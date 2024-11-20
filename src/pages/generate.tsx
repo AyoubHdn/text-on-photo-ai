@@ -14,10 +14,12 @@ const GeneratePage: NextPage = () => {
       prompt: "",
     }
   );
+  const [imageUrl,setImageUrl] = useState('')
 
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data){
-      console.log("muttation finished", data)
+      if(!data.imageBase64) return;
+      setImageUrl(data.imageBase64)
     },
   })
 
@@ -26,6 +28,7 @@ const GeneratePage: NextPage = () => {
     generateIcon.mutate({
       prompt: form.prompt,
     })
+    setForm({prompt: ""})
   }
 
   function updateForm(key: string){
@@ -38,7 +41,7 @@ const GeneratePage: NextPage = () => {
   const session = useSession();
 
   const isLoggedIn = !!session.data;
-  console.log(isLoggedIn)
+  
   return (
     <>
       <Head>
@@ -73,6 +76,11 @@ const GeneratePage: NextPage = () => {
             Submit
           </Button>
         </form>
+        <img 
+          src= {`data:image/png;base64, ${imageUrl}`} 
+          alt="an image of your generated prompt"
+          width="500" height="500"
+        />
       </main>
     </>
   );
