@@ -7,7 +7,6 @@ import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
 import AWS from "aws-sdk";
-import { use } from "react";
 
 const s3 = new AWS.S3({
   credentials:{
@@ -16,6 +15,8 @@ const s3 = new AWS.S3({
   },
   region: "eu-south-2",
 })
+
+const BACKET_NAME = "wall-text-web-ai"
 
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
@@ -47,7 +48,7 @@ async function generateIcon(prompt: string): Promise<string | undefined> {
         megapixels: "1",
         num_outputs: 1,
         aspect_ratio: "1:1",
-        output_format: "png", // Use a valid format
+        output_format: "webp", // Use a valid format
         output_quality: 80,
         num_inference_steps: 4,
       },
@@ -109,15 +110,15 @@ export const generateRouter = createTRPCRouter({
       });
 
       await s3.putObject({
-        Bucket: "wall-text-web-ai",
+        Bucket: BACKET_NAME,
         Body: Buffer.from(b64Image!,"base64"),
         Key: icon.id,
         ContentEncoding:"base64",
-        ContentType: "image/png",
+        ContentType: "image/webp",
       }).promise();
 
       return {
-        imageBase64: b64Image, // Return the Base64 string
+        imageBase64: `https://${BACKET_NAME}.s3.eu-south-2.amazonaws.com/${icon.id}`,
       };
     }),
 });

@@ -4,11 +4,11 @@ import { Input } from"../component/Input";
 import { FormGroup } from "~/component/FormGroup";
 import { useState } from "react";
 import { api } from "~/utils/api";
-import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "~/component/Button";
+import Image from "next/image";
 
 const GeneratePage: NextPage = () => {
-
+ 
   const [form,setForm] = useState(
     {
       prompt: "",
@@ -37,10 +37,6 @@ const GeneratePage: NextPage = () => {
         [key]: e.target.value,}))
     }
   }
-
-  const session = useSession();
-
-  const isLoggedIn = !!session.data;
   
   return (
     <>
@@ -50,20 +46,6 @@ const GeneratePage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center">
-        {!isLoggedIn && (
-        <Button onClick={() => {
-          signIn().catch(console.error);
-        }}>
-          Login
-        </Button>)
-        }
-        {isLoggedIn && (
-        <Button onClick={() => {
-          signOut().catch(console.error);
-        }}>
-          Logout
-        </Button>)
-        }
         <form className="flex flex-col gap-3" onSubmit={handelFormSubmit}>
           <FormGroup>
             <label>Prompt</label>
@@ -76,10 +58,10 @@ const GeneratePage: NextPage = () => {
             Submit
           </Button>
         </form>
-        <img 
-          src= {`data:image/png;base64, ${imageUrl}`} 
+        <Image 
+          src= {imageUrl} 
           alt="an image of your generated prompt"
-          width="500" height="500"
+          width="100" height="100"
         />
       </main>
     </>

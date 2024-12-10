@@ -19,7 +19,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./types"], // Include the types folder
+    "strict": true
   },
   "include": [
     ".eslintrc.cjs",
