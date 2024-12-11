@@ -26,6 +26,7 @@ const config = {
       },
     ],
     "@next/next/no-img-element": "off"
+    
   },
   
 };
