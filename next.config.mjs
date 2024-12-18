@@ -26,5 +26,16 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        destination: 'https://namedesignai.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
+
 export default config;
