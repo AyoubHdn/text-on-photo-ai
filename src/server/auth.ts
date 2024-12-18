@@ -44,6 +44,18 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async signIn({ user, account, profile }) {
+      console.log("SignIn Callback Debug:", { user, account, profile });
+      return true; // Adjust logic if you need to restrict sign-ins
+    },
+    async redirect({ url, baseUrl }) {
+      console.log("Redirect Callback Debug:", { url, baseUrl });
+      return baseUrl; // Ensure users are redirected correctly
+    },
+    async jwt({ token, user, account, profile }) {
+      console.log("JWT Callback Debug:", { token, user, account, profile });
+      return token; // Customize token handling if necessary
+    },
   },
   adapter: PrismaAdapter(prisma),
   providers: [
