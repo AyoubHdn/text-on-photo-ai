@@ -12,7 +12,7 @@ const config = {
 
   images: {
     domains: [
-      "wall-text-web-ai.s3.eu-south-2.amazonaws.com",
+      "name-design-ai.s3.us-east-1.amazonaws.com",
     ],
   },
 
