@@ -36,17 +36,6 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
-  cookies: {
-    sessionToken: {
-      name: "__Secure-next-auth.session-token",
-      options: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        domain: ".namedesignai.com", // Your domain
-      },
-    },
-  },
   callbacks: {
     session({ session, user }) {
       if (session.user) {
@@ -54,18 +43,6 @@ export const authOptions: NextAuthOptions = {
         // session.user.role = user.role; <-- put other properties on the session here
       }
       return session;
-    },
-    signIn({ user, account, profile }) {
-      console.log("SignIn Callback Debug:", { user, account, profile });
-      return true; // Adjust logic if you need to restrict sign-ins
-    },
-    redirect({ url, baseUrl }) {
-      console.log("Redirect Callback Debug:", { url, baseUrl });
-      return baseUrl; // Ensure users are redirected correctly
-    },
-    jwt({ token, user, account, profile }) {
-      console.log("JWT Callback Debug:", { token, user, account, profile });
-      return token; // Customize token handling if necessary
     },
   },
   adapter: PrismaAdapter(prisma),
