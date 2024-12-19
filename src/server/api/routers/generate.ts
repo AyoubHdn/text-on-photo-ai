@@ -13,10 +13,10 @@ const s3 = new AWS.S3({
     accessKeyId: env.ACCESS_KEY_ID,
     secretAccessKey: env.SECRET_ACCESS_KEY,
   },
-  region: "eu-south-2",
+  region: "us-east-1",
 })
 
-const BACKET_NAME = "wall-text-web-ai"
+const BACKET_NAME = "name-design-ai"
 
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
@@ -121,7 +121,7 @@ export const generateRouter = createTRPCRouter({
       }).promise();
 
       return {
-        imageBase64: `https://${BACKET_NAME}.s3.eu-south-2.amazonaws.com/${icon.id}`,
+        imageBase64: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
       };
     }),
 });

@@ -12,9 +12,11 @@ const config = {
 
   images: {
     domains: [
-      "wall-text-web-ai.s3.eu-south-2.amazonaws.com",
+      "name-design-ai.s3.us-east-1.amazonaws.com",
     ],
   },
+
+  productionBrowserSourceMaps: true, // Enable source maps for production builds
 
   /**
    * If you have the "experimental: { appDir: true }" setting enabled, then you
@@ -27,4 +29,5 @@ const config = {
     defaultLocale: "en",
   },
 };
+
 export default config;

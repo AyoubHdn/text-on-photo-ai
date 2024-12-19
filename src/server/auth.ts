@@ -27,7 +27,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     redirect({ url, baseUrl }) {
-      // Add redirect callback to handle URLs properly
       console.log("Redirect callback:", { url, baseUrl });
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
@@ -49,7 +48,6 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: env.NEXTAUTH_SECRET,
   debug: true,  // Enable debug mode to log more details
-  // Add these configurations
   useSecureCookies: true,
   cookies: {
     sessionToken: {
