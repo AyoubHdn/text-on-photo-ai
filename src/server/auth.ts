@@ -23,10 +23,12 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = user.id;
       }
+      console.log("Session callback:", { session, user });
       return session;
     },
     redirect({ url, baseUrl }) {
       // Add redirect callback to handle URLs properly
+      console.log("Redirect callback:", { url, baseUrl });
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
@@ -46,7 +48,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   secret: env.NEXTAUTH_SECRET,
-  debug: true,
+  debug: true,  // Enable debug mode to log more details
   // Add these configurations
   useSecureCookies: true,
   cookies: {
@@ -60,6 +62,26 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
+  events: {
+    signIn: (message) => {
+      console.log("SignIn event:", message);
+    },
+    signOut: (message) => {
+      console.log("SignOut event:", message);
+    },
+    createUser: (message) => {
+      console.log("CreateUser event:", message);
+    },
+    updateUser: (message) => {
+      console.log("UpdateUser event:", message);
+    },
+    linkAccount: (message) => {
+      console.log("LinkAccount event:", message);
+    },
+    session: (message) => {
+      console.log("Session event:", message);
+    }
+  }
 }
 
 export const getServerAuthSession = (ctx: {
