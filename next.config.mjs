@@ -26,10 +26,6 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
-  
-  env: {
-    ACCESS_KEY_ID: process.env.ACCESS_KEY_ID,
-  },
 };
 
 export default config;
