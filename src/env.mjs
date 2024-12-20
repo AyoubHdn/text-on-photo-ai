@@ -15,20 +15,20 @@ const server = z.object({
     // This makes Vercel deployments not fail if you don't set NEXTAUTH_URL
     // Since NextAuth.js automatically uses the VERCEL_URL if present.
     (str) => process.env.VERCEL_URL ?? str,
-    // VERCEL_URL doesn't include `https` so it can't be validated as a URL
+    // VERCEL_URL doesn't include `https` so it cant be validated as a URL
     process.env.VERCEL ? z.string().min(1) : z.string().url(),
   ),
   // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
-  REPLICATE_API_TOKEN: z.string().min(1),
-  MOCK_REPLICATE: z.string().min(1),
-  SECRET_ACCESS_KEY: z.string().min(1),
-  ACCESS_KEY_ID: z.string().min(1),
-  STRIPE_SECRET_KEY: z.string().min(1),
-  HOST_NAME: z.string().min(1),
-  PRICE_ID: z.string().min(1),
-  STRIPE_WEB_HOOK_SECRET: z.string().min(1),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  REPLICATE_API_TOKEN: z.string(),
+  MOCK_REPLICATE: z.string(),
+  SECRET_ACCESS_KEY: z.string(),
+  ACCESS_KEY_ID: z.string(),
+  STRIPE_SECRET_KEY: z.string(),
+  HOST_NAME: z.string(),
+  PRICE_ID: z.string(),
+  STRIPE_WEB_HOOK_SECRET: z.string(),
 });
 
 /**
@@ -37,7 +37,7 @@ const server = z.object({
  */
 const client = z.object({
   // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
-  NEXT_PUBLIC_STRIPE_KEY: z.string().min(1),
+  NEXT_PUBLIC_STRIPE_KEY: z.string(),
 });
 
 /**
