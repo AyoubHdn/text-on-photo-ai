@@ -14,10 +14,15 @@ export function Header() {
     return (
         <header className="container mx-auto flex h-16 items-center justify-between px-4 dark:bg-gray-800">
             <PrimaryLink href="/">Logo</PrimaryLink>
-            <ul>
+            <ul className="flex gap-4">
                 <li>
                     <PrimaryLink href="/generate">Generate</PrimaryLink>
                 </li>
+                {isLoggedIn && (
+                <li>
+                    <PrimaryLink href="/collection">Collection</PrimaryLink>
+                </li>
+                )}
             </ul>
             <ul className="flex gap-4">
                 {isLoggedIn && (
@@ -42,7 +47,7 @@ export function Header() {
                 )}
                 {!isLoggedIn && (
                 <li>
-                   <Button onClick={() => {
+                    <Button onClick={() => {
                         signIn().catch(console.error);
                     }}>
                         Login
