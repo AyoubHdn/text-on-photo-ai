@@ -79,12 +79,12 @@ export const generateRouter = createTRPCRouter({
         where: {
           id: ctx.session.user.id,
           credits: {
-            gte: 1,
+            gte: input.numberOfImages,
           },
         },
         data: {
           credits: {
-            decrement: 1,
+            decrement: input.numberOfImages,
           },
         },
       });

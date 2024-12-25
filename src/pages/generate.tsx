@@ -6,6 +6,7 @@ import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "../component/Input";
+import { error } from "console";
 
 const colors = [
   "blue",
@@ -27,11 +28,17 @@ const GeneratePage: NextPage = () => {
       numberofImages: "1",
     }
   );
+
+  const [error, setError] = useState("");
   const [imagesUrl,setImagesUrl] = useState<{imageUrl: string}[]>([]);
 
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data){
       setImagesUrl(data);
+    },
+    onError(error){
+      console.log(error);
+      setError(error.message);
     },
   });
 
@@ -102,6 +109,8 @@ const GeneratePage: NextPage = () => {
                 >
               </Input>
           </FormGroup>
+
+          {error && <div className="bg-red-500 text-white rounded p-8 text-xl">{error}</div>}
 
           <Button isLoading={generateIcon.isLoading}
           disabled={generateIcon.isLoading}>
