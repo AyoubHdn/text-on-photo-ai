@@ -1,22 +1,22 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import fetch from "node-fetch"; // Install this if not already installed
-
+import fetch from "node-fetch"; // Ensure this is installed
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
 import AWS from "aws-sdk";
 
+// Configure AWS S3
 const s3 = new AWS.S3({
-  credentials:{
+  credentials: {
     accessKeyId: env.ACCESS_KEY_ID,
     secretAccessKey: env.SECRET_ACCESS_KEY,
   },
   region: "us-east-1",
-})
+});
 
-const BACKET_NAME = "name-design-ai"
+const BACKET_NAME = "name-design-ai";
 
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
@@ -35,37 +35,32 @@ async function fetchAndEncodeImage(url: string): Promise<string> {
   return buffer.toString("base64");
 }
 
-// Generate the image and encode to Base64
-async function generateIcon(prompt: string): Promise<string | undefined> {
+// Generate the image and encode it as Base64
+async function generateIcon(prompt: string, numberOfImages = 1): Promise<string[]> {
   if (env.MOCK_REPLICATE === "true") {
-    return b64Image;
+    return Array(numberOfImages).fill(b64Image) as string[]; // Mock data for testing
   } else {
-    // Call the Replicate API
     const output = (await replicate.run("black-forest-labs/flux-schnell", {
       input: {
-        prompt: prompt,
+        prompt,
         go_fast: true,
         megapixels: "1",
-        num_outputs: 1,
+        num_outputs: numberOfImages,
         aspect_ratio: "1:1",
-        output_format: "webp", // Use a valid format
+        output_format: "webp",
         output_quality: 80,
         num_inference_steps: 4,
       },
     })) as string[];
 
-    // Assume output is an array of URLs
-    const imageUrl = Array.isArray(output) ? output[0] : undefined;
-
-    if (!imageUrl) {
+    if (!Array.isArray(output) || output.length === 0) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to generate image URL",
+        message: "Failed to generate image URLs",
       });
     }
 
-    // Fetch and encode the image as Base64
-    return await fetchAndEncodeImage(imageUrl);
+    return Promise.all(output.map(fetchAndEncodeImage));
   }
 }
 
@@ -75,6 +70,7 @@ export const generateRouter = createTRPCRouter({
       z.object({
         prompt: z.string(),
         color: z.string(),
+        numberOfImages: z.number().min(1).max(10),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -100,28 +96,37 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
-      const finalPrompt = `a nature with name ${input.prompt} with ${input.color} background `
+      const finalPrompt = `a nature with name ${input.prompt} with ${input.color} background`;
 
       // Generate the image as Base64
-      const b64Image = await generateIcon(finalPrompt);
+      const b64Images: string[] = await generateIcon(finalPrompt, input.numberOfImages);
 
-      const icon = await ctx.prisma.icon.create({
-        data: {
-          prompt: input.prompt,
-          userId: ctx.session.user.id,
-        },
-      });
+      const createdIcons = await Promise.all(
+        b64Images.map(async (image: string) => {
+          const icon = await ctx.prisma.icon.create({
+            data: {
+              prompt: input.prompt,
+              userId: ctx.session.user.id,
+            },
+          });
 
-      await s3.putObject({
-        Bucket: BACKET_NAME,
-        Body: Buffer.from(b64Image!,"base64"),
-        Key: icon.id,
-        ContentEncoding:"base64",
-        ContentType: "image/webp",
-      }).promise();
+          await s3
+            .putObject({
+              Bucket: BACKET_NAME,
+              Body: Buffer.from(image, "base64"),
+              Key: icon.id,
+              ContentEncoding: "base64",
+              ContentType: "image/webp",
+            })
+            .promise();
 
-      return {
-        imageBase64: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
-      };
+          return icon;
+        })
+      );
+
+      // Map created icons to return their URLs
+      return createdIcons.map((icon) => ({
+        imageUrl: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
+      }));
     }),
 });

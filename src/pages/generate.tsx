@@ -24,21 +24,22 @@ const GeneratePage: NextPage = () => {
     {
       prompt: "",
       color: "",
+      numberofImages: "1",
     }
   );
-  const [imageUrl,setImageUrl] = useState('')
+  const [imagesUrl,setImagesUrl] = useState<{imageUrl: string}[]>([]);
 
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data){
-      if(!data.imageBase64) return;
-      setImageUrl(data.imageBase64)
+      setImagesUrl(data);
     },
-  })
+  });
 
   function handelFormSubmit(e: React.FormEvent){
     e.preventDefault();
-    generateIcon.mutate(form)
-    setForm((prev) => ({ ...prev, prompt: ""}));
+    generateIcon.mutate({
+      ...form, numberOfImages: parseInt(form.numberofImages)
+    });
   }
 
   function updateForm(key: string){
@@ -59,23 +60,25 @@ const GeneratePage: NextPage = () => {
         <h1 className="text-6xl">Generate your desing</h1>
         <p className="text-2xl">type your name / text </p>
         <form className="flex flex-col gap-3" onSubmit={handelFormSubmit}>
-          <h2 className="text-xl">
-            1. Type your name
-          </h2>
+
+          <h2 className="text-xl">1. Type your name</h2>
+
           <FormGroup className="mb-12">
             <label>Prompt</label>
-            <Input 
+            <Input
+              required
               value={form.prompt}
               onChange={updateForm("prompt")}>
             </Input>
           </FormGroup>
-          <h2 className="text-xl">
-            2. Pick your style
-          </h2>
+
+          <h2 className="text-xl">2. Pick your style</h2>
+
           <FormGroup className="grid grid-cols-4 mb-12">
             {colors.map(color => 
               <label key={color} className="flex gap-2">
               <input 
+                required
                 type="radio"
                 name="color"
                 checked={color === form.color}
@@ -84,24 +87,41 @@ const GeneratePage: NextPage = () => {
               {color}
               </label>
             )}
-            
           </FormGroup>
+
+          <h2 className="text-xl">3. How muny do you want</h2>
+
+          <FormGroup className="mb-12">
+              <label>Number of images</label>
+              <Input
+                required
+                inputMode="numeric"
+                pattern="[1-9]|10"
+                value={form.numberofImages}
+                onChange={updateForm("numberofImages")}
+                >
+              </Input>
+          </FormGroup>
+
           <Button isLoading={generateIcon.isLoading}
           disabled={generateIcon.isLoading}>
             Submit
           </Button>
+
         </form>
-        {imageUrl &&
+        {imagesUrl.length > 0 &&
         <>
-        <h2 className="text-xl">
-        2. Your images
-      </h2>
+        <h2 className="text-xl">Your images</h2>
       <section className="grid grid-cols-4 gap-4 mb-12">
-      <Image 
-          src= {imageUrl} 
-          alt="an image of your generated prompt"
-          width="100" height="100" className="w-full"
-        />
+        {imagesUrl.map(({imageUrl}) =>
+          <Image 
+            key={imageUrl}
+            src={imageUrl} 
+            alt="an image of your generated prompt"
+            width="512" height="512" className="w-full"
+            />
+
+        )}
       </section>
         
         </>
