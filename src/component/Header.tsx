@@ -15,18 +15,23 @@ export function Header() {
 
     return (
         <header className="container mx-auto flex h-16 items-center justify-between px-4 dark:bg-gray-800">
-            <PrimaryLink href="/">Logo</PrimaryLink>
+            
             <ul className="flex gap-4">
                 <li>
-                    <PrimaryLink href="/generate">Generate</PrimaryLink>
+                    <PrimaryLink href="/">Logo</PrimaryLink>
                 </li>
                 <li>
                     <PrimaryLink href="/community">Cummunity</PrimaryLink>
                 </li>
                 {isLoggedIn && (
-                <li>
-                    <PrimaryLink href="/collection">Collection</PrimaryLink>
-                </li>
+                <>
+                    <li>
+                        <PrimaryLink href="/collection">Collection</PrimaryLink>
+                    </li>
+                    <li>
+                        <PrimaryLink href="/generate">Generate</PrimaryLink>
+                    </li>
+                </>
                 )}
             </ul>
             <ul className="flex gap-4">

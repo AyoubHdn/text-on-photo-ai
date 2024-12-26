@@ -36,7 +36,10 @@ async function fetchAndEncodeImage(url: string): Promise<string> {
 }
 
 // Generate the image and encode it as Base64
-async function generateIcon(prompt: string, numberOfImages = 1): Promise<string[]> {
+async function generateIcon(
+  prompt: string,
+  numberOfImages = 1
+): Promise<string[]> {
   if (env.MOCK_REPLICATE === "true") {
     return Array(numberOfImages).fill(b64Image) as string[]; // Mock data for testing
   } else {
@@ -66,67 +69,61 @@ async function generateIcon(prompt: string, numberOfImages = 1): Promise<string[
 
 export const generateRouter = createTRPCRouter({
   generateIcon: protectedProcedure
-    .input(
-      z.object({
-        prompt: z.string(),
-        color: z.string(),
-        numberOfImages: z.number().min(1).max(10),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Decrement credits
-      const { count } = await ctx.prisma.user.updateMany({
-        where: {
-          id: ctx.session.user.id,
-          credits: {
-            gte: input.numberOfImages,
-          },
+  .input(
+    z.object({
+      prompt: z.string(),
+      numberOfImages: z.number().min(1).max(10),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const { count } = await ctx.prisma.user.updateMany({
+      where: {
+        id: ctx.session.user.id,
+        credits: {
+          gte: input.numberOfImages,
         },
-        data: {
-          credits: {
-            decrement: input.numberOfImages,
-          },
+      },
+      data: {
+        credits: {
+          decrement: input.numberOfImages,
         },
+      },
+    });
+
+    if (count <= 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "You do not have enough credits",
       });
+    }
 
-      if (count <= 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You do not have enough credits",
+    const b64Images: string[] = await generateIcon(input.prompt, input.numberOfImages);
+
+    const createdIcons = await Promise.all(
+      b64Images.map(async (image: string) => {
+        const icon = await ctx.prisma.icon.create({
+          data: {
+            prompt: input.prompt,
+            userId: ctx.session.user.id,
+          },
         });
-      }
 
-      const finalPrompt = `a nature with name ${input.prompt} with ${input.color} background`;
+        await s3
+          .putObject({
+            Bucket: BACKET_NAME,
+            Body: Buffer.from(image, "base64"),
+            Key: icon.id,
+            ContentEncoding: "base64",
+            ContentType: "image/webp",
+          })
+          .promise();
 
-      // Generate the image as Base64
-      const b64Images: string[] = await generateIcon(finalPrompt, input.numberOfImages);
+        return icon;
+      })
+    );
 
-      const createdIcons = await Promise.all(
-        b64Images.map(async (image: string) => {
-          const icon = await ctx.prisma.icon.create({
-            data: {
-              prompt: input.prompt,
-              userId: ctx.session.user.id,
-            },
-          });
-
-          await s3
-            .putObject({
-              Bucket: BACKET_NAME,
-              Body: Buffer.from(image, "base64"),
-              Key: icon.id,
-              ContentEncoding: "base64",
-              ContentType: "image/webp",
-            })
-            .promise();
-
-          return icon;
-        })
-      );
-
-      // Map created icons to return their URLs
-      return createdIcons.map((icon) => ({
-        imageUrl: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
-      }));
-    }),
+    return createdIcons.map((icon) => ({
+      imageUrl: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
+    }));
+  }),
 });

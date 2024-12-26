@@ -22,8 +22,8 @@ const CollectionPage: NextPage = () => {
                 <li key={icon.id}>
                     <Image 
                         className="w-full rounded"
-                        width="100"
-                        height="100"
+                        width="512"
+                        height="512"
                         alt={icon.prompt ?? "an image of an icon"}
                         src={`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`}
                     />
