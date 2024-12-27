@@ -72,12 +72,30 @@ const GeneratePage: NextPage = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+
+      // Convert the webp blob to PNG format
+      const imageBitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(imageBitmap, 0, 0);
+      }
+
+      const pngBlob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+        }, "image/png")
+      );
+
+      const blobUrl = window.URL.createObjectURL(pngBlob);
 
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = "generated_image.png";
+      link.download = "generated_image.png"; // Customize filename
       link.click();
 
       window.URL.revokeObjectURL(blobUrl);
