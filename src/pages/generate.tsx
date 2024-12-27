@@ -6,19 +6,7 @@ import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "../component/Input";
-import { stylesData } from "../data/stylesData";
-
-// Type definitions and constants
-interface ImageData {
-  imageUrl: string;
-}
-
-const USER_LOGIN = 'AyoubHdn';
-
-const getCurrentDateTime = (): string => {
-  const now = new Date();
-  return now.toISOString().slice(0, 19).replace('T', '_');
-};
+import { stylesData } from "../data/stylesData"; // Updated import location
 
 const GeneratePage: NextPage = () => {
   const [form, setForm] = useState({
@@ -27,12 +15,11 @@ const GeneratePage: NextPage = () => {
     numberofImages: "1",
   });
 
-  const [error, setError] = useState<string>("");
-  const [imagesUrl, setImagesUrl] = useState<ImageData[]>([]);
+  const [error, setError] = useState("");
+  const [imagesUrl, setImagesUrl] = useState<{ imageUrl: string }[]>([]);
   const [activeTab, setActiveTab] = useState<keyof typeof stylesData>("Modern");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [popupImage, setPopupImage] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [popupImage, setPopupImage] = useState<string | null>(null); // State for the popup image
 
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data) {
@@ -44,15 +31,7 @@ const GeneratePage: NextPage = () => {
     },
   });
 
-  const handleOpenPopup = (url: string): void => {
-    setPopupImage(url);
-  };
-
-  const handleClosePopup = (): void => {
-    setPopupImage(null);
-  };
-
-  const handleFormSubmit = (e: React.FormEvent): void => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.name || !form.basePrompt) {
@@ -69,7 +48,7 @@ const GeneratePage: NextPage = () => {
   };
 
   const updateForm = (key: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement>): void => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm((prev) => ({
         ...prev,
         [key]: e.target.value,
@@ -77,7 +56,7 @@ const GeneratePage: NextPage = () => {
     };
   };
 
-  const handleImageSelect = (basePrompt: string, src: string): void => {
+  const handleImageSelect = (basePrompt: string, src: string) => {
     setSelectedImage(src);
     setForm((prev) => ({
       ...prev,
@@ -86,89 +65,52 @@ const GeneratePage: NextPage = () => {
     setError("");
   };
 
-  const handleDownload = async (url: string): Promise<void> => {
-    setIsDownloading(true);
+  const handleDownload = async (imageUrl: string) => {
+    console.log("Attempting to download:", imageUrl); // Debug the URL
     try {
-      const img = document.createElement('img');
-      img.crossOrigin = 'anonymous';
-      img.src = url;
-
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error('Image failed to load'));
-      });
-
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('Could not get canvas context');
+      const response = await fetch(imageUrl, { mode: "cors" });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      ctx.drawImage(img, 0, 0);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
 
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Could not create blob'));
-          }
-        }, 'image/png');
-      });
-
-      const timestamp = getCurrentDateTime();
-      const filename = `generated_image_${timestamp}_${USER_LOGIN}.png`;
-
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
+      link.download = "generated_image.png";
       link.click();
-      document.body.removeChild(link);
 
-      URL.revokeObjectURL(blobUrl);
+      window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Error downloading image:', error);
-      try {
-        const timestamp = getCurrentDateTime();
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `generated_image_${timestamp}_${USER_LOGIN}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (fallbackError) {
-        console.error('Fallback download failed:', fallbackError);
-        window.open(url, '_blank');
-      }
-    } finally {
-      setIsDownloading(false);
+      console.error("Error downloading the image:", error);
+      // Fallback: Open the image in a new tab for manual download
+      window.open(imageUrl, "_blank");
     }
   };
 
-  const handleShare = async (url: string): Promise<void> => {
+  const handleShare = async (imageUrl: string) => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: "Check out this generated image!",
           text: "I created this awesome image using the app.",
-          url: url,
+          url: imageUrl,
         });
         alert("Shared successfully!");
       } catch (error) {
         console.error("Error sharing the image:", error);
       }
     } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        alert("Image URL copied to clipboard. Share it manually!");
-      } catch (error) {
-        alert("Unable to copy. Please manually copy and share the URL.");
-      }
+      alert("Web Share API is not supported in your browser.");
     }
+  };
+
+  const openPopup = (imageUrl: string) => {
+    setPopupImage(imageUrl); // Open the popup
+  };
+
+  const closePopup = () => {
+    setPopupImage(null); // Close the popup
   };
 
   return (
@@ -195,6 +137,7 @@ const GeneratePage: NextPage = () => {
 
           <h2 className="text-xl">2. Pick your style</h2>
           <div className="mb-12">
+            {/* Tabs */}
             <div className="flex border-b mb-4">
               {Object.keys(stylesData).map((style) => (
                 <button
@@ -212,6 +155,7 @@ const GeneratePage: NextPage = () => {
               ))}
             </div>
 
+            {/* Image Grid */}
             <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-30">
               {stylesData[activeTab].map(({ src, basePrompt }, index) => (
                 <div
@@ -261,31 +205,38 @@ const GeneratePage: NextPage = () => {
           <>
             <h2 className="text-xl">Your images</h2>
             <section className="grid grid-cols-4 gap-4 mb-12">
-              {imagesUrl.map((image: ImageData, index: number) => (
+              {imagesUrl.map(({ imageUrl }, index) => (
                 <div key={index} className="relative rounded shadow-md hover:shadow-lg transition">
+                  {/* Buttons at Top-Right */}
                   <div className="absolute top-2 right-2 flex gap-2">
+                    {/* Fullscreen Button */}
                     <button
-                      onClick={(): void => handleOpenPopup(image.imageUrl)}
+                      onClick={() => openPopup(imageUrl)}
                       className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none"
                       title="View Fullscreen"
                     >
                       ⬜️
                     </button>
 
+                    {/* Download Button */}
                     <button
-                      onClick={(): void => {
-                        void handleDownload(image.imageUrl);
+                      onClick={() => {
+                        handleDownload(imageUrl).catch((error) => {
+                          console.error("Error downloading the image:", error);
+                        });
                       }}
-                      disabled={isDownloading}
-                      className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none disabled:opacity-50"
+                      className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none"
                       title="Download Image"
                     >
-                      {isDownloading ? '⏳' : '⬇️'}
+                      ⬇️
                     </button>
 
+                    {/* Share Button */}
                     <button
-                      onClick={(): void => {
-                        void handleShare(image.imageUrl);
+                      onClick={() => {
+                        handleShare(imageUrl).catch((error) => {
+                          console.error("Error sharing the image:", error);
+                        });
                       }}
                       className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none"
                       title="Share Image"
@@ -294,13 +245,13 @@ const GeneratePage: NextPage = () => {
                     </button>
                   </div>
 
+                  {/* Generated Image */}
                   <Image
-                    src={image.imageUrl}
-                    alt={`Generated output ${index + 1}`}
+                    src={imageUrl}
+                    alt="Generated output"
                     width={512}
                     height={512}
                     className="w-full rounded"
-                    unoptimized
                   />
                 </div>
               ))}
@@ -308,11 +259,12 @@ const GeneratePage: NextPage = () => {
           </>
         )}
 
+        {/* Popup Modal */}
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
               <button
-                onClick={handleClosePopup}
+                onClick={closePopup}
                 className="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700 focus:outline-none"
                 title="Close"
               >
