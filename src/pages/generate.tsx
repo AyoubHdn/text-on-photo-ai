@@ -105,7 +105,7 @@ const GeneratePage: NextPage = () => {
       window.open(imageUrl, "_blank");
     }
   };
-
+  {/*
   const handleShare = async (imageUrl: string) => {
     if (navigator.share) {
       try {
@@ -121,7 +121,7 @@ const GeneratePage: NextPage = () => {
     } else {
       alert("Web Share API is not supported in your browser.");
     }
-  };
+  };*/}
 
   const openPopup = (imageUrl: string) => {
     setPopupImage(imageUrl); // Open the popup
@@ -178,16 +178,25 @@ const GeneratePage: NextPage = () => {
               {stylesData[activeTab].map(({ src, basePrompt }, index) => (
                 <div
                   key={index}
-                  className={`rounded shadow-md hover:shadow-lg transition cursor-pointer ${
+                  className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
                     selectedImage === src ? "ring-4 ring-blue-500" : ""
                   }`}
-                  onClick={() => handleImageSelect(basePrompt, src)}
                 >
+                  {/* Image */}
                   <img
                     src={src}
                     alt={basePrompt}
                     className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
+                    onClick={() => handleImageSelect(basePrompt, src)}
                   />
+                  {/* View Icon Button */}
+                  <button
+                    onClick={() => openPopup(src)}
+                    className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                    title="View Fullscreen"
+                  >
+                    🔍
+                  </button>
                 </div>
               ))}
             </div>
@@ -225,31 +234,31 @@ const GeneratePage: NextPage = () => {
             <section className="grid grid-cols-4 gap-4 mb-12">
               {imagesUrl.map(({ imageUrl }, index) => (
                 <div key={index} className="relative rounded shadow-md hover:shadow-lg transition">
-                  {/* Buttons at Top-Right */}
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    {/* Fullscreen Button */}
-                    <button
-                      onClick={() => openPopup(imageUrl)}
-                      className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none"
-                      title="View Fullscreen"
-                    >
-                      ⬜️
-                    </button>
+                {/* Buttons at Top-Right */}
+                <div className="absolute top-0 right-0 flex gap-0">
+                  {/* Fullscreen Button */}
+                  <button
+                    onClick={() => openPopup(imageUrl)}
+                    className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                    title="View Fullscreen"
+                  >
+                    🔍
+                  </button>
+              
+                  {/* Download Button */}
+                  <button
+                    onClick={() => {
+                      handleDownload(imageUrl).catch((error) => {
+                        console.error("Error downloading the image:", error);
+                      });
+                    }}
+                    className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                    title="Download Image"
+                  >
+                    ⬇️
+                  </button>
 
-                    {/* Download Button */}
-                    <button
-                      onClick={() => {
-                        handleDownload(imageUrl).catch((error) => {
-                          console.error("Error downloading the image:", error);
-                        });
-                      }}
-                      className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none"
-                      title="Download Image"
-                    >
-                      ⬇️
-                    </button>
-
-                    {/* Share Button */}
+                    {/* Share Button 
                     <button
                       onClick={() => {
                         handleShare(imageUrl).catch((error) => {
@@ -260,7 +269,7 @@ const GeneratePage: NextPage = () => {
                       title="Share Image"
                     >
                       🔗
-                    </button>
+                    </button>*/}
                   </div>
 
                   {/* Generated Image */}
