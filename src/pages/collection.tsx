@@ -24,14 +24,33 @@ const CollectionPage: NextPage = () => {
       }
 
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = "icon_image.png"; // Customize filename
-      link.click();
+      // Convert WebP to PNG using canvas
+      const imageBitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(imageBitmap, 0, 0);
+      }
 
-      window.URL.revokeObjectURL(blobUrl);
+      const pngBlob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((blob) => resolve(blob), "image/png")
+      );
+
+      if (pngBlob) {
+        const blobUrl = window.URL.createObjectURL(pngBlob);
+
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = "icon_image.png"; // Customize filename
+        link.click();
+
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        console.error("Failed to create PNG blob.");
+      }
     } catch (error) {
       console.error("Error downloading the image:", error);
     }
@@ -62,7 +81,7 @@ const CollectionPage: NextPage = () => {
                 {/* View Button */}
                 <button
                   onClick={() => openPopup(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`)}
-                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
+                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2 rounded"
                   title="View Fullscreen"
                 >
                   🔍
@@ -72,7 +91,7 @@ const CollectionPage: NextPage = () => {
                   onClick={() => {
                     void handleDownload(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`);
                   }}
-                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
+                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2 rounded"
                   title="Download"
                 >
                   ⬇️
