@@ -7,8 +7,12 @@ import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "../component/Input";
 import { stylesData } from "../data/stylesData"; // Updated import location
+import { useSession, signIn } from "next-auth/react";
 
 const GeneratePage: NextPage = () => {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session;
+
   const [form, setForm] = useState({
     name: "",
     basePrompt: "",
@@ -26,13 +30,18 @@ const GeneratePage: NextPage = () => {
       setImagesUrl(data);
     },
     onError(error) {
-      console.log(error);
+      console.error(error);
       setError(error.message);
     },
   });
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isLoggedIn) {
+      signIn().catch(console.error); // Redirect to login
+      return;
+    }
 
     if (!form.name || !form.basePrompt) {
       setError("Please type your name and select a style.");
@@ -66,62 +75,24 @@ const GeneratePage: NextPage = () => {
   };
 
   const handleDownload = async (imageUrl: string) => {
-    console.log("Attempting to download:", imageUrl); // Debug the URL
     try {
-      const response = await fetch(imageUrl, { mode: "cors" });
+      const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const blob = await response.blob();
-
-      // Convert the webp blob to PNG format
-      const imageBitmap = await createImageBitmap(blob);
-      const canvas = document.createElement("canvas");
-      canvas.width = imageBitmap.width;
-      canvas.height = imageBitmap.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(imageBitmap, 0, 0);
-      }
-
-      const pngBlob = await new Promise<Blob>((resolve) =>
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-        }, "image/png")
-      );
-
-      const blobUrl = window.URL.createObjectURL(pngBlob);
+      const blobUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = "generated_image.png"; // Customize filename
+      link.download = "generated_image.png";
       link.click();
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error("Error downloading the image:", error);
-      // Fallback: Open the image in a new tab for manual download
-      window.open(imageUrl, "_blank");
     }
   };
-  {/*
-  const handleShare = async (imageUrl: string) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Check out this generated image!",
-          text: "I created this awesome image using the app.",
-          url: imageUrl,
-        });
-        alert("Shared successfully!");
-      } catch (error) {
-        console.error("Error sharing the image:", error);
-      }
-    } else {
-      alert("Web Share API is not supported in your browser.");
-    }
-  };*/}
 
   const openPopup = (imageUrl: string) => {
     setPopupImage(imageUrl); // Open the popup
@@ -139,10 +110,29 @@ const GeneratePage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
-        <h1 className="text-6xl">Generate your design</h1>
-        <p className="text-2xl">Type your name / text</p>
-        <form className="flex flex-col gap-3" onSubmit={handleFormSubmit}>
-          <h2 className="text-xl">1. Type your name</h2>
+        <h1 className="text-4xl ">
+          <strong>Let’s Generate a Unique Name Design</strong>
+        </h1>
+        <p className="text-1xl mt-4">
+          Create unique name designs for social media, your brand, business
+          logos, or thoughtful gifts. Follow the steps below and bring your
+          ideas to life!
+        </p>
+        <p className="text-1xl mt-4">
+          For the best results, keep these tips in mind:
+        </p>
+        <ul className="list-disc ml-6 mt-2 text-1xl">
+          <li>
+            The design may slightly vary from the selected style to enhance
+            creativity.
+          </li>
+          <li>Use clear and simple names or phrases for better precision.</li>
+          <li>Experiment with styles to find your perfect match.</li>
+          <li>For businesses, align the style with your target audience.</li>
+          <li>For gifts, choose playful or personalized designs.</li>
+        </ul>
+        <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
+          <h2 className="text-xl">1. Enter a Name to Get Started</h2>
           <FormGroup className="mb-12">
             <label>Name</label>
             <Input
@@ -153,9 +143,8 @@ const GeneratePage: NextPage = () => {
             />
           </FormGroup>
 
-          <h2 className="text-xl">2. Pick your style</h2>
+          <h2 className="text-xl">2. Choose Your Favorite Style</h2>
           <div className="mb-12">
-            {/* Tabs */}
             <div className="flex border-b mb-4">
               {Object.keys(stylesData).map((style) => (
                 <button
@@ -172,9 +161,7 @@ const GeneratePage: NextPage = () => {
                 </button>
               ))}
             </div>
-
-            {/* Image Grid */}
-            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-30">
+            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4">
               {stylesData[activeTab].map(({ src, basePrompt }, index) => (
                 <div
                   key={index}
@@ -182,14 +169,13 @@ const GeneratePage: NextPage = () => {
                     selectedImage === src ? "ring-4 ring-blue-500" : ""
                   }`}
                 >
-                  {/* Image */}
                   <img
                     src={src}
                     alt={basePrompt}
                     className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
                     onClick={() => handleImageSelect(basePrompt, src)}
                   />
-                  {/* View Icon Button */}
+                  {/* Add View Button */}
                   <button
                     onClick={() => openPopup(src)}
                     className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
@@ -202,7 +188,7 @@ const GeneratePage: NextPage = () => {
             </div>
           </div>
 
-          <h2 className="text-xl">3. How many do you want?</h2>
+          <h2 className="text-xl">3. Select How Many Designs You Want</h2>
           <FormGroup className="mb-12">
             <label>Number of images</label>
             <Input
@@ -224,55 +210,37 @@ const GeneratePage: NextPage = () => {
             isLoading={generateIcon.isLoading}
             disabled={generateIcon.isLoading}
           >
-            Submit
+            {isLoggedIn ? "Generate" : "Log in to Generate"}
           </Button>
         </form>
 
         {imagesUrl.length > 0 && (
           <>
-            <h2 className="text-xl">Your images</h2>
+            <h2 className="text-xl mt-8">Your Custom Name Designs</h2>
             <section className="grid grid-cols-4 gap-4 mb-12">
               {imagesUrl.map(({ imageUrl }, index) => (
-                <div key={index} className="relative rounded shadow-md hover:shadow-lg transition">
-                {/* Buttons at Top-Right */}
-                <div className="absolute top-0 right-0 flex gap-0">
-                  {/* Fullscreen Button */}
-                  <button
-                    onClick={() => openPopup(imageUrl)}
-                    className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                    title="View Fullscreen"
-                  >
-                    🔍
-                  </button>
-              
-                  {/* Download Button */}
-                  <button
-                    onClick={() => {
-                      handleDownload(imageUrl).catch((error) => {
-                        console.error("Error downloading the image:", error);
-                      });
-                    }}
-                    className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                    title="Download Image"
-                  >
-                    ⬇️
-                  </button>
-
-                    {/* Share Button 
+                <div
+                  key={index}
+                  className="relative rounded shadow-md hover:shadow-lg transition"
+                >
+                  <div className="absolute top-0 right-0 flex gap-0">
+                    <button
+                      onClick={() => openPopup(imageUrl)}
+                      className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                      title="View Fullscreen"
+                    >
+                      🔍
+                    </button>
                     <button
                       onClick={() => {
-                        handleShare(imageUrl).catch((error) => {
-                          console.error("Error sharing the image:", error);
-                        });
+                        void handleDownload(imageUrl);
                       }}
-                      className="bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 focus:outline-none"
-                      title="Share Image"
+                      className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                      title="Download Image"
                     >
-                      🔗
-                    </button>*/}
+                      ⬇️
+                    </button>
                   </div>
-
-                  {/* Generated Image */}
                   <Image
                     src={imageUrl}
                     alt="Generated output"
@@ -286,7 +254,6 @@ const GeneratePage: NextPage = () => {
           </>
         )}
 
-        {/* Popup Modal */}
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">

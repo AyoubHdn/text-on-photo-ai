@@ -81,7 +81,7 @@ const CollectionPage: NextPage = () => {
                 {/* View Button */}
                 <button
                   onClick={() => openPopup(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`)}
-                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2 rounded"
+                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="View Fullscreen"
                 >
                   🔍
@@ -91,7 +91,7 @@ const CollectionPage: NextPage = () => {
                   onClick={() => {
                     void handleDownload(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`);
                   }}
-                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2 rounded"
+                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="Download"
                 >
                   ⬇️
