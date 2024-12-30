@@ -27,7 +27,7 @@ const HomePage: NextPage = () => {
     );
   }
 
-  function StatisticsSection() {
+  {/*function StatisticsSection() {
     return (
       <section className="py-12 text-center">
         <h2 className="text-4xl font-bold">Join Thousands of Creators!</h2>
@@ -36,7 +36,7 @@ const HomePage: NextPage = () => {
         </p>
       </section>
     );
-  }
+  }*/}
 
   function DemoSection() {
     return (
@@ -87,7 +87,7 @@ const HomePage: NextPage = () => {
     );
   }
 
-  function TestimonialsSection() {
+  {/*function TestimonialsSection() {
     return (
       <section className="py-12 px-8">
         <h2 className="text-4xl font-bold text-center mb-8">What Our Users Are Saying</h2>
@@ -107,7 +107,7 @@ const HomePage: NextPage = () => {
         </div>
       </section>
     );
-  }
+  }*/}
 
   return (
     <>
