@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 
 const TermsOfService: React.FC = () => {
   return (
@@ -47,7 +48,7 @@ const TermsOfService: React.FC = () => {
 
             <h2 className="text-2xl font-bold mt-10">Refund Policy</h2>
             <p>
-              By purchasing credits, you agree to the <a href="/refund" className="text-gray-200 underline">Refund Policy</a>. Ensure you understand the limitations of AI-generated designs before purchasing.
+              By purchasing credits, you agree to the <Link href="/refund" className="text-gray-200 underline">Refund Policy</Link>. Ensure you understand the limitations of AI-generated designs before purchasing.
             </p>
 
             <h2 className="text-2xl font-bold mt-10">Termination</h2>
