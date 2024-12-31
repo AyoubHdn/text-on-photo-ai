@@ -47,7 +47,7 @@ const HomePage: NextPage = () => {
             className="rounded-lg shadow-lg"
             controls
             width="640"
-            src="/demo.mp4"
+            src="/tuto.mp4"
             poster="/video-thumbnail.png"
           >
             Your browser does not support the video tag.
