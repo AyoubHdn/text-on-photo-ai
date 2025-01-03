@@ -64,7 +64,7 @@ const CollectionPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-4 px-8">
-        <h1 className="text-4xl">Your Icons</h1>
+        <h1 className="text-4xl">Your images</h1>
 
         <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
           {icons.data?.map((icon) => (
