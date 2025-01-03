@@ -81,18 +81,34 @@ const GeneratePage: NextPage = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = "generated_image.png";
-      link.click();
-
-      window.URL.revokeObjectURL(blobUrl);
+  
+      // Convert to PNG if needed
+      const imageBitmap = await createImageBitmap(blob);
+      const canvas = document.createElement("canvas");
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.drawImage(imageBitmap, 0, 0);
+        const pngBlob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, "image/png")
+        );
+        if (pngBlob) {
+          const blobUrl = window.URL.createObjectURL(pngBlob);
+  
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.download = "design-name-ai.png";
+          link.click();
+  
+          window.URL.revokeObjectURL(blobUrl);
+        }
+      }
     } catch (error) {
       console.error("Error downloading the image:", error);
     }
   };
+  
 
   const openPopup = (imageUrl: string) => {
     setPopupImage(imageUrl); // Open the popup
