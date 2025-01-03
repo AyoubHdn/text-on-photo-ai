@@ -24,7 +24,7 @@ export const checkoutRouter = createTRPCRouter({
 
     try {
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card", "us_bank_account"],
+        payment_method_types: ["card"],
         metadata: {
           userId: ctx.session.user.id,
         },
