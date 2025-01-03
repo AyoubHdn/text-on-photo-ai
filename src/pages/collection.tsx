@@ -44,7 +44,7 @@ const CollectionPage: NextPage = () => {
 
         const link = document.createElement("a");
         link.href = blobUrl;
-        link.download = "design-name-ai.png"; // Customize filename
+        link.download = "name-design-ai.png"; // Customize filename
         link.click();
 
         window.URL.revokeObjectURL(blobUrl);

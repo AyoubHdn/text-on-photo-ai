@@ -98,7 +98,7 @@ const GeneratePage: NextPage = () => {
   
           const link = document.createElement("a");
           link.href = blobUrl;
-          link.download = "design-name-ai.png";
+          link.download = "name-design-ai.png";
           link.click();
   
           window.URL.revokeObjectURL(blobUrl);
