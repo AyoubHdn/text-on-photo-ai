@@ -48,7 +48,7 @@ const TermsOfService: React.FC = () => {
 
             <h2 className="text-2xl font-bold mt-10">Refund Policy</h2>
             <p>
-              By purchasing credits, you agree to the <Link href="/refund" className="text-gray-200 underline">Refund Policy</Link>. Ensure you understand the limitations of AI-generated designs before purchasing.
+              By purchasing credits, you agree to the <Link href="/refund" className="dark:text-gray-200 underline">Refund Policy</Link>. Ensure you understand the limitations of AI-generated designs before purchasing.
             </p>
 
             <h2 className="text-2xl font-bold mt-10">Termination</h2>
@@ -68,7 +68,7 @@ const TermsOfService: React.FC = () => {
               If you have any questions about these Terms, you can contact us at:
             </p>
             <p>
-              <a href="mailto:contact@namedesignai.com" className="text-gray-200 underline">
+              <a href="mailto:contact@namedesignai.com" className="dark:text-gray-200 underline">
                 contact@namedesignai.com
               </a>
             </p>

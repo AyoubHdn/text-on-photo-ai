@@ -45,7 +45,7 @@ const RefundPolicy: React.FC = () => {
               If you have any questions or concerns about this policy, you can reach us at:
             </p>
             <p>
-              <a href="mailto:contact@namedesignai.com" className="text-gray-200 underline">
+              <a href="mailto:contact@namedesignai.com" className="dark:text-gray-200 underline">
                 contact@namedesignai.com
               </a>
             </p>

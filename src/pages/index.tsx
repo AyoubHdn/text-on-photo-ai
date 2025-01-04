@@ -9,7 +9,7 @@ const HomePage: NextPage = () => {
       <section className="mt-12 mb-24 grid grid-cols-1 gap-12 px-8 sm:mt-24 sm:grid-cols-2">
         <div className="flex flex-col gap-4">
           <h1 className="text-5xl font-bold">Create Stunning Name Images!</h1>
-          <p className="text-2xl text-gray-300">
+          <p className="text-2xl text-gray-500 dark:text-gray-300">
             Transform your name into art with Name Design AI! Create stunning, personalized designs perfect for social media, branding, or self-expression. Unleash your creativity today!
           </p>
           <PrimaryLinkButton href={"/generate"} className="self-start">
@@ -59,23 +59,23 @@ const HomePage: NextPage = () => {
 
   function FeaturesSection() {
     return (
-      <section className="py-12 mb-12 bg-gray-900 rounded">
+      <section className="py-12 mb-12 bg-gray-300 dark:bg-gray-900 rounded">
         <h2 className="text-4xl font-bold text-center mb-8">Why Choose Us?</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 px-8">
           <div className="flex flex-col items-center text-center">
             <Image src="/quick.png" alt="Quick" width={64} height={64} />
             <h3 className="text-xl font-bold mt-4">Fast & Easy</h3>
-            <p className="text-gray-200 mt-2">Generate designs in seconds with just a few clicks.</p>
+            <p className="dark:text-gray-200 mt-2">Generate designs in seconds with just a few clicks.</p>
           </div>
           <div className="flex flex-col items-center text-center">
             <Image src="/styles.png" alt="Customizable" width={64} height={64} />
             <h3 className="text-xl font-bold mt-4">Diverse Styles</h3>
-            <p className="text-gray-200 mt-2">Choose from 100+ styles and unleash your creativity!</p>
+            <p className="dark:text-gray-200 mt-2">Choose from 100+ styles and unleash your creativity!</p>
           </div>
           <div className="flex flex-col items-center text-center">
             <Image src="/affordable.png" alt="Affordable" width={64} height={64} />
             <h3 className="text-xl font-bold mt-4">Affordable Pricing</h3>
-            <p className="text-gray-200 mt-2">Get high-quality designs at unbeatable prices.</p>
+            <p className="dark:text-gray-200 mt-2">Get high-quality designs at unbeatable prices.</p>
           </div>
         </div>
         <div className="mt-12 text-center">

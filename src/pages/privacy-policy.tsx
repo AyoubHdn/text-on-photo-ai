@@ -82,7 +82,7 @@ const PrivacyPolicy: React.FC = () => {
                 <strong>Website</strong>: Refers to Name Design AI, accessible from{" "}
                 <a
                   href="https://www.namedesignai.com"
-                  className="text-gray-200 underline"
+                  className="dark:text-gray-200 underline"
                   target="_blank"
                 >
                   www.namedesignai.com
@@ -138,7 +138,7 @@ const PrivacyPolicy: React.FC = () => {
               **By email**:{" "}
               <a
                 href="mailto:contact@namedesignai.com"
-                className="text-gray-200 underline"
+                className="dark:text-gray-200 underline"
               >
                 contact@namedesignai.com
               </a>

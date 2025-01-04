@@ -4,9 +4,9 @@ import { PrimaryLink } from "./PrimaryLink";
 export function Footer() {
   return (
     <footer className="dark:bg-gray-900">
-      <div className="container mx-auto grid h-24 grid-cols-4 items-center bg-gray-900 text-center">
+      <div className="container mx-auto grid h-24 grid-cols-4 items-center bg-gray-300 dark:bg-gray-900 text-center">
         <div>
-        <PrimaryLink href="/">NameDesignAi.com.com</PrimaryLink><br/>
+        <PrimaryLink href="/">NameDesignAi.com</PrimaryLink><br/>
         <Link target="_blank" href="https://hdnstudio.com/">HDN STUDIO LTD</Link>
         </div>
         <PrimaryLink href="/privacy-policy">Privacy Policy</PrimaryLink>

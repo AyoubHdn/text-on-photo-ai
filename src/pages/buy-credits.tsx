@@ -67,14 +67,14 @@ const BuyCredits: React.FC = () => {
       <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-4 px-8">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-center mb-6">Buy Credits</h1>
-          <p className="text-center text-gray-200 mb-4">
+          <p className="text-center dark:text-gray-200 mb-4">
             Please review our{" "}
-            <Link href="/refund" className="text-gray-100 underline">
+            <Link href="/refund" className="dark:text-gray-100 underline">
               Refund Policy
             </Link>{" "}
             before buying credits. We do not issue refunds at this time.
           </p>
-          <p className="text-center text-gray-300 mb-10">
+          <p className="text-center dark:text-gray-300 mb-10">
             Choose the perfect plan for your design needs.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
