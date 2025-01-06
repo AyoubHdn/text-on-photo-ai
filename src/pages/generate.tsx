@@ -34,7 +34,21 @@ const GeneratePage: NextPage = () => {
       setError(error.message);
     },
   });
+  
+  const aspectRatios = [
+    { label: "1:1", value: "1:1", visual: "aspect-square" },
+    { label: "16:9", value: "16:9", visual: "aspect-video" },
+    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
+    { label: "4:3", value: "4:3", visual: "aspect-classic" },
+  ];
 
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState("1:1");
+  
+  const [selectedModel, setSelectedModel] = useState("flux-schnell"); // Default to flux-schnell
+
+  const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null); // To store the selected style image
+
+  // Update the form submit handler
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -48,11 +62,13 @@ const GeneratePage: NextPage = () => {
       return;
     }
 
-    const finalPrompt = `${form.basePrompt.replace("Text", form.name)}`;
+    const finalPrompt = `${form.basePrompt.replace('Text', form.name)} full design`;
 
     generateIcon.mutate({
       prompt: finalPrompt,
       numberOfImages: parseInt(form.numberofImages),
+      aspectRatio: selectedAspectRatio, // Include aspect ratio
+      model: selectedModel, // Pass the selected model
     });
   };
 
@@ -66,11 +82,12 @@ const GeneratePage: NextPage = () => {
   };
 
   const handleImageSelect = (basePrompt: string, src: string) => {
-    setSelectedImage(src);
+    setSelectedImage(src); // Keeps track of the selected image
     setForm((prev) => ({
       ...prev,
       basePrompt,
     }));
+    setSelectedStyleImage(src); // Save the selected style image
     setError("");
   };
 
@@ -126,27 +143,44 @@ const GeneratePage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
-        <h1 className="text-4xl ">
-          <strong>Let’s Generate a Unique Name Design</strong>
-        </h1>
-        <p className="text-1xl mt-4">
-          Create unique name designs for social media, your brand, business
-          logos, or thoughtful gifts. Follow the steps below and bring your
-          ideas to life!
-        </p>
-        <p className="text-1xl mt-4">
-          For the best results, keep these tips in mind:
-        </p>
-        <ul className="list-disc ml-6 mt-2 text-1xl">
-          <li>
-            The design may slightly vary from the selected style to enhance
-            creativity.
-          </li>
-          <li>Use clear and simple names or phrases for better precision.</li>
-          <li>Experiment with styles to find your perfect match.</li>
-          <li>For businesses, align the style with your target audience.</li>
-          <li>For gifts, choose playful or personalized designs.</li>
-        </ul>
+      <h1 className="text-4xl ">
+        <strong>Let’s Generate a Unique Name Design</strong>
+      </h1>
+      <p className="text-1xl mt-4">
+        Create stunning name designs for social media, your brand, business logos, or thoughtful gifts. 
+        Follow the steps below and bring your ideas to life!
+      </p>
+      <p className="text-1xl mt-4">Here’s how it works:</p>
+      <ol className="list-decimal ml-6 mt-2 text-1xl">
+        <li>Enter a Name to Get Started.</li>
+        <li>Choose Your Favorite Style.</li>
+        <li>
+          Select Image Size:
+          <ul className="list-disc ml-6">
+            <li><strong>1:1</strong>: Square (ideal for profile pictures).</li>
+            <li><strong>16:9</strong>: Landscape (great for desktops and presentations).</li>
+            <li><strong>9:16</strong>: Portrait (perfect for mobile screens).</li>
+            <li><strong>4:3</strong>: Classic (suitable for versatile use).</li>
+          </ul>
+        </li>
+        <li>Select AI Model:
+          <ul className="list-disc ml-6">
+            <li><strong>Standard</strong>: Quick and cost-effective designs.</li>
+            <li><strong>Optimized</strong>: Enhanced quality for a professional finish.</li>
+          </ul>
+        </li>
+        <li>Choose How Many Designs You Want.</li>
+      </ol>
+      <p className="text-1xl mt-4">
+        For the best results, keep these tips in mind:
+      </p>
+      <ul className="list-disc ml-6 mt-2 text-1xl">
+        <li>Use clear and simple names or phrases for better precision.</li>
+        <li>Experiment with styles to find your perfect match.</li>
+        <li>Align the style with your target audience for businesses.</li>
+        <li>For gifts, select playful or personalized designs for a thoughtful touch.</li>
+      </ul>
+
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
           <h2 className="text-xl">1. Enter a Name to Get Started</h2>
           <FormGroup className="mb-12">
@@ -204,7 +238,105 @@ const GeneratePage: NextPage = () => {
             </div>
           </div>
 
-          <h2 className="text-xl">3. Select How Many Designs You Want</h2>
+          {/* Add the image size selection in the form */}
+          <h2 className="text-xl">3. Select Image Size</h2>
+          <FormGroup className="mb-12">
+            <label className="block mb-4 text-sm font-medium">Aspect Ratio</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {aspectRatios.map((ratio) => {
+                // Precompute the aspect class
+                const aspectClass =
+                  ratio.visual === "aspect-square"
+                    ? "aspect-[1/1]"
+                    : ratio.visual === "aspect-video"
+                    ? "aspect-[16/9]"
+                    : ratio.visual === "aspect-portrait"
+                    ? "aspect-[9/16]"
+                    : ratio.visual === "aspect-classic"
+                    ? "aspect-[4/3]"
+                    : "";
+
+                return (
+                  <button
+                    key={ratio.value}
+                    type="button"
+                    onClick={() => setSelectedAspectRatio(ratio.value)}
+                    className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
+                      selectedAspectRatio === ratio.value
+                        ? "border-blue-500 ring-2 ring-blue-500"
+                        : "border-gray-300 hover:border-gray-500"
+                    }`}
+                  >
+                    {/* Visual Representation */}
+                    <div
+                      className={`w-full h-21 dark:bg-gray-200 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
+                      style={{ backgroundColor: "#ddd" }}
+                    >
+                      {/* Aspect Ratio Label Inside the Shape */}
+                      <span className="text-gray-600 font-medium">{ratio.label}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </FormGroup>
+
+          <h2 className="text-xl">4. Select AI Model</h2>
+          <FormGroup className="mb-12">
+            <label className="block mb-4 text-sm font-medium">AI Model</label>
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  name: "Standard",
+                  value: "flux-schnell",
+                  cost: 1,
+                  image: selectedStyleImage || "/images/placeholder.png", // Use selected image or placeholder
+                },
+                {
+                  name: "Optimized",
+                  value: "flux-dev",
+                  cost: 2,
+                  image:
+                    selectedStyleImage && selectedStyleImage.includes(".")
+                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1") // Append 'e' before the extension
+                      : "/images/placeholder.png", // Placeholder if no image is selected
+                  badge: "Optimized", // Badge text for Flux Dev
+                },
+              ].map((model) => (
+                <button
+                  key={model.value}
+                  type="button"
+                  onClick={() => setSelectedModel(model.value)}
+                  className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
+                    selectedModel === model.value
+                      ? "border-blue-500 ring-2 ring-blue-500"
+                      : "border-gray-300 hover:border-gray-500"
+                  }`}
+                >
+                  {/* Badge for Flux Dev */}
+                  {model.badge && (
+                    <span
+                      className="absolute top-2 right-2 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-md"
+                    >
+                      {model.badge}
+                    </span>
+                  )}
+                  {/* Style Image */}
+                  <img
+                    src={model.image}
+                    alt={model.name}
+                    className="w-22 h-22 mb-2 rounded"
+                  />
+                  {/* Credit Cost */}
+                  <span className="text-sm text-gray-500 mt-2">
+                    Cost: {model.cost} credits
+                  </span>
+                </button>
+              ))}
+            </div>
+          </FormGroup>
+
+          <h2 className="text-xl">5. How Many Designs You Want</h2>
           <FormGroup className="mb-12">
             <label>Number of images</label>
             <Input

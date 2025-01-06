@@ -36,23 +36,29 @@ async function fetchAndEncodeImage(url: string): Promise<string> {
 }
 
 // Generate the image and encode it as Base64
-async function generateIcon(
+const generateIcon = async (
   prompt: string,
-  numberOfImages = 1
-): Promise<string[]> {
+  numberOfImages = 1,
+  aspectRatio = "1:1", // Default aspect ratio
+  model = "flux-schnell" // Default model
+): Promise<string[]> => {
+  const config = model === "flux-schnell"
+    ? { steps: 4, path: "black-forest-labs/flux-schnell" as `${string}/${string}` }
+    : { steps: 28, path: "black-forest-labs/flux-dev" as `${string}/${string}` };
+
   if (env.MOCK_REPLICATE === "true") {
     return Array(numberOfImages).fill(b64Image) as string[]; // Mock data for testing
   } else {
-    const output = (await replicate.run("black-forest-labs/flux-schnell", {
+    const output = (await replicate.run(config.path, {
       input: {
         prompt,
         go_fast: true,
         megapixels: "1",
         num_outputs: numberOfImages,
-        aspect_ratio: "1:1",
+        aspect_ratio: aspectRatio, // Use dynamic aspect ratio
         output_format: "webp",
         output_quality: 80,
-        num_inference_steps: 4,
+        num_inference_steps: config.steps,
       },
     })) as string[];
 
@@ -65,65 +71,82 @@ async function generateIcon(
 
     return Promise.all(output.map(fetchAndEncodeImage));
   }
-}
+};
 
+
+// Update the TRPC mutation to include `model` in the input schema
 export const generateRouter = createTRPCRouter({
   generateIcon: protectedProcedure
-  .input(
-    z.object({
-      prompt: z.string(),
-      numberOfImages: z.number().min(1).max(10),
-    })
-  )
-  .mutation(async ({ ctx, input }) => {
-    const { count } = await ctx.prisma.user.updateMany({
-      where: {
-        id: ctx.session.user.id,
-        credits: {
-          gte: input.numberOfImages,
-        },
-      },
-      data: {
-        credits: {
-          decrement: input.numberOfImages,
-        },
-      },
-    });
-
-    if (count <= 0) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "You do not have enough credits",
-      });
-    }
-
-    const b64Images: string[] = await generateIcon(input.prompt, input.numberOfImages);
-
-    const createdIcons = await Promise.all(
-      b64Images.map(async (image: string) => {
-        const icon = await ctx.prisma.icon.create({
-          data: {
-            prompt: input.prompt,
-            userId: ctx.session.user.id,
-          },
-        });
-
-        await s3
-          .putObject({
-            Bucket: BACKET_NAME,
-            Body: Buffer.from(image, "base64"),
-            Key: icon.id,
-            ContentEncoding: "base64",
-            ContentType: "image/webp",
-          })
-          .promise();
-
-        return icon;
+    .input(
+      z.object({
+        prompt: z.string(),
+        numberOfImages: z.number().min(1).max(10),
+        aspectRatio: z.string().optional(), // Add aspect ratio
+        model: z.string(), // Add model selection
       })
-    );
+    )
+    .mutation(async ({ ctx, input }) => {
+      const modelConfig =
+        input.model === "flux-schnell"
+          ? { credits: 1 }
+          : { credits: 4 };
 
-    return createdIcons.map((icon) => ({
-      imageUrl: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
-    }));
-  }),
+      const totalCredits = modelConfig.credits * input.numberOfImages;
+
+      // Check if the user has enough credits
+      const { count } = await ctx.prisma.user.updateMany({
+        where: {
+          id: ctx.session.user.id,
+          credits: {
+            gte: totalCredits,
+          },
+        },
+        data: {
+          credits: {
+            decrement: totalCredits,
+          },
+        },
+      });
+
+      if (count <= 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You do not have enough credits",
+        });
+      }
+
+      const b64Images: string[] = await generateIcon(
+        input.prompt,
+        input.numberOfImages,
+        input.aspectRatio, // Pass aspect ratio
+        input.model // Pass model
+      );
+
+      const createdIcons = await Promise.all(
+        b64Images.map(async (image: string) => {
+          const icon = await ctx.prisma.icon.create({
+            data: {
+              prompt: input.prompt,
+              userId: ctx.session.user.id,
+            },
+          });
+
+          await s3
+            .putObject({
+              Bucket: BACKET_NAME,
+              Body: Buffer.from(image, "base64"),
+              Key: icon.id,
+              ContentEncoding: "base64",
+              ContentType: "image/webp",
+            })
+            .promise();
+
+          return icon;
+        })
+      );
+
+      return createdIcons.map((icon) => ({
+        imageUrl: `https://${BACKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
+      }));
+    }),
 });
