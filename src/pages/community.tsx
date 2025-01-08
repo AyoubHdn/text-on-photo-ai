@@ -10,12 +10,12 @@ const CommunityPage: NextPage = () => {
     return (
     <>
     <Head>
-        <title>Community images</title>
-        <meta name="description" content="your images" />
+        <title>Community Gallery | User-Generated Images on Name Design AI</title>
+        <meta name="description" content="Browse all user-generated images on Name Design AI. Explore creative designs crafted by our community and find inspiration for your next project." />
         <link rel="icon" href="/favicon.ico" />
     </Head>
     <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-4 px-8">
-        <h1 className="text-4xl">Community Images</h1>
+        <h1 className="text-4xl">Community Gallery</h1>
 
         <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
             {icons.data?.map((icon) => (

@@ -4,7 +4,7 @@ const PrivacyPolicy: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Privacy Policy - Name Design AI</title>
+        <title>Privacy Policy | Name Design AI</title>
         <meta
           name="description"
           content="Read our Privacy Policy at Name Design AI to understand how we handle your data."

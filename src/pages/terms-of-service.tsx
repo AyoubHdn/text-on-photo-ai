@@ -5,7 +5,7 @@ const TermsOfService: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Terms of Service - Name Design AI</title>
+        <title>Terms of Service | Name Design AI</title>
         <meta
           name="description"
           content="Read our Terms of Service to understand the conditions of using Name Design AI."

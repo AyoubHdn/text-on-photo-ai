@@ -59,12 +59,12 @@ const CollectionPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Your images</title>
-        <meta name="description" content="your images" />
+        <title>Your Generated Images | Name Design AI</title>
+        <meta name="description" content="View, download, and manage your generated images on Name Design AI. Access your personalized designs anytime, anywhere." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-4 px-8">
-        <h1 className="text-4xl">Your images</h1>
+        <h1 className="text-4xl">Your Generated Images</h1>
 
         <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
           {icons.data?.map((icon) => (
