@@ -31,13 +31,13 @@ const GeneratePage: NextPage = () => {
 
   // Update `activeSubTab` whenever `activeTab` changes
   useEffect(() => {
-    const firstSubTab = stylesData && stylesData[activeTab]
-      ? Object.keys(stylesData[activeTab])[0] || ""
-      : "";
+    const firstSubTab =
+      stylesData && stylesData[activeTab]
+        ? Object.keys(stylesData[activeTab] || {})[0] || ""
+        : "";
     setActiveSubTab(firstSubTab);
   }, [activeTab, stylesData]);
   
-
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [popupImage, setPopupImage] = useState<string | null>(null); // State for the popup image
 
