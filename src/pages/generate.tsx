@@ -25,7 +25,7 @@ const GeneratePage: NextPage = () => {
 
   const [activeTab, setActiveTab] = useState<keyof typeof stylesData>("Themes");
   const [activeSubTab, setActiveSubTab] = useState<string>(() => {
-    const firstTabData = stylesData["Modern"];
+    const firstTabData = stylesData["Themes"];
     return firstTabData ? Object.keys(firstTabData)[0] || "" : "";
   });
 
