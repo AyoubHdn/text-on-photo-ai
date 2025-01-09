@@ -23,10 +23,12 @@ const GeneratePage: NextPage = () => {
   const [error, setError] = useState("");
   const [imagesUrl, setImagesUrl] = useState<{ imageUrl: string }[]>([]);
 
-  const [activeTab, setActiveTab] = useState<keyof typeof stylesData>("Themes");
+  const [activeTab, setActiveTab] = useState<keyof typeof stylesData>(
+    Object.keys(stylesData)[0] as keyof typeof stylesData // Default to the first key in `stylesData`
+  );
   const [activeSubTab, setActiveSubTab] = useState<string>(() => {
-    const firstTabData = stylesData["Themes"];
-    return firstTabData ? Object.keys(firstTabData)[0] || "" : "";
+  const firstTabData = stylesData["Themes"];
+  return firstTabData ? Object.keys(firstTabData)[0] || "" : "";
   });
 
   // Update `activeSubTab` whenever `activeTab` changes
@@ -36,7 +38,7 @@ const GeneratePage: NextPage = () => {
         ? Object.keys(stylesData[activeTab] || {})[0] || ""
         : "";
     setActiveSubTab(firstSubTab);
-  }, [activeTab, stylesData]);
+  }, [activeTab, stylesData]);  
   
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [popupImage, setPopupImage] = useState<string | null>(null); // State for the popup image
@@ -50,7 +52,7 @@ const GeneratePage: NextPage = () => {
       setError(error.message);
     },
   });
-  
+
   const aspectRatios = [
     { label: "1:1", value: "1:1", visual: "aspect-square" },
     { label: "16:9", value: "16:9", visual: "aspect-video" },
@@ -232,7 +234,7 @@ const GeneratePage: NextPage = () => {
             {/* Subcategories */}
             <div className="flex flex-wrap border-b mb-4 mt-0">
               {stylesData[activeTab] &&
-                Object.keys(stylesData[activeTab]).map((subcategory) => (
+                Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
                   <button
                     key={subcategory}
                     type="button"
