@@ -12,7 +12,7 @@ const HomePage: NextPage = () => {
           <p className="text-2xl text-gray-500 dark:text-gray-300">
             Transform your name into art with Name Design AI! Create stunning, personalized designs perfect for social media, branding, or self-expression. Unleash your creativity today!
           </p>
-          <PrimaryLinkButton href={"/generate"} className="self-start">
+          <PrimaryLinkButton href={"/generate"} className="self-start" id="generate-your-image-button-heroBanner">
             Generate your image
           </PrimaryLinkButton>
         </div>
@@ -79,7 +79,7 @@ const HomePage: NextPage = () => {
           </div>
         </div>
         <div className="mt-12 text-center">
-          <PrimaryLinkButton href="/generate" className="inline-block px-8 py-4 text-lg font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+          <PrimaryLinkButton id="start-generating-now-button-featuresSection" href="/generate" className="inline-block px-8 py-4 text-lg font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
             Start Generating Now
           </PrimaryLinkButton>
         </div>

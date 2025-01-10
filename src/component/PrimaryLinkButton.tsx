@@ -3,7 +3,7 @@ import Link, {type LinkProps } from "next/link";
 import {type ReactNode } from "react";
 
 export function PrimaryLinkButton(
-    props: LinkProps & { children: ReactNode; className?: string}
+    props: LinkProps & { children: ReactNode; className?: string; id?: string}
 ) {
     const {className, ...propsWithoutClassname} = props;
     return (

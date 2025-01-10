@@ -56,18 +56,18 @@ export function Header() {
                     </PrimaryLink>
                 </li>
                 <li>
-                    <PrimaryLink href="/generate" className="hidden md:block">
+                    <PrimaryLink id="generate-header-button" href="/generate" className="hidden md:block">
                         Generate
                     </PrimaryLink>
                 </li>
                 <li>
-                    <PrimaryLink href="/community" className="hidden md:block">
+                    <PrimaryLink id="community-header-button" href="/community" className="hidden md:block">
                         Community
                     </PrimaryLink>
                 </li>
                 {isLoggedIn && (
                     <li>
-                        <PrimaryLink href="/collection" className="hidden md:block">
+                        <PrimaryLink id="collection-header-button" href="/collection" className="hidden md:block">
                             Collection
                         </PrimaryLink>
                     </li>
@@ -83,18 +83,19 @@ export function Header() {
                             <span className="text-sm font-medium text-gray-500">Credits</span>
                         </li>
                         <li>
-                            <PrimaryLink href="/buy-credits">
+                            <PrimaryLink id="buy-credits-header-button" href="/buy-credits">
                                 <Button>Buy Credits</Button>
                             </PrimaryLink>
                         </li>
                         <li>
                             <Button
+                                id="SignOut-header-button"
                                 variant="secondary"
                                 onClick={() => {
                                     signOut().catch(console.error);
                                 }}
                             >
-                                Logout
+                                Sign Out
                             </Button>
                         </li>
                     </>
@@ -102,11 +103,12 @@ export function Header() {
                 {!isLoggedIn && (
                     <li>
                         <Button
+                            id="signIn-header-button"
                             onClick={() => {
                                 signIn().catch(console.error);
                             }}
                         >
-                            Login
+                            Sign In
                         </Button>
                     </li>
                 )}
@@ -126,6 +128,7 @@ export function Header() {
                             <>
                                 <li>
                                     <Link
+                                        id="buy-credits-header-button"
                                         href="/buy-credits"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
@@ -135,6 +138,7 @@ export function Header() {
                                 </li>
                                 <li>
                                     <Link
+                                        id="generate-header-button"
                                         href="/generate"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
@@ -144,6 +148,7 @@ export function Header() {
                                 </li>
                                 <li>
                                     <Link
+                                        id="community-header-button"
                                         href="/community"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
@@ -153,6 +158,7 @@ export function Header() {
                                 </li>
                                 <li>
                                     <Link
+                                        id="collection-header-button"
                                         href="/collection"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
@@ -162,6 +168,7 @@ export function Header() {
                                 </li>
                                 <li>
                                     <button
+                                        id="SignOut-header-button"
                                         onClick={() => {
                                             signOut().catch(console.error);
                                             setIsDropdownOpen(false);
@@ -177,17 +184,19 @@ export function Header() {
                             <>
                                 <li>
                                     <button
+                                        id="SignIn-header-button"
                                         onClick={() => {
                                             signIn().catch(console.error);
                                             setIsDropdownOpen(false);
                                         }}
                                         className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700"
                                     >
-                                        Login
+                                        Sign In
                                     </button>
                                 </li>
                                 <li>
                                     <Link
+                                        id="generate-header-button"
                                         href="/generate"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
@@ -197,6 +206,7 @@ export function Header() {
                                 </li>
                                 <li>
                                     <Link
+                                        id="community-header-button"
                                         href="/community"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
