@@ -300,7 +300,7 @@ const GeneratePage: NextPage = () => {
                   <button
                     key={ratio.value}
                     type="button"
-                    id={`aspect-${ratio.value}`} // Add a unique ID
+                    id={`aspect-${ratio.value || 'default'}`}
                     onClick={() => setSelectedAspectRatio(ratio.value)}
                     className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                       selectedAspectRatio === ratio.value
@@ -349,7 +349,7 @@ const GeneratePage: NextPage = () => {
                 <button
                   key={model.value}
                   type="button"
-                  id={model.id} // Add unique ID
+                  id={model.id || `model-${model.value || 'default'}`}
                   onClick={() => setSelectedModel(model.value)}
                   className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
