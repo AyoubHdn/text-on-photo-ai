@@ -219,7 +219,8 @@ const GeneratePage: NextPage = () => {
               <button
                 key={category}
                 type="button"
-                onClick={() => setActiveTab(category)} // TypeScript already infers the correct type
+                onClick={() => setActiveTab(category)}
+                data-category={category}
                 className={`px-4 py-2 ${
                   activeTab === category
                     ? "font-semibold border-b-2 border-blue-500 text-blue-500"
@@ -231,50 +232,51 @@ const GeneratePage: NextPage = () => {
             ))}
           </div>
 
-            {/* Subcategories */}
-            <div className="flex flex-wrap border-b mb-4 mt-0">
-              {stylesData[activeTab] &&
-                Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
-                  <button
-                    key={subcategory}
-                    type="button"
-                    onClick={() => setActiveSubTab(subcategory)}
-                    className={`px-4 py-2 ${
-                      activeSubTab === subcategory
-                        ? "text-sm border-b-2 border-purple-300 text-purple-300"
-                        : " text-sm text-gray-500"
-                    }`}
-                  >
-                    {subcategory}
-                  </button>
-                ))}
-            </div>
-
-            {/* Display designs for selected subcategory */}
-            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4">
-              {stylesData[activeTab]?.[activeSubTab]?.map(({ src, basePrompt }, index) => (
-                <div
-                  key={index}
-                  className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
-                    selectedImage === src ? "ring-4 ring-blue-500" : ""
+          <div className="flex flex-wrap border-b mb-4 mt-0">
+            {stylesData[activeTab] &&
+              Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
+                <button
+                  key={subcategory}
+                  type="button"
+                  onClick={() => setActiveSubTab(subcategory)}
+                  data-subcategory={subcategory}
+                  className={`px-4 py-2 ${
+                    activeSubTab === subcategory
+                      ? "text-sm border-b-2 border-purple-300 text-purple-300"
+                      : " text-sm text-gray-500"
                   }`}
                 >
-                  <img
-                    src={src}
-                    alt={basePrompt}
-                    className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
-                    onClick={() => handleImageSelect(basePrompt, src)}
-                  />
-                  <button
-                    onClick={() => openPopup(src)}
-                    className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                    title="View Fullscreen"
-                  >
-                    🔍
-                  </button>
-                </div>
+                  {subcategory}
+                </button>
               ))}
-            </div>
+          </div>
+
+          <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            {stylesData[activeTab]?.[activeSubTab]?.map(({ src, basePrompt }, index) => (
+              <div
+                key={index}
+                className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
+                  selectedImage === src ? "ring-4 ring-blue-500" : ""
+                }`}
+              >
+                <img
+                  src={src}
+                  alt={basePrompt}
+                  data-image={src}
+                  className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
+                  onClick={() => handleImageSelect(basePrompt, src)}
+                />
+                <button
+                  onClick={() => openPopup(src)}
+                  className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                  title="View Fullscreen"
+                >
+                  🔍
+                </button>
+              </div>
+            ))}
+          </div>
+
           </div>
 
           {/* Add the image size selection in the form */}
