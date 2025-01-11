@@ -65,29 +65,40 @@ const GeneratePage: NextPage = () => {
   const [selectedModel, setSelectedModel] = useState("flux-schnell"); // Default to flux-schnell
 
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null); // To store the selected style image
-
-  // Update the form submit handler
+  
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-
+  
     if (!isLoggedIn) {
-      signIn().catch(console.error); // Redirect to login
+      signIn().catch(console.error);
       return;
     }
-
+  
     if (!form.name || !form.basePrompt) {
       setError("Please type your name and select a style.");
       return;
     }
-
-    const finalPrompt = `${form.basePrompt.replace('Text', form.name)} full design`;
-
+  
+    // Initialize and push to dataLayer
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "form_submission",
+      category: activeTab,
+      subcategory: activeSubTab,
+      styleImage: selectedImage || "none",
+      aspectRatio: selectedAspectRatio,
+      model: selectedModel,
+      numberOfVariants: form.numberofImages,
+    });
+  
+    const finalPrompt = `${form.basePrompt.replace("Text", form.name)} full design`;
+  
     generateIcon.mutate({
       prompt: finalPrompt,
-      numberOfImages: parseInt(form.numberofImages),
-      aspectRatio: selectedAspectRatio, // Include aspect ratio
-      model: selectedModel, // Pass the selected model
+      numberOfImages: parseInt(form.numberofImages, 10),
+      aspectRatio: selectedAspectRatio,
+      model: selectedModel,
     });
   };
 
@@ -349,7 +360,7 @@ const GeneratePage: NextPage = () => {
                 <button
                   key={model.value}
                   type="button"
-                  data-model-id={`ai-model-${model.name || 'default'}`} // Unique data attribute
+                  id={`ai-model-${model.name || 'default'}`}
                   onClick={() => setSelectedModel(model.value)}
                   className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
@@ -369,6 +380,7 @@ const GeneratePage: NextPage = () => {
                   <img
                     src={model.image}
                     alt={model.name}
+                    
                     className="w-22 h-22 mb-2 rounded"
                   />
                   {/* Credit Cost */}
