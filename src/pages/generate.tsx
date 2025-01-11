@@ -213,70 +213,69 @@ const GeneratePage: NextPage = () => {
 
           <h2 className="text-xl">2. Choose Your Favorite Style</h2>
           <div className="mb-12">
-          {/* Categories */}
-          <div className="flex flex-wrap border-b mb-0">
-            {Object.keys(stylesData).map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setActiveTab(category)}
-                data-category={category}
-                className={`px-4 py-2 ${
-                  activeTab === category
-                    ? "font-semibold border-b-2 border-blue-500 text-blue-500"
-                    : "font-semibold text-gray-500"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap border-b mb-4 mt-0">
-            {stylesData[activeTab] &&
-              Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
+            {/* Categories */}
+            <div className="flex flex-wrap border-b mb-0">
+              {Object.keys(stylesData).map((category) => (
                 <button
-                  key={subcategory}
+                  key={category}
                   type="button"
-                  onClick={() => setActiveSubTab(subcategory)}
-                  data-subcategory={subcategory}
+                  onClick={() => setActiveTab(category)}
+                  id={category}
                   className={`px-4 py-2 ${
-                    activeSubTab === subcategory
-                      ? "text-sm border-b-2 border-purple-300 text-purple-300"
-                      : " text-sm text-gray-500"
+                    activeTab === category
+                      ? "font-semibold border-b-2 border-blue-500 text-blue-500"
+                      : "font-semibold text-gray-500"
                   }`}
                 >
-                  {subcategory}
+                  {category}
                 </button>
               ))}
-          </div>
+            </div>
 
-          <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4">
-            {stylesData[activeTab]?.[activeSubTab]?.map(({ src, basePrompt }, index) => (
-              <div
-                key={index}
-                className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
-                  selectedImage === src ? "ring-4 ring-blue-500" : ""
-                }`}
-              >
-                <img
-                  src={src}
-                  alt={basePrompt}
-                  data-image={src}
-                  className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
-                  onClick={() => handleImageSelect(basePrompt, src)}
-                />
-                <button
-                  onClick={() => openPopup(src)}
-                  className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                  title="View Fullscreen"
+            <div className="flex flex-wrap border-b mb-4 mt-0">
+              {stylesData[activeTab] &&
+                Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
+                  <button
+                    key={subcategory}
+                    type="button"
+                    onClick={() => setActiveSubTab(subcategory)}
+                    id={subcategory}
+                    className={`px-4 py-2 ${
+                      activeSubTab === subcategory
+                        ? "text-sm border-b-2 border-purple-300 text-purple-300"
+                        : " text-sm text-gray-500"
+                    }`}
+                  >
+                    {subcategory}
+                  </button>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4">
+              {stylesData[activeTab]?.[activeSubTab]?.map(({ src, basePrompt }, index) => (
+                <div
+                  key={index}
+                  className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
+                    selectedImage === src ? "ring-4 ring-blue-500" : ""
+                  }`}
                 >
-                  🔍
-                </button>
-              </div>
-            ))}
-          </div>
-
+                  <img
+                    src={src}
+                    alt={basePrompt}
+                    id={src}
+                    className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
+                    onClick={() => handleImageSelect(basePrompt, src)}
+                  />
+                  <button
+                    onClick={() => openPopup(src)}
+                    className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                    title="View Fullscreen"
+                  >
+                    🔍
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Add the image size selection in the form */}
@@ -301,6 +300,7 @@ const GeneratePage: NextPage = () => {
                   <button
                     key={ratio.value}
                     type="button"
+                    id={`aspect-${ratio.value}`} // Add a unique ID
                     onClick={() => setSelectedAspectRatio(ratio.value)}
                     className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                       selectedAspectRatio === ratio.value
@@ -331,22 +331,25 @@ const GeneratePage: NextPage = () => {
                   name: "Standard",
                   value: "flux-schnell",
                   cost: 1,
-                  image: selectedStyleImage || "/images/placeholder.png", // Use selected image or placeholder
+                  id: "ai-model-standard", // Unique ID for Standard model
+                  image: selectedStyleImage || "/images/placeholder.png",
                 },
                 {
                   name: "Optimized",
                   value: "flux-dev",
                   cost: 2,
+                  id: "ai-model-optimized", // Unique ID for Optimized model
                   image:
                     selectedStyleImage && selectedStyleImage.includes(".")
-                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1") // Append 'e' before the extension
-                      : "/images/placeholder.png", // Placeholder if no image is selected
-                  badge: "Optimized", // Badge text for Flux Dev
+                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
+                      : "/images/placeholder.png",
+                  badge: "Optimized",
                 },
               ].map((model) => (
                 <button
                   key={model.value}
                   type="button"
+                  id={model.id} // Add unique ID
                   onClick={() => setSelectedModel(model.value)}
                   className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
