@@ -349,7 +349,7 @@ const GeneratePage: NextPage = () => {
                 <button
                   key={model.value}
                   type="button"
-                  id={model.id || `model-${model.value || 'default'}`}
+                  data-model-id={`ai-model-${model.name || 'default'}`} // Unique data attribute
                   onClick={() => setSelectedModel(model.value)}
                   className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
