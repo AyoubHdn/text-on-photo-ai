@@ -1,8 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 
 const SuccessPage: React.FC = () => {
   const router = useRouter();
+
+  useEffect(() => {
+    // Inject Google Ads conversion tracking script
+    const gtagEvent = () => {
+      if (typeof window !== "undefined" && window.gtag) {
+        window.gtag('event', 'conversion', {
+          'send_to': 'AW-794176708/x-pvCNj1_IMaEMTZ2PoC',
+          'value': 1.0,
+          'currency': 'MAD',
+          'transaction_id': '' // Pass the transaction ID if available
+        });
+      }
+    };
+    
+    gtagEvent();
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -13,7 +29,7 @@ const SuccessPage: React.FC = () => {
         </p>
         <button
           className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-          onClick={() => {void router.push("/generate")}}
+          onClick={() => { void router.push("/generate") }}
         >
           Start Generating Designs
         </button>
