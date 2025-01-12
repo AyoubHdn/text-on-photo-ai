@@ -101,6 +101,7 @@ const BuyCredits: React.FC = () => {
                   Only ${offer.pricePerImage}/image
                 </p>
                 <button
+                  id={`plan-${offer.plan || 'default'}`}
                   onClick={() => {
                     void handleBuy(offer.plan);
                   }}

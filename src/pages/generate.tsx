@@ -311,7 +311,7 @@ const GeneratePage: NextPage = () => {
                   <button
                     key={ratio.value}
                     type="button"
-                    data-aspect={`aspect-${ratio.value || 'default'}`}
+                    id={`aspect-${ratio.value || 'default'}`}
                     onClick={() => setSelectedAspectRatio(ratio.value)}
                     className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                       selectedAspectRatio === ratio.value

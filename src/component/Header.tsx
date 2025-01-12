@@ -83,8 +83,8 @@ export function Header() {
                             <span className="text-sm font-medium text-gray-500">Credits</span>
                         </li>
                         <li>
-                            <PrimaryLink id="buy-credits-header-button" href="/buy-credits">
-                                <Button>Buy Credits</Button>
+                            <PrimaryLink href="/buy-credits">
+                                <Button id="buy-credits-header-button" >Buy Credits</Button>
                             </PrimaryLink>
                         </li>
                         <li>
