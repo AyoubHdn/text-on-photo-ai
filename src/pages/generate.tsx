@@ -289,51 +289,7 @@ const GeneratePage: NextPage = () => {
             </div>
           </div>
 
-          {/* Add the image size selection in the form */}
-          <h2 className="text-xl">3. Select Image Size</h2>
-          <FormGroup className="mb-12">
-            <label className="block mb-4 text-sm font-medium">Aspect Ratio</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {aspectRatios.map((ratio) => {
-                // Precompute the aspect class
-                const aspectClass =
-                  ratio.visual === "aspect-square"
-                    ? "aspect-[1/1]"
-                    : ratio.visual === "aspect-video"
-                    ? "aspect-[16/9]"
-                    : ratio.visual === "aspect-portrait"
-                    ? "aspect-[9/16]"
-                    : ratio.visual === "aspect-classic"
-                    ? "aspect-[4/3]"
-                    : "";
-
-                return (
-                  <button
-                    key={ratio.value}
-                    type="button"
-                    id={`aspect-${ratio.value || 'default'}`}
-                    onClick={() => setSelectedAspectRatio(ratio.value)}
-                    className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
-                      selectedAspectRatio === ratio.value
-                        ? "border-blue-500 ring-2 ring-blue-500"
-                        : "border-gray-300 hover:border-gray-500"
-                    }`}
-                  >
-                    {/* Visual Representation */}
-                    <div
-                      className={`w-full h-21 dark:bg-gray-200 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
-                      style={{ backgroundColor: "#ddd" }}
-                    >
-                      {/* Aspect Ratio Label Inside the Shape */}
-                      <span className="text-gray-600 font-medium">{ratio.label}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </FormGroup>
-
-          <h2 className="text-xl">4. Select AI Model</h2>
+          <h2 className="text-xl">3. Select AI Model</h2>
           <FormGroup className="mb-12">
             <label className="block mb-4 text-sm font-medium">AI Model</label>
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
@@ -389,6 +345,50 @@ const GeneratePage: NextPage = () => {
                   </span>
                 </button>
               ))}
+            </div>
+          </FormGroup>
+
+          {/* Add the image size selection in the form */}
+          <h2 className="text-xl">4. Select Image Size</h2>
+          <FormGroup className="mb-12">
+            <label className="block mb-4 text-sm font-medium">Aspect Ratio</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {aspectRatios.map((ratio) => {
+                // Precompute the aspect class
+                const aspectClass =
+                  ratio.visual === "aspect-square"
+                    ? "aspect-[1/1]"
+                    : ratio.visual === "aspect-video"
+                    ? "aspect-[16/9]"
+                    : ratio.visual === "aspect-portrait"
+                    ? "aspect-[9/16]"
+                    : ratio.visual === "aspect-classic"
+                    ? "aspect-[4/3]"
+                    : "";
+
+                return (
+                  <button
+                    key={ratio.value}
+                    type="button"
+                    id={`aspect-${ratio.value || 'default'}`}
+                    onClick={() => setSelectedAspectRatio(ratio.value)}
+                    className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
+                      selectedAspectRatio === ratio.value
+                        ? "border-blue-500 ring-2 ring-blue-500"
+                        : "border-gray-300 hover:border-gray-500"
+                    }`}
+                  >
+                    {/* Visual Representation */}
+                    <div
+                      className={`w-full h-21 dark:bg-gray-200 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
+                      style={{ backgroundColor: "#ddd" }}
+                    >
+                      {/* Aspect Ratio Label Inside the Shape */}
+                      <span className="text-gray-600 font-medium">{ratio.label}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </FormGroup>
 
