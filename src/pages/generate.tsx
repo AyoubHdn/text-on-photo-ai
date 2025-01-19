@@ -92,7 +92,7 @@ const GeneratePage: NextPage = () => {
       numberOfVariants: form.numberofImages,
     });
   
-    const finalPrompt = `${form.basePrompt.replace("Text", form.name)} full design`;
+    const finalPrompt = `${form.basePrompt.replace(/Text/g, form.name)}, designed to cover the entire screen, high resolution`;
   
     generateIcon.mutate({
       prompt: finalPrompt,
@@ -184,6 +184,12 @@ const GeneratePage: NextPage = () => {
       <ol className="list-decimal ml-6 mt-2 text-1xl">
         <li>Enter a Name to Get Started.</li>
         <li>Choose Your Favorite Style.</li>
+        <li>Select AI Model:
+          <ul className="list-disc ml-6">
+            <li><strong>Standard</strong>: Quick and cost-effective designs.</li>
+            <li><strong>Optimized</strong>: Enhanced quality for a professional finish.</li>
+          </ul>
+        </li>
         <li>
           Select Image Size:
           <ul className="list-disc ml-6">
@@ -191,12 +197,6 @@ const GeneratePage: NextPage = () => {
             <li><strong>16:9</strong>: Landscape (great for desktops and presentations).</li>
             <li><strong>9:16</strong>: Portrait (perfect for mobile screens).</li>
             <li><strong>4:3</strong>: Classic (suitable for versatile use).</li>
-          </ul>
-        </li>
-        <li>Select AI Model:
-          <ul className="list-disc ml-6">
-            <li><strong>Standard</strong>: Quick and cost-effective designs.</li>
-            <li><strong>Optimized</strong>: Enhanced quality for a professional finish.</li>
           </ul>
         </li>
         <li>Choose How Many Designs You Want.</li>
