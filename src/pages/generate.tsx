@@ -414,7 +414,7 @@ const GeneratePage: NextPage = () => {
             isLoading={generateIcon.isLoading}
             disabled={generateIcon.isLoading}
           >
-            {isLoggedIn ? "Generate" : "Log in to Generate"}
+            {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
         </form>
 
