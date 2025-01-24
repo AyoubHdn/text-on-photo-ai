@@ -120,6 +120,7 @@ Record<string, { src: string; basePrompt: string }[]>
       { src: "/styles/s63.webp", basePrompt: "A captivating and vibrant 3D illustration showcasing the name 'Text' in exquisite, ornate letters, adorned with a mesmerizing color palette of purples, pinks, aqua blues, soft glows, and shimmering stars. The name is surrounded by intricate swirls, varied-sized hearts, and iridescent purple butterflies that gracefully dance, adding a touch of elegance. Small purple roses are scattered throughout, accentuating the vivid colors. Shapes provide depth and dimension to the overall artwork, while the composition delicately leans to the right. A highly detailed, white teddy bear sits at the left side, adding a whimsical touch. Small confetti glitter is sprinkled around, and the artwork is set against a muted soft purple background. Inspired by ukiyo-e, vibrant, cinematic, illustration, ukiyo-e" },
       { src: "/styles/s129.webp", basePrompt: "A captivating 3D rendering of the 'Text' logo, featuring a hypnotic liquid-style font that mesmerizes the viewer. The distinct letters drip and flow like water, displaying a mesmerizing shimmer that transitions through various shades of blue. The dynamic effect is further amplified by the presence of water droplets of varying sizes, nestled around the logo and adding a refreshing, eye-catching dimension. This innovative design truly embodies the spirit of  'Text', standing out in a remarkable and unforgettable way., 3d render, vibrant, typography" },
       { src: "/styles/s130.webp", basePrompt: "A captivating 9D rendering of the 'Text' logo features a mesmerizing liquid-style font, with each letter appearing to flow and drip like water,creating a dynamic and vibrant shimmer. The letters dance across a rainbow spectrum, drawing the viewer's eye effortlessly. The design is further enhanced by water droplets of varying sizes, surrounding the logo and adding a refreshing, eye-catching depth. This groundbreaking and unforgettable design embodies the essence of aura, making a powerful and indelible impact on typography and visual design., vibrant, 9d render, typography" },
+      { src: "/styles/s262.webp", basePrompt: "A 3D render of a light-skinned young man's hand holding a long, shiny gold chain. The chain has a large pendant with the name 'Text' written in a script. The pendant is covered in yellow diamonds. The background is black." },
 
     ],
     Illustration: [
@@ -287,6 +288,10 @@ Record<string, { src: string; basePrompt: string }[]>
     ],
   },
   Other:{
+    Logos: [
+      { src: "/styles/s263.webp", basePrompt: "A black background with bold, cool white text for the brand 'Text'. The text 'Text' is underlined. The Last letter is replaced with a lion. The lion has its mouth open and its teeth are visible. The lion is wearing a crown"},
+      { src: "/styles/s237.webp", basePrompt: ""},
+    ],
     Landscapes: [
       { src: "/styles/s28.webp", basePrompt: "A photo of the Aydemirovna inscription written in the sand near the sea. The waves are gently lapping at the edge of the sand, gradually eroding the inscription. The inscription is written in cursive script and contains the text 'Text'. The background contains the vast, deep blue sea and a clear sky with a few clouds." },
       { src: "/styles/s29.webp", basePrompt: "A 3D logo of the text 'Text' forming an island in the middle of the ocean. Each letter is designed to appear as rugged, rocky terrain, with realistic textures and features like cliffs, greenery, and small trees. Surrounding the 'Text' island-logo are several pirate ships, their sails full as they navigate the ocean. The ocean around the logo is detailed with gentle waves, giving a sense of movement and adventure." },
@@ -322,6 +327,7 @@ Record<string, { src: string; basePrompt: string }[]>
       { src: "/styles/s245.webp", basePrompt: "A name design for 'Text' inspired by mythical animals. The text 'Text' is ornate and glowing, surrounded by dragons, unicorns, and phoenixes. The background is a starry night sky with swirling magical energy in vivid colors."},
       { src: "/styles/s246.webp", basePrompt: "A name design for 'Text' inspired by farm animals. The text 'Text' is styled in a clean, rustic font with hay and wood textures. Surrounding elements include a cow, a rooster, and a pig, with a bright barnyard backdrop featuring rolling fields."},
       { src: "/styles/s247.webp", basePrompt: "A name design for 'Text' inspired by powerful predators. The text 'Text' is bold and jagged, with claw marks and glowing eyes. Surrounding elements include a wolf, a bear, and a shark, with a dramatic, dark background accented by moonlight."},
+      { src: "/styles/s261.webp", basePrompt: "A charming, cartoon-style 3D render with the title 'Text' in 3d metallic purople, of a Border Collie taking a morning coffe. The dog is smiling and holding a cup of steaming coffee. The coffee mug has the text 'Text' in golden, along with a dog paw and a coffee bean. There's a plate with bread beside him and also a banana. The background is a minimalistic, modern design with a few lines. The overall image has a cheerful and playful atmosphere, suitable for a casual and fun environment."},
     ],
   },
 };
