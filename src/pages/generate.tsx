@@ -427,7 +427,7 @@ const GeneratePage: NextPage = () => {
                       id={subcategory}
                       className={`px-4 py-2 ${
                         activeSubTab === subcategory
-                          ? "text-sm border-b-2 border-purple-300 text-purple-300"
+                          ? "text-sm border-b-2 blue-purple-500 text-blue-500"
                           : "text-sm text-gray-500"
                       }`}
                     >
