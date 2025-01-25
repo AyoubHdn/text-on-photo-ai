@@ -1,14 +1,15 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "../component/Input";
 import { stylesData } from "../data/stylesData"; // Updated import location
 import { useSession, signIn } from "next-auth/react";
-import { useEffect } from "react";
+// 1) Import the icons you want
+import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 
 const GeneratePage: NextPage = () => {
   const { data: session } = useSession();
@@ -23,25 +24,80 @@ const GeneratePage: NextPage = () => {
   const [error, setError] = useState("");
   const [imagesUrl, setImagesUrl] = useState<{ imageUrl: string }[]>([]);
 
+  // Default to first available styleData key
   const [activeTab, setActiveTab] = useState<keyof typeof stylesData>(
-    Object.keys(stylesData)[0] as keyof typeof stylesData // Default to the first key in `stylesData`
+    Object.keys(stylesData)[0] as keyof typeof stylesData
   );
+
+  // Default subTab is the first subcategory of "Themes"
   const [activeSubTab, setActiveSubTab] = useState<string>(() => {
-  const firstTabData = stylesData["Themes"];
-  return firstTabData ? Object.keys(firstTabData)[0] || "" : "";
+    const firstTabData = stylesData["Themes"];
+    return firstTabData ? Object.keys(firstTabData)[0] || "" : "";
   });
 
-  // Update `activeSubTab` whenever `activeTab` changes
+  // Whenever activeTab changes, reset subcategory to that tab’s first item
   useEffect(() => {
     const firstSubTab =
       stylesData && stylesData[activeTab]
         ? Object.keys(stylesData[activeTab] || {})[0] || ""
         : "";
     setActiveSubTab(firstSubTab);
-  }, [activeTab, stylesData]);  
-  
+  }, [activeTab]);
+
+  // Track which style image is selected
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [popupImage, setPopupImage] = useState<string | null>(null); // State for the popup image
+
+  // Popup image state
+  const [popupImage, setPopupImage] = useState<string | null>(null);
+
+  // -- Horizontal scroll references & arrow-visibility states --
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const subcategoryScrollRef = useRef<HTMLDivElement>(null);
+
+  // Show/hide arrow states for categories
+  const [showLeftCategoryArrow, setShowLeftCategoryArrow] = useState(false);
+  const [showRightCategoryArrow, setShowRightCategoryArrow] = useState(false);
+
+  // Show/hide arrow states for subcategories
+  const [showLeftSubCategoryArrow, setShowLeftSubCategoryArrow] = useState(false);
+  const [showRightSubCategoryArrow, setShowRightSubCategoryArrow] = useState(false);
+
+  // Check scroll positions immediately on mount
+  useEffect(() => {
+    handleCategoryScroll();
+    handleSubCategoryScroll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // -- Scroll logic for categories --
+  const handleCategoryScroll = () => {
+    if (!categoryScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
+    setShowLeftCategoryArrow(scrollLeft > 0);
+    setShowRightCategoryArrow(scrollLeft < scrollWidth - clientWidth);
+  };
+
+  const scrollCategoriesLeft = () => {
+    categoryScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
+  };
+  const scrollCategoriesRight = () => {
+    categoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
+  };
+
+  // -- Scroll logic for subcategories --
+  const handleSubCategoryScroll = () => {
+    if (!subcategoryScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = subcategoryScrollRef.current;
+    setShowLeftSubCategoryArrow(scrollLeft > 0);
+    setShowRightSubCategoryArrow(scrollLeft < scrollWidth - clientWidth);
+  };
+
+  const scrollSubCategoriesLeft = () => {
+    subcategoryScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
+  };
+  const scrollSubCategoriesRight = () => {
+    subcategoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
+  };
 
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data) {
@@ -61,26 +117,26 @@ const GeneratePage: NextPage = () => {
   ];
 
   const [selectedAspectRatio, setSelectedAspectRatio] = useState("1:1");
-  
-  const [selectedModel, setSelectedModel] = useState("flux-schnell"); // Default to flux-schnell
+  const [selectedModel, setSelectedModel] = useState("flux-schnell"); // Default to "Standard" model
 
-  const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null); // To store the selected style image
-  
+  // To store the selected style image for the preview in model cards
+  const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
+
+  // Form submission
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (!isLoggedIn) {
       signIn().catch(console.error);
       return;
     }
-  
+
     if (!form.name || !form.basePrompt) {
       setError("Please type your name and select a style.");
       return;
     }
-  
-    // Initialize and push to dataLayer
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
+    // Push data to GTM dataLayer for analytics
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       event: "form_submission",
@@ -91,9 +147,9 @@ const GeneratePage: NextPage = () => {
       model: selectedModel,
       numberOfVariants: form.numberofImages,
     });
-  
+
     const finalPrompt = `${form.basePrompt.replace(/Text/g, form.name)}, designed to cover the entire screen, high resolution`;
-  
+
     generateIcon.mutate({
       prompt: finalPrompt,
       numberOfImages: parseInt(form.numberofImages, 10),
@@ -102,25 +158,27 @@ const GeneratePage: NextPage = () => {
     });
   };
 
-  const updateForm = (key: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Update form state
+  const updateForm =
+    (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm((prev) => ({
         ...prev,
         [key]: e.target.value,
       }));
     };
-  };
 
+  // When user selects a style
   const handleImageSelect = (basePrompt: string, src: string) => {
-    setSelectedImage(src); // Keeps track of the selected image
+    setSelectedImage(src); // highlight the chosen thumbnail
     setForm((prev) => ({
       ...prev,
       basePrompt,
     }));
-    setSelectedStyleImage(src); // Save the selected style image
+    setSelectedStyleImage(src); // store image for model previews
     setError("");
   };
 
+  // Download logic
   const handleDownload = async (imageUrl: string) => {
     try {
       const response = await fetch(imageUrl);
@@ -128,7 +186,7 @@ const GeneratePage: NextPage = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const blob = await response.blob();
-  
+
       // Convert to PNG if needed
       const imageBitmap = await createImageBitmap(blob);
       const canvas = document.createElement("canvas");
@@ -142,12 +200,12 @@ const GeneratePage: NextPage = () => {
         );
         if (pngBlob) {
           const blobUrl = window.URL.createObjectURL(pngBlob);
-  
+
           const link = document.createElement("a");
           link.href = blobUrl;
           link.download = "name-design-ai.png";
           link.click();
-  
+
           window.URL.revokeObjectURL(blobUrl);
         }
       }
@@ -155,61 +213,78 @@ const GeneratePage: NextPage = () => {
       console.error("Error downloading the image:", error);
     }
   };
-  
 
+  // Popup open/close
   const openPopup = (imageUrl: string) => {
-    setPopupImage(imageUrl); // Open the popup
+    setPopupImage(imageUrl);
   };
-
   const closePopup = () => {
-    setPopupImage(null); // Close the popup
+    setPopupImage(null);
   };
 
   return (
     <>
       <Head>
-      <title>Generate Name Designs Online | Name Design AI</title>
-      <meta name="description" content="Generate name designs online with Name Design AI. Easily create personalized, artistic name designs using a variety of styles, fonts, and effects." />
+        <title>Generate Name Designs Online | Name Design AI</title>
+        <meta
+          name="description"
+          content="Generate name designs online with Name Design AI. Easily create personalized, artistic name designs using a variety of styles, fonts, and effects."
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
-      <h1 className="text-4xl ">
-        <strong>Let’s Generate a Unique Name Design</strong>
-      </h1>
-      <p className="text-1xl mt-4">
-        Create stunning name designs for social media, your brand, business logos, or thoughtful gifts. 
-        Follow the steps below and bring your ideas to life!
-      </p>
-      <p className="text-1xl mt-4">Here’s how it works:</p>
-      <ol className="list-decimal ml-6 mt-2 text-1xl">
-        <li>Enter a Name to Get Started.</li>
-        <li>Choose Your Favorite Style.</li>
-        <li>Select AI Model:
-          <ul className="list-disc ml-6">
-            <li><strong>Standard</strong>: Quick and cost-effective designs.</li>
-            <li><strong>Optimized</strong>: Enhanced quality for a professional finish.</li>
-          </ul>
-        </li>
-        <li>
-          Select Image Size:
-          <ul className="list-disc ml-6">
-            <li><strong>1:1</strong>: Square (ideal for profile pictures).</li>
-            <li><strong>16:9</strong>: Landscape (great for desktops and presentations).</li>
-            <li><strong>9:16</strong>: Portrait (perfect for mobile screens).</li>
-            <li><strong>4:3</strong>: Classic (suitable for versatile use).</li>
-          </ul>
-        </li>
-        <li>Choose How Many Designs You Want.</li>
-      </ol>
-      <p className="text-1xl mt-4">
-        For the best results, keep these tips in mind:
-      </p>
-      <ul className="list-disc ml-6 mt-2 text-1xl">
-        <li>Use clear and simple names or phrases for better precision.</li>
-        <li>Experiment with styles to find your perfect match.</li>
-        <li>Align the style with your target audience for businesses.</li>
-        <li>For gifts, select playful or personalized designs for a thoughtful touch.</li>
-      </ul>
+        <h1 className="text-4xl ">
+          <strong>Let’s Generate a Unique Name Design</strong>
+        </h1>
+        <p className="text-1xl mt-4">
+          Create stunning name designs for social media, your brand, business
+          logos, or thoughtful gifts. Follow the steps below and bring your ideas
+          to life!
+        </p>
+        <p className="text-1xl mt-4">Here’s how it works:</p>
+        <ol className="list-decimal ml-6 mt-2 text-1xl">
+          <li>Enter a Name to Get Started.</li>
+          <li>Choose Your Favorite Style.</li>
+          <li>
+            Select AI Model:
+            <ul className="list-disc ml-6">
+              <li>
+                <strong>Standard</strong>: Quick and cost-effective designs.
+              </li>
+              <li>
+                <strong>Optimized</strong>: Enhanced quality for a professional
+                finish.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Select Image Size:
+            <ul className="list-disc ml-6">
+              <li>
+                <strong>1:1</strong>: Square (ideal for profile pictures).
+              </li>
+              <li>
+                <strong>16:9</strong>: Landscape (great for desktops and
+                presentations).
+              </li>
+              <li>
+                <strong>9:16</strong>: Portrait (perfect for mobile screens).
+              </li>
+              <li>
+                <strong>4:3</strong>: Classic (suitable for versatile use).
+              </li>
+            </ul>
+          </li>
+          <li>Choose How Many Designs You Want.</li>
+        </ol>
+        <p className="text-1xl mt-4">For the best results, keep these tips in mind:</p>
+        <ul className="list-disc ml-6 mt-2 text-1xl">
+          <li>Use clear and simple names or phrases for better precision.</li>
+          <li>Experiment with styles to find your perfect match.</li>
+          <li>Align the style with your target audience for businesses.</li>
+          <li>For gifts, select playful or personalized designs for a thoughtful touch.</li>
+        </ul>
 
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
           <h2 className="text-xl">1. Enter a Name/Text to Get Started</h2>
@@ -222,47 +297,176 @@ const GeneratePage: NextPage = () => {
             />
           </FormGroup>
 
+          {/* ---------------- 2. Choose Your Favorite Style ---------------- */}
           <h2 className="text-xl">2. Choose Your Favorite Style</h2>
           <div className="mb-12">
-            {/* Categories */}
-            <div className="flex flex-wrap border-b mb-0">
-              {Object.keys(stylesData).map((category) => (
+            {/* ====================== CATEGORIES (Horizontal Scroll) ====================== */}
+            <div className="relative border-b mb-0">
+              {/* Left Arrow for Categories (Using AiOutlineLeft) */}
+              {showLeftCategoryArrow && (
                 <button
-                  key={category}
                   type="button"
-                  onClick={() => setActiveTab(category)}
-                  id={category}
-                  className={`px-4 py-2 ${
-                    activeTab === category
-                      ? "font-semibold border-b-2 border-blue-500 text-blue-500"
-                      : "font-semibold text-gray-500"
-                  }`}
+                  onClick={scrollCategoriesLeft}
+                  className="
+                    absolute 
+                    left-[-1.5rem]
+                    top-1/2
+                    -translate-y-1/2
+                    w-5 h-10
+                    rounded-md
+                    bg-gray-700
+                    text-white
+                    hover:bg-gray-200
+                    border border-gray-300
+                    shadow
+                    z-10
+                    flex
+                    items-center
+                    justify-center
+                  "
+                  title="Scroll Left"
                 >
-                  {category}
+                  <AiOutlineLeft className="text-xl" />
                 </button>
-              ))}
-            </div>
+              )}
 
-            <div className="flex flex-wrap border-b mb-4 mt-0">
-              {stylesData[activeTab] &&
-                Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
+              {/* Scrollable Categories */}
+              <div
+                ref={categoryScrollRef}
+                onScroll={handleCategoryScroll}
+                className="flex overflow-x-auto whitespace-nowrap no-scrollbar"
+              >
+                {Object.keys(stylesData).map((category) => (
                   <button
-                    key={subcategory}
+                    key={category}
                     type="button"
-                    onClick={() => setActiveSubTab(subcategory)}
-                    id={subcategory}
+                    onClick={() => setActiveTab(category)}
+                    id={category}
                     className={`px-4 py-2 ${
-                      activeSubTab === subcategory
-                        ? "text-sm border-b-2 border-purple-300 text-purple-300"
-                        : " text-sm text-gray-500"
+                      activeTab === category
+                        ? "font-semibold border-b-2 border-blue-500 text-blue-500"
+                        : "font-semibold text-gray-500"
                     }`}
                   >
-                    {subcategory}
+                    {category}
                   </button>
                 ))}
+              </div>
+
+              {/* Right Arrow for Categories (Using AiOutlineRight) */}
+              {showRightCategoryArrow && (
+                <button
+                  type="button"
+                  onClick={scrollCategoriesRight}
+                  className="
+                    absolute 
+                    right-[-1.5rem]
+                    top-1/2
+                    -translate-y-1/2
+                    w-5 h-10
+                    rounded-md
+                    bg-gray-700
+                    text-white
+                    hover:bg-gray-200
+                    border border-gray-300
+                    shadow
+                    z-10
+                    flex
+                    items-center
+                    justify-center
+                  "
+                  title="Scroll Right"
+                >
+                  <AiOutlineRight className="text-xl" />
+                </button>
+              )}
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            {/* ====================== SUBCATEGORIES (Horizontal Scroll) ====================== */}
+            <div className="relative border-b mb-4 mt-0">
+              {/* Left Arrow for Subcategories (Using AiOutlineLeft) */}
+              {showLeftSubCategoryArrow && (
+                <button
+                  type="button"
+                  onClick={scrollSubCategoriesLeft}
+                  className="
+                    absolute
+                    left-[-1.5rem]
+                    top-1/2
+                    -translate-y-1/2
+                    w-5 h-10
+                    rounded-md
+                    bg-gray-700
+                    text-white
+                    hover:bg-gray-200
+                    border border-gray-300
+                    shadow
+                    z-10
+                    flex
+                    items-center
+                    justify-center
+                  "
+                  title="Scroll Left"
+                >
+                  <AiOutlineLeft className="text-xl" />
+                </button>
+              )}
+
+              {/* Scrollable Subcategories */}
+              <div
+                ref={subcategoryScrollRef}
+                onScroll={handleSubCategoryScroll}
+                className="flex overflow-x-auto whitespace-nowrap no-scrollbar"
+              >
+                {stylesData[activeTab] &&
+                  Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
+                    <button
+                      key={subcategory}
+                      type="button"
+                      onClick={() => setActiveSubTab(subcategory)}
+                      id={subcategory}
+                      className={`px-4 py-2 ${
+                        activeSubTab === subcategory
+                          ? "text-sm border-b-2 border-purple-300 text-purple-300"
+                          : "text-sm text-gray-500"
+                      }`}
+                    >
+                      {subcategory}
+                    </button>
+                  ))}
+              </div>
+
+              {/* Right Arrow for Subcategories (Using AiOutlineRight) */}
+              {showRightSubCategoryArrow && (
+                <button
+                  type="button"
+                  onClick={scrollSubCategoriesRight}
+                  className="
+                    absolute
+                    right-[-1.5rem]
+                    top-1/2
+                    -translate-y-1/2
+                    w-5 h-10
+                    rounded-md
+                    bg-gray-700
+                    text-white
+                    hover:bg-gray-200
+                    border border-gray-300
+                    shadow
+                    z-10
+                    flex
+                    items-center
+                    justify-center
+                  "
+                  title="Scroll Right"
+                >
+                  <AiOutlineRight className="text-xl" />
+                </button>
+              )}
+            </div>
+
+            {/* ====================== THUMBNAILS ====================== */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {stylesData[activeTab]?.[activeSubTab]?.map(({ src, basePrompt }, index) => (
                 <div
                   key={index}
@@ -274,7 +478,7 @@ const GeneratePage: NextPage = () => {
                     src={src}
                     alt={basePrompt}
                     id={src}
-                    className="rounded w-30 h-30 min-w-20 min-h-20 object-cover mx-auto"
+                    className="rounded w-full h-auto object-cover mx-auto"
                     onClick={() => handleImageSelect(basePrompt, src)}
                   />
                   <button
@@ -289,6 +493,7 @@ const GeneratePage: NextPage = () => {
             </div>
           </div>
 
+          {/* ---------------- 3. Select AI Model ---------------- */}
           <h2 className="text-xl">3. Select AI Model</h2>
           <FormGroup className="mb-12">
             <label className="block mb-4 text-sm font-medium">AI Model</label>
@@ -298,14 +503,14 @@ const GeneratePage: NextPage = () => {
                   name: "Standard",
                   value: "flux-schnell",
                   cost: 1,
-                  id: "ai-model-standard", // Unique ID for Standard model
+                  id: "ai-model-standard",
                   image: selectedStyleImage || "/images/placeholder.png",
                 },
                 {
                   name: "Optimized",
                   value: "flux-dev",
                   cost: 2,
-                  id: "ai-model-optimized", // Unique ID for Optimized model
+                  id: "ai-model-optimized",
                   image:
                     selectedStyleImage && selectedStyleImage.includes(".")
                       ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
@@ -316,7 +521,7 @@ const GeneratePage: NextPage = () => {
                 <button
                   key={model.value}
                   type="button"
-                  data-model={`ai-model-${model.name || 'default'}`}
+                  data-model={`ai-model-${model.name || "default"}`}
                   onClick={() => setSelectedModel(model.value)}
                   className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
@@ -324,22 +529,17 @@ const GeneratePage: NextPage = () => {
                       : "border-gray-300 hover:border-gray-500"
                   }`}
                 >
-                  {/* Badge for Flux Dev */}
+                  {/* Badge for "Optimized" */}
                   {model.badge && (
-                    <span
-                      className="absolute top-2 right-2 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-md"
-                    >
+                    <span className="absolute top-2 right-2 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-md">
                       {model.badge}
                     </span>
                   )}
-                  {/* Style Image */}
                   <img
                     src={model.image}
                     alt={model.name}
-                    
                     className="w-22 h-22 mb-2 rounded"
                   />
-                  {/* Credit Cost */}
                   <span className="text-sm text-gray-500 mt-2">
                     Cost: {model.cost} credits
                   </span>
@@ -348,7 +548,7 @@ const GeneratePage: NextPage = () => {
             </div>
           </FormGroup>
 
-          {/* Add the image size selection in the form */}
+          {/* ---------------- 4. Select Image Size ---------------- */}
           <h2 className="text-xl">4. Select Image Size</h2>
           <FormGroup className="mb-12">
             <label className="block mb-4 text-sm font-medium">Aspect Ratio</label>
@@ -370,7 +570,7 @@ const GeneratePage: NextPage = () => {
                   <button
                     key={ratio.value}
                     type="button"
-                    id={`aspect-${ratio.value || 'default'}`}
+                    id={`aspect-${ratio.value || "default"}`}
                     onClick={() => setSelectedAspectRatio(ratio.value)}
                     className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                       selectedAspectRatio === ratio.value
@@ -383,8 +583,9 @@ const GeneratePage: NextPage = () => {
                       className={`w-full h-21 dark:bg-gray-200 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
                       style={{ backgroundColor: "#ddd" }}
                     >
-                      {/* Aspect Ratio Label Inside the Shape */}
-                      <span className="text-gray-600 font-medium">{ratio.label}</span>
+                      <span className="text-gray-600 font-medium">
+                        {ratio.label}
+                      </span>
                     </div>
                   </button>
                 );
@@ -392,6 +593,7 @@ const GeneratePage: NextPage = () => {
             </div>
           </FormGroup>
 
+          {/* ---------------- 5. Number of Designs ---------------- */}
           <h2 className="text-xl">5. How Many Designs You Want</h2>
           <FormGroup className="mb-12">
             <label>Number of images</label>
@@ -410,14 +612,12 @@ const GeneratePage: NextPage = () => {
             </div>
           )}
 
-          <Button
-            isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading}
-          >
+          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
             {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
         </form>
 
+        {/* ---------------- Generated Images Preview ---------------- */}
         {imagesUrl.length > 0 && (
           <>
             <h2 className="text-xl mt-8">Your Custom Name Designs</h2>
@@ -458,6 +658,7 @@ const GeneratePage: NextPage = () => {
           </>
         )}
 
+        {/* ---------------- Fullscreen Popup ---------------- */}
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
