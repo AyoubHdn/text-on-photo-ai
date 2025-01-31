@@ -1,80 +1,152 @@
+// /pages/generate.tsx
+
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "../component/Input";
-import { stylesData } from "../data/stylesData"; // Updated import location
+import { stylesData } from "../data/stylesData"; // For Name Art
+import { gamerStylesData } from "../data/gamerStylesData"; // For Game Logo
 import { useSession, signIn } from "next-auth/react";
-// 1) Import the icons you want
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
+import { colorFamilies } from "../data/colors";
+
+/**
+ * We define our 4 possible design types:
+ * 'NameArt' => use stylesData
+ * 'GameLogo' => use gamerStylesData
+ * 'Wallpaper' => (placeholder)
+ * 'ProLogo' => (placeholder)
+ */
+type DesignType = "NameArt" | "GameLogo" | "Wallpaper" | "ProLogo" | null;
+
+type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
+type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3";
+type ColorMode = "bg" | "text";
 
 const GeneratePage: NextPage = () => {
   const { data: session } = useSession();
   const isLoggedIn = !!session;
 
+  // ===========================================================
+  // 1) State to pick "NameArt" vs "GameLogo" vs "Wallpaper" vs "ProLogo"
+  // ===========================================================
+  const [designType, setDesignType] = useState<DesignType>(null);
+
+  // We'll set this once the user picks a designType
+  // 'activeData' can be either 'stylesData' or 'gamerStylesData'
+  // or null if user hasn't chosen yet
+  const [activeData, setActiveData] = useState<
+    typeof stylesData | typeof gamerStylesData | null
+  >(null);
+
+  // We'll also keep track of the "active category" and "active subcategory"
+  // for whichever data object is loaded
+  const [activeTab, setActiveTab] = useState<string>("");
+  const [activeSubTab, setActiveSubTab] = useState<string>("");
+
+  // Once user picks a design type, we set activeData accordingly
+  useEffect(() => {
+    if (designType === "NameArt") {
+      setActiveData(stylesData);
+    } else if (designType === "GameLogo") {
+      setActiveData(gamerStylesData);
+    } else {
+      // Wallpaper or ProLogo => no data for now
+      setActiveData(null);
+    }
+
+    // Reset tabs
+    setActiveTab("");
+    setActiveSubTab("");
+  }, [designType]);
+
+  // Whenever activeData changes, set the initial activeTab and activeSubTab
+  useEffect(() => {
+    if (!activeData) return;
+
+    const categoryKeys = Object.keys(activeData);
+    if (categoryKeys.length > 0) {
+      setActiveTab(categoryKeys[0] ?? "");
+    }
+  }, [activeData]);
+
+  // Whenever activeTab changes, set the initial activeSubTab
+  useEffect(() => {
+    if (!activeData) return;
+    if (!activeTab) return;
+
+    const subKeys = Object.keys(activeData[activeTab] || {});
+    if (subKeys.length > 0) {
+      setActiveSubTab(subKeys[0] ?? "");
+    }
+  }, [activeTab, activeData]);
+
+  // ===========================================================
+  // 2) Additional states & logic
+  // ===========================================================
   const [form, setForm] = useState({
     name: "",
     basePrompt: "",
     numberofImages: "1",
   });
-
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
   const [imagesUrl, setImagesUrl] = useState<{ imageUrl: string }[]>([]);
-
-  // Default to first available styleData key
-  const [activeTab, setActiveTab] = useState<keyof typeof stylesData>(
-    Object.keys(stylesData)[0] as keyof typeof stylesData
-  );
-
-  // Default subTab is the first subcategory of "Themes"
-  const [activeSubTab, setActiveSubTab] = useState<string>(() => {
-    const firstTabData = stylesData["Themes"];
-    return firstTabData ? Object.keys(firstTabData)[0] || "" : "";
-  });
-
-  // Whenever activeTab changes, reset subcategory to that tab’s first item
-  useEffect(() => {
-    const firstSubTab =
-      stylesData && stylesData[activeTab]
-        ? Object.keys(stylesData[activeTab] || {})[0] || ""
-        : "";
-    setActiveSubTab(firstSubTab);
-  }, [activeTab]);
-
-  // Track which style image is selected
+  const [allowCustomColors, setAllowCustomColors] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  // Popup image state
   const [popupImage, setPopupImage] = useState<string | null>(null);
 
-  // -- Horizontal scroll references & arrow-visibility states --
+  // Scroll references
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const subcategoryScrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftCategoryArrow, setShowLeftCategoryArrow] = useState<boolean>(false);
+  const [showRightCategoryArrow, setShowRightCategoryArrow] = useState<boolean>(false);
+  const [showLeftSubCategoryArrow, setShowLeftSubCategoryArrow] = useState<boolean>(false);
+  const [showRightSubCategoryArrow, setShowRightSubCategoryArrow] = useState<boolean>(false);
 
-  // Show/hide arrow states for categories
-  const [showLeftCategoryArrow, setShowLeftCategoryArrow] = useState(false);
-  const [showRightCategoryArrow, setShowRightCategoryArrow] = useState(false);
+  // AI Model
+  const [selectedModel, setSelectedModel] = useState<AIModel>("flux-schnell");
 
-  // Show/hide arrow states for subcategories
-  const [showLeftSubCategoryArrow, setShowLeftSubCategoryArrow] = useState(false);
-  const [showRightSubCategoryArrow, setShowRightSubCategoryArrow] = useState(false);
+  // Aspect Ratios
+  const aspectRatios: { label: string; value: AspectRatio; visual: string }[] = [
+    { label: "1:1", value: "1:1", visual: "aspect-square" },
+    { label: "16:9", value: "16:9", visual: "aspect-video" },
+    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
+    { label: "4:3", value: "4:3", visual: "aspect-classic" },
+  ];
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
+  const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
 
-  // Check scroll positions immediately on mount
-  useEffect(() => {
+  // Colors
+  const [colorMode, setColorMode] = useState<ColorMode>("bg");
+  const [selectedBgColor, setSelectedBgColor] = useState<string>("#FFFFFF");
+  const [selectedTextColor, setSelectedTextColor] = useState<string>("#000000");
+  const colorFamilyNames: string[] = Object.keys(colorFamilies);
+  const [showLeftColorFamArrow, setShowLeftColorFamArrow] = useState<boolean>(false);
+  const [showRightColorFamArrow, setShowRightColorFamArrow] = useState<boolean>(false);
+  const colorFamilyScrollRef = useRef<HTMLDivElement>(null);
+  const [activeColorFamily, setActiveColorFamily] = useState<string>(
+    colorFamilyNames[0] ?? "Reds"
+  );
+
+  // ===========================================================
+  // 3) Scroll Handling with useLayoutEffect
+  // ===========================================================
+  // Scroll handling for Categories & Subcategories
+  useLayoutEffect(() => {
     handleCategoryScroll();
     handleSubCategoryScroll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeData, activeTab]);
 
-  // -- Scroll logic for categories --
   const handleCategoryScroll = () => {
     if (!categoryScrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
+    // Buffer for floating point inaccuracies
     setShowLeftCategoryArrow(scrollLeft > 0);
-    setShowRightCategoryArrow(scrollLeft < scrollWidth - clientWidth);
+    setShowRightCategoryArrow(scrollLeft + clientWidth < scrollWidth - 1);
   };
 
   const scrollCategoriesLeft = () => {
@@ -84,14 +156,12 @@ const GeneratePage: NextPage = () => {
     categoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
   };
 
-  // -- Scroll logic for subcategories --
   const handleSubCategoryScroll = () => {
     if (!subcategoryScrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = subcategoryScrollRef.current;
     setShowLeftSubCategoryArrow(scrollLeft > 0);
-    setShowRightSubCategoryArrow(scrollLeft < scrollWidth - clientWidth);
+    setShowRightSubCategoryArrow(scrollLeft + clientWidth < scrollWidth - 1);
   };
-
   const scrollSubCategoriesLeft = () => {
     subcategoryScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
   };
@@ -99,6 +169,27 @@ const GeneratePage: NextPage = () => {
     subcategoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
   };
 
+  // Scroll handling for Color Families
+  useLayoutEffect(() => {
+    handleColorFamilyScroll();
+  }, [activeColorFamily]);
+
+  const handleColorFamilyScroll = () => {
+    if (!colorFamilyScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = colorFamilyScrollRef.current;
+    setShowLeftColorFamArrow(scrollLeft > 0);
+    setShowRightColorFamArrow(scrollLeft + clientWidth < scrollWidth - 1);
+  };
+  const scrollColorFamilyLeft = () => {
+    colorFamilyScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
+  };
+  const scrollColorFamilyRight = () => {
+    colorFamilyScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
+  };
+
+  // ===========================================================
+  // 4) TRPC generate
+  // ===========================================================
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data) {
       setImagesUrl(data);
@@ -109,46 +200,47 @@ const GeneratePage: NextPage = () => {
     },
   });
 
-  const aspectRatios = [
-    { label: "1:1", value: "1:1", visual: "aspect-square" },
-    { label: "16:9", value: "16:9", visual: "aspect-video" },
-    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
-    { label: "4:3", value: "4:3", visual: "aspect-classic" },
-  ];
-
-  const [selectedAspectRatio, setSelectedAspectRatio] = useState("1:1");
-  const [selectedModel, setSelectedModel] = useState("flux-schnell"); // Default to "Standard" model
-
-  // To store the selected style image for the preview in model cards
-  const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
-
-  // Form submission
-  const handleFormSubmit = (e: React.FormEvent) => {
+  // ===========================================================
+  // 5) Form submission logic
+  // ===========================================================
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!isLoggedIn) {
       signIn().catch(console.error);
       return;
     }
-
     if (!form.name || !form.basePrompt) {
       setError("Please type your name and select a style.");
       return;
     }
 
-    // Push data to GTM dataLayer for analytics
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
+    // Analytics tracking
+    (window.dataLayer = window.dataLayer || []).push({
       event: "form_submission",
+      designType,
       category: activeTab,
       subcategory: activeSubTab,
       styleImage: selectedImage || "none",
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
-      numberOfVariants: form.numberofImages,
+      numberOfVariants: parseInt(form.numberofImages, 10),
+      selectedBgColor,
+      selectedTextColor,
+      allowCustomColors,
     });
 
-    const finalPrompt = `${form.basePrompt.replace(/Text/g, form.name)}, designed to cover the entire screen, high resolution`;
+    let finalPrompt = form.basePrompt;
+    // If custom colors are allowed, replace placeholders
+    if (allowCustomColors) {
+      finalPrompt = finalPrompt
+        .replace(/'background color'/gi, `${selectedBgColor} (${findColorName(selectedBgColor)})`)
+        .replace(/'Text color'/gi, `${selectedTextColor} (${findColorName(selectedTextColor)})`);
+    }
+    // Replace 'Text' placeholders with the actual form name
+    finalPrompt = finalPrompt.replace(/'Text'/gi, form.name);
+    // Add any extra instructions for coverage & resolution
+    finalPrompt += " designed to cover the entire screen, high resolution";
 
     generateIcon.mutate({
       prompt: finalPrompt,
@@ -158,27 +250,25 @@ const GeneratePage: NextPage = () => {
     });
   };
 
-  // Update form state
-  const updateForm =
-    (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setForm((prev) => ({
-        ...prev,
-        [key]: e.target.value,
-      }));
-    };
+  // Helper function to find color name
+  function findColorName(hex: string): string {
+    for (const famArr of Object.values(colorFamilies)) {
+      const found = famArr.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
+      if (found) return found.name;
+    }
+    return "Unknown Color";
+  }
 
-  // When user selects a style
-  const handleImageSelect = (basePrompt: string, src: string) => {
-    setSelectedImage(src); // highlight the chosen thumbnail
-    setForm((prev) => ({
-      ...prev,
-      basePrompt,
-    }));
-    setSelectedStyleImage(src); // store image for model previews
+  // Handle style selection
+  const handleImageSelect = (basePrompt: string, src: string, allowColors = true) => {
+    setSelectedImage(src);
+    setForm((prev) => ({ ...prev, basePrompt }));
+    setSelectedStyleImage(src);
     setError("");
+    setAllowCustomColors(allowColors);
   };
 
-  // Download logic
+  // Handle image download
   const handleDownload = async (imageUrl: string) => {
     try {
       const response = await fetch(imageUrl);
@@ -186,8 +276,6 @@ const GeneratePage: NextPage = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const blob = await response.blob();
-
-      // Convert to PNG if needed
       const imageBitmap = await createImageBitmap(blob);
       const canvas = document.createElement("canvas");
       canvas.width = imageBitmap.width;
@@ -200,12 +288,10 @@ const GeneratePage: NextPage = () => {
         );
         if (pngBlob) {
           const blobUrl = window.URL.createObjectURL(pngBlob);
-
           const link = document.createElement("a");
           link.href = blobUrl;
           link.download = "name-design-ai.png";
           link.click();
-
           window.URL.revokeObjectURL(blobUrl);
         }
       }
@@ -214,7 +300,7 @@ const GeneratePage: NextPage = () => {
     }
   };
 
-  // Popup open/close
+  // Handle popup
   const openPopup = (imageUrl: string) => {
     setPopupImage(imageUrl);
   };
@@ -234,393 +320,481 @@ const GeneratePage: NextPage = () => {
       </Head>
 
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
-        <h1 className="text-4xl ">
-          <strong>Let’s Generate a Unique Name Design</strong>
-        </h1>
+        {/* Main heading */}
+        <h1 className="text-4xl font-bold">Let’s Generate a Unique Design</h1>
+
+        {/* Restored Guideline / Instructions */}
         <p className="text-1xl mt-4">
-          Create stunning name designs for social media, your brand, business
-          logos, or thoughtful gifts. Follow the steps below and bring your ideas
-          to life!
+          Create stunning name designs for social media, your brand, business logos, or
+          thoughtful gifts. Follow the steps below and bring your ideas to life!
         </p>
-        <p className="text-1xl mt-4">Here’s how it works:</p>
-        <ol className="list-decimal ml-6 mt-2 text-1xl">
-          <li>Enter a Name to Get Started.</li>
-          <li>Choose Your Favorite Style.</li>
-          <li>
-            Select AI Model:
-            <ul className="list-disc ml-6">
-              <li>
-                <strong>Standard</strong>: Quick and cost-effective designs.
-              </li>
-              <li>
-                <strong>Optimized</strong>: Enhanced quality for a professional
-                finish.
-              </li>
-            </ul>
-          </li>
-          <li>
-            Select Image Size:
-            <ul className="list-disc ml-6">
-              <li>
-                <strong>1:1</strong>: Square (ideal for profile pictures).
-              </li>
-              <li>
-                <strong>16:9</strong>: Landscape (great for desktops and
-                presentations).
-              </li>
-              <li>
-                <strong>9:16</strong>: Portrait (perfect for mobile screens).
-              </li>
-              <li>
-                <strong>4:3</strong>: Classic (suitable for versatile use).
-              </li>
-            </ul>
-          </li>
-          <li>Choose How Many Designs You Want.</li>
-        </ol>
-        <p className="text-1xl mt-4">For the best results, keep these tips in mind:</p>
-        <ul className="list-disc ml-6 mt-2 text-1xl">
-          <li>Use clear and simple names or phrases for better precision.</li>
-          <li>Experiment with styles to find your perfect match.</li>
-          <li>Align the style with your target audience for businesses.</li>
-          <li>For gifts, select playful or personalized designs for a thoughtful touch.</li>
-        </ul>
+        <div className="mt-4 mb-8 p-4 border border-gray-300 rounded-md dark:bg-gray-700 text-sm leading-relaxed">
+          <h2 className="text-lg font-semibold mb-2">Here’s how it works:</h2>
+          <ol className="list-decimal list-inside">
+            <li>Enter a Name to Get Started.</li>
+            <li>Choose Your Favorite Style.</li>
+            <li>Select AI Model:
+              <ul className="list-disc ml-5">
+                <li><strong>Standard:</strong> Quick and cost-effective designs.</li>
+                <li><strong>Optimized:</strong> Enhanced quality for a professional finish.</li>
+              </ul>
+            </li>
+            <li>Select Image Size:
+              <ul className="list-disc ml-5">
+                <li><strong>1:1</strong>: Square (ideal for profile pictures).</li>
+                <li><strong>16:9</strong>: Landscape (great for desktops and presentations).</li>
+                <li><strong>9:16</strong>: Portrait (perfect for mobile screens).</li>
+                <li><strong>4:3</strong>: Classic (suitable for versatile use).</li>
+              </ul>
+            </li>
+            <li>Choose How Many Designs You Want.</li>
+          </ol>
 
-        <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
-          <h2 className="text-xl">1. Enter a Name/Text to Get Started</h2>
-          <FormGroup className="mb-12">
-            <Input
-              required
-              value={form.name}
-              onChange={updateForm("name")}
-              placeholder="Type your name here"
-            />
-          </FormGroup>
+          <h3 className="text-md font-semibold mt-3">For the best results, keep these tips in mind:</h3>
+          <ul className="list-disc list-inside">
+            <li>Use clear and simple names or phrases for better precision.</li>
+            <li>Experiment with styles to find your perfect match.</li>
+            <li>Align the style with your target audience if it’s for a business.</li>
+            <li>For gifts, pick playful or personalized designs for a thoughtful touch.</li>
+          </ul>
+        </div>
 
-          {/* ---------------- 2. Choose Your Favorite Style ---------------- */}
-          <h2 className="text-xl">2. Choose Your Favorite Style</h2>
-          <div className="mb-12">
-            {/* ====================== CATEGORIES (Horizontal Scroll) ====================== */}
-            <div className="relative border-b mb-0">
-              {/* Left Arrow for Categories (Using AiOutlineLeft) */}
-              {showLeftCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollCategoriesLeft}
-                  className="
-                    absolute 
-                    left-[-1.5rem]
-                    top-1/2
-                    -translate-y-1/2
-                    w-5 h-10
-                    rounded-md
-                    bg-gray-700
-                    text-white
-                    hover:bg-gray-200
-                    border border-gray-300
-                    shadow
-                    z-10
-                    flex
-                    items-center
-                    justify-center
-                  "
-                  title="Scroll Left"
-                >
-                  <AiOutlineLeft className="text-xl" />
-                </button>
+        {/* ------------------------------------ */}
+        {/* SECTION 1: PICK DESIGN PURPOSE */}
+        {/* ------------------------------------ */}
+        <div className="mt-6 mb-4">
+          <h2 className="text-xl font-semibold">Section 1: What Do You Want to Create?</h2>
+          <div className="flex gap-4 mt-2">
+            {/* Name Art */}
+            <button
+              type="button"
+              onClick={() => setDesignType("NameArt")}
+              className={`px-6 py-3 border-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                designType === "NameArt"
+                  ? "bg-blue-900 text-white border-blue-900"
+                  : "bg-blue-100 text-blue-900 border-blue-300 hover:bg-blue-200 hover:border-blue-400"
+              }`}
+            >
+              Name Art
+            </button>
+
+            {/* Game Logo */}
+            <button
+              type="button"
+              onClick={() => setDesignType("GameLogo")}
+              className={`px-6 py-3 border-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                designType === "GameLogo"
+                  ? "bg-blue-900 text-white border-blue-900"
+                  : "bg-blue-100 text-blue-900 border-blue-300 hover:bg-blue-200 hover:border-blue-400"
+              }`}
+            >
+              Game Logo
+            </button>
+
+            {/* Wallpaper (hidden/placeholder) */}
+            <button
+              type="button"
+              className="hidden px-6 py-3 border-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed"
+              disabled
+            >
+              Wallpaper (Coming Soon)
+            </button>
+
+            {/* Professional Logo (hidden/placeholder) */}
+            <button
+              type="button"
+              className="hidden px-6 py-3 border-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed"
+              disabled
+            >
+              Professional Logo (Coming Soon)
+            </button>
+          </div>
+        </div>
+
+        {/* If the user hasn't picked anything yet */}
+        {designType === null && (
+          <p className="text-gray-500">
+            Please select <strong>Name Art</strong> or <strong>Game Logo</strong> above.
+          </p>
+        )}
+
+        {/* If designType is NameArt or GameLogo, show the rest of the form */}
+        {(designType === "NameArt" || designType === "GameLogo") && (
+          <>
+            <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
+              {/* Step 1: Name */}
+              <h2 className="text-xl">1. Enter a Name/Text to Get Started</h2>
+              <FormGroup className="mb-12">
+                <Input
+                  required
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  placeholder="Type your name here"
+                />
+              </FormGroup>
+
+              {/* Step 2: Category/Subcategory */}
+              <h2 className="text-xl">2. Choose Your Favorite Style</h2>
+              {!activeData ? (
+                <p className="text-gray-400 italic">
+                  (No data loaded for this design type yet)
+                </p>
+              ) : (
+                <div className="mb-12">
+                  {/* Category Scroller */}
+                  <div className="relative border-b mb-0 mt-4 flex items-center">
+                    {/* Left Scroll Button */}
+                    {showLeftCategoryArrow && (
+                      <button
+                        type="button"
+                        onClick={scrollCategoriesLeft}
+                        className="
+                          absolute
+                          left-[-1.5rem]
+                          top-1/2
+                          -translate-y-1/2
+                          w-5
+                          h-10
+                          rounded-md
+                          bg-gray-700
+                          text-white
+                          hover:bg-gray-200
+                          border
+                          border-gray-300
+                          shadow
+                          z-10
+                          flex
+                          items-center
+                          justify-center
+                        "
+                        title="Scroll Categories Left"
+                        aria-label="Scroll Categories Left"
+                      >
+                        <AiOutlineLeft className="text-xl" />
+                      </button>
+                    )}
+
+                    {/* Categories */}
+                    <div
+                      ref={categoryScrollRef}
+                      onScroll={handleCategoryScroll}
+                      className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1"
+                    >
+                      {Object.keys(activeData).map((catKey) => (
+                        <button
+                          key={catKey}
+                          type="button"
+                          onClick={() => setActiveTab(catKey)}
+                          className={`px-4 py-2 ${
+                            activeTab === catKey
+                              ? "font-semibold border-b-2 border-blue-500 text-blue-500"
+                              : "font-semibold text-gray-500"
+                          }`}
+                        >
+                          {catKey}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Right Scroll Button */}
+                    {showRightCategoryArrow && (
+                      <button
+                        type="button"
+                        onClick={scrollCategoriesRight}
+                        className="
+                          absolute
+                          right-[-1.5rem]
+                          top-1/2
+                          -translate-y-1/2
+                          w-5
+                          h-10
+                          rounded-md
+                          bg-gray-700
+                          text-white
+                          hover:bg-gray-200
+                          border
+                          border-gray-300
+                          shadow
+                          z-10
+                          flex
+                          items-center
+                          justify-center
+                        "
+                        title="Scroll Categories Right"
+                        aria-label="Scroll Categories Right"
+                      >
+                        <AiOutlineRight className="text-xl" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Subcategory Scroller */}
+                  <div className="relative border-b mb-4 mt-4 flex items-center">
+                    {/* Left Scroll Button */}
+                    {showLeftSubCategoryArrow && (
+                      <button
+                        type="button"
+                        onClick={scrollSubCategoriesLeft}
+                        className="
+                          absolute
+                          left-[-1.5rem]
+                          top-1/2
+                          -translate-y-1/2
+                          w-5
+                          h-10
+                          rounded-md
+                          bg-gray-700
+                          text-white
+                          hover:bg-gray-200
+                          border
+                          border-gray-300
+                          shadow
+                          z-10
+                          flex
+                          items-center
+                          justify-center
+                        "
+                        title="Scroll Subcategories Left"
+                        aria-label="Scroll Subcategories Left"
+                      >
+                        <AiOutlineLeft className="text-xl" />
+                      </button>
+                    )}
+
+                    {/* Subcategories */}
+                    <div
+                      ref={subcategoryScrollRef}
+                      onScroll={handleSubCategoryScroll}
+                      className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1"
+                    >
+                      {activeData[activeTab] &&
+                        Object.keys(activeData[activeTab] || {}).map((sub) => (
+                          <button
+                            key={sub}
+                            type="button"
+                            onClick={() => setActiveSubTab(sub)}
+                            className={`px-4 py-2 ${
+                              activeSubTab === sub
+                                ? "text-sm border-b-2 border-blue-500 text-blue-500"
+                                : "text-sm text-gray-500"
+                            }`}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                    </div>
+
+                    {/* Right Scroll Button */}
+                    {showRightSubCategoryArrow && (
+                      <button
+                        type="button"
+                        onClick={scrollSubCategoriesRight}
+                        className="
+                          absolute
+                          right-[-1.5rem]
+                          top-1/2
+                          -translate-y-1/2
+                          w-5
+                          h-10
+                          rounded-md
+                          bg-gray-700
+                          text-white
+                          hover:bg-gray-200
+                          border
+                          border-gray-300
+                          shadow
+                          z-10
+                          flex
+                          items-center
+                          justify-center
+                        "
+                        title="Scroll Subcategories Right"
+                        aria-label="Scroll Subcategories Right"
+                      >
+                        <AiOutlineRight className="text-xl" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Thumbnails (with src+e.webp) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {activeData[activeTab]?.[activeSubTab]?.map((item, idx) => {
+                      const allowColors =
+                        item.allowCustomColors === false ? false : true;
+                      // IMPORTANT: convert the original .webp to e.webp
+                      const styleImagePath = item.src.replace(/\.webp$/, "e.webp");
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
+                            selectedImage === item.src
+                              ? "ring-4 ring-blue-500"
+                              : ""
+                          }`}
+                        >
+                          <img
+                            src={styleImagePath}
+                            alt={item.basePrompt}
+                            className="rounded w-full h-auto object-cover mx-auto"
+                            onClick={() =>
+                              handleImageSelect(item.basePrompt, item.src, allowColors)
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={() => openPopup(styleImagePath)}
+                            className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                            title="View Fullscreen"
+                            aria-label="View Fullscreen"
+                          >
+                            🔍
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
 
-              {/* Scrollable Categories */}
-              <div
-                ref={categoryScrollRef}
-                onScroll={handleCategoryScroll}
-                className="flex overflow-x-auto whitespace-nowrap no-scrollbar"
-              >
-                {Object.keys(stylesData).map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => setActiveTab(category)}
-                    id={category}
-                    className={`px-4 py-2 ${
-                      activeTab === category
-                        ? "font-semibold border-b-2 border-blue-500 text-blue-500"
-                        : "font-semibold text-gray-500"
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-
-              {/* Right Arrow for Categories (Using AiOutlineRight) */}
-              {showRightCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollCategoriesRight}
-                  className="
-                    absolute 
-                    right-[-1.5rem]
-                    top-1/2
-                    -translate-y-1/2
-                    w-5 h-10
-                    rounded-md
-                    bg-gray-700
-                    text-white
-                    hover:bg-gray-200
-                    border border-gray-300
-                    shadow
-                    z-10
-                    flex
-                    items-center
-                    justify-center
-                  "
-                  title="Scroll Right"
-                >
-                  <AiOutlineRight className="text-xl" />
-                </button>
-              )}
-            </div>
-
-            {/* ====================== SUBCATEGORIES (Horizontal Scroll) ====================== */}
-            <div className="relative border-b mb-4 mt-0">
-              {/* Left Arrow for Subcategories (Using AiOutlineLeft) */}
-              {showLeftSubCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollSubCategoriesLeft}
-                  className="
-                    absolute
-                    left-[-1.5rem]
-                    top-1/2
-                    -translate-y-1/2
-                    w-5 h-10
-                    rounded-md
-                    bg-gray-700
-                    text-white
-                    hover:bg-gray-200
-                    border border-gray-300
-                    shadow
-                    z-10
-                    flex
-                    items-center
-                    justify-center
-                  "
-                  title="Scroll Left"
-                >
-                  <AiOutlineLeft className="text-xl" />
-                </button>
-              )}
-
-              {/* Scrollable Subcategories */}
-              <div
-                ref={subcategoryScrollRef}
-                onScroll={handleSubCategoryScroll}
-                className="flex overflow-x-auto whitespace-nowrap no-scrollbar"
-              >
-                {stylesData[activeTab] &&
-                  Object.keys(stylesData[activeTab] || {}).map((subcategory) => (
+              {/* Step 3: AI Model */}
+              <h2 className="text-xl">3. Select AI Model</h2>
+              <FormGroup className="mb-12">
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    {
+                      name: "Standard",
+                      value: "flux-schnell" as AIModel,
+                      cost: 1,
+                      image: selectedStyleImage || "/images/placeholder.png",
+                    },
+                    {
+                      name: "Optimized",
+                      value: "flux-dev" as AIModel,
+                      cost: 2,
+                      image:
+                        selectedStyleImage && selectedStyleImage.includes(".")
+                          ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
+                          : "/images/placeholder.png",
+                    },
+                  ].map((model) => (
                     <button
-                      key={subcategory}
+                      key={model.value}
                       type="button"
-                      onClick={() => setActiveSubTab(subcategory)}
-                      id={subcategory}
-                      className={`px-4 py-2 ${
-                        activeSubTab === subcategory
-                          ? "text-sm border-b-2 blue-purple-500 text-blue-500"
-                          : "text-sm text-gray-500"
+                      onClick={() => setSelectedModel(model.value)}
+                      className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
+                        selectedModel === model.value
+                          ? "border-blue-500 ring-2 ring-blue-500"
+                          : "border-gray-300 hover:border-gray-500"
                       }`}
                     >
-                      {subcategory}
+                      <img
+                        src={model.image}
+                        alt={model.name}
+                        className="w-22 h-22 mb-2 rounded"
+                      />
+                      <span className="text-sm font-semibold">{model.name}</span>
+                      <span className="text-sm text-gray-500">
+                        Cost: {model.cost} credits
+                      </span>
                     </button>
                   ))}
-              </div>
-
-              {/* Right Arrow for Subcategories (Using AiOutlineRight) */}
-              {showRightSubCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollSubCategoriesRight}
-                  className="
-                    absolute
-                    right-[-1.5rem]
-                    top-1/2
-                    -translate-y-1/2
-                    w-5 h-10
-                    rounded-md
-                    bg-gray-700
-                    text-white
-                    hover:bg-gray-200
-                    border border-gray-300
-                    shadow
-                    z-10
-                    flex
-                    items-center
-                    justify-center
-                  "
-                  title="Scroll Right"
-                >
-                  <AiOutlineRight className="text-xl" />
-                </button>
-              )}
-            </div>
-
-            {/* ====================== THUMBNAILS ====================== */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {stylesData[activeTab]?.[activeSubTab]?.map(({ src, basePrompt }, index) => (
-                <div
-                  key={index}
-                  className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
-                    selectedImage === src ? "ring-4 ring-blue-500" : ""
-                  }`}
-                >
-                  <img
-                    src={src}
-                    alt={basePrompt}
-                    id={src}
-                    className="rounded w-full h-auto object-cover mx-auto"
-                    onClick={() => handleImageSelect(basePrompt, src)}
-                  />
-                  <button
-                    onClick={() => openPopup(src)}
-                    className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                    title="View Fullscreen"
-                  >
-                    🔍
-                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
+              </FormGroup>
 
-          {/* ---------------- 3. Select AI Model ---------------- */}
-          <h2 className="text-xl">3. Select AI Model</h2>
-          <FormGroup className="mb-12">
-            <label className="block mb-4 text-sm font-medium">AI Model</label>
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-              {[
-                {
-                  name: "Standard",
-                  value: "flux-schnell",
-                  cost: 1,
-                  id: "ai-model-standard",
-                  image: selectedStyleImage || "/images/placeholder.png",
-                },
-                {
-                  name: "Optimized",
-                  value: "flux-dev",
-                  cost: 2,
-                  id: "ai-model-optimized",
-                  image:
-                    selectedStyleImage && selectedStyleImage.includes(".")
-                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
-                      : "/images/placeholder.png",
-                  badge: "Optimized",
-                },
-              ].map((model) => (
-                <button
-                  key={model.value}
-                  type="button"
-                  data-model={`ai-model-${model.name || "default"}`}
-                  onClick={() => setSelectedModel(model.value)}
-                  className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
-                    selectedModel === model.value
-                      ? "border-blue-500 ring-2 ring-blue-500"
-                      : "border-gray-300 hover:border-gray-500"
-                  }`}
-                >
-                  {/* Badge for "Optimized" */}
-                  {model.badge && (
-                    <span className="absolute top-2 right-2 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-md">
-                      {model.badge}
-                    </span>
-                  )}
-                  <img
-                    src={model.image}
-                    alt={model.name}
-                    className="w-22 h-22 mb-2 rounded"
-                  />
-                  <span className="text-sm text-gray-500 mt-2">
-                    Cost: {model.cost} credits
-                  </span>
-                </button>
-              ))}
-            </div>
-          </FormGroup>
+              {/* Step 4: Aspect Ratio */}
+              <h2 className="text-xl">4. Select Image Size</h2>
+              <FormGroup className="mb-12">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {aspectRatios.map((ratio) => {
+                    const aspectClass =
+                      ratio.visual === "aspect-square"
+                        ? "aspect-[1/1]"
+                        : ratio.visual === "aspect-video"
+                        ? "aspect-[16/9]"
+                        : ratio.visual === "aspect-portrait"
+                        ? "aspect-[9/16]"
+                        : ratio.visual === "aspect-classic"
+                        ? "aspect-[4/3]"
+                        : "";
+                    return (
+                      <button
+                        key={ratio.value}
+                        type="button"
+                        onClick={() => setSelectedAspectRatio(ratio.value)}
+                        className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
+                          selectedAspectRatio === ratio.value
+                            ? "border-blue-500 ring-2 ring-blue-500"
+                            : "border-gray-300 hover:border-gray-500"
+                        }`}
+                      >
+                        <div
+                          className={`w-full h-21 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
+                          style={{ backgroundColor: "#ddd" }}
+                        >
+                          <span className="text-gray-600 font-medium">
+                            {ratio.label}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </FormGroup>
 
-          {/* ---------------- 4. Select Image Size ---------------- */}
-          <h2 className="text-xl">4. Select Image Size</h2>
-          <FormGroup className="mb-12">
-            <label className="block mb-4 text-sm font-medium">Aspect Ratio</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {aspectRatios.map((ratio) => {
-                // Precompute the aspect class
-                const aspectClass =
-                  ratio.visual === "aspect-square"
-                    ? "aspect-[1/1]"
-                    : ratio.visual === "aspect-video"
-                    ? "aspect-[16/9]"
-                    : ratio.visual === "aspect-portrait"
-                    ? "aspect-[9/16]"
-                    : ratio.visual === "aspect-classic"
-                    ? "aspect-[4/3]"
-                    : "";
+              {/* Step 5: Number of Images */}
+              <h2 className="text-xl">5. How Many Designs You Want</h2>
+              <FormGroup className="mb-12">
+                <label htmlFor="numberofImages">Number of images</label>
+                <Input
+                  required
+                  id="numberofImages"
+                  type="number"
+                  min={1}
+                  max={selectedModel === "ideogram-ai/ideogram-v2-turbo" ? 1 : 10}
+                  value={form.numberofImages}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, numberofImages: e.target.value }))
+                  }
+                  disabled={selectedModel === "ideogram-ai/ideogram-v2-turbo"}
+                  placeholder={
+                    selectedModel === "ideogram-ai/ideogram-v2-turbo"
+                      ? "1 (Fixed)"
+                      : "1-10"
+                  }
+                />
+              </FormGroup>
 
-                return (
-                  <button
-                    key={ratio.value}
-                    type="button"
-                    id={`aspect-${ratio.value || "default"}`}
-                    onClick={() => setSelectedAspectRatio(ratio.value)}
-                    className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
-                      selectedAspectRatio === ratio.value
-                        ? "border-blue-500 ring-2 ring-blue-500"
-                        : "border-gray-300 hover:border-gray-500"
-                    }`}
-                  >
-                    {/* Visual Representation */}
-                    <div
-                      className={`w-full h-21 dark:bg-gray-200 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
-                      style={{ backgroundColor: "#ddd" }}
-                    >
-                      <span className="text-gray-600 font-medium">
-                        {ratio.label}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </FormGroup>
+              {/* (Optional) Step 6: Colors… if allowCustomColors is true */}
+              {/* 
+                Insert your color selection UI here if needed
+                ...
+              */}
 
-          {/* ---------------- 5. Number of Designs ---------------- */}
-          <h2 className="text-xl">5. How Many Designs You Want</h2>
-          <FormGroup className="mb-12">
-            <label>Number of images</label>
-            <Input
-              required
-              inputMode="numeric"
-              pattern="[1-9]|10"
-              value={form.numberofImages}
-              onChange={updateForm("numberofImages")}
-            />
-          </FormGroup>
+              {/* Show error if any */}
+              {error && (
+                <div className="bg-red-500 text-white rounded p-4 text-xl">
+                  {error}
+                </div>
+              )}
 
-          {error && (
-            <div className="bg-red-500 text-white rounded p-8 text-xl">
-              {error}
-            </div>
-          )}
+              {/* Submit Button */}
+              <Button
+                isLoading={generateIcon.isLoading}
+                disabled={generateIcon.isLoading}
+              >
+                {isLoggedIn ? "Generate" : "Sign in to Generate"}
+              </Button>
+            </form>
+          </>
+        )}
 
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
-            {isLoggedIn ? "Generate" : "Sign in to Generate"}
-          </Button>
-        </form>
-
-        {/* ---------------- Generated Images Preview ---------------- */}
+        {/* Render images if any */}
         {imagesUrl.length > 0 && (
           <>
-            <h2 className="text-xl mt-8">Your Custom Name Designs</h2>
+            <h2 className="text-xl mt-8">Your Custom Designs</h2>
             <section className="grid grid-cols-4 gap-4 mb-12">
               {imagesUrl.map(({ imageUrl }, index) => (
                 <div
@@ -629,18 +803,20 @@ const GeneratePage: NextPage = () => {
                 >
                   <div className="absolute top-0 right-0 flex gap-0">
                     <button
+                      type="button"
                       onClick={() => openPopup(imageUrl)}
                       className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
                       title="View Fullscreen"
+                      aria-label="View Fullscreen"
                     >
                       🔍
                     </button>
                     <button
-                      onClick={() => {
-                        void handleDownload(imageUrl);
-                      }}
+                      type="button"
+                      onClick={() => void handleDownload(imageUrl)}
                       className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                      title="Download Image"
+                      title="Download"
+                      aria-label="Download"
                     >
                       ⬇️
                     </button>
@@ -658,14 +834,16 @@ const GeneratePage: NextPage = () => {
           </>
         )}
 
-        {/* ---------------- Fullscreen Popup ---------------- */}
+        {/* Fullscreen Popup */}
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
               <button
+                type="button"
                 onClick={closePopup}
                 className="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700 focus:outline-none"
-                title="Close"
+                title="Close Popup"
+                aria-label="Close Popup"
               >
                 ✖️
               </button>
