@@ -794,7 +794,7 @@ const GeneratePage: NextPage = () => {
         {/* Render images if any */}
         {imagesUrl.length > 0 && (
           <>
-            <h2 className="text-xl mt-8">Your Custom Designs</h2>
+            <h2 className="text-xl mt-8 mb-2">Your Custom Designs</h2>
             <section className="grid grid-cols-4 gap-4 mb-12">
               {imagesUrl.map(({ imageUrl }, index) => (
                 <div

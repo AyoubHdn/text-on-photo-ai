@@ -107,6 +107,128 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         basePrompt: "Design a creative Call of Duty logo for ''Text''. The text ''Text'' features strong, bold fonts and vibrant colors, integrated with the game's soldiers and high-tech weaponry, set against a backdrop of a battlefield with explosive effects.",
       },
     ],
+    "Counter-Strike": [
+    {
+      src: "/styles/s320.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a tactical Counter-Strike-themed gaming logo for ''Text''. Use gritty, military-style fonts with weapon silhouettes and a bold, urban color palette."
+    },
+    {
+      src: "/styles/s321.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a Counter-Strike logo for ''Text''. Incorporate sleek, modern lettering, camouflage or city rubble textures, and iconic CSGO gear for a high-stakes combat vibe."
+    },
+    {
+      src: "/styles/s322.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a dynamic Counter-Strike logo for ''Text''. Use edgy fonts, references to flashbangs or rifles, and a dark, intense backdrop to reflect competitive shooter energy."
+    },
+    {
+      src: "/styles/s323.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop an action-ready Counter-Strike design for ''Text''. Combine bold, mission-focused text with sniper scope or bomb-defusal motifs, evoking intense strategic gameplay."
+    },
+    /*{
+      src: "/styles/s324.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a stealthy Counter-Strike logo for ''Text''. Employ angular fonts, minimal neon outlines, and details like special ops masks or tactical knives, conveying deadly precision."
+    },*/
+    {
+      src: "/styles/s325.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a professional Counter-Strike logo for ''Text''. Use strong, blocky lettering, subtle bullet hole effects, and team-based color schemes to capture squad-based warfare."
+    },
+    {
+      src: "/styles/s326.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a high-impact Counter-Strike emblem for ''Text''. Combine bold, modern fonts with references to grenades or headshots, set against an electrifying tournament backdrop."
+    },
+    {
+      src: "/styles/s327.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a gritty Counter-Strike-themed logo for ''Text''. Use hard-edged typography, metallic textures, and iconic terrorist or counter-terrorist silhouettes for an immersive warzone feel."
+    },
+    {
+      src: "/styles/s328.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a creative Counter-Strike logo for ''Text''. Merge aggressive fonts with a blend of explosions, bullet casings, and urban map references, highlighting adrenaline-fueled gameplay."
+    },
+    {
+      src: "/styles/s329.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a modern Counter-Strike gaming logo for ''Text''. Incorporate strong typography, tactical gear icons, and dynamic lighting to evoke the tension and speed of the game."
+    },
+    {
+      src: "/styles/s330.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design an e-sports Counter-Strike mascot logo for ''Text''. Feature a masked operative or soldier in bold outlines and edgy fonts, capturing intense tactical energy."
+    },
+    {
+      src: "/styles/s331.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a Counter-Strike e-sports emblem for ''Text''. Show a fierce commando or sniper with neon highlights, bold typography, and a gritty urban palette."
+    },
+    {
+      src: "/styles/s332.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a modern CSGO-style logo for ''Text''. Use a dynamic crouched soldier or crosshair icon, bold blocky fonts, and dramatic lighting reminiscent of e-sports events."
+    },
+    {
+      src: "/styles/s333.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a Counter-Strike mascot logo for ''Text''. Portray a special ops figure or assault rifle silhouette, paired with sharp, angular text and intense color contrasts."
+    },
+    {
+      src: "/styles/s334.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a neon-touched CSGO e-sports logo for ''Text''. Center on a stylish commando mask or pistol, bold stylized fonts, and glowing accents for a tournament-ready look."
+    },
+    {
+      src: "/styles/s335.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a tactical Counter-Strike icon for ''Text''. Feature a menacing CT or T figure with edgy line art, bold uppercase lettering, and steel-gray to neon color transitions."
+    },
+    {
+      src: "/styles/s336.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design an aggressive CSGO clan logo for ''Text''. Incorporate a hooded operative or bullet shell motif, with strong color blocks and stylized e-sports typography."
+    },
+    {
+      src: "/styles/s337.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a gritty Counter-Strike-themed logo for ''Text''. Use hard-edged typography, metallic textures, and iconic terrorist or counter-terrorist silhouettes for an immersive warzone feel."
+    },
+    {
+      src: "/styles/s338.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a creative Counter-Strike logo for ''Text''. Merge aggressive fonts with a blend of explosions, bullet casings, and urban map references, highlighting adrenaline-fueled gameplay."
+    },
+    {
+      src: "/styles/s339.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a modern Counter-Strike gaming logo for ''Text''. Incorporate strong typography, tactical gear icons, and dynamic lighting to evoke the tension and speed of the game."
+    }
+  ],
     // You can continue this pattern for other specific game titles like Counter-Strike, Cyberpunk 2077, etc.
   },
   "Game Genres": {
@@ -214,7 +336,129 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         basePrompt: "A modern Fighting-themed logo for ''Text''. The text ''Text'' is styled with bold, edgy typography and surrounded by elements like punching gloves, fighter silhouettes, and dynamic energy lines, set against an intense, high-energy background.",
       },
     ],
-    // Continue with other game genres like MOBA, Shooters, RPG, etc.
+    "MOBA": [
+    {
+      src: "/styles/s370.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a MOBA-inspired gaming logo for ''Text''. Use vibrant, stylized fonts with character class icons, capturing fast-paced team combat and fantasy adventure."
+    },
+    {
+      src: "/styles/s371.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a dynamic MOBA logo for ''Text''. Incorporate epic fonts, lane or tower motifs, and bold magical or tech elements to showcase high-intensity strategic battles."
+    },
+    {
+      src: "/styles/s372.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a bold MOBA-themed logo for ''Text''. Blend sweeping, heroic typography with references to minions or battle arenas, highlighting cooperative gameplay and epic showdowns."
+    },
+    {
+      src: "/styles/s373.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a colorful MOBA logo for ''Text''. Use stylized, energetic letters with champion silhouettes or ability icons, set against a vibrant battlefield backdrop."
+    },
+    {
+      src: "/styles/s374.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a professional MOBA gaming logo for ''Text''. Combine sleek, modern fonts with layered shield or crest imagery, reflecting tactical team synergy and hero-based strategies."
+    },
+    {
+      src: "/styles/s375.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a stylized MOBA design for ''Text''. Employ bold lettering, mystical power or aura effects, and distinct lane references to channel the thrill of champion warfare."
+    },
+    {
+      src: "/styles/s376.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a fantasy-tech MOBA logo for ''Text''. Merge futuristic and magical elements in the text style, adding small minion or turret icons for a balanced strategic feel."
+    },
+    {
+      src: "/styles/s377.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a high-energy MOBA logo for ''Text''. Use strong, angular fonts with swirling spells or sword silhouettes, capturing the intense clash of heroes."
+    },
+    {
+      src: "/styles/s378.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a creative MOBA-themed logo for ''Text''. Incorporate realm-based motifs, hero weapon outlines, and color-coded team bars for a dynamic eSports presence."
+    },
+    {
+      src: "/styles/s379.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a modern MOBA logo for ''Text''. Utilize stylized, heroic typography, faint lightning or elemental effects, and subtle references to lane or jungle conflicts."
+    },
+    {
+      src: "/styles/s380.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a MOBA-inspired mascot logo for ''Text''. Feature a stylized hero champion or creature with vivid outlines, epic fonts, and dynamic color transitions."
+    },
+    {
+      src: "/styles/s381.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a fast-paced MOBA crest for ''Text''. Showcase a fierce warrior or mage icon in bold line art, with energetic, angled fonts and glowing accents."
+    },
+    {
+      src: "/styles/s382.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a heroic MOBA emblem for ''Text''. Combine a mythical fighter or beast silhouette, neon highlights, and e-sports style typography for a competitive edge."
+    },
+    {
+      src: "/styles/s383.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a dynamic MOBA logo for ''Text''. Use a champion-like figure or creature, thick cartoonish outlines, and bold team-font design with magical color flares."
+    },
+    {
+      src: "/styles/s384.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a vibrant e-sports logo for ''Text''. Center on a MOBA hero or monster, big eyes or dramatic expression, and blocky letters for intense, team-based action."
+    },
+    {
+      src: "/styles/s385.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a stylized MOBA icon for ''Text''. Show a fierce champion or summoner creature with glowing aura, and a modern, edgy font that commands attention."
+    },
+    {
+      src: "/styles/s386.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a sleek MOBA mascot logo for ''Text''. Incorporate a strong fantasy or sci-fi hero silhouette, neon arcs, and futuristic e-sports typography."
+    },
+    {
+      src: "/styles/s387.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a bold MOBA-themed design for ''Text''. Feature a dynamic pose of a champion or minion, dramatic outlines, and fierce stylized text that pops."
+    },
+    {
+      src: "/styles/s388.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a competitive MOBA crest for ''Text''. Use a central hero or epic beast with aura effects, framed by angled, heroic text in bright e-sports colors."
+    },
+    {
+      src: "/styles/s389.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a modern MOBA clan logo for ''Text''. Highlight a legendary champion or summoner staff, layered neon shapes, and a crisp uppercase font for tournament appeal."
+    }
+  ],
+    // Continue with other game genres like Shooters, RPG, etc.
   },
   "Art": {
     "8‐bit": [
@@ -321,7 +565,129 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         basePrompt: "A modern cartoonish logo for ''Text'' inspired by toony, exaggerated styles. The text ''Text'' is styled with playful, bold typography and bright colors, surrounded by fun, animated elements like cute characters and vibrant patterns, set against a lively, colorful background.",
       },
     ],
-    // Continue with other art/design styles like Emblem, Kawaii, Mascot Logo, etc.
+    "Emblem": [
+      {
+        src: "/styles/s420.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Design a regal emblem logo for ''Text''. Use ornate shields, crests, and bold typography, capturing an epic, old-world gaming aesthetic."
+      },
+      {
+        src: "/styles/s421.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Create a classic emblem-styled logo for ''Text''. Incorporate heraldic symbols, filigree accents, and a strong central shield for a timeless fantasy feel."
+      },
+      {
+        src: "/styles/s422.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Forge a robust emblem gaming logo for ''Text''. Use powerful, symmetrical iconography, thick lines, and grand typography reminiscent of knightly banners."
+      },
+      {
+        src: "/styles/s423.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Develop a modern emblem design for ''Text''. Blend crisp geometry with subtle metallic textures, anchored by an iconic crest that screams competitive royalty."
+      },
+      {
+        src: "/styles/s424.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Craft an intricate emblem-based logo for ''Text''. Incorporate layered shield motifs, filigree flourishes, and bold, stylized fonts for a polished medieval flair."
+      },
+      {
+        src: "/styles/s425.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Create a commanding emblem logo for ''Text''. Feature majestic animals or mythical creatures, elegant heraldry, and strong text that stands out in eSports contexts."
+      },
+      {
+        src: "/styles/s426.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Design a stylized emblem gaming logo for ''Text''. Use dynamic shapes, regal borders, and crisp lettering to portray a noble yet modern gaming identity."
+      },
+      {
+        src: "/styles/s427.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Produce a triumphant emblem-themed logo for ''Text''. Merge bold crest outlines, subtle gem or metal effects, and powerful, uppercase fonts for a conquering vibe."
+      },
+      {
+        src: "/styles/s428.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Develop a creative emblem logo for ''Text''. Combine knightly shield silhouettes, swirling scrollwork, and a heroic color palette to emphasize epic grandeur."
+      },
+      {
+        src: "/styles/s429.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Generate a modern-fantasy emblem for ''Text''. Fuse ornate, symmetrical shapes with futuristic lines, and add a strong typographic focal point that suits eSports."
+      },
+      {
+        src: "/styles/s430.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Design a regal emblem logo for ''Text''. Include a stylized mascot or creature within a shield, with bold e-sports lines and ornate, heroic text."
+      },
+      {
+        src: "/styles/s431.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Create a classic emblem-styled gaming logo for ''Text''. Incorporate heraldic symbols, filigree accents, and a strong central shield for a timeless fantasy feel."
+      },
+      {
+        src: "/styles/s432.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Forge a robust e-sports emblem for ''Text''. Use powerful, symmetrical iconography, thick lines, and grand typography reminiscent of knightly banners."
+      },
+      {
+        src: "/styles/s433.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Develop a modern emblem design for ''Text''. Blend crisp geometry with subtle metallic textures, anchored by an iconic crest that screams competitive royalty."
+      },
+      {
+        src: "/styles/s434.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Craft an intricate emblem-based logo for ''Text''. Incorporate layered shield motifs, filigree flourishes, and bold, stylized fonts for a polished medieval flair."
+      },
+      {
+        src: "/styles/s435.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Create a commanding emblem logo for ''Text''. Use a roaring beast or armored figure, dramatic highlight strokes, and a thick typeface that stands out in e-sports."
+      },
+      /*{
+        src: "/styles/s436.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Design a stylized emblem gaming logo for ''Text''. Emphasize crest geometry, bold color blocks, and a fierce central mascot, with modern outlines for e-sports excitement."
+      },*/
+      {
+        src: "/styles/s437.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Produce a triumphant emblem-themed logo for ''Text''. Merge bold crest outlines, subtle gem or metal effects, and powerful, uppercase fonts for a conquering vibe."
+      },
+      {
+        src: "/styles/s438.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Develop a creative crest for ''Text''. Combine knightly shield silhouettes, swirling scrollwork, and a heroic color palette to emphasize epic grandeur."
+      },
+      {
+        src: "/styles/s439.webp",
+        allowCustomColors: true,
+        basePrompt:
+          "Generate a modern-fantasy emblem for ''Text''. Fuse ornate, symmetrical shapes with futuristic lines, and add a strong typographic focal point that suits e-sports."
+      }
+    ],
+    // Continue with other art/design styles like Kawaii, Mascot Logo, etc.
   },
   "Themes & Motifs": {
     "Aliens": [
@@ -428,7 +794,129 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         basePrompt: "Create a modern astrology-inspired logo for ''Text''. Use flowing, mystical fonts with star accents and zodiac symbols. Set against a cosmic, star-filled backdrop to reflect celestial sophistication.",
       },
     ],
-    // Continue with other themes & motifs like Fantasy, Horror, Ninja, etc.
+    "Fantasy": [
+    {
+      src: "/styles/s470.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a whimsical fantasy gaming logo for ''Text''. Use flowing, magical fonts, enchanted forest or crystal motifs, and vibrant, otherworldly colors."
+    },
+    {
+      src: "/styles/s471.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a high-fantasy logo for ''Text''. Incorporate dragon silhouettes, swirling arcane symbols, and bold, medieval-inspired fonts for epic immersion."
+    },
+    {
+      src: "/styles/s472.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a mystical fantasy logo for ''Text''. Merge glowing runic lettering, ethereal elemental effects, and subtle castle spires for a grand RPG-like style."
+    },
+    {
+      src: "/styles/s473.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a heroic fantasy gaming logo for ''Text''. Use proud, angular text, sword or shield icons, and sweeping magical energy lines to convey epic quests."
+    },
+    {
+      src: "/styles/s474.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft an enchanted fantasy logo for ''Text''. Blend ornate, serif fonts with cosmic stardust or fairy-like glows, reflecting a dreamlike, storybook realm."
+    },
+    {
+      src: "/styles/s475.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a professional fantasy logo for ''Text''. Employ polished medieval typography, creature silhouettes, and a regal color scheme for a premium RPG appeal."
+    },
+    {
+      src: "/styles/s476.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a dark fantasy gaming logo for ''Text''. Combine sinister, jagged fonts, spiky demon horns, or eerie glowing eyes for a menacing, gothic presence."
+    },
+    {
+      src: "/styles/s477.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce an ethereal fantasy logo for ''Text''. Use wispy, flowing lettering, star or moon motifs, and a soft pastel glow to evoke a magical wonderland."
+    },
+    {
+      src: "/styles/s478.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a colorful fantasy design for ''Text''. Merge vibrant arcane runes, gemlike crystals, and lively calligraphy that captures epic realm adventures."
+    },
+    {
+      src: "/styles/s479.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a modern fantasy gaming logo for ''Text''. Integrate clean, stylized fonts with subtle mystical shapes or creatures, creating a striking, eSports-ready style."
+    },
+    {
+      src: "/styles/s480.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a whimsical fantasy mascot logo for ''Text''. Feature a playful wizard, dragon, or elf in bright lines, with bold e-sports text and vibrant magical accents."
+    },
+    {
+      src: "/styles/s481.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a high-fantasy gaming logo for ''Text''. Integrate a majestic creature or armored knight, swirling arcane effects, and eye-catching bold typography."
+    },
+    {
+      src: "/styles/s482.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a mystical fantasy emblem for ''Text''. Combine glowing runic lettering, ethereal elemental effects, and subtle castle spires for a grand RPG-like style."
+    },
+    {
+      src: "/styles/s483.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a heroic fantasy clan logo for ''Text''. Show a sword-wielding warrior or mythical beast, set against luminous shapes and bold angled fonts."
+    },
+    {
+      src: "/styles/s484.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft an enchanted fantasy design for ''Text''. Blend ornate, serif fonts with cosmic stardust or fairy-like glows, reflecting a dreamlike, storybook realm."
+    },
+    {
+      src: "/styles/s485.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a professional fantasy gaming logo for ''Text''. Incorporate regal medieval fonts, mythical silhouettes, and a strong dynamic shading for premium RPG appeal."
+    },
+    {
+      src: "/styles/s486.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a dark fantasy mascot for ''Text''. Include a sinister demon or undead sorcerer, sharp neon highlights, and aggressive e-sports typography."
+    },
+    {
+      src: "/styles/s487.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce an ethereal fantasy logo for ''Text''. Use starry or moonlit accents, a magical creature silhouette, and softly glowing bold text for a dreamy vibe."
+    },
+    {
+      src: "/styles/s488.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a colorful fantasy e-sports logo for ''Text''. Merge rainbow-hued runes, a lively monster or wizard, and impactful cartoon-like text that leaps out."
+    },
+    {
+      src: "/styles/s489.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a modern fantasy gaming logo for ''Text''. Portray a futuristic mage or draconic beast in metallic outlines, combined with chunky, confident lettering."
+    }
+  ],
+    // Continue with other themes & motifs like Horror, Ninja, etc.
   },
   "Colors": {
     "Black": [
@@ -554,7 +1042,129 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         basePrompt:
           "Create a modern blue-themed gaming logo for ''Text''. Use sleek, high-tech fonts with bold cyan or royal-blue outlines. Incorporate subtle wave or droplet motifs, set against a luminous, tranquil background for a refined, immersive style."
       }
-    ]
+    ],
+    "Green": [
+    {
+      src: "/styles/s520.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a green-themed gaming logo for ''Text''. Use bold, futuristic fonts with neon-green highlights, referencing forests or toxic slime for an edgy gamer vibe."
+    },
+    {
+      src: "/styles/s521.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a vibrant green logo for ''Text''. Merge energetic, angular lettering with leaf or vine motifs, set against a fresh, electric color palette."
+    },
+    {
+      src: "/styles/s522.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a sleek green gaming logo for ''Text''. Employ sharp typography in lime or emerald hues, enhanced by subtle wave or glow effects to evoke a futuristic style."
+    },
+    {
+      src: "/styles/s523.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a modern green design for ''Text''. Combine crisp, edgy lettering with digital circuit lines or leaf silhouettes for a tech-inspired, eco-friendly twist."
+    },
+    {
+      src: "/styles/s524.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a neon-green gaming logo for ''Text''. Use intense glow or glitch details, plus dynamic shapes that accentuate a fast-paced, energetic identity."
+    },
+    {
+      src: "/styles/s525.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a professional green-themed logo for ''Text''. Use smooth, polished fonts with gradient green edges, adding subtle nature or biohazard icons for gamer flair."
+    },
+    {
+      src: "/styles/s526.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a bold green logo for ''Text''. Pair strong, blocky letters with swirling leaf or dragon-scale motifs, reflecting both nature and power."
+    },
+    {
+      src: "/styles/s527.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a stylized green gaming logo for ''Text''. Combine edgy fonts in neon or forest green with swirling patterns, referencing growth or poison elements."
+    },
+    {
+      src: "/styles/s528.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a futuristic green logo for ''Text''. Merge angular, Tron-like typography with vivid lime highlights, giving an advanced, sci-fi aura."
+    },
+    {
+      src: "/styles/s529.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a creative green-themed design for ''Text''. Use dynamic, geometric lettering in emerald or lime, adding minimal leaf or lightning icons to capture raw, natural energy."
+    },
+    {
+      src: "/styles/s530.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a green-themed e-sports mascot logo for ''Text''. Feature a toxic beast or leafy creature, neon-lime outlines, and bold, gritty text for a fierce impression."
+    },
+    {
+      src: "/styles/s531.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a vibrant green gaming logo for ''Text''. Use a venomous snake or radioactive motif, angular fonts, and contrasting dark tones for an edgy style."
+    },
+    {
+      src: "/styles/s532.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a sleek green design for ''Text''. Combine electric lettering in emerald or neon-lime with a stylized reptile, alien, or slime creature in bold lines."
+    },
+    {
+      src: "/styles/s533.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a modern green e-sports logo for ''Text''. Focus on a warrior or monster sporting green power effects, paired with aggressive blocky fonts."
+    },
+    {
+      src: "/styles/s534.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a neon-toxic logo for ''Text''. Feature radioactive, green fumes or slime drips, thick outlines, and edgy uppercase text for a rebellious gamer look."
+    },
+    {
+      src: "/styles/s535.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a professional green-themed badge for ''Text''. Use a stylized forest spirit or gas-masked figure, metallic highlights, and strong, crisp fonts for e-sports polish."
+    },
+    {
+      src: "/styles/s536.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a bold green mascot logo for ''Text''. Portray a fierce plant creature or serpent with dynamic shading, combined with heavy, modern type for an epic effect."
+    },
+    {
+      src: "/styles/s537.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a stylized green e-sports logo for ''Text''. Combine edgy fonts in neon or forest green with swirling patterns, referencing growth or poison elements."
+    },
+    {
+      src: "/styles/s538.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a futuristic green crest for ''Text''. Combine a slick, robotic creature or mech with neon-lime edges, anchored by an authoritative uppercase font."
+    },
+    {
+      src: "/styles/s539.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a creative green-themed design for ''Text''. Use dynamic, geometric lettering in emerald or lime, adding minimal leaf or lightning icons to capture raw, natural energy."
+    }
+  ],
     // Other colors (Green, Orange, etc.) continue here ...
   },
   "Holidays & Seasonal": {
@@ -743,7 +1353,129 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         basePrompt:
           "Design a modern Halloween-themed gaming logo for ''Text''. Use jagged, cryptic lettering with subtle neon highlights, plus bat or spiderweb motifs, channeling an eerie festive aura."
       }
-    ]
+    ],
+    "Holiday": [
+    {
+      src: "/styles/s580.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a joyful holiday-themed gaming logo for ''Text''. Use festive fonts, playful snowflake or ornament details, and bright, celebratory colors."
+    },
+    {
+      src: "/styles/s581.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a festive holiday logo for ''Text''. Merge cheerful lettering, candy cane stripes or gift box elements, and a warm, glowing backdrop for a cozy gaming vibe."
+    },
+    {
+      src: "/styles/s582.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a winter wonderland holiday logo for ''Text''. Combine frosty, playful typography, ice crystal effects, and subtle gaming icons with a bright holiday palette."
+    },
+    {
+      src: "/styles/s583.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a dynamic holiday-themed design for ''Text''. Use bold, celebratory fonts, snow-laced edges, and stylized ornaments or bells for a merry gaming style."
+    },
+    {
+      src: "/styles/s584.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a modern holiday gaming logo for ''Text''. Integrate crisp, edgy lettering with sleek snowflake or star motifs, using neon reds and greens for an eSports-friendly twist."
+    },
+    /*{
+      src: "/styles/s585.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a magical holiday logo for ''Text''. Combine whimsical fonts with sparkling lights, reindeer silhouettes, or festive wreaths for a cozy, gift-worthy feel."
+    },*/
+    {
+      src: "/styles/s586.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a celebratory holiday logo for ''Text''. Merge bright, energetic lettering, scattered confetti, and minimal gaming references, capturing a year-end party vibe."
+    },
+    {
+      src: "/styles/s587.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a stylized holiday-themed logo for ''Text''. Use frosted, fun fonts, string lights or candy icons, and vibrant colors for a warm, festive gaming approach."
+    },
+    {
+      src: "/styles/s588.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a cheerful holiday gaming logo for ''Text''. Blend playful typography, small gift box or mistletoe details, and a bold, jolly color scheme."
+    },
+    {
+      src: "/styles/s589.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a sleek holiday logo for ''Text''. Utilize modern, minimal fonts with subtle holiday icons (like bells or ribbons) and a refined color palette for a classy seasonal feel."
+    },
+    {
+      src: "/styles/s590.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a joyful holiday mascot logo for ''Text''. Use a fun character like a snowman or elf with thick outlines, bright reds and greens, and playful e-sports text."
+    },
+    {
+      src: "/styles/s591.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a festive holiday logo for ''Text''. Combine a cheerful reindeer or ornament mascot, candy-cane patterns, and bold, cartoony lettering for a merry vibe."
+    },
+    {
+      src: "/styles/s592.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Forge a winter wonderland e-sports logo for ''Text''. Combine frosty, playful typography, ice crystal effects, and subtle gaming icons with a bright holiday palette."
+    },
+    {
+      src: "/styles/s593.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a dynamic holiday-themed design for ''Text''. Show a bell- or toy-inspired mascot with neon edges, plus strong uppercase fonts for a party-like feel."
+    },
+    {
+      src: "/styles/s594.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Craft a modern holiday gaming logo for ''Text''. Combine a stylized sleigh or candy motif, bright contrasting colors, and thick lines for a cheerful e-sports style."
+    },
+    /*{
+      src: "/styles/s595.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Create a magical holiday design for ''Text''. Use a whimsical elf or gift box character, bold glows, and cartoon-like text for a cozy, gift-worthy impression."
+    },*/
+    {
+      src: "/styles/s596.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Design a celebratory holiday logo for ''Text''. Merge fireworks or confetti with a jolly mascot (like a gingerbread man), plus dynamic e-sports fonts for year-end excitement."
+    },
+    {
+      src: "/styles/s597.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Generate a stylized holiday-themed mascot for ''Text''. Use frosted, fun fonts, string lights or candy icons, and vibrant colors for a warm, festive gaming approach."
+    },
+    {
+      src: "/styles/s598.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Develop a cheerful holiday gaming logo for ''Text''. Incorporate a comedic holiday figure (reindeer or snow monster) with big eyes, neon highlights, and thick text lines."
+    },
+    {
+      src: "/styles/s599.webp",
+      allowCustomColors: true,
+      basePrompt:
+        "Produce a sleek festive logo for ''Text''. Fuse modern, minimal fonts with subtle holiday icons (bells or ribbons) and a classy color palette for a refined seasonal approach."
+    }
+  ],
     // You can add more holidays like St. Patrick’s Day, etc., following a similar style.
   },
   "Real‐World / Cultural": {
