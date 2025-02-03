@@ -366,6 +366,7 @@ const GeneratePage: NextPage = () => {
           <div className="flex gap-4 mt-2">
             {/* Name Art */}
             <button
+              id="Section-one-name-art"
               type="button"
               onClick={() => setDesignType("NameArt")}
               className={`px-6 py-3 border-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
@@ -379,6 +380,7 @@ const GeneratePage: NextPage = () => {
 
             {/* Game Logo */}
             <button
+              id="Section-one-game-logo"
               type="button"
               onClick={() => setDesignType("GameLogo")}
               className={`px-6 py-3 border-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
@@ -777,7 +779,7 @@ const GeneratePage: NextPage = () => {
                 <div className="bg-red-500 text-white rounded p-4 text-xl">
                   {error}{" "}
                   {error === "You do not have enough credits" && (
-                    <Link href="/buy-credits" className="underline font-bold ml-2">
+                    <Link id="not-enough-credits-alert-btn" href="/buy-credits" className="underline font-bold ml-2">
                       Buy Credits
                     </Link>
                   )}

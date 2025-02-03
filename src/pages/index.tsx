@@ -53,6 +53,7 @@ const HomePage: NextPage = () => {
             <PrimaryLinkButton
               href="/generate?type=name-art"
               className="mt-4"
+              id="generate-name-art"
             >
               Create
             </PrimaryLinkButton>
@@ -72,6 +73,7 @@ const HomePage: NextPage = () => {
             <PrimaryLinkButton
               href="/generate?type=game-logo"
               className="mt-4"
+              id="generate-game-logo"
             >
               Create
             </PrimaryLinkButton>
