@@ -73,7 +73,6 @@ const generateIcon = async (
   }
 };
 
-
 // Update the TRPC mutation to include `model` in the input schema
 export const generateRouter = createTRPCRouter({
   generateIcon: protectedProcedure

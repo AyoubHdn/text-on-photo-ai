@@ -1,5 +1,3 @@
-// /pages/generate.tsx
-
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
@@ -13,6 +11,7 @@ import { gamerStylesData } from "../data/gamerStylesData"; // For Game Logo
 import { useSession, signIn } from "next-auth/react";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { colorFamilies } from "../data/colors";
+import Link from "next/link";
 
 /**
  * We define our 4 possible design types:
@@ -211,7 +210,7 @@ const GeneratePage: NextPage = () => {
       return;
     }
     if (!form.name || !form.basePrompt) {
-      setError("Please type your name and select a style.");
+      setError("Please select a style.");
       return;
     }
 
@@ -776,7 +775,12 @@ const GeneratePage: NextPage = () => {
               {/* Show error if any */}
               {error && (
                 <div className="bg-red-500 text-white rounded p-4 text-xl">
-                  {error}
+                  {error}{" "}
+                  {error === "You do not have enough credits" && (
+                    <Link href="/buy-credits" className="underline font-bold ml-2">
+                      Buy Credits
+                    </Link>
+                  )}
                 </div>
               )}
 

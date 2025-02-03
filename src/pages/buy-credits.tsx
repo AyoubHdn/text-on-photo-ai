@@ -10,7 +10,7 @@ const BuyCredits: React.FC = () => {
   type Offer = {
     name: string;
     images: number;
-    price: number;
+    price: number;  // current (discounted) price
     description: string;
     plan: "starter" | "pro" | "elite";
     popular?: boolean;
@@ -60,10 +60,12 @@ const BuyCredits: React.FC = () => {
   return (
     <>
       <Head>
-      <title>Buy Credits | Name Design AI</title>
-      <meta name="description" content="Explore affordable pricing plans and buy credits to unlock premium features on Name Design AI. Start creating stunning name designs today!" />
-
-        <link rel="icon" href="/favicon.ico"/>
+        <title>Buy Credits | Name Design AI</title>
+        <meta
+          name="description"
+          content="Explore affordable pricing plans and buy credits to unlock premium features on Name Design AI. Start creating stunning name designs today!"
+        />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-4 px-8">
         <div className="container mx-auto px-4">
@@ -79,39 +81,61 @@ const BuyCredits: React.FC = () => {
             Choose the perfect plan for your design needs.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
-            {offers.map((offer, index) => (
-              <div
-                key={index}
-                className={`border rounded-lg p-6 shadow-sm bg-white ${
-                  offer.popular ? "border-blue-500" : "border-gray-300"
-                }`}
-              >
-                {offer.popular && (
-                  <div className="bg-blue-500 text-white text-xs uppercase px-2 py-1 rounded-full inline-block mb-4">
-                    Most Popular
-                  </div>
-                )}
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">{offer.name}</h2>
-                <p className="text-gray-600 mb-4">{offer.description}</p>
-                <p className="text-4xl font-bold text-gray-800 mb-6">
-                  ${offer.price.toFixed(2)}
-                </p>
-                <p className="text-gray-600 mb-6">{offer.images} images included</p>
-                <p className="text-sm text-gray-500">
-                  Only ${offer.pricePerImage}/image
-                </p>
-                <button
-                  id={`plan_${offer.plan || 'default'}`}
-                  onClick={() => {
-                    void handleBuy(offer.plan);
-                  }}
-                  className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-                  disabled={loadingPlan === offer.plan} // Disable if this plan is loading
+            {offers.map((offer, index) => {
+              // Calculate the old price as double the current (discounted) price
+              const oldPrice = (offer.price * 2).toFixed(2);
+              return (
+                <div
+                  key={index}
+                  className={`relative border rounded-lg p-6 shadow-lg bg-white ${
+                    offer.popular ? "border-blue-500" : "border-gray-300"
+                  }`}
                 >
-                  {loadingPlan === offer.plan ? "Processing..." : "Buy Now"}
-                </button>
-              </div>
-            ))}
+                  {/* Discount badge */}
+                  <div className="absolute top-0 right-0 m-2">
+                    <span className="bg-red-600 text-white text-xs font-bold uppercase px-2 py-1 rounded">
+                      50% Off
+                    </span>
+                  </div>
+                  {offer.popular && (
+                    <div className="bg-blue-500 text-white text-xs uppercase px-2 py-1 rounded-full inline-block mb-4">
+                      Most Popular
+                    </div>
+                  )}
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    {offer.name}
+                  </h2>
+                  <p className="text-gray-600 mb-4">{offer.description}</p>
+                  <div className="mb-6">
+                    <p className="text-lg text-gray-500 line-through">
+                      Old Price: ${oldPrice}
+                    </p>
+                    <p className="text-4xl font-bold text-gray-800">
+                      Now: ${offer.price.toFixed(2)}
+                    </p>
+                  </div>
+                  <p className="text-gray-600 mb-2">
+                    {offer.images} Credits / {offer.images} Images
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Only ${offer.pricePerImage}/image
+                  </p>
+                  <p className="text-center text-sm text-red-600 mb-4 font-bold">
+                    Limited Offer: Only 2 spots available!
+                  </p>
+                  <button
+                    id={`plan_${offer.plan}`}
+                    onClick={() => {
+                      void handleBuy(offer.plan);
+                    }}
+                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+                    disabled={loadingPlan === offer.plan} // Disable if this plan is loading
+                  >
+                    {loadingPlan === offer.plan ? "Processing..." : "Buy Now"}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </main>
