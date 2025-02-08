@@ -229,6 +229,58 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
         "Produce a modern Counter-Strike gaming logo for ''Text''. Incorporate strong typography, tactical gear icons, and dynamic lighting to evoke the tension and speed of the game."
     }
   ],
+  "Cyberpunk 2077": [
+    {
+      src: "/styles/s340.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports mascot logo for ''Text'' in a neon dystopia. The text ''Text'' glows with circuit-like patterns, while a cybernetic skull or robotic figure exudes intense futuristic vibes."
+    },
+    {
+      src: "/styles/s341.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports crest for ''Text'' inspired by Cyberpunk 2077. The text ''Text'' is bold and metallic, surrounded by neon wires and glitch effects, reflecting a high-tech urban underworld."
+    },
+    {
+      src: "/styles/s342.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports style logo for ''Text'' featuring a futuristic wolf head with integrated LED elements. The text ''Text'' beams in neon pink and teal against a gritty city backdrop."
+    },
+    {
+      src: "/styles/s343.webp",
+      allowCustomColors: true,
+      basePrompt: "A neon-inspired e-sports emblem for ''Text'' with angular cyber armor. The text ''Text'' is outlined by holographic lines, capturing the essence of a futuristic combat arena."
+    },
+    {
+      src: "/styles/s344.webp",
+      allowCustomColors: true,
+      basePrompt: "A hardcore e-sports mascot design for ''Text'' featuring a techno-samurai. The text ''Text'' glows in bold red neon, blending ancient warrior aesthetics with futuristic elements."
+    },
+    {
+      src: "/styles/s345.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' that embraces the edgy style of Cyberpunk 2077. The text ''Text'' has a metallic sheen, accompanied by neon city silhouettes and circuit-inspired graphics."
+    },
+    {
+      src: "/styles/s346.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' showcasing a neon-lit skyline with towering holograms. The text ''Text'' appears in glitchy, sci-fi typography, hinting at technological rebellion."
+    },
+    {
+      src: "/styles/s347.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' merging street graffiti style with cybernetic details. The text ''Text'' is outlined by glowing wires, symbolizing the gritty, high-tech underbelly."
+    },
+    {
+      src: "/styles/s348.webp",
+      allowCustomColors: true,
+      basePrompt: "A futuristic neon fractal design for 'Text.' The text ''Text'' is embedded in a pulsating circuit board pattern, reflecting the edgy vibe of a cybernetic future."
+    },
+    {
+      src: "/styles/s349.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with a bold mix of chrome and neon aesthetics. The text ''Text'' features glitch effects, highlighting the electrifying world of Cyberpunk 2077."
+    }
+  ],
     // You can continue this pattern for other specific game titles like Counter-Strike, Cyberpunk 2077, etc.
   },
   "Game Genres": {
@@ -456,6 +508,58 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
       allowCustomColors: true,
       basePrompt:
         "Produce a modern MOBA clan logo for ''Text''. Highlight a legendary champion or summoner staff, layered neon shapes, and a crisp uppercase font for tournament appeal."
+    }
+  ],
+  "Shooters": [
+    {
+      src: "/styles/s390.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports mascot logo for ''Text'' featuring a fierce commando. The text ''Text'' is stenciled in tactical font, with crossed rifles and bullet casings in the background."
+    },
+    {
+      src: "/styles/s391.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports shooter logo for ''Text'' with a menacing skull wearing night-vision goggles. The text ''Text'' is bold and metallic, capturing intense military action."
+    },
+    {
+      src: "/styles/s392.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports style insignia for ''Text'' highlighting a stylized crosshair. The text ''Text'' pops with a sharp gradient, surrounded by dynamic muzzle flash effects."
+    },
+    {
+      src: "/styles/s393.webp",
+      allowCustomColors: true,
+      basePrompt: "A gritty e-sports emblem for ''Text'' featuring a stylized bullet. The text ''Text'' is bold and aggressive, accompanied by sparks and tactical gear elements."
+    },
+    {
+      src: "/styles/s394.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports badge for ''Text'' with a sleek sniper scope design. The text ''Text'' is sharp and imposing, set against camouflage patterns and bullet fragments."
+    },
+    {
+      src: "/styles/s395.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' evoking the intensity of FPS games. The text ''Text'' is styled with gunmetal textures, with crosshair icons and smokey effects in the background."
+    },
+    {
+      src: "/styles/s396.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' featuring a dynamic bullet trail across the design. The text ''Text'' is robust, representing the high-octane action of shooter gameplay."
+    },
+    {
+      src: "/styles/s397.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with a bold shield shape, sporting a modern rifle silhouette. The text ''Text'' stands out with crisp lines, hinting at competitive shooting prowess."
+    },
+    {
+      src: "/styles/s398.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' featuring a minimalistic helmet outline. The text ''Text'' carries a strong military vibe, combined with gritty textures and subtle bullet holes."
+    },
+    {
+      src: "/styles/s399.webp",
+      allowCustomColors: true,
+      basePrompt: "A refined shooter logo for ''Text'' with crosshairs and a stylized muzzle flash. The text ''Text'' is intense and angular, symbolizing precision and force."
     }
   ],
     // Continue with other game genres like Shooters, RPG, etc.
@@ -687,6 +791,58 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
           "Generate a modern-fantasy emblem for ''Text''. Fuse ornate, symmetrical shapes with futuristic lines, and add a strong typographic focal point that suits e-sports."
       }
     ],
+    "Kawaii": [
+    {
+      src: "/styles/s440.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports mascot logo for ''Text'' in kawaii style, featuring an adorable anime creature. The text ''Text'' is playful, surrounded by pastel stars and hearts."
+    },
+    {
+      src: "/styles/s441.webp",
+      allowCustomColors: true,
+      basePrompt: "A kawaii e-sports badge for ''Text'' with a chibi panda holding a tiny controller. The text ''Text'' is bubbly and bright, perfect for a fun gaming team."
+    },
+    {
+      src: "/styles/s442.webp",
+      allowCustomColors: true,
+      basePrompt: "A cute e-sports logo for ''Text'' featuring a magical unicorn. The text ''Text'' is written in pastel gradients, with sparkles and candy-like outlines."
+    },
+    {
+      src: "/styles/s443.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports crest for ''Text'' with a whimsical kitten. The text ''Text'' shines in bright pink, framed by glittery hearts and playful anime effects."
+    },
+    {
+      src: "/styles/s444.webp",
+      allowCustomColors: true,
+      basePrompt: "A kawaii e-sports insignia for ''Text'' highlighting a big-eyed bunny. The text ''Text'' features pastel polka dots, giving it a charming, youthful vibe."
+    },
+    {
+      src: "/styles/s445.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with soft pastel colors and bubble-like shapes. The text ''Text'' is curved and friendly, surrounded by cute bows and stars."
+    },
+    {
+      src: "/styles/s446.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' featuring a sweet ice cream cone character. The text ''Text'' is in a playful font, complemented by smiling faces and sparkly highlights."
+    },
+    {
+      src: "/styles/s447.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with a dreamy rainbow and cloud design. The text ''Text'' is soft and cheerful, embodying a lighthearted kawaii spirit."
+    },
+    {
+      src: "/styles/s448.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' depicting a cute little robot with heart-shaped eyes. The text ''Text'' is rounded and pastel-toned, capturing a techno-kawaii essence."
+    },
+    {
+      src: "/styles/s449.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' showcasing a cuddly chibi bear. The text ''Text'' is bright and inviting, surrounded by stars and soft pink sparkles."
+    }
+  ],
     // Continue with other art/design styles like Kawaii, Mascot Logo, etc.
   },
   "Themes & Motifs": {
@@ -914,6 +1070,58 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
       allowCustomColors: true,
       basePrompt:
         "Generate a modern fantasy gaming logo for ''Text''. Portray a futuristic mage or draconic beast in metallic outlines, combined with chunky, confident lettering."
+    }
+  ],
+  "Horror": [
+    {
+      src: "/styles/s490.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports mascot logo for ''Text'' featuring a menacing demon skull. The text ''Text'' is distressed and dripping with dark, horror-infused energy."
+    },
+    {
+      src: "/styles/s491.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports horror crest for ''Text'' with a twisted clown face. The text ''Text'' is jagged and blood-splattered, exuding a terrifying carnival feel."
+    },
+    {
+      src: "/styles/s492.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports emblem for ''Text'' showing a grim reaper silhouette. The text ''Text'' is sharp, set against eerie fog and ghostly shadows."
+    },
+    {
+      src: "/styles/s493.webp",
+      allowCustomColors: true,
+      basePrompt: "A horror-themed e-sports logo for ''Text'' with a snarling werewolf. The text ''Text'' is carved in a spiky font, with a full moon backdrop."
+    },
+    {
+      src: "/styles/s494.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports badge for ''Text'' depicting a creepy zombie hand. The text ''Text'' is bold and cracked, surrounded by splatters of greenish gore."
+    },
+    {
+      src: "/styles/s495.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' inspired by gothic horror. The text ''Text'' is ornate, framed by twisted vines and a looming haunted house silhouette."
+    },
+    {
+      src: "/styles/s496.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' showing a tattered, dripping bat emblem. The text ''Text'' has a sinister edge, highlighted by glowing red eyes in the background."
+    },
+    {
+      src: "/styles/s497.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with a dark, macabre atmosphere. The text ''Text'' is scratched and weathered, hovering over a stylized graveyard scene."
+    },
+    {
+      src: "/styles/s498.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' evoking midnight horror. The text ''Text'' appears in a blood-red hue, flanked by twisted trees and eerie silhouettes."
+    },
+    {
+      src: "/styles/s499.webp",
+      allowCustomColors: true,
+      basePrompt: "A chilling logo for ''Text'' featuring a vampire’s open coffin. The text ''Text'' is bold and gothic, accentuated by dripping candles and black roses."
     }
   ],
     // Continue with other themes & motifs like Horror, Ninja, etc.
@@ -1163,6 +1371,58 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
       allowCustomColors: true,
       basePrompt:
         "Produce a creative green-themed design for ''Text''. Use dynamic, geometric lettering in emerald or lime, adding minimal leaf or lightning icons to capture raw, natural energy."
+    }
+  ],
+  "Orange": [
+    {
+      src: "/styles/s540.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports mascot logo for ''Text'' dominated by a blazing orange lion. The text ''Text'' has fiery highlights, symbolizing power and intensity."
+    },
+    {
+      src: "/styles/s541.webp",
+      allowCustomColors: true,
+      basePrompt: "A dynamic e-sports crest for ''Text'' with a bold orange phoenix. The text ''Text'' is sleek and modern, amplifying the emblem’s fiery energy."
+    },
+    {
+      src: "/styles/s542.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports badge for ''Text'' showcasing an orange dragon head. The text ''Text'' is styled in black and white, making the orange design pop."
+    },
+    {
+      src: "/styles/s543.webp",
+      allowCustomColors: true,
+      basePrompt: "A sporty e-sports design for ''Text'' featuring an orange fox. The text ''Text'' is bold and angular, highlighting agility and fierce competition."
+    },
+    {
+      src: "/styles/s544.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports emblem for ''Text'' with an orange lightning bolt. The text ''Text'' is sharp and energetic, reflecting swift, electrifying gameplay."
+    },
+    {
+      src: "/styles/s545.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' emphasizing bright orange and black contrasts. The text ''Text'' is modern, underlined by a simple yet striking geometric shape."
+    },
+    {
+      src: "/styles/s546.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with molten orange gradients and metallic accents. The text ''Text'' radiates warmth, giving a powerful, standout impression."
+    },
+    {
+      src: "/styles/s547.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' showcasing an abstract orange swirl. The text ''Text'' is clean and contemporary, suggesting speed and creativity."
+    },
+    {
+      src: "/styles/s548.webp",
+      allowCustomColors: true,
+      basePrompt: "A bold logo for ''Text'' with a bright orange shield. The text ''Text'' is thick and crisp, surrounded by subtle flame patterns for a dynamic touch."
+    },
+    {
+      src: "/styles/s549.webp",
+      allowCustomColors: true,
+      basePrompt: "A spirited logo for ''Text'' highlighting an orange sunburst. The text ''Text'' is strong and high-contrast, embodying energy and optimism."
     }
   ],
     // Other colors (Green, Orange, etc.) continue here ...
@@ -1474,6 +1734,58 @@ Record<string, { src: string; basePrompt: string ; allowCustomColors: boolean }[
       allowCustomColors: true,
       basePrompt:
         "Produce a sleek festive logo for ''Text''. Fuse modern, minimal fonts with subtle holiday icons (bells or ribbons) and a classy color palette for a refined seasonal approach."
+    }
+  ],
+  "Valentine's Day": [
+    {
+      src: "/styles/s630.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports mascot logo for ''Text'' with a heart-shaped creature. The text ''Text'' is playful and pink, symbolizing romance in a competitive arena."
+    },
+    {
+      src: "/styles/s631.webp",
+      allowCustomColors: true,
+      basePrompt: "An e-sports crest for ''Text'' featuring cupid arrows and a glowing heart. The text ''Text'' is outlined by soft reds and whites for a sweet yet bold look."
+    },
+    {
+      src: "/styles/s632.webp",
+      allowCustomColors: true,
+      basePrompt: "A Valentine's e-sports badge for ''Text'' with a cartoon cherub. The text ''Text'' is in a candy pink font, adorned with sparkly hearts and bows."
+    },
+    {
+      src: "/styles/s633.webp",
+      allowCustomColors: true,
+      basePrompt: "A romantic e-sports emblem for ''Text'' starring a winged heart wearing headphones. The text ''Text'' is dynamic and fun, set against a rosy halo."
+    },
+    {
+      src: "/styles/s634.webp",
+      allowCustomColors: true,
+      basePrompt: "A playful e-sports logo for ''Text'' with a sweet cupid bear. The text ''Text'' is curved, framed by mini hearts and swirling pastel ribbons."
+    },
+    {
+      src: "/styles/s635.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' focused on a warm Valentine's vibe. The text ''Text'' is elegantly scripted, accented by a large heart motif and subtle roses."
+    },
+    {
+      src: "/styles/s636.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with interwoven hearts in a gentle pink palette. The text ''Text'' is neat and modern, signifying a sweet, romantic tone."
+    },
+    {
+      src: "/styles/s637.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' featuring a stylized rose wreath. The text ''Text'' stands out in a bold red hue, surrounded by delicate blossoms and soft sparkles."
+    },
+    {
+      src: "/styles/s638.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' with heart-shaped balloons and a subtle glitter effect. The text ''Text'' is round and playful, capturing cheerful Valentine's vibes."
+    },
+    {
+      src: "/styles/s639.webp",
+      allowCustomColors: true,
+      basePrompt: "A logo for ''Text'' merging a heart lock and key design. The text ''Text'' is romantic yet sleek, symbolizing love, trust, and unity."
     }
   ],
     // You can add more holidays like St. Patrick’s Day, etc., following a similar style.
