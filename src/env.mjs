@@ -31,6 +31,9 @@ const server = z.object({
   PRICE_ID_STARTER: z.string(),
   PRICE_ID_PRO: z.string(),
   PRICE_ID_ELITE: z.string(),
+  MAUTIC_BASE_URL: z.string(),
+  MAUTIC_USERNAME: z.string(),
+  MAUTIC_PASSWORD: z.string(),
 });
 
 /**
@@ -66,6 +69,9 @@ const processEnv = {
   PRICE_ID_STARTER: process.env.PRICE_ID_STARTER,
   PRICE_ID_PRO: process.env.PRICE_ID_PRO,
   PRICE_ID_ELITE: process.env.PRICE_ID_ELITE,
+  MAUTIC_BASE_URL: process.env.MAUTIC_BASE_URL,
+  MAUTIC_USERNAME: process.env.MAUTIC_USERNAME,
+  MAUTIC_PASSWORD: process.env.MAUTIC_PASSWORD,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

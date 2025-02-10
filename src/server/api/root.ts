@@ -3,6 +3,7 @@ import { userRouter } from "~/server/api/routers/user";
 import { generateRouter } from "~/server/api/routers/generate";
 import { checkoutRouter } from "~/server/api/routers/checkout";
 import { iconRouter } from "./routers/icons";
+import { mauticRouter } from "~/server/api/routers/mautic";
 
 /**
  * This is the primary router for your server.
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   generate: generateRouter,
   checkout: checkoutRouter,
   icons: iconRouter,
+  mautic: mauticRouter,
 });
 
 // export type definition of API
