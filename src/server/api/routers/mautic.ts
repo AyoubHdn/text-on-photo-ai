@@ -1,9 +1,9 @@
 // src/server/api/routers/mautic.ts
 import { env } from "~/env.mjs";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { User } from "@prisma/client";
 
-// Define an interface for the response from Mautic's API
-interface MauticResponse {
+export interface MauticResponse {
   contact?: unknown;
   errors?: string[];
   [key: string]: unknown;
@@ -20,10 +20,12 @@ export async function updateMauticContact(contact: {
   const authHeader =
     "Basic " + Buffer.from(`${mauticUsername}:${mauticPassword}`).toString("base64");
 
-  // Split name into first and last names.
+  // Split the name into first and last names.
   const [firstname, ...rest] = contact.name ? contact.name.split(" ") : [""];
   const lastname = rest.join(" ") || "";
 
+  // Build payload for update or creation.
+  // If credits is defined, send "No credits" when it's 0; otherwise, send the credit value as a string.
   const payload: { [key: string]: unknown } = {
     email: contact.email,
     firstname,
@@ -31,7 +33,7 @@ export async function updateMauticContact(contact: {
   };
 
   if (contact.credits !== undefined) {
-    payload.credits = contact.credits;
+    payload.credits = contact.credits === 0 ? "No credits" : String(contact.credits);
   }
 
   const response = await fetch(`${mauticBaseUrl}/api/contacts/new`, {
@@ -48,12 +50,10 @@ export async function updateMauticContact(contact: {
 
 export const mauticRouter = createTRPCRouter({
   syncContacts: protectedProcedure.mutation(async ({ ctx }) => {
-    // Fetch contacts from your Prisma database.
-    const contacts = await ctx.prisma.user.findMany({
+    const contacts: User[] = await ctx.prisma.user.findMany({
       where: { email: { not: null } },
     });
 
-    // Loop through each contact and update Mautic.
     for (const contact of contacts || []) {
       if (!contact.email) {
         console.warn("Skipping contact with no email.");
