@@ -1,8 +1,10 @@
+// src/pages/api/stripe.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { env } from "~/env.mjs";
 import { buffer } from "micro";
 import { prisma } from "~/server/db";
+import { updateMauticContact } from "~/server/api/routers/mautic";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-11-20.acacia",
@@ -77,7 +79,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
       console.log(`Credits to increment: ${incrementCredits}`);
 
-      // Update user credits
+      // Update user credits and immediately update Mautic
       try {
         const userBeforeUpdate = await prisma.user.findUnique({
           where: { id: userId },
@@ -95,6 +97,22 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         });
 
         console.log("User after update:", updatedUser);
+
+        // Immediately update Mautic contact with the new credit balance.
+        if (updatedUser.email) {
+          try {
+            const mauticResult = await updateMauticContact({
+              email: updatedUser.email,
+              name: updatedUser.name,
+              credits: updatedUser.credits,
+            });
+            console.log("Mautic updated after purchase:", mauticResult);
+          } catch (err) {
+            console.error("Error updating Mautic after purchase:", err);
+          }
+        } else {
+          console.error("Updated user has no email; cannot update Mautic.");
+        }
       } catch (err) {
         console.error("Error updating user credits:", err);
         return res.status(500).send("Failed to update user credits.");

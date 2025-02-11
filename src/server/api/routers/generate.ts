@@ -1,3 +1,4 @@
+// src/server/api/routers/generate.ts
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import fetch from "node-fetch"; // Ensure this is installed
@@ -6,6 +7,7 @@ import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
 import AWS from "aws-sdk";
+import { updateMauticContact } from "~/server/api/routers/mautic"; // Import your Mautic update function
 
 // Configure AWS S3
 const s3 = new AWS.S3({
@@ -92,7 +94,7 @@ export const generateRouter = createTRPCRouter({
 
       const totalCredits = modelConfig.credits * input.numberOfImages;
 
-      // Check if the user has enough credits
+      // Check if the user has enough credits and deduct them.
       const { count } = await ctx.prisma.user.updateMany({
         where: {
           id: ctx.session.user.id,
@@ -114,6 +116,30 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
+      // Fetch the updated user record from the database.
+      const updatedUser = await ctx.prisma.user.findUnique({
+        where: { id: ctx.session.user.id },
+      });
+      if (!updatedUser || !updatedUser.email) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "User not found after credit update",
+        });
+      }
+
+      // Immediately update Mautic with the new credit balance.
+      try {
+        await updateMauticContact({
+          email: updatedUser.email,
+          name: updatedUser.name,
+          credits: updatedUser.credits,
+        });
+        console.log("Mautic contact updated after credit deduction.");
+      } catch (err) {
+        console.error("Error updating Mautic after credit deduction:", err);
+      }
+
+      // Generate the images.
       const b64Images: string[] = await generateIcon(
         input.prompt,
         input.numberOfImages,

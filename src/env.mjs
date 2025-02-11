@@ -34,6 +34,7 @@ const server = z.object({
   MAUTIC_BASE_URL: z.string(),
   MAUTIC_USERNAME: z.string(),
   MAUTIC_PASSWORD: z.string(),
+  CRON_SECRET: z.string(),
 });
 
 /**
@@ -72,6 +73,7 @@ const processEnv = {
   MAUTIC_BASE_URL: process.env.MAUTIC_BASE_URL,
   MAUTIC_USERNAME: process.env.MAUTIC_USERNAME,
   MAUTIC_PASSWORD: process.env.MAUTIC_PASSWORD,
+  CRON_SECRET: process.env.CRON_SECRET,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

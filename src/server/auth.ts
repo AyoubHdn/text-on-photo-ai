@@ -8,6 +8,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import { updateMauticContact } from "~/server/api/routers/mautic";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -61,14 +62,44 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    signIn: (message) => {
-      console.log("SignIn event:", message);
+    signIn: async ({ user }) => {
+      if (user.email) {
+        try {
+          // Fetch the latest user record from the database
+          const latestUser = await prisma.user.findUnique({
+            where: { id: user.id },
+          });
+          if (!latestUser) {
+            console.error("User not found in database on signIn.");
+            return;
+          }
+          const result = await updateMauticContact({
+            email: latestUser.email!,
+            name: latestUser.name,
+            credits: latestUser.credits,
+          });
+          console.log("Mautic updated on signIn:", result);
+        } catch (err) {
+          console.error("Error updating Mautic on signIn:", err);
+        }
+      }
     },
     signOut: (message) => {
       console.log("SignOut event:", message);
     },
-    createUser: (message) => {
-      console.log("CreateUser event:", message);
+    createUser: async ({ user }) => {
+      if (user.email) {
+        try {
+          const result = await updateMauticContact({
+            email: user.email,
+            name: user.name,
+            credits: 1, // New users start with 1 credit
+          });
+          console.log("Mautic updated on createUser:", result);
+        } catch (err) {
+          console.error("Error updating Mautic on createUser:", err);
+        }
+      }
     },
     updateUser: (message) => {
       console.log("UpdateUser event:", message);
@@ -78,7 +109,8 @@ export const authOptions: NextAuthOptions = {
     },
     session: (message) => {
       console.log("Session event:", message);
-    }
+    },
+    
   }
 }
 
