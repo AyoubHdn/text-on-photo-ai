@@ -51,7 +51,7 @@ const HomePage: NextPage = () => {
               Generate custom name art for any occasion.
             </p>
             <PrimaryLinkButton
-              href="/generate?type=name-art"
+              href="/generate"
               className="mt-4"
               id="generate-name-art"
             >
@@ -71,7 +71,7 @@ const HomePage: NextPage = () => {
               Design a unique game logo for your brand or community.
             </p>
             <PrimaryLinkButton
-              href="/generate?type=game-logo"
+              href="/generate"
               className="mt-4"
               id="generate-game-logo"
             >

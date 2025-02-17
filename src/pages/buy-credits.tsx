@@ -121,7 +121,7 @@ const BuyCredits: React.FC = () => {
                     Only ${offer.pricePerImage}/image
                   </p>
                   <p className="text-center text-sm text-red-600 mb-4 font-bold">
-                    Limited Offer: Only 2 spots available!
+                    Limited Offer
                   </p>
                   <button
                     id={`plan_${offer.plan}`}
