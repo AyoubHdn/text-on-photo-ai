@@ -2,30 +2,41 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import { PrimaryLinkButton } from "~/component/PrimaryLinkButton";
+import { useSession, signIn } from "next-auth/react";
 
 const HomePage: NextPage = () => {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session;
+
   function HeroBanner() {
+    const handleTryItFree = () => {
+      if (!isLoggedIn) {
+        signIn("google").catch(console.error); // Trigger Google sign-in if not logged in
+      } else {
+        // Scroll to CategorySection if logged in
+        document.getElementById("category-section")?.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
     return (
       <section className="mt-12 mb-24 grid grid-cols-1 gap-12 px-8 sm:mt-24 sm:grid-cols-2">
         <div className="flex flex-col gap-4">
-          <h1 className="text-5xl font-bold">Create Stunning Name Art & Game Logos!</h1>
+          <h1 className="text-5xl font-bold">Create Name Art, Gaming Logos & Pro Designs!</h1>
           <p className="text-2xl text-gray-500 dark:text-gray-300">
-            Transform your name into art or design an epic game logo! 
-            With Name Design AI, you can easily create personalized designs perfect for social media, branding, or gaming. 
-            (Wallpaper and Pro Logo coming soon!)
+            Unleash your creativity with Name Design AI. Design personalized name art, epic gaming logos, or professional branding—all in minutes. Perfect for social media, gifts, or businesses!
           </p>
-          <PrimaryLinkButton
-            href={"/generate"}
-            className="self-start"
-            id="generate-your-image-button-heroBanner"
+          <button
+            onClick={handleTryItFree}
+            className="self-start px-6 py-3 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition"
+            id="try-it-free-button-heroBanner"
           >
             Try it Free
-          </PrimaryLinkButton>
+          </button>
         </div>
         <Image
           className="order-first sm:order-none"
           src="/banner.png"
-          alt="bunch of nice looking icons"
+          alt="Examples of name art, gaming logos, and professional designs"
           width="400"
           height="300"
         />
@@ -35,77 +46,78 @@ const HomePage: NextPage = () => {
 
   function CategorySection() {
     return (
-      <section className="py-12 px-8 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm mb-12">
-        <h2 className="text-4xl font-bold text-center mb-8">What Do You Want To Create?</h2>
+      <section className="py-12 px-8 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm mb-12" id="category-section">
+        <h2 className="text-4xl font-bold text-center mb-8">What Do You Want to Create?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Name Art */}
           <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow transition hover:shadow-lg">
             <Image
               src="/icons/name-art.webp"
-              alt="Name Art"
+              alt="Personalized Name Art Generator"
               width={64}
               height={64}
             />
             <h3 className="text-xl font-bold mt-4">Name Art</h3>
             <p className="text-gray-600 dark:text-gray-300 mt-2 text-center">
-              Generate custom name art for any occasion.
+              Turn any name into stunning art for social media or gifts.
             </p>
             <PrimaryLinkButton
-              href="/generate"
+              href="/name-art"
               className="mt-4"
               id="generate-name-art"
             >
-              Create
+              Create Now
             </PrimaryLinkButton>
           </div>
-          {/* Game Logo */}
+          {/* Gaming Logo */}
           <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow transition hover:shadow-lg">
             <Image
               src="/icons/game-logo.webp"
-              alt="Game Logo"
+              alt="Gaming Logo Generator"
               width={64}
               height={64}
             />
-            <h3 className="text-xl font-bold mt-4">Game Logo</h3>
+            <h3 className="text-xl font-bold mt-4">Gaming Logo</h3>
             <p className="text-gray-600 dark:text-gray-300 mt-2 text-center">
-              Design a unique game logo for your brand or community.
+              Design bold logos for gaming teams or streams.
             </p>
             <PrimaryLinkButton
-              href="/generate"
+              href="/gaming-logo"
               className="mt-4"
               id="generate-game-logo"
             >
-              Create
+              Create Now
+            </PrimaryLinkButton>
+          </div>
+          {/* Professional Logo */}
+          <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow transition hover:shadow-lg">
+            <Image
+              src="/icons/pro-logo.webp"
+              alt="Professional Logo Generator"
+              width={64}
+              height={64}
+            />
+            <h3 className="text-xl font-bold mt-4">Professional Logo</h3>
+            <p className="text-gray-600 dark:text-gray-300 mt-2 text-center">
+              Craft custom logos for businesses or brands.
+            </p>
+            <PrimaryLinkButton
+              href="/pro-logo"
+              className="mt-4"
+              id="generate-pro-logo"
+            >
+              Create Now
             </PrimaryLinkButton>
           </div>
           {/* Wallpaper (Coming Soon) */}
           <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow opacity-50 pointer-events-none">
             <Image
               src="/icons/wallpaper.png"
-              alt="Wallpaper"
+              alt="Wallpaper Generator (Coming Soon)"
               width={64}
               height={64}
             />
             <h3 className="text-xl font-bold mt-4">Wallpaper</h3>
-            <p className="text-gray-600 dark:text-gray-300 mt-2 text-center">
-              Coming Soon
-            </p>
-            <button
-              disabled
-              className="mt-4 bg-gray-300 text-white font-bold py-2 px-4 rounded cursor-not-allowed"
-            >
-              Coming Soon
-            </button>
-          </div>
-          {/* Pro Logo (Coming Soon) */}
-          <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow opacity-50 pointer-events-none">
-            <Image
-              src="/icons/pro-logo.png"
-              alt="Pro Logo"
-              width={64}
-              height={64}
-            />
-            <h3 className="text-xl font-bold mt-4">Pro Logo</h3>
             <p className="text-gray-600 dark:text-gray-300 mt-2 text-center">
               Coming Soon
             </p>
@@ -124,10 +136,10 @@ const HomePage: NextPage = () => {
   function StatisticsSection() {
     return (
       <section className="py-12 text-center">
-        <h2 className="text-4xl font-bold">Join the Creative Revolution!</h2>
+        <h2 className="text-4xl font-bold">Join Thousands of Creators!</h2>
         <p className="text-xl text-gray-600 mt-4 dark:text-gray-300">
-          More than <span className="font-bold text-blue-500">945</span> creators
-          have generated <span className="font-bold text-blue-500">4,634</span> unique designs using our tool!
+          Over <span className="font-bold text-blue-500">945</span> users have created 
+          <span className="font-bold text-blue-500">4,634</span> unique designs with Name Design AI!
         </p>
       </section>
     );
@@ -136,7 +148,7 @@ const HomePage: NextPage = () => {
   function DemoSection() {
     return (
       <section className="py-12 px-8">
-        <h2 className="text-4xl font-bold text-center">See How It Works</h2>
+        <h2 className="text-4xl font-bold text-center">See How Easy It Is</h2>
         <div className="mt-8 flex justify-center">
           <video
             className="rounded-lg shadow-lg"
@@ -156,54 +168,48 @@ const HomePage: NextPage = () => {
   function FeaturesSection() {
     return (
       <section className="py-12 mb-12 bg-white shadow-sm dark:bg-gray-900 rounded-lg">
-        <h2 className="text-4xl font-bold text-center mb-8">Why Choose Us?</h2>
+        <h2 className="text-4xl font-bold text-center mb-8">Why Use Name Design AI?</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 px-8">
           <div className="flex flex-col items-center text-center max-w-sm mx-auto">
-            <Image src="/quick.png" alt="Quick" width={64} height={64} />
-            <h3 className="text-xl font-bold mt-4">Fast & Easy</h3>
+            <Image src="/quick.png" alt="Fast Design Creation" width={64} height={64} />
+            <h3 className="text-xl font-bold mt-4">Fast & Simple</h3>
             <p className="leading-normal dark:text-gray-200 mt-2">
-              Generate stunning designs in seconds with just a few clicks.
-              No design skills required—our AI-powered tool does the hard work for you.
+              Create stunning designs in seconds—no design skills needed.
             </p>
           </div>
           <div className="flex flex-col items-center text-center">
-            <Image src="/styles.png" alt="Customizable" width={64} height={64} />
-            <h3 className="text-xl font-bold mt-4">Variety of Styles</h3>
+            <Image src="/styles.png" alt="Variety of Design Styles" width={64} height={64} />
+            <h3 className="text-xl font-bold mt-4">Endless Styles</h3>
             <p className="leading-normal dark:text-gray-200 mt-2">
-              Choose from +1000 unique styles, from elegant and modern to playful and festive. 
-              No matter the occasion, we have a style that fits your needs.
+              From playful name art to sleek logos, find your perfect style.
             </p>
           </div>
           <div className="flex flex-col items-center text-center">
-            <Image src="/affordable.png" alt="Affordable" width={64} height={64} />
-            <h3 className="text-xl font-bold mt-4">Affordable Pricing</h3>
+            <Image src="/affordable.png" alt="Affordable Design Tool" width={64} height={64} />
+            <h3 className="text-xl font-bold mt-4">Budget-Friendly</h3>
             <p className="leading-normal dark:text-gray-200 mt-2">
-              Get high-quality designs at unbeatable prices. 
-              Save money compared to hiring professional designers.
+              High-quality designs at a fraction of the cost.
             </p>
           </div>
           <div className="flex flex-col items-center text-center">
-            <Image src="/manage.png" alt="Manage Creations" width={64} height={64} />
-            <h3 className="text-xl font-bold mt-4">Manage Your Creations</h3>
+            <Image src="/manage.png" alt="Cloud Design Storage" width={64} height={64} />
+            <h3 className="text-xl font-bold mt-4">Organize Easily</h3>
             <p className="leading-normal dark:text-gray-200 mt-2">
-              We store all your generated designs in the cloud, 
-              so you can easily access and organize them anytime.
+              Store and access your creations anytime in the cloud.
             </p>
           </div>
           <div className="flex flex-col items-center text-center">
-            <Image src="/hd.png" alt="High Resolution" width={64} height={64} />
-            <h3 className="text-xl font-bold mt-4">High Resolution</h3>
+            <Image src="/hd.png" alt="High-Resolution Designs" width={64} height={64} />
+            <h3 className="text-xl font-bold mt-4">HD Quality</h3>
             <p className="leading-normal dark:text-gray-200 mt-2">
-              All designs are delivered in high resolution, 
-              ensuring they look sharp and professional in both print and digital.
+              Crisp, professional designs for any use.
             </p>
           </div>
           <div className="flex flex-col items-center text-center">
-            <Image src="/share.png" alt="Social Sharing" width={64} height={64} />
-            <h3 className="text-xl font-bold mt-4">Social Presence</h3>
+            <Image src="/share.png" alt="Share Designs Instantly" width={64} height={64} />
+            <h3 className="text-xl font-bold mt-4">Share Instantly</h3>
             <p className="leading-normal dark:text-gray-200 mt-2">
-              Easily share your creations on social media. 
-              Perfect for showcasing your creativity or getting feedback.
+              Show off your creations on social media with ease.
             </p>
           </div>
         </div>
@@ -214,46 +220,35 @@ const HomePage: NextPage = () => {
   function UserFeedbackSection() {
     const feedbacks = [
       {
-        image: "/user-youtube-logo.webp",
-        feedback:
-          "I used this tool to create a logo for my YouTube channel, and it turned out incredible! My subscribers love it!",
-        name: "Chris D.",
-      },
-      {
         image: "/user-birthday-design.webp",
-        feedback:
-          "I created a custom name design for my friend’s birthday, and it was a huge hit! They absolutely loved it!",
+        feedback: "I made a name art gift for my friend’s birthday—it was a total hit!",
         name: "Ashley K.",
       },
       {
-        image: "/user-wallpaper-design.webp",
-        feedback:
-          "I generated a name wallpaper for my desktop, and it looks so cool! The high-resolution quality is amazing.",
-        name: "Jordan P.",
-      },
-      {
-        image: "/user-gift-fiance.webp",
-        feedback:
-          "I made a personalized name design as a gift for my fiancé. He was so touched—it was the perfect keepsake!",
-        name: "Emma T.",
-      },
-      {
         image: "/user-game-logo.webp",
-        feedback:
-          "This tool helped me create a professional-looking logo for my game channel Discord. The styles available are perfect for gaming!",
+        feedback: "The gaming logo I created for my Discord server looks so pro!",
         name: "Ryan L.",
       },
       {
         image: "/user-social-media.webp",
-        feedback:
-          "I designed a name for my social media profile, and it boosted my brand identity! It's so easy to use and looks amazing.",
+        feedback: "My new name art boosted my social media profile instantly!",
         name: "Samantha B.",
+      },
+      {
+        image: "/user-gift-fiance.webp",
+        feedback: "I designed a name art keepsake for my fiancé—he loved it!",
+        name: "Emma T.",
+      },
+      {
+        image: "/user-youtube-logo.webp",
+        feedback: "Perfect logo for my YouTube gaming channel—super easy to make!",
+        name: "Chris D.",
       },
     ];
 
     return (
       <section className="py-12 px-8">
-        <h2 className="text-4xl font-bold text-center mb-8">What Our Users Are Saying</h2>
+        <h2 className="text-4xl font-bold text-center mb-8">Hear From Our Users</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {feedbacks.map((item, index) => (
             <div
@@ -262,7 +257,7 @@ const HomePage: NextPage = () => {
             >
               <Image
                 src={item.image}
-                alt={`User feedback from ${item.name}`}
+                alt={`Feedback from ${item.name} about Name Design AI`}
                 width={200}
                 height={200}
                 className="rounded-lg mb-4"
@@ -277,50 +272,53 @@ const HomePage: NextPage = () => {
   }
 
   function BenefitsSection() {
+    const handleStartGenerating = () => {
+      if (!isLoggedIn) {
+        signIn("google").catch(console.error); // Trigger Google sign-in if not logged in
+      } else {
+        // Scroll to CategorySection if logged in
+        document.getElementById("category-section")?.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
     const benefits = [
       {
         icon: "/icons/save-time.png",
-        title: "Save Time and Money",
-        description:
-          "Why spend hours negotiating with freelancers or paying high fees for simple tasks? Our AI handles it instantly.",
+        title: "Save Time",
+        description: "Create designs instantly—no waiting required.",
       },
       {
         icon: "/icons/styles.png",
-        title: "Variety of Styles",
-        description:
-          "Whether you need a thoughtful gift, a new profile picture, or a logo for your business, we’ve got you covered.",
+        title: "Versatile Styles",
+        description: "Find the perfect look for name art, logos, and more.",
       },
       {
         icon: "/icons/pricing.png",
-        title: "Affordable Pricing",
-        description:
-          "Generating designs with our tool is significantly cheaper than hiring a designer or using premium services.",
+        title: "Low Cost",
+        description: "Affordable designs without compromising quality.",
       },
       {
         icon: "/icons/unique-designs.png",
-        title: "Unique Designs",
-        description:
-          "Every design is one-of-a-kind, tailored to your preferences. Stand out from the crowd with custom artwork.",
+        title: "One-of-a-Kind",
+        description: "Every design is unique and tailored to you.",
       },
       {
         icon: "/icons/users.png",
-        title: "Who Can Use This Tool?",
-        description:
-          "From creatives and entrepreneurs to gift-givers and gamers, it’s perfect for anyone seeking personalized designs.",
+        title: "For Everyone",
+        description: "Perfect for gamers, gift-givers, and businesses alike.",
       },
     ];
 
     return (
       <section className="py-12 px-8 bg-gray-100 dark:bg-gray-900 rounded-lg mb-11">
-        <h2 className="text-4xl font-bold text-center mb-8">Benefits of Using Our Tool</h2>
+        <h2 className="text-4xl font-bold text-center mb-8">Why Name Design AI?</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {benefits.map((benefit, index) => (
             <div key={index} className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow-sm">
               <div className="flex items-center gap-4 mb-4">
                 <Image
-                  className="shadow-current"
                   src={benefit.icon}
-                  alt={`${benefit.title} icon`}
+                  alt={`${benefit.title} benefit icon`}
                   width={40}
                   height={40}
                 />
@@ -331,13 +329,13 @@ const HomePage: NextPage = () => {
           ))}
         </div>
         <div className="mt-12 text-center">
-          <PrimaryLinkButton
-            id="start-generating-now-button-benefitsSection"
-            href="/generate"
+          <button
+            onClick={handleStartGenerating}
             className="inline-block px-8 py-4 text-lg font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+            id="start-generating-now-button-benefitsSection"
           >
             Start Generating Now
-          </PrimaryLinkButton>
+          </button>
         </div>
       </section>
     );
@@ -346,16 +344,16 @@ const HomePage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Name Design AI – Generate Name Art & Game Logos.</title>
+        <title>Name Design AI – Name Art, Gaming Logos & Professional Designs</title>
         <meta
           name="description"
-          content="Transform your name into art (or design an epic game logo) with Name Design AI!"
+          content="Create personalized name art, gaming logos, or professional designs with Name Design AI. Perfect for social media, gifts, or branding—try it free!"
         />
+        <meta name="keywords" content="name art generator, gaming logo maker, professional logo creator, custom designs, AI design tool" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container mx-auto">
         <HeroBanner />
-        {/* New Category Section for Name Art, Game Logo, Wallpaper, Pro Logo */}
         <CategorySection />
         <StatisticsSection />
         <DemoSection />

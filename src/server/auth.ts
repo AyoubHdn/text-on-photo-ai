@@ -8,7 +8,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
-import { updateMauticContact } from "~/server/api/routers/mautic";
+import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {

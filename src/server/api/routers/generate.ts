@@ -1,4 +1,7 @@
-// src/server/api/routers/generate.ts
+// =========================================
+// ~/server/api/routers/generate.ts
+// =========================================
+
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import fetch from "node-fetch"; // Ensure this is installed
@@ -7,7 +10,7 @@ import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
 import AWS from "aws-sdk";
-import { updateMauticContact } from "~/server/api/routers/mautic"; // Import your Mautic update function
+import { updateMauticContact } from "~/server/api/routers/mautic-utils"; // Import your Mautic update function
 
 // Configure AWS S3
 const s3 = new AWS.S3({
@@ -57,7 +60,7 @@ const generateIcon = async (
         go_fast: true,
         megapixels: "1",
         num_outputs: numberOfImages,
-        aspect_ratio: aspectRatio, // Use dynamic aspect ratio
+        aspect_ratio: aspectRatio,
         output_format: "webp",
         output_quality: 80,
         num_inference_steps: config.steps,
@@ -75,18 +78,19 @@ const generateIcon = async (
   }
 };
 
-// Update the TRPC mutation to include `model` in the input schema
+// TRPC Router
 export const generateRouter = createTRPCRouter({
   generateIcon: protectedProcedure
     .input(
       z.object({
         prompt: z.string(),
         numberOfImages: z.number().min(1).max(10),
-        aspectRatio: z.string().optional(), // Add aspect ratio
-        model: z.string(), // Add model selection
+        aspectRatio: z.string().optional(),
+        model: z.string(), 
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Determine cost
       const modelConfig =
         input.model === "flux-schnell"
           ? { credits: 1 }
@@ -94,7 +98,7 @@ export const generateRouter = createTRPCRouter({
 
       const totalCredits = modelConfig.credits * input.numberOfImages;
 
-      // Check if the user has enough credits and deduct them.
+      // Deduct credits
       const { count } = await ctx.prisma.user.updateMany({
         where: {
           id: ctx.session.user.id,
@@ -116,7 +120,7 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
-      // Fetch the updated user record from the database.
+      // Fetch updated user
       const updatedUser = await ctx.prisma.user.findUnique({
         where: { id: ctx.session.user.id },
       });
@@ -127,7 +131,7 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
-      // Immediately update Mautic with the new credit balance.
+      // Update Mautic
       try {
         await updateMauticContact({
           email: updatedUser.email,
@@ -139,14 +143,15 @@ export const generateRouter = createTRPCRouter({
         console.error("Error updating Mautic after credit deduction:", err);
       }
 
-      // Generate the images.
+      // Generate images
       const b64Images: string[] = await generateIcon(
         input.prompt,
         input.numberOfImages,
-        input.aspectRatio, // Pass aspect ratio
-        input.model // Pass model
+        input.aspectRatio,
+        input.model
       );
 
+      // Store images in DB and S3
       const createdIcons = await Promise.all(
         b64Images.map(async (image: string) => {
           const icon = await ctx.prisma.icon.create({

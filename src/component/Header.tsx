@@ -56,8 +56,18 @@ export function Header() {
                     </PrimaryLink>
                 </li>
                 <li>
-                    <PrimaryLink id="generate-header-button" href="/generate" className="hidden md:block">
-                        Generate
+                    <PrimaryLink id="generate-header-button" href="/name-art" className="hidden md:block">
+                        Name Art
+                    </PrimaryLink>
+                </li>
+                <li>
+                    <PrimaryLink id="generate-header-button" href="/gaming-logo" className="hidden md:block">
+                        Gaming Logo
+                    </PrimaryLink>
+                </li>
+                <li>
+                    <PrimaryLink id="generate-header-button" href="/pro-logo" className="hidden md:block">
+                        Pro Logo
                     </PrimaryLink>
                 </li>
                 <li>
@@ -68,7 +78,7 @@ export function Header() {
                 {isLoggedIn && (
                     <li>
                         <PrimaryLink id="collection-header-button" href="/collection" className="hidden md:block">
-                            Collection
+                            My Designs
                         </PrimaryLink>
                     </li>
                 )}
@@ -139,11 +149,31 @@ export function Header() {
                                 <li>
                                     <Link
                                         id="generate-header-button"
-                                        href="/generate"
+                                        href="/name-art"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
-                                        Generate
+                                        Name Art
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        id="generate-header-button"
+                                        href="/ing-logo"
+                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Gaming Logo
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        id="generate-header-button"
+                                        href="/pro-logo"
+                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Pro Logo
                                     </Link>
                                 </li>
                                 <li>
@@ -163,7 +193,7 @@ export function Header() {
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
-                                        Collection
+                                        My Designs
                                     </Link>
                                 </li>
                                 <li>
@@ -197,11 +227,31 @@ export function Header() {
                                 <li>
                                     <Link
                                         id="generate-header-button"
-                                        href="/generate"
+                                        href="/name-art"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
-                                        Generate
+                                        Name Art
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        id="generate-header-button"
+                                        href="/gaming-logo"
+                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Gaming Logo
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        id="generate-header-button"
+                                        href="/pro-logo"
+                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        Pro Logo
                                     </Link>
                                 </li>
                                 <li>
