@@ -7,7 +7,6 @@ import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 
-
 // TRPC (Assuming this is set up in your project)
 import { api } from "~/utils/api";
 
@@ -26,7 +25,6 @@ type ColorPalette = {
   label: string;
   colors: [string, string, string];
 };
-
 
 // **Synonyms by Industry and Style**
 const synonymsByIndustryAndStyle: Record<
@@ -234,29 +232,29 @@ const styleData: Record<
 // **Color Palettes**
 const colorPalettes: ColorPalette[] = [
   { label: "blue (#007BFF), neon aqua (#00D1FF) and accent gray (#333333)", colors: ["#007BFF", "#00D1FF", "#333333"] },
-  { label: "Platinum (#007BFF) and Floral white (#007BFF) and Almond (#EAD7C3)", colors: ["#DCE0D9", "#FBF6EF", "#EAD7C3"] },
-  { label: "Yale Blue (#0D3B66) and Lemon chiffon (#FAF0CA) and Naples yellow (#F4D35E)", colors: ["#0D3B66", "#FAF0CA", "#F4D35E"] },
-  { label: "Ivory (#F6F7EB) and Cinnabar (#E94F37) and Onyx (#393E41)", colors: ["#F6F7EB", "#E94F37", "#393E41"] },
-  { label: "Caribbean Current (#006D77) and Tiffany Blue (#83C5BE) and Alice Blue (#EDF6F9)", colors: ["#006D77", "#83C5BE", "#EDF6F9"] },
-  { label: "Bittersweet (#ED6A5A) and Lemon chiffon (#F4F1BB) and Ash gray (#9BC1BC)", colors: ["#ED6A5A", "#F4F1BB", "#9BC1BC"] },
-  { label: "Space cadet (#2B2D42) and Cool gray (#8D99AE) and Anti-flash white (#EDF2F4)", colors: ["#2B2D42", "#8D99AE", "#EDF2F4"] },
-  { label: "Magenta (#FE218B) and School bus yellow (#FED700) and Picton Blue (#21B0FE)", colors: ["#FE218B", "#FED700", "#21B0FE"] },
-  { label: "Eggshell (#F4F1DE) and Burnt sienna (#E07A5F) and Delft Blue (#3D405B)", colors: ["#F4F1DE", "#E07A5F", "#3D405B"] },
-  { label: "YInMn Blue (#26547C) and Bright pink (Crayola) (#EF476F) and Sunglow (#FFD166)", colors: ["#26547C", "#EF476F", "#FFD166"] },
-  { label: "Polynesian blue (#064789) and UCLA Blue (#427AA1) and Alice Blue (#EBF2FA)", colors: ["#064789", "#427AA1", "#EBF2FA"] },
-  { label: "Mint green (#DDFFF7) and Tiffany Blue (#93E1D8) and Melon (#FFA69E)", colors: ["#DDFFF7", "#93E1D8", "#FFA69E"] },
-  { label: "Dark moss green (#606C38) and Pakistan green (#283618) and Cornsilk (#FEFAE0)", colors: ["#606C38", "#283618", "#FEFAE0"] },
-  { label: "Raisin black (#1E1E24) and Penn red (#92140C) and Floral white (#FFF8F0)", colors: ["#1E1E24", "#92140C", "#FFF8F0"] },
-  { label: "Tropical indigo (#9381FF) and Periwinkle (#B8B8FF) and Ghost white (#F8F7FF)", colors: ["#9381FF", "#B8B8FF", "#F8F7FF"] },
-  { label: "Rich black (#0C1618) and Brunswick green (#004643) and Cornsilk (#FAF4D3)", colors: ["#0C1618", "#004643", "#FAF4D3"] },
-  { label: "Buff (#CB997E) and Desert sand (#DDBEA9) and Champagne pink (#FFE8D6)", colors: ["#CB997E", "#DDBEA9", "#FFE8D6"] },
+  { label: "Platinum (#007BFF), Floral white (#007BFF) and Almond (#EAD7C3)", colors: ["#DCE0D9", "#FBF6EF", "#EAD7C3"] },
+  { label: "Yale Blue (#0D3B66), Lemon chiffon (#FAF0CA) and Naples yellow (#F4D35E)", colors: ["#0D3B66", "#FAF0CA", "#F4D35E"] },
+  { label: "Ivory (#F6F7EB), Cinnabar (#E94F37) and Onyx (#393E41)", colors: ["#F6F7EB", "#E94F37", "#393E41"] },
+  { label: "Caribbean Current (#006D77), Tiffany Blue (#83C5BE) and Alice Blue (#EDF6F9)", colors: ["#006D77", "#83C5BE", "#EDF6F9"] },
+  { label: "Bittersweet (#ED6A5A), Lemon chiffon (#F4F1BB) and Ash gray (#9BC1BC)", colors: ["#ED6A5A", "#F4F1BB", "#9BC1BC"] },
+  { label: "Space cadet (#2B2D42), Cool gray (#8D99AE) and Anti-flash white (#EDF2F4)", colors: ["#2B2D42", "#8D99AE", "#EDF2F4"] },
+  { label: "Magenta (#FE218B), School bus yellow (#FED700) and Picton Blue (#21B0FE)", colors: ["#FE218B", "#FED700", "#21B0FE"] },
+  { label: "Eggshell (#F4F1DE), Burnt sienna (#E07A5F) and Delft Blue (#3D405B)", colors: ["#F4F1DE", "#E07A5F", "#3D405B"] },
+  { label: "YInMn Blue (#26547C), Bright pink (Crayola) (#EF476F) and Sunglow (#FFD166)", colors: ["#26547C", "#EF476F", "#FFD166"] },
+  { label: "Polynesian blue (#064789), UCLA Blue (#427AA1) and Alice Blue (#EBF2FA)", colors: ["#064789", "#427AA1", "#EBF2FA"] },
+  { label: "Mint green (#DDFFF7), Tiffany Blue (#93E1D8) and Melon (#FFA69E)", colors: ["#DDFFF7", "#93E1D8", "#FFA69E"] },
+  { label: "Dark moss green (#606C38), Pakistan green (#283618) and Cornsilk (#FEFAE0)", colors: ["#606C38", "#283618", "#FEFAE0"] },
+  { label: "Raisin black (#1E1E24), Penn red (#92140C) and Floral white (#FFF8F0)", colors: ["#1E1E24", "#92140C", "#FFF8F0"] },
+  { label: "Tropical indigo (#9381FF), Periwinkle (#B8B8FF) and Ghost white (#F8F7FF)", colors: ["#9381FF", "#B8B8FF", "#F8F7FF"] },
+  { label: "Rich black (#0C1618), Brunswick green (#004643) and Cornsilk (#FAF4D3)", colors: ["#0C1618", "#004643", "#FAF4D3"] },
+  { label: "Buff (#CB997E), Desert sand (#DDBEA9) and Champagne pink (#FFE8D6)", colors: ["#CB997E", "#DDBEA9", "#FFE8D6"] },
   { label: "Black (#000000), Red (#FF0000) and School bus yellow (#FFE100)", colors: ["#000000", "#FF0000", "#FFE100"] },
-  { label: "Hunyadi yellow (#EDAE49) and Amaranth (#D1495B) and Caribbean Current (#00798C)", colors: ["#EDAE49", "#D1495B", "#00798C"] },
-  { label: "Aquamarine (#84FFC9) and Powder blue (#AAB2FF) and Mauve (#ECA0FF)", colors: ["#84FFC9", "#AAB2FF", "#ECA0FF"] },
-  { label: "Charcoal (#233D4D) and Pumpkin (#FE7F2D) and Sunglow (#FCCA46)", colors: ["#233D4D", "#FE7F2D", "#FCCA46"] },
-  { label: "Indigo (#540D6E) and Red (Crayola) (#EE4266) and Sunglow (#FFD23F)", colors: ["#540D6E", "#EE4266", "#FFD23F"] },
-  { label: "Snow (#FBF5F3) and Fulvous (#E28413) and Oxford Blue (#000022)", colors: ["#FBF5F3", "#E28413", "#000022"] },
-  { label: "Tangelo (#F6511D) and Selective yellow (#FFB400) and Picton Blue (#00A6ED)", colors: ["#F6511D", "#FFB400", "#00A6ED"] },
+  { label: "Hunyadi yellow (#EDAE49), Amaranth (#D1495B) and Caribbean Current (#00798C)", colors: ["#EDAE49", "#D1495B", "#00798C"] },
+  { label: "Aquamarine (#84FFC9), Powder blue (#AAB2FF) and Mauve (#ECA0FF)", colors: ["#84FFC9", "#AAB2FF", "#ECA0FF"] },
+  { label: "Charcoal (#233D4D), Pumpkin (#FE7F2D) and Sunglow (#FCCA46)", colors: ["#233D4D", "#FE7F2D", "#FCCA46"] },
+  { label: "Indigo (#540D6E), Red (Crayola) (#EE4266) and Sunglow (#FFD23F)", colors: ["#540D6E", "#EE4266", "#FFD23F"] },
+  { label: "Snow (#FBF5F3), Fulvous (#E28413) and Oxford Blue (#000022)", colors: ["#FBF5F3", "#E28413", "#000022"] },
+  { label: "Tangelo (#F6511D), Selective yellow (#FFB400) and Picton Blue (#00A6ED)", colors: ["#F6511D", "#FFB400", "#00A6ED"] },
 ];
 
 // **Aspect Ratios**
@@ -339,7 +337,7 @@ const ProLogoPage: NextPage = () => {
     return template.trim();
   }
 
-  // **Submit Handler**
+  // **Submit Handler with Analytics**
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -357,6 +355,19 @@ const ProLogoPage: NextPage = () => {
       setError("Something is missing, please check your selections.");
       return;
     }
+
+    // Add Analytics Tracking
+    (window.dataLayer = window.dataLayer || []).push({
+      event: "form_submission",
+      designType: "ProLogo",
+      industry: selectedIndustry,
+      style: selectedStyle,
+      styleImage: selectedStyle ? styleData[selectedStyle].previewImage : "none",
+      aspectRatio: selectedAspect,
+      model: selectedModel,
+      numberOfVariants: parseInt(numberOfImages, 10),
+      selectedPalette: colorPalettes[selectedPaletteIndex]?.label || "unknown",
+    });
 
     generateIcon.mutate({
       prompt: finalPrompt,
@@ -416,11 +427,11 @@ const ProLogoPage: NextPage = () => {
       </Head>
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
         <h1 className="text-3xl font-bold mb-6">
-        Professional Logo Generator: Custom Business Logos Made Easy
+          Professional Logo Generator: Custom Business Logos Made Easy
         </h1>
         {/* Restored Guideline / Instructions */}
         <p className="text-1xl mt-4">
-        Build a standout brand with our Professional Logo Generator! Perfect for businesses, startups, or freelancers, this tool lets you design custom logos tailored to your industry and style. Follow the steps below to get started. 
+          Build a standout brand with our Professional Logo Generator! Perfect for businesses, startups, or freelancers, this tool lets you design custom logos tailored to your industry and style. Follow the steps below to get started. 
         </p>
         <div className="mt-4 mb-8 p-4 border border-gray-300 rounded-md dark:bg-gray-700 text-sm leading-relaxed">
           <h2 className="text-lg font-semibold mb-2">Here’s how it works:</h2>
