@@ -1,4 +1,4 @@
-// src/pages/api/stripe.ts
+// ~/server/api/stripe.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { env } from "~/env.mjs";
@@ -70,16 +70,22 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         [env.PRICE_ID_ELITE]: 100,
       };
 
+      const planMap: Record<number, string> = {
+        20: "Starter",
+        50: "Pro",
+        100: "Elite",
+      };
+
       const incrementCredits = creditsMap[priceId] ?? 0;
+      const plan = planMap[incrementCredits] ?? "None";
 
       if (incrementCredits === 0) {
         console.warn(`Unhandled priceId: ${priceId}`);
         return;
       }
 
-      console.log(`Credits to increment: ${incrementCredits}`);
+      console.log(`Credits to increment: ${incrementCredits}, Plan: ${plan}`);
 
-      // Update user credits and immediately update Mautic
       try {
         const userBeforeUpdate = await prisma.user.findUnique({
           where: { id: userId },
@@ -93,18 +99,20 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             credits: {
               increment: incrementCredits,
             },
+            plan: plan as "None" | "Starter" | "Pro" | "Elite", // Type-safe with Plan enum
           },
         });
 
         console.log("User after update:", updatedUser);
 
-        // Immediately update Mautic contact with the new credit balance.
         if (updatedUser.email) {
           try {
             const mauticResult = await updateMauticContact({
               email: updatedUser.email,
               name: updatedUser.name,
               credits: updatedUser.credits,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              plan: updatedUser.plan, // Now recognized
             });
             console.log("Mautic updated after purchase:", mauticResult);
           } catch (err) {
@@ -114,8 +122,8 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           console.error("Updated user has no email; cannot update Mautic.");
         }
       } catch (err) {
-        console.error("Error updating user credits:", err);
-        return res.status(500).send("Failed to update user credits.");
+        console.error("Error updating user credits or plan:", err);
+        return res.status(500).send("Failed to update user credits or plan.");
       }
 
       break;

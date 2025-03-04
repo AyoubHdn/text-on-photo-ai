@@ -1,9 +1,7 @@
-// src/server/api/routers/mautic.ts
-import { env } from "~/env.mjs";
+// ~/server/api/routers/mautic.ts
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "./mautic-utils";
-import type { User } from "@prisma/client";
-
+import { User } from "@prisma/client"; // Import from Prisma
 
 export const mauticRouter = createTRPCRouter({
   syncContacts: protectedProcedure.mutation(async ({ ctx }) => {
@@ -11,9 +9,11 @@ export const mauticRouter = createTRPCRouter({
       where: { email: { not: null } },
     });
 
+    let processedCount = 0;
+
     for (const contact of contacts || []) {
       if (!contact.email) {
-        console.warn("Skipping contact with no email.");
+        console.warn("Skipping contact with no email:", contact.id);
         continue;
       }
       try {
@@ -21,16 +21,20 @@ export const mauticRouter = createTRPCRouter({
           email: contact.email,
           name: contact.name,
           credits: contact.credits,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          plan: contact.plan, // Now recognized
         });
-        console.log(`Processed contact ${contact.email ?? "unknown"}:`, mauticData);
+        console.log(`Processed contact ${contact.email}:`, mauticData);
+        processedCount++;
       } catch (err) {
-        console.error(`Error processing contact ${contact.email ?? "unknown"}:`, err);
+        console.error(`Error processing contact ${contact.email}:`, err);
       }
     }
 
     return {
       message: "Contacts sync complete",
       total: contacts.length,
+      processed: processedCount,
     };
   }),
 });
