@@ -19,6 +19,12 @@ model Example {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+enum Plan {
+    None
+    Starter
+    Pro
+    Elite
+}
 
 // Necessary for Next auth
 model Account {
@@ -54,6 +60,7 @@ model User {
     emailVerified DateTime?
     image         String?
     credits       Int       @default(1)
+    plan          Plan      @default(None) // New field to track plan
     accounts      Account[]
     sessions      Session[]
     icons         Icon[]
