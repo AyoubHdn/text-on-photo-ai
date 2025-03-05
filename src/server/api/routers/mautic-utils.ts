@@ -33,15 +33,13 @@ export async function updateMauticContact(contact: {
   }
 
   if (contact.plan !== undefined) {
-    payload.plan = contact.plan;
+    payload.plan = contact.plan; // This should send "Starter" or "None"
   }
 
   try {
     const searchResponse = await fetch(`${mauticBaseUrl}/api/contacts?search=email:${contact.email}`, {
       method: "GET",
-      headers: {
-        Authorization: authHeader,
-      },
+      headers: { Authorization: authHeader },
     });
     const searchData = (await searchResponse.json()) as { contacts: Record<string, any> };
     const contactId = searchData.contacts ? Object.keys(searchData.contacts)[0] : null;
@@ -55,7 +53,9 @@ export async function updateMauticContact(contact: {
         },
         body: JSON.stringify(payload),
       });
-      return (await updateResponse.json()) as MauticResponse;
+      const updateData = (await updateResponse.json()) as MauticResponse;
+      console.log(`Updated Mautic contact ${contactId}:`, updateData);
+      return updateData;
     } else {
       const createResponse = await fetch(`${mauticBaseUrl}/api/contacts/new`, {
         method: "POST",
@@ -65,7 +65,9 @@ export async function updateMauticContact(contact: {
         },
         body: JSON.stringify(payload),
       });
-      return (await createResponse.json()) as MauticResponse;
+      const createData = (await createResponse.json()) as MauticResponse;
+      console.log(`Created Mautic contact for ${contact.email}:`, createData);
+      return createData;
     }
   } catch (err) {
     console.error(`Error syncing contact ${contact.email}:`, err);

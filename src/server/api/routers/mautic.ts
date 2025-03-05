@@ -1,13 +1,15 @@
 // ~/server/api/routers/mautic.ts
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "./mautic-utils";
-import { User } from "@prisma/client"; // Import from Prisma
+import { User } from "@prisma/client";
 
 export const mauticRouter = createTRPCRouter({
   syncContacts: protectedProcedure.mutation(async ({ ctx }) => {
     const contacts: User[] = await ctx.prisma.user.findMany({
       where: { email: { not: null } },
     });
+
+    console.log("Fetched contacts:", contacts.map(c => ({ email: c.email, credits: c.credits, plan: c.plan })));
 
     let processedCount = 0;
 
@@ -17,12 +19,12 @@ export const mauticRouter = createTRPCRouter({
         continue;
       }
       try {
+        console.log("Sending to Mautic:", { email: contact.email, credits: contact.credits, plan: contact.plan });
         const mauticData = await updateMauticContact({
           email: contact.email,
           name: contact.name,
           credits: contact.credits,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          plan: contact.plan, // Now recognized
+          plan: contact.plan,
         });
         console.log(`Processed contact ${contact.email}:`, mauticData);
         processedCount++;
