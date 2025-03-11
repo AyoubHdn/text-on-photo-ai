@@ -455,60 +455,78 @@ const GameLogoPage: NextPage = () => {
           </div>
 
           {/* 3. Select AI Model */}
-            <h2 className="text-xl">3. Select AI Model</h2>
-            <FormGroup className="mb-12">
-            <div className="grid grid-cols-2 gap-4">
-                {[
+          <h2 className="text-xl">3. Select AI Model</h2>
+          <FormGroup className="mb-12">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {[
                 {
-                    name: "Standard",
-                    value: "flux-schnell" as AIModel,
-                    cost: 1,
-                    image:
+                  name: "Standard",
+                  value: "flux-schnell" as AIModel,
+                  cost: 1,
+                  image:
                     selectedStyleImage && selectedStyleImage.includes(".")
-                        ? selectedStyleImage
-                        : "/images/placeholder.png",
-                    recommended: false,
+                      ? selectedStyleImage
+                      : "/images/placeholder.png",
+                  recommended: false,
+                  label: undefined, // No extra label
                 },
                 {
-                    name: "Optimized",
-                    value: "flux-dev" as AIModel,
-                    cost: 4,
-                    image:
+                  name: "Optimized",
+                  value: "flux-dev" as AIModel,
+                  cost: 4,
+                  image:
                     selectedStyleImage && selectedStyleImage.includes(".")
-                        ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
-                        : "/images/placeholder.png",
-                    recommended: true,
+                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
+                      : "/images/placeholder.png",
+                  recommended: true,  // Shows the "Recommended" tag
+                  label: undefined,
                 },
-                ].map((model) => (
+                {
+                  name: "Ultimate",
+                  value: "ideogram-ai/ideogram-v2-turbo" as AIModel,
+                  cost: 8,
+                  image:
+                    selectedStyleImage && selectedStyleImage.includes(".")
+                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "ea$1")
+                      : "/images/placeholder.png",
+                  recommended: false, // Not recommended
+                  label: "Top Tier",   // New label for highest-end
+                },
+              ].map((model) => (
                 <button
-                    key={model.value}
-                    type="button"
-                    onClick={() => setSelectedModel(model.value)}
-                    className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
+                  key={model.value}
+                  type="button"
+                  onClick={() => setSelectedModel(model.value)}
+                  className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
-                        ? "border-blue-500 ring-2 ring-blue-500"
-                        : "border-gray-300 hover:border-gray-500"
-                    }`}
+                      ? "border-blue-500 ring-2 ring-blue-500"
+                      : "border-gray-300 hover:border-gray-500"
+                  }`}
                 >
-                    <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
+                  <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
                     <img
-                        src={model.image}
-                        alt={model.name}
-                        className="w-full h-full object-cover"
+                      src={model.image}
+                      alt={model.name}
+                      className="w-full h-full object-cover"
                     />
                     {model.recommended && (
-                        <span className="absolute top-1 right-1 bg-yellow-400 text-black px-2 text-xs rounded">
+                      <span className="absolute top-1 right-1 bg-yellow-400 text-black px-2 text-xs rounded">
                         Recommended
-                        </span>
+                      </span>
                     )}
-                    </div>
-                    <span className="text-sm font-semibold">{model.name}</span>
-                    <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
+                    {/* Render label if present (e.g. "Top Tier") */}
+                    {model.label && (
+                      <span className="absolute top-1 right-1 bg-red-300 text-black px-2 text-xs rounded">
+                        {model.label}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold">{model.name}</span>
+                  <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
                 </button>
-                ))}
+              ))}
             </div>
-            </FormGroup>
-
+          </FormGroup>
 
           {/* 4. Aspect Ratio */}
           <h2 className="text-xl">4. Select Image Size</h2>

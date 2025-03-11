@@ -19,7 +19,7 @@ import { Input } from "~/component/Input";
 type IndustryKey = "technology" | "food" | "finance" | "healthcare" | "retail" | "ecommerce" | "fashion" | "entertainment" | "sports" | "education" | "sustainability" | "realestate" | "professionalservices";
 type StyleID = "abstract" | "brandmark" | "wordmark" | "lettermark" | "combination" | "emblem";
 type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3";
-type AIModel = "flux-schnell" | "flux-dev";
+type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 
 type ColorPalette = {
   label: string;
@@ -519,43 +519,49 @@ Ensure it captures the essence of [INDUSTRY]."
 // **Style Data** (unchanged)
 const styleData: Record<
   StyleID,
-  { label: string; previewImage: string; standardImage: string; optimizedImage: string }
+  { label: string; previewImage: string; standardImage: string; optimizedImage: string; bestResultImage: string}
 > = {
   abstract: {
     label: "Abstract",
     previewImage: "/styles/abstract-opt.webp",
     standardImage: "/styles/abstract-std.webp",
     optimizedImage: "/styles/abstract-opt.webp",
+    bestResultImage: "/styles/abstract-best.webp",
   },
   brandmark: {
     label: "Brand Mark",
     previewImage: "/styles/brandmark-opt.webp",
     standardImage: "/styles/brandmark-std.webp",
     optimizedImage: "/styles/brandmark-opt.webp",
+    bestResultImage: "/styles/brandmark-best.webp",
   },
   wordmark: {
     label: "Word Mark",
     previewImage: "/styles/wordmark-opt.webp",
     standardImage: "/styles/wordmark-std.webp",
     optimizedImage: "/styles/wordmark-opt.webp",
+    bestResultImage: "/styles/wordmark-best.webp",
   },
   lettermark: {
     label: "Lettermark",
     previewImage: "/styles/lettermark-opt.webp",
     standardImage: "/styles/lettermark-std.webp",
     optimizedImage: "/styles/lettermark-opt.webp",
+    bestResultImage: "/styles/lettermark-best.webp",
   },
   combination: {
     label: "Combination Mark",
     previewImage: "/styles/combination-opt.webp",
     standardImage: "/styles/combination-std.webp",
     optimizedImage: "/styles/combination-opt.webp",
+    bestResultImage: "/styles/combination-best.webp",
   },
   emblem: {
     label: "Emblem",
     previewImage: "/styles/emblem-opt.webp",
     standardImage: "/styles/emblem-std.webp",
     optimizedImage: "/styles/emblem-opt.webp",
+    bestResultImage: "/styles/emblem-best.webp",
   },
 };
 
@@ -744,8 +750,8 @@ const ProLogoPage: NextPage = () => {
   // **Standard/Optimized Images**
   const stdImg = selectedStyle ? styleData[selectedStyle].standardImage : "";
   const optImg = selectedStyle ? styleData[selectedStyle].optimizedImage : "";
+  const bestImg = selectedStyle ? styleData[selectedStyle].bestResultImage : "";
 
-  // **JSX**
   return (
     <>
       <Head>
@@ -803,7 +809,6 @@ const ProLogoPage: NextPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 mt-6">
-          {/* Brand Name */}
           <FormGroup>
             <label className="font-semibold">Brand Name</label>
             <Input
@@ -814,7 +819,6 @@ const ProLogoPage: NextPage = () => {
             />
           </FormGroup>
 
-          {/* Short Description */}
           <FormGroup>
             <label className="font-semibold">Short Description</label>
             <textarea
@@ -877,7 +881,8 @@ const ProLogoPage: NextPage = () => {
           {selectedStyle && (
             <div className="mt-4 border rounded p-4">
               <h3 className="font-semibold mb-2">Choose AI Model</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {/* Standard Model */}
                 <div
                   onClick={() => setSelectedModel("flux-schnell")}
                   className={`relative border rounded p-2 flex flex-col items-center cursor-pointer
@@ -893,6 +898,7 @@ const ProLogoPage: NextPage = () => {
                   <span className="font-medium mt-2">Standard</span>
                   <span className="text-sm text-gray-500">Cost: 1 credit</span>
                 </div>
+                {/* Optimized Model */}
                 <div
                   onClick={() => setSelectedModel("flux-dev")}
                   className={`relative border rounded p-2 flex flex-col items-center cursor-pointer
@@ -910,6 +916,27 @@ const ProLogoPage: NextPage = () => {
                   )}
                   <span className="font-medium mt-2">Optimized</span>
                   <span className="text-sm text-gray-500">Cost: 4 credits</span>
+                </div>
+                {/* --- ADDED: Third Model (Ideogram) --- */}
+                <div
+                  onClick={() => setSelectedModel("ideogram-ai/ideogram-v2-turbo")}
+                  className={`relative border rounded p-2 flex flex-col items-center cursor-pointer
+                    ${selectedModel === "ideogram-ai/ideogram-v2-turbo" ? "ring-2 ring-blue-500" : ""}`}
+                >
+                  {/* You can place a badge if you like, or remove it */}
+                  <span className="absolute top-1 right-1 bg-red-300 text-black px-2 py-0.5 text-xs rounded">
+                    Top Tier
+                  </span>
+                  {bestImg ? (
+                    <img src={bestImg} alt="Optimized Preview" className="w-full h-auto rounded" />
+                  ) : (
+                    <div className="bg-gray-200 w-full h-32 flex items-center justify-center text-gray-500">
+                      {/* Or you can add a real image if you have it */}
+                      Ultimate Preview
+                    </div>
+                  )}
+                  <span className="font-medium mt-2">Ultimate</span>
+                  <span className="text-sm text-gray-500">Cost: 8 credits</span>
                 </div>
               </div>
             </div>
@@ -1002,14 +1029,14 @@ const ProLogoPage: NextPage = () => {
                 required
                 type="number"
                 min={1}
-                max={10}
+                max={selectedModel === "ideogram-ai/ideogram-v2-turbo" ? 1 : 10}
                 value={numberOfImages}
                 onChange={(e) => setNumberOfImages(e.target.value)}
+                disabled={selectedModel === "ideogram-ai/ideogram-v2-turbo"}
               />
             </FormGroup>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="bg-red-600 text-white p-3 rounded">
               {error}
@@ -1021,13 +1048,11 @@ const ProLogoPage: NextPage = () => {
             </div>
           )}
 
-          {/* Submit Button */}
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
             {isLoggedIn ? "Generate Logo" : "Sign In to Generate"}
           </Button>
         </form>
 
-        {/* Generated Images */}
         {imagesUrl.length > 0 && (
           <>
             <h2 className="text-xl mt-8 mb-2">Your Generated Logos</h2>
@@ -1065,7 +1090,6 @@ const ProLogoPage: NextPage = () => {
           </>
         )}
 
-        {/* Fullscreen Popup */}
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">

@@ -18,7 +18,6 @@ import Link from "next/link";
  * but references only `stylesData`.
  */
 
-// We keep the same type definitions for model, aspect ratio, etc.
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3";
 type ColorMode = "bg" | "text";
@@ -27,7 +26,6 @@ const NameArtPage: NextPage = () => {
   const { data: session } = useSession();
   const isLoggedIn = !!session;
 
-  // We replicate the original state/logic for the name prompt, etc.
   const [form, setForm] = useState({
     name: "",
     basePrompt: "",
@@ -76,10 +74,6 @@ const NameArtPage: NextPage = () => {
     colorFamilyNames[0] ?? "Reds"
   );
 
-  // In your original code, you had "DesignType" logic. We've removed it here
-  // because this page is for Name Art only.
-
-  // Similar to your old "useEffect" for setting initial tab states
   useEffect(() => {
     const categoryKeys = Object.keys(stylesData);
     if (categoryKeys.length > 0) {
@@ -95,7 +89,6 @@ const NameArtPage: NextPage = () => {
     }
   }, [activeTab]);
 
-  // Scroll handlers
   useLayoutEffect(() => {
     handleCategoryScroll();
     handleSubCategoryScroll();
@@ -127,7 +120,6 @@ const NameArtPage: NextPage = () => {
     subcategoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
   };
 
-  // For color families (if you want to keep that logic for name art):
   useLayoutEffect(() => {
     handleColorFamilyScroll();
   }, [activeColorFamily]);
@@ -145,7 +137,6 @@ const NameArtPage: NextPage = () => {
     colorFamilyScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
   };
 
-  // TRPC Mutation
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess(data) {
       setImagesUrl(data);
@@ -156,7 +147,6 @@ const NameArtPage: NextPage = () => {
     },
   });
 
-  // Form submission
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -168,7 +158,6 @@ const NameArtPage: NextPage = () => {
       return;
     }
 
-    // Analytics (if you want to keep it)
     (window.dataLayer = window.dataLayer || []).push({
       event: "form_submission",
       designType: "NameArt",
@@ -189,9 +178,7 @@ const NameArtPage: NextPage = () => {
         .replace(/'background color'/gi, `${selectedBgColor} (${findColorName(selectedBgColor)})`)
         .replace(/'Text color'/gi, `${selectedTextColor} (${findColorName(selectedTextColor)})`);
     }
-    // Replace 'Text' placeholders with the actual form name
     finalPrompt = finalPrompt.replace(/'Text'/gi, form.name);
-    // Add extra instructions
     finalPrompt += " designed to cover the entire screen, high resolution";
 
     generateIcon.mutate({
@@ -210,7 +197,6 @@ const NameArtPage: NextPage = () => {
     return "Unknown Color";
   }
 
-  // Handle style selection
   const handleImageSelect = (basePrompt: string, src: string, allowColors = true) => {
     setSelectedImage(src);
     setForm((prev) => ({ ...prev, basePrompt }));
@@ -219,7 +205,6 @@ const NameArtPage: NextPage = () => {
     setAllowCustomColors(allowColors);
   };
 
-  // Download image
   const handleDownload = async (imageUrl: string) => {
     try {
       const response = await fetch(imageUrl);
@@ -251,7 +236,6 @@ const NameArtPage: NextPage = () => {
     }
   };
 
-  // Popup
   const openPopup = (imageUrl: string) => {
     setPopupImage(imageUrl);
   };
@@ -269,23 +253,23 @@ const NameArtPage: NextPage = () => {
         />
       </Head>
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
-        {/* Main heading */}
         <h1 className="text-4xl font-bold">Name Art Generator: Create Personalized Designs</h1>
-        {/* Restored Guideline / Instructions */}
         <p className="text-1xl mt-4">
-        Unleash your creativity with our Name Art Generator! Design beautiful and unique name art for yourself, friends, or loved ones. Whether you want a standout profile picture, a personalized gift, or just something fun to share, our tool makes it easy to turn any name into a work of art. Follow the simple steps below and watch your ideas come to life!</p>
+          Unleash your creativity with our Name Art Generator! Design beautiful and unique name art for yourself, friends, or loved ones. Whether you want a standout profile picture, a personalized gift, or just something fun to share, our tool makes it easy to turn any name into a work of art. Follow the simple steps below and watch your ideas come to life!
+        </p>
         <div className="mt-4 mb-8 p-4 border border-gray-300 rounded-md dark:bg-gray-700 text-sm leading-relaxed">
           <h2 className="text-lg font-semibold mb-2">Here’s how it works:</h2>
           <ol className="list-decimal list-inside">
             <li><b>Enter a Name to Get Started</b><br/>
-            Type in any name or word—this could be your name, a friend’s, or something meaningful to you. Keep it simple for the best results!  </li>
+            Type in any name or word—this could be your name, a friend’s, or something meaningful to you. Keep it simple for the best results!
+            </li>
             <li><b>Choose Your Favorite Style</b><br/>
             Pick an artistic style that matches your vision:
-            <ul className="list-disc ml-5">
-                <li><b>Calligraphy:</b> Elegant and flowing designs.</li>
-                <li><b>Graffiti:</b> Bold, street-art-inspired looks.</li>
-                <li><b>Abstract:</b> Creative, non-literal shapes and patterns.</li>
-                <li><b>Playful:</b> Fun and colorful for a lighthearted touch.</li>
+              <ul className="list-disc ml-5">
+                  <li><b>Calligraphy:</b> Elegant and flowing designs.</li>
+                  <li><b>Graffiti:</b> Bold, street-art-inspired looks.</li>
+                  <li><b>Abstract:</b> Creative, non-literal shapes and patterns.</li>
+                  <li><b>Playful:</b> Fun and colorful for a lighthearted touch.</li>
               </ul>
             </li>
             <li>Select AI Model:
@@ -298,7 +282,7 @@ const NameArtPage: NextPage = () => {
               <ul className="list-disc ml-5">
                 <li><b>1:1 (Square)</b>: Ideal for social media profiles or small prints.</li>
                 <li><b>16:9 (Landscape)</b>: Great for desktop wallpapers or larger displays.</li>
-                <li><b>9:16 (Portrait)</b>: Perfect for mobile wallpapers or vertical prints. </li>
+                <li><b>9:16 (Portrait)</b>: Perfect for mobile wallpapers or vertical prints.</li>
                 <li><b>4:3 (Classic)</b>: Versatile for various uses, from digital to print.</li>
               </ul>
             </li>
@@ -314,7 +298,6 @@ const NameArtPage: NextPage = () => {
           </ul>
           <h4 className="text-md font-semibold mt-3"><b>Start Creating Your Name Art Now!</b> See what your name looks like in art and share it with the world.</h4>
         </div>
-
 
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
           {/* 1. Enter name */}
@@ -469,65 +452,78 @@ const NameArtPage: NextPage = () => {
           </div>
 
           {/* 3. Select AI Model */}
-            <h2 className="text-xl">3. Select AI Model</h2>
-            <FormGroup className="mb-12">
-            <div className="grid grid-cols-2 gap-4">
-                {[
+          <h2 className="text-xl">3. Select AI Model</h2>
+          <FormGroup className="mb-12">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {[
                 {
-                    name: "Standard",
-                    value: "flux-schnell" as AIModel,
-                    cost: 1,
-                    // If selectedStyleImage is set, show it; otherwise fallback to a placeholder
-                    image:
+                  name: "Standard",
+                  value: "flux-schnell" as AIModel,
+                  cost: 1,
+                  image:
                     selectedStyleImage && selectedStyleImage.includes(".")
-                        ? selectedStyleImage
-                        : "/images/placeholder.png",
-                    recommended: false,
+                      ? selectedStyleImage
+                      : "/images/placeholder.png",
+                  recommended: false,
+                  label: undefined, // No extra label
                 },
                 {
-                    name: "Optimized",
-                    value: "flux-dev" as AIModel,
-                    cost: 4,
-                    // Show the style image with "e" appended before the file extension
-                    image:
+                  name: "Optimized",
+                  value: "flux-dev" as AIModel,
+                  cost: 4,
+                  image:
                     selectedStyleImage && selectedStyleImage.includes(".")
-                        ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
-                        : "/images/placeholder.png",
-                    recommended: true,
+                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
+                      : "/images/placeholder.png",
+                  recommended: true,  // Shows the "Recommended" tag
+                  label: undefined,
                 },
-                ].map((model) => (
+                {
+                  name: "Ultimate",
+                  value: "ideogram-ai/ideogram-v2-turbo" as AIModel,
+                  cost: 8,
+                  image:
+                    selectedStyleImage && selectedStyleImage.includes(".")
+                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "ea$1")
+                      : "/images/placeholder.png",
+                  recommended: false, // Not recommended
+                  label: "Top Tier",   // New label for highest-end
+                },
+              ].map((model) => (
                 <button
-                    key={model.value}
-                    type="button"
-                    onClick={() => setSelectedModel(model.value)}
-                    className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
+                  key={model.value}
+                  type="button"
+                  onClick={() => setSelectedModel(model.value)}
+                  className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                     selectedModel === model.value
-                        ? "border-blue-500 ring-2 ring-blue-500"
-                        : "border-gray-300 hover:border-gray-500"
-                    }`}
+                      ? "border-blue-500 ring-2 ring-blue-500"
+                      : "border-gray-300 hover:border-gray-500"
+                  }`}
                 >
-                    {/* Show the chosen style image in the model card */}
-                    <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
+                  <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
                     <img
-                        src={model.image}
-                        alt={model.name}
-                        className="w-full h-full object-cover"
+                      src={model.image}
+                      alt={model.name}
+                      className="w-full h-full object-cover"
                     />
                     {model.recommended && (
-                        <span className="absolute top-1 right-1 bg-yellow-400 text-black px-2 text-xs rounded">
+                      <span className="absolute top-1 right-1 bg-yellow-400 text-black px-2 text-xs rounded">
                         Recommended
-                        </span>
+                      </span>
                     )}
-                    </div>
-                    <span className="text-sm font-semibold">{model.name}</span>
-                    <span className="text-sm text-gray-500">
-                    Cost: {model.cost} credits
-                    </span>
+                    {/* Render label if present (e.g. "Top Tier") */}
+                    {model.label && (
+                      <span className="absolute top-1 right-1 bg-red-300 text-black px-2 text-xs rounded">
+                        {model.label}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold">{model.name}</span>
+                  <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
                 </button>
-                ))}
+              ))}
             </div>
-            </FormGroup>
-
+          </FormGroup>
 
           {/* 4. Aspect Ratio */}
           <h2 className="text-xl">4. Select Image Size</h2>
@@ -590,8 +586,6 @@ const NameArtPage: NextPage = () => {
             />
           </FormGroup>
 
-          {/* (Optional) colors ... kept from your original code if you want that UI here */}
-
           {error && (
             <div className="bg-red-500 text-white rounded p-4 text-xl">
               {error}{" "}
@@ -607,13 +601,11 @@ const NameArtPage: NextPage = () => {
             </div>
           )}
 
-          {/* Submit */}
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
             {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
         </form>
 
-        {/* Render images */}
         {imagesUrl.length > 0 && (
           <>
             <h2 className="text-xl mt-8 mb-2">Your Custom Name Art</h2>
@@ -656,7 +648,6 @@ const NameArtPage: NextPage = () => {
           </>
         )}
 
-        {/* Fullscreen popup */}
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
