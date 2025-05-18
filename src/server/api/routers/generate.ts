@@ -242,8 +242,9 @@ export const generateRouter = createTRPCRouter({
         await updateMauticContact({
           email: updatedUser.email,
           name: updatedUser.name,
-          credits: updatedUser.credits,
-        });
+          brand_specific_credits: updatedUser.credits,
+        },
+          'namedesignai');
         console.log("Mautic contact updated after credit deduction.");
       } catch (err) {
         console.error("Error updating Mautic after credit deduction:", err);

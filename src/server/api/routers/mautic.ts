@@ -23,9 +23,10 @@ export const mauticRouter = createTRPCRouter({
         const mauticData = await updateMauticContact({
           email: contact.email,
           name: contact.name,
-          credits: contact.credits,
-          plan: contact.plan,
-        });
+          brand_specific_credits: contact.credits,
+          brand_specific_plan: contact.plan,
+        },
+          'namedesignai');
         console.log(`Processed contact ${contact.email}:`, mauticData);
         processedCount++;
       } catch (err) {

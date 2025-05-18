@@ -76,9 +76,10 @@ export const authOptions: NextAuthOptions = {
           const result = await updateMauticContact({
             email: latestUser.email!,
             name: latestUser.name,
-            credits: latestUser.credits,
-            plan: latestUser.plan,
-          });
+            brand_specific_credits: latestUser.credits,
+            brand_specific_plan: latestUser.plan,
+          },
+          'namedesignai');
           console.log("Mautic updated on signIn:", result);
         } catch (err) {
           console.error("Error updating Mautic on signIn:", err);
@@ -94,9 +95,10 @@ export const authOptions: NextAuthOptions = {
           const result = await updateMauticContact({
             email: user.email,
             name: user.name,
-            credits: 1, // New users start with 1 credit
-            plan: "None",
-          });
+            brand_specific_credits: 1, // New users start with 1 credit
+            brand_specific_plan: "None",
+          },
+          'namedesignai');
           console.log("Mautic updated on createUser:", result);
         } catch (err) {
           console.error("Error updating Mautic on createUser:", err);

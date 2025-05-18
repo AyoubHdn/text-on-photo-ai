@@ -110,10 +110,11 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             const mauticResult = await updateMauticContact({
               email: updatedUser.email,
               name: updatedUser.name,
-              credits: updatedUser.credits,
+              brand_specific_credits: updatedUser.credits,
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              plan: updatedUser.plan, // Now recognized
-            });
+              brand_specific_plan: updatedUser.plan, // Now recognized
+            },
+          'namedesignai');
             console.log("Mautic updated after purchase:", mauticResult);
           } catch (err) {
             console.error("Error updating Mautic after purchase:", err);

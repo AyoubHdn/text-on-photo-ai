@@ -29,7 +29,7 @@ const SuccessPage: React.FC = () => {
         </p>
         <button
           className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-          onClick={() => { void router.push("/generate") }}
+          onClick={() => { void router.push("/") }}
         >
           Start Generating Designs
         </button>
