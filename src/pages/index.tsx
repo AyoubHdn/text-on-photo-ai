@@ -21,9 +21,9 @@ const HomePage: NextPage = () => {
     return (
       <section className="mt-12 mb-24 grid grid-cols-1 gap-12 px-8 sm:mt-24 sm:grid-cols-2">
         <div className="flex flex-col gap-4">
-          <h1 className="text-5xl font-bold">Create Name Art, Gaming Logos & Pro Designs!</h1>
+          <h1 className="text-5xl font-bold">Create Name Art & Pro Designs!</h1>
           <p className="text-2xl text-gray-500 dark:text-gray-300">
-            Unleash your creativity with Name Design AI. Design personalized name art, epic gaming logos, or professional branding—all in minutes. Perfect for social media, gifts, or businesses!
+            Unleash your creativity with Name Design AI. Design personalized name art, or professional branding—all in minutes. Perfect for social media, gifts, or businesses!
           </p>
           <button
             onClick={handleTryItFree}
@@ -36,7 +36,7 @@ const HomePage: NextPage = () => {
         <Image
           className="order-first sm:order-none"
           src="/banner.png"
-          alt="Examples of name art, gaming logos, and professional designs"
+          alt="Examples of name art, and professional designs"
           width="400"
           height="300"
         />
@@ -48,7 +48,7 @@ const HomePage: NextPage = () => {
     return (
       <section className="py-12 px-8 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm mb-12" id="category-section">
         <h2 className="text-4xl font-bold text-center mb-8">What Do You Want to Create?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Name Art */}
           <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow transition hover:shadow-lg">
             <Image
@@ -69,26 +69,7 @@ const HomePage: NextPage = () => {
               Create Now
             </PrimaryLinkButton>
           </div>
-          {/* Gaming Logo */}
-          <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow transition hover:shadow-lg">
-            <Image
-              src="/icons/game-logo.webp"
-              alt="Gaming Logo Generator"
-              width={64}
-              height={64}
-            />
-            <h3 className="text-xl font-bold mt-4">Gaming Logo</h3>
-            <p className="text-gray-600 dark:text-gray-300 mt-2 text-center">
-              Design bold logos for gaming teams or streams.
-            </p>
-            <PrimaryLinkButton
-              href="/gaming-logo"
-              className="mt-4"
-              id="generate-game-logo"
-            >
-              Create Now
-            </PrimaryLinkButton>
-          </div>
+          
           {/* Professional Logo */}
           <div className="flex flex-col items-center bg-white dark:bg-gray-700 p-6 rounded-lg shadow transition hover:shadow-lg">
             <Image
@@ -225,11 +206,6 @@ const HomePage: NextPage = () => {
         name: "Ashley K.",
       },
       {
-        image: "/user-game-logo.webp",
-        feedback: "The gaming logo I created for my Discord server looks so pro!",
-        name: "Ryan L.",
-      },
-      {
         image: "/user-social-media.webp",
         feedback: "My new name art boosted my social media profile instantly!",
         name: "Samantha B.",
@@ -238,11 +214,6 @@ const HomePage: NextPage = () => {
         image: "/user-gift-fiance.webp",
         feedback: "I designed a name art keepsake for my fiancé—he loved it!",
         name: "Emma T.",
-      },
-      {
-        image: "/user-youtube-logo.webp",
-        feedback: "Perfect logo for my YouTube gaming channel—super easy to make!",
-        name: "Chris D.",
       },
     ];
 
@@ -305,7 +276,7 @@ const HomePage: NextPage = () => {
       {
         icon: "/icons/users.png",
         title: "For Everyone",
-        description: "Perfect for gamers, gift-givers, and businesses alike.",
+        description: "Perfect for gift-givers, and businesses alike.",
       },
     ];
 
@@ -344,12 +315,12 @@ const HomePage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Name Design AI – Name Art, Gaming Logos & Professional Designs</title>
+        <title>Name Design AI – Name Art & Professional Designs</title>
         <meta
           name="description"
-          content="Create personalized name art, gaming logos, or professional designs with Name Design AI. Perfect for social media, gifts, or branding—try it free!"
+          content="Create personalized name art, professional designs with Name Design AI. Perfect for social media, gifts, or branding—try it free!"
         />
-        <meta name="keywords" content="name art generator, gaming logo maker, professional logo creator, custom designs, AI design tool" />
+        <meta name="keywords" content="name art generator, professional logo creator, custom designs, AI design tool" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container mx-auto">

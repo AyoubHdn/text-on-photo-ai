@@ -60,11 +60,7 @@ export function Header() {
                         Name Art
                     </PrimaryLink>
                 </li>
-                <li>
-                    <PrimaryLink id="gaming-logo-header-button" href="/gaming-logo" className="hidden md:block">
-                        Gaming Logo
-                    </PrimaryLink>
-                </li>
+
                 <li>
                     <PrimaryLink id="pro-logo-header-button" href="/pro-logo" className="hidden md:block">
                         Pro Logo
@@ -158,16 +154,6 @@ export function Header() {
                                 </li>
                                 <li>
                                     <Link
-                                        id="gaming-logo-header-button"
-                                        href="/gaming-logo"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Gaming Logo
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
                                         id="pro-logo-header-button"
                                         href="/pro-logo"
                                         className="block px-4 py-2 dark:text-white hover:bg-gray-700"
@@ -232,16 +218,6 @@ export function Header() {
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
                                         Name Art
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        id="gaming-logo-header-button"
-                                        href="/gaming-logo"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Gaming Logo
                                     </Link>
                                 </li>
                                 <li>
