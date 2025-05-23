@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "postinstall": "prisma generate",
+    "postbuild": "next-sitemap",
     "lint": "next lint",
     "start": "next start",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe"
@@ -25,6 +26,7 @@
     "micro": "^10.0.1",
     "next": "^15.0.3",
     "next-auth": "^4.19.0",
+    "next-sitemap": "^4.2.3",
     "node-fetch": "^3.3.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
