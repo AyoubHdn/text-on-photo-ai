@@ -43,7 +43,7 @@ export function Header() {
                     <PrimaryLink href="/">
                         <Image
                             src="/logo.png" // Replace with your actual logo path
-                            alt="Logo"
+                            alt="Name Design AI Logo"
                             width={50}
                             height={50}
                             className="rounded"

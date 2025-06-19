@@ -454,7 +454,7 @@ const NameArtPage: NextPage = () => {
           {/* 3. Select AI Model */}
           <h2 className="text-xl">3. Select AI Model</h2>
           <FormGroup className="mb-12">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
               {[
                 {
                   name: "Standard",
@@ -478,17 +478,7 @@ const NameArtPage: NextPage = () => {
                   recommended: true,  // Shows the "Recommended" tag
                   label: undefined,
                 },
-                {
-                  name: "Ultimate",
-                  value: "ideogram-ai/ideogram-v2-turbo" as AIModel,
-                  cost: 8,
-                  image:
-                    selectedStyleImage && selectedStyleImage.includes(".")
-                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "ea$1")
-                      : "/images/placeholder.png",
-                  recommended: false, // Not recommended
-                  label: "Top Tier",   // New label for highest-end
-                },
+                
               ].map((model) => (
                 <button
                   key={model.value}
