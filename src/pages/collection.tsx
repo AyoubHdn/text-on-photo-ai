@@ -3,6 +3,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { useState } from "react";
 import { api } from "~/utils/api";
+import { ShareModal } from '~/component/ShareModal';
 
 const CollectionPage: NextPage = () => {
   const icons = api.icons.getIcons.useQuery();
@@ -14,6 +15,19 @@ const CollectionPage: NextPage = () => {
 
   const closePopup = () => {
     setPopupImage(null);
+  };
+
+  const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({
+      isOpen: false,
+      imageUrl: null,
+    });
+  
+    const openShareModal = (imageUrl: string) => {
+    setShareModalData({ isOpen: true, imageUrl });
+  };
+  
+  const closeShareModal = () => {
+    setShareModalData({ isOpen: false, imageUrl: null });
   };
 
   const handleDownload = async (imageUrl: string) => {
@@ -55,6 +69,7 @@ const CollectionPage: NextPage = () => {
       console.error("Error downloading the image:", error);
     }
   };
+  // Add this function inside your component, alongside handleDownload, etc.
 
   return (
     <>
@@ -96,6 +111,16 @@ const CollectionPage: NextPage = () => {
                 >
                   ⬇️
                 </button>
+                <button
+                  onClick={() => {
+                    openShareModal(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`);
+                  }}
+                  className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
+                  title="Share"
+                  aria-label="Share"
+                >
+                  📤
+                </button>
               </div>
             </li>
           ))}
@@ -120,6 +145,11 @@ const CollectionPage: NextPage = () => {
             </div>
           </div>
         )}
+        <ShareModal 
+          isOpen={shareModalData.isOpen}
+          onClose={closeShareModal}
+          imageUrl={shareModalData.imageUrl}
+        />
       </main>
     </>
   );

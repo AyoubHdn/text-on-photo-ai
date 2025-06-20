@@ -11,6 +11,7 @@ import { useSession, signIn } from "next-auth/react";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { colorFamilies } from "~/data/colors";
 import Link from "next/link";
+import { ShareModal } from '~/component/ShareModal';
 
 /**
  * This page is dedicated to generating Name Art only.
@@ -93,6 +94,19 @@ const NameArtPage: NextPage = () => {
     handleCategoryScroll();
     handleSubCategoryScroll();
   }, [activeTab]);
+
+const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({
+    isOpen: false,
+    imageUrl: null,
+  });
+
+  const openShareModal = (imageUrl: string) => {
+  setShareModalData({ isOpen: true, imageUrl });
+};
+
+const closeShareModal = () => {
+  setShareModalData({ isOpen: false, imageUrl: null });
+};
 
   const handleCategoryScroll = () => {
     if (!categoryScrollRef.current) return;
@@ -624,6 +638,15 @@ const NameArtPage: NextPage = () => {
                     >
                       ⬇️
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => openShareModal(imageUrl)} // This now opens the modal
+                      className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
+                      title="Share"
+                      aria-label="Share"
+                    >
+                      📤
+                    </button>
                   </div>
                   <Image
                     src={imageUrl}
@@ -658,6 +681,11 @@ const NameArtPage: NextPage = () => {
             </div>
           </div>
         )}
+        <ShareModal 
+          isOpen={shareModalData.isOpen}
+          onClose={closeShareModal}
+          imageUrl={shareModalData.imageUrl}
+        />
       </main>
     </>
   );
