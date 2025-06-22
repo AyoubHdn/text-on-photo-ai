@@ -2,19 +2,65 @@ import Link from "next/link";
 import { PrimaryLink } from "./PrimaryLink";
 
 export function Footer() {
+
+  // --- NEW: Generator pages to be listed in the footer ---
+  const generatorLinks = [
+    { href: "/personalized-gifts-generator", name: "Personalized Gift Generator" },
+    { href: "/name-art-generator", name: "Name Art Generator" },
+    { href: "/pro-logo-generator", name: "Pro Logo Generator" },
+    // TODO: Add more generator links here as you create them
+    // { href: "/anniversary-art-generator", name: "Anniversary Art Generator" },
+    // { href: "/gaming-logo-generator", name: "Gaming Logo Generator" },
+  ];
+
   return (
-    <footer className="bg-gray-300 dark:bg-gray-900 pb-24 ">
-      <div className="container mx-auto flex flex-col justify-between gap-4 px-2 pt-8 text-center md:flex-row">
-        <div className="flex flex-col gap-2">
-          <PrimaryLink href="/">NameDesignAi.com</PrimaryLink><br/>
-          <Link target="_blank" href="https://hdnstudio.com/">HDN STUDIO LTD</Link>
+    <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          
+          {/* Column 1: Brand Info */}
+          <div className="flex flex-col gap-4">
+            <h3 className="font-semibold text-lg">NameDesignAi.com</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">AI-powered art & logo creation for everyone.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              © {new Date().getFullYear()} HDN STUDIO LTD
+            </p>
+          </div>
+
+          {/* Column 2: Our Generators */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">Our Generators</h3>
+            <ul className="flex flex-col gap-3">
+              {generatorLinks.map(link => (
+                <li key={link.href}>
+                  <PrimaryLink href={link.href} className="text-sm">
+                    {link.name}
+                  </PrimaryLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Company */}
+          <div>
+             <h3 className="font-semibold text-lg mb-4">Community</h3>
+             <ul className="flex flex-col gap-3">
+                <li><PrimaryLink href="/community" className="text-sm">Gallery</PrimaryLink></li>
+                {/* Add About or Contact links here if you create them */}
+             </ul>
+          </div>
+
+          {/* Column 4: Legal */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">Legal</h3>
+            <ul className="flex flex-col gap-3">
+              <li><PrimaryLink href="/privacy-policy" className="text-sm">Privacy Policy</PrimaryLink></li>
+              <li><PrimaryLink href="/terms-of-service" className="text-sm">Terms of Service</PrimaryLink></li>
+              <li><PrimaryLink href="/refund" className="text-sm">Refund Policy</PrimaryLink></li>
+            </ul>
+          </div>
+
         </div>
-        <div className="flex justify-between gap-8 px-4">
-          <PrimaryLink href="/privacy-policy">Privacy Policy</PrimaryLink>
-          <PrimaryLink href="/terms-of-service">Terms of Service</PrimaryLink>
-          <PrimaryLink href="/refund">Refund Policy</PrimaryLink>
-        </div>
-        
       </div>
     </footer>
   );

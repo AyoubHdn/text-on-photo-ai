@@ -5,44 +5,60 @@ import { PrimaryLink } from "./PrimaryLink";
 import { api } from "~/utils/api";
 import Image from "next/image";
 import Link from "next/link";
+import { AiOutlineDown } from "react-icons/ai"; // Using an icon for the dropdown
 
 export function Header() {
     const session = useSession();
     const credits = api.user.getCredits.useQuery();
     const isLoggedIn = !!session.data;
 
-    // State for toggling the dropdown menu
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
 
-    // Reference to the dropdown for detecting outside clicks
-    const dropdownRef = useRef(null);
+    const mobileMenuRef = useRef<HTMLDivElement>(null);
+    // --- FIX: Changed from HTMLDivElement to HTMLLIElement to match the <li> it references ---
+    const productsDropdownRef = useRef<HTMLLIElement>(null);
 
-    // Close dropdown when clicking outside
+    const productLinks = [
+        { href: "/name-art", name: "Name Art" },
+        { href: "/personalized-gifts", name: "Personalized Gifts" },
+        { href: "/pro-logo", name: "Pro Logo" },
+        // TODO: Add more landing pages here as you create them
+        // { href: "/anniversary-art", name: "Anniversary Art" },
+        // { href: "/gaming-logos", name: "Gaming Logos" },
+    ];
+
+    // Close mobile dropdown when clicking outside
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
-            if (dropdownRef.current && !(dropdownRef.current as HTMLElement).contains(event.target as Node)) {
-                setIsDropdownOpen(false);
+            if (mobileMenuRef.current && !(mobileMenuRef.current as HTMLElement).contains(event.target as Node)) {
+                setIsMobileMenuOpen(false);
             }
         };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
 
-        if (isDropdownOpen) {
-            document.addEventListener("mousedown", handleOutsideClick);
-        } else {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        }
-
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
+    // Close products dropdown when clicking outside
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (productsDropdownRef.current && !(productsDropdownRef.current as HTMLElement).contains(event.target as Node)) {
+                setIsProductsDropdownOpen(false);
+            }
         };
-    }, [isDropdownOpen]);
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
+
 
     return (
         <header className="container mx-auto flex h-16 items-center justify-between px-4 dark:bg-gray-800">
+            {/* --- LEFT NAVIGATION --- */}
             <ul className="flex gap-8 items-center">
                 <li>
                     <PrimaryLink href="/">
                         <Image
-                            src="/logo.png" // Replace with your actual logo path
+                            src="/logo.png"
                             alt="Name Design AI Logo"
                             width={50}
                             height={50}
@@ -55,17 +71,33 @@ export function Header() {
                         <strong>Name Design AI</strong>
                     </PrimaryLink>
                 </li>
-                <li>
-                    <PrimaryLink id="name-art-header-button" href="/name-art" className="hidden md:block">
-                        Name Art
-                    </PrimaryLink>
+                {/* --- START: NEW PRODUCTS DROPDOWN --- */}
+                <li ref={productsDropdownRef} className="relative hidden md:block">
+                    <button
+                        onClick={() => setIsProductsDropdownOpen(prev => !prev)}
+                        className="flex items-center gap-1 font-medium text-slate-800 dark:text-slate-200 hover:text-blue-500"
+                    >
+                        Products <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isProductsDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-56 z-20 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                            <ul className="py-1">
+                                {productLinks.map(link => (
+                                    <li key={link.href}>
+                                        <Link 
+                                            href={link.href}
+                                            onClick={() => setIsProductsDropdownOpen(false)}
+                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                        >
+                                            {link.name}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </li>
-
-                <li>
-                    <PrimaryLink id="pro-logo-header-button" href="/pro-logo" className="hidden md:block">
-                        Pro Logo
-                    </PrimaryLink>
-                </li>
+                {/* --- END: NEW PRODUCTS DROPDOWN --- */}
                 <li>
                     <PrimaryLink id="community-header-button" href="/community" className="hidden md:block">
                         Community
@@ -79,6 +111,8 @@ export function Header() {
                     </li>
                 )}
             </ul>
+
+            {/* --- RIGHT NAVIGATION (DESKTOP) --- */}
             <ul className="hidden gap-4 items-center md:flex">
                 {isLoggedIn && (
                     <>
@@ -119,124 +153,71 @@ export function Header() {
                     </li>
                 )}
             </ul>
-            {/* Dropdown Toggle Button */}
+
+            {/* --- MOBILE HAMBURGER MENU --- */}
             <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="relative focus:outline-none md:hidden"
+                onClick={() => setIsMobileMenuOpen(prev => !prev)}
+                className="relative focus:outline-none md:hidden text-2xl"
             >
-                {isDropdownOpen ? "X" : "☰"}
+                {isMobileMenuOpen ? "×" : "☰"}
             </button>
-            {/* Dropdown Menu */}
-            {isDropdownOpen && (
-                <div ref={dropdownRef} className="absolute top-14 z-10 w-full p-4 md:block md:w-auto">
-                    <ul className="rounded-lg bg-white p-4 text-slate-800 dark:bg-gray-900 dark:text-slate-200">
-                        {isLoggedIn && (
+            {isMobileMenuOpen && (
+                <div ref={mobileMenuRef} className="absolute top-16 left-0 right-0 z-10 p-4 md:hidden">
+                    <ul className="rounded-lg bg-white p-4 text-slate-800 dark:bg-gray-900 dark:text-slate-200 shadow-lg">
+                        {isLoggedIn ? (
                             <>
                                 <li>
-                                    <Link
-                                        id="buy-credits-header-button"
-                                        href="/buy-credits"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Buy Credits ({credits.data ?? 0} credits left)
+                                    <Link href="/buy-credits" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                        Buy Credits ({credits.data ?? 0} left)
                                     </Link>
                                 </li>
+                                {/* --- START: Mobile Products Section --- */}
+                                <li className="px-4 py-2 font-bold text-gray-500">Products</li>
+                                {productLinks.map(link => (
+                                     <li key={link.href} className="pl-4">
+                                         <Link href={link.href} className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                             {link.name}
+                                         </Link>
+                                     </li>
+                                ))}
+                                <div className="my-2 border-t border-gray-700"></div> 
+                                {/* --- END: Mobile Products Section --- */}
                                 <li>
-                                    <Link
-                                        id="name-art-header-button"
-                                        href="/name-art"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Name Art
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        id="pro-logo-header-button"
-                                        href="/pro-logo"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Pro Logo
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        id="community-header-button"
-                                        href="/community"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
+                                    <Link href="/community" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link
-                                        id="collection-header-button"
-                                        href="/collection"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
+                                    <Link href="/collection" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
                                         My Designs
                                     </Link>
                                 </li>
                                 <li>
-                                    <button
-                                        id="SignOut-header-button"
-                                        onClick={() => {
-                                            signOut().catch(console.error);
-                                            setIsDropdownOpen(false);
-                                        }}
-                                        className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700"
-                                    >
+                                    <button onClick={() => { signOut().catch(console.error); setIsMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700">
                                         Sign Out
                                     </button>
                                 </li>
                             </>
-                        )}
-                        {!isLoggedIn && (
+                        ) : (
                             <>
                                 <li>
-                                    <button
-                                        id="SignIn-header-button"
-                                        onClick={() => {
-                                            signIn().catch(console.error);
-                                            setIsDropdownOpen(false);
-                                        }}
-                                        className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700"
-                                    >
+                                    <button onClick={() => { signIn().catch(console.error); setIsMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700">
                                         Sign In
                                     </button>
                                 </li>
+                                 {/* --- START: Mobile Products Section --- */}
+                                <li className="px-4 py-2 font-bold text-gray-500">Products</li>
+                                {productLinks.map(link => (
+                                     <li key={link.href} className="pl-4">
+                                         <Link href={link.href} className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                             {link.name}
+                                         </Link>
+                                     </li>
+                                ))}
+                                <div className="my-2 border-t border-gray-700"></div> 
+                                {/* --- END: Mobile Products Section --- */}
                                 <li>
-                                    <Link
-                                        id="name-art-header-button"
-                                        href="/name-art"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Name Art
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        id="pro-logo-header-button"
-                                        href="/pro-logo"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Pro Logo
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        id="community-header-button"
-                                        href="/community"
-                                        className="block px-4 py-2 dark:text-white hover:bg-gray-700"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
+                                    <Link href="/community" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
                                     </Link>
                                 </li>
