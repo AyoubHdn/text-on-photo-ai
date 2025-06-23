@@ -36,20 +36,31 @@ const generateSiteMap = (pages: string[]) => {
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   // --- This is where you list all the pages on your site ---
   const pages = [
+    // Core Pages
     '/',
-    '/personalized-gifts',
-    '/personalized-gifts-generator',
-    '/name-art',
-    '/name-art-generator',
-    '/pro-logo',
-    '/pro-logo-generator',
     '/community',
     '/collection',
+    '/buy-credits',
+
+    // Landing Pages (High Priority)
+    '/personalized-gifts',
+    '/name-art',
+    '/pro-logo',
+
+    // Generator Pages (Medium Priority)
+    '/personalized-gifts-generator',
+    '/name-art-generator',
+    '/pro-logo-generator',
+
+    // --- START: NEW BLOG PAGES TO ADD ---
+    '/blog', // The main blog page
+    '/blog/how-to-give-a-thoughtful-gift',
+    // --- END: NEW BLOG PAGES TO ADD ---
+
+    // Legal Pages (Low Priority)
     '/privacy-policy',
     '/terms-of-service',
     '/refund',
-    // TODO: Add new landing pages here as you create them.
-    // e.g., '/anniversary-art', '/gaming-logos', etc.
   ];
 
   // We generate the sitemap XML
