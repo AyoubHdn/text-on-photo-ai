@@ -103,6 +103,11 @@ export function Header() {
                         Community
                     </PrimaryLink>
                 </li>
+                <li>
+                    <PrimaryLink id="blog-header-button" href="/blog" className="hidden md:block">
+                        Blog
+                    </PrimaryLink>
+                </li>
                 {isLoggedIn && (
                     <li>
                         <PrimaryLink id="collection-header-button" href="/collection" className="hidden md:block">
@@ -188,6 +193,11 @@ export function Header() {
                                     </Link>
                                 </li>
                                 <li>
+                                    <Link href="/blog" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                        Blog
+                                    </Link>
+                                </li>
+                                <li>
                                     <Link href="/collection" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
                                         My Designs
                                     </Link>
@@ -219,6 +229,11 @@ export function Header() {
                                 <li>
                                     <Link href="/community" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/blog" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                        Blog
                                     </Link>
                                 </li>
                             </>

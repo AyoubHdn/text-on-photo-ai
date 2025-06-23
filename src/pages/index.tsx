@@ -216,7 +216,7 @@ function FinalCTASection() {
     <section className="relative bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white">
       <div className="container mx-auto text-center px-6 py-20">
         <h2 className="text-3xl md:text-4xl font-bold">Ready to Create Something Amazing?</h2>
-        <p className="mt-4 text-lg text-blue-100 max-w-xl mx-auto">
+        <p className="mt-4 text-lg dark:text-blue-100 text-blue-500 max-w-xl mx-auto">
           Your perfect design is just a few clicks away. Explore our tools and bring your ideas to life.
         </p>
         <div className="mt-8">

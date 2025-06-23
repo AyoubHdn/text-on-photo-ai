@@ -48,6 +48,10 @@ export function Footer() {
                 <li><PrimaryLink href="/community" className="text-sm">Gallery</PrimaryLink></li>
                 {/* Add About or Contact links here if you create them */}
              </ul>
+             <ul className="flex flex-col gap-3">
+                <li><PrimaryLink href="/blog" className="text-sm">Blog</PrimaryLink></li>
+                {/* Add About or Contact links here if you create them */}
+             </ul>
           </div>
 
           {/* Column 4: Legal */}
