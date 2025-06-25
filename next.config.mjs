@@ -26,22 +26,6 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
-  async redirects() {
-    return [
-      {
-        source: '/gaming-logo', // The old path on namedesignai.com
-        destination: 'https://www.gaminglogoai.com/gaming-logo-maker', // New permanent location
-        permanent: true, // This makes it a 301 redirect
-      },
-      // Add redirects for any other removed gaming-specific pages
-      // For example, if you had /gaming-logo/styles/mascot :
-      // {
-      //   source: '/gaming-logo/styles/:slug',
-      //   destination: 'https://www.gaminglogoai.com/gaming-logo-maker', // Or a more specific new path
-      //   permanent: true,
-      // },
-    ];
-  },
 };
 
 export default config;
