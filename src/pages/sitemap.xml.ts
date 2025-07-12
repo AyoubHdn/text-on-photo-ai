@@ -46,15 +46,18 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/personalized-gifts',
     '/name-art',
     '/pro-logo',
+    '/couples-art',
 
     // Generator Pages (Medium Priority)
     '/personalized-gifts-generator',
     '/name-art-generator',
     '/pro-logo-generator',
+    '/couples-name-art-generator',
 
     // --- START: NEW BLOG PAGES TO ADD ---
     '/blog', // The main blog page
     '/blog/how-to-give-a-thoughtful-gift',
+    '/blog/why-couple-name-art-is-the-perfect-keepsake',
     // --- END: NEW BLOG PAGES TO ADD ---
 
     // Legal Pages (Low Priority)

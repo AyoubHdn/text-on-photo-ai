@@ -23,6 +23,7 @@ export function Header() {
         { href: "/name-art", name: "Name Art" },
         { href: "/personalized-gifts", name: "Personalized Gifts" },
         { href: "/pro-logo", name: "Pro Logo" },
+        { href: "/couples-art", name: "Couples Art" },
         // TODO: Add more landing pages here as you create them
         // { href: "/anniversary-art", name: "Anniversary Art" },
         // { href: "/gaming-logos", name: "Gaming Logos" },

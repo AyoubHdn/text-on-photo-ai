@@ -8,6 +8,7 @@ export function Footer() {
     { href: "/personalized-gifts-generator", name: "Personalized Gift Generator" },
     { href: "/name-art-generator", name: "Name Art Generator" },
     { href: "/pro-logo-generator", name: "Pro Logo Generator" },
+    { href: "/couples-name-art-generator", name: "Couples Name Art Generator" },
     // TODO: Add more generator links here as you create them
     // { href: "/anniversary-art-generator", name: "Anniversary Art Generator" },
     // { href: "/gaming-logo-generator", name: "Gaming Logo Generator" },
