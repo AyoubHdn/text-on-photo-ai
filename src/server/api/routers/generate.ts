@@ -74,7 +74,7 @@ const generateIcon = async ({
 
     input = {
       prompt,
-      image: referenceImageAsDataUrl,
+      input_image: referenceImageAsDataUrl,
       output_format: "png", // Kontext works best with PNG for quality edits
       output_quality: 90,
     };
