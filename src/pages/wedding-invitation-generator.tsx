@@ -94,6 +94,12 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
     if (!isLoggedIn) { signIn().catch(console.error); return; }
     if (!selectedStyle) { setError("Please select an invitation style first."); return; }
 
+    // --- FIX #1: Construct the full, absolute URL for the reference image ---
+    const baseUrl = window.location.origin; // This gets "https://www.namedesignai.com"
+    const absoluteReferenceUrl = new URL(selectedStyle.src, baseUrl).href;
+    console.log("Sending absolute reference URL to backend:", absoluteReferenceUrl);
+    // --- End of Fix ---
+
     const textInstructions = `
       Edit this wedding invitation.
       Bride's Name: ${formData.brideName}
@@ -109,7 +115,7 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
     generateTextInvite.mutate({
       prompt: textInstructions,
       model: "flux-kontext-dev",
-      referenceImageUrl: selectedStyle.src,
+      referenceImageUrl: absoluteReferenceUrl, // <-- Pass the new absolute URL
       numberOfImages: 1,
       aspectRatio: '9:16',
     });
@@ -119,7 +125,6 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
     if (!initialImageUrl) { setError("Please generate the initial invitation first."); return; }
     if (!photoForUpsell) { setError("Please upload a photo to add."); return; }
 
-    // TODO: Your logic to upload `photoForUpsell` to S3 and get a `userPhotoUrl`
     const userPhotoUrl = "https://your-s3-bucket-url/path/to/user/photo.jpg"; // Placeholder
     console.log("Simulating photo upload:", userPhotoUrl);
 
@@ -132,7 +137,7 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
     generatePhotoInvite.mutate({
       prompt: photoInstructions,
       model: "flux-kontext-dev",
-      referenceImageUrl: initialImageUrl,
+      referenceImageUrl: initialImageUrl, 
       userImageUrl: userPhotoUrl,
       numberOfImages: 1,
       aspectRatio: '9:16',
