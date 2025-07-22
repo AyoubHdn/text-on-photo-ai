@@ -114,7 +114,7 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
 
     generateTextInvite.mutate({
       prompt: textInstructions,
-      model: "flux-kontext-dev",
+      model: "flux-kontext-pro",
       referenceImageUrl: absoluteReferenceUrl, // <-- Pass the new absolute URL
       numberOfImages: 1,
       aspectRatio: '9:16',
@@ -136,7 +136,7 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
 
     generatePhotoInvite.mutate({
       prompt: photoInstructions,
-      model: "flux-kontext-dev",
+      model: "flux-kontext-pro",
       referenceImageUrl: initialImageUrl, 
       userImageUrl: userPhotoUrl,
       numberOfImages: 1,

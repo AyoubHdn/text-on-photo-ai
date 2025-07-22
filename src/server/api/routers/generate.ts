@@ -47,7 +47,7 @@ const generateIcon = async ({
   prompt: string;
   numberOfImages?: number;
   aspectRatio?: string;
-  model: "flux-schnell" | "flux-dev" | "flux-kontext-dev" | "ideogram-ai/ideogram-v2-turbo";
+  model: "flux-schnell" | "flux-dev" | "flux-kontext-pro" | "ideogram-ai/ideogram-v2-turbo";
   referenceImageUrl?: string;
   userImageUrl?: string;
 }): Promise<string[]> => {
@@ -62,12 +62,12 @@ const generateIcon = async ({
     path = "black-forest-labs/flux-dev";
     input = { prompt, num_outputs: numberOfImages, aspect_ratio: aspectRatio, output_format: "webp" };
   } 
-  // --- START: NEW FLUX-KONTEXT-DEV LOGIC ---
-  else if (model === "flux-kontext-dev") {
+  // --- START: NEW flux-kontext-pro LOGIC ---
+  else if (model === "flux-kontext-pro") {
     if (!referenceImageUrl) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "A reference image is required for flux-kontext-dev." });
+      throw new TRPCError({ code: "BAD_REQUEST", message: "A reference image is required for flux-kontext-pro." });
     }
-    path = "black-forest-labs/flux-kontext-dev";
+    path = "black-forest-labs/flux-kontext-pro";
     
     // Convert the public URLs from your /styles/ folder into data URLs for Replicate
     const referenceImageAsDataUrl = `data:image/webp;base64,${await fetchAndEncodeImage(referenceImageUrl)}`;
@@ -85,7 +85,7 @@ const generateIcon = async ({
       input.user_image = userImageAsDataUrl;
     }
   } 
-  // --- END: NEW FLUX-KONTEXT-DEV LOGIC ---
+  // --- END: NEW flux-kontext-pro LOGIC ---
   else if (model === "ideogram-ai/ideogram-v2-turbo") {
     path = "ideogram-ai/ideogram-v2-turbo";
     input = { prompt, aspect_ratio: aspectRatio };
@@ -123,7 +123,7 @@ export const generateRouter = createTRPCRouter({
         model: z.enum([
           "flux-schnell",
           "flux-dev",
-          "flux-kontext-dev",
+          "flux-kontext-pro",
           "ideogram-ai/ideogram-v2-turbo",
         ]),
         // --- STRATEGIC CHANGE: Add optional image URLs to the input schema ---
@@ -135,7 +135,7 @@ export const generateRouter = createTRPCRouter({
       const creditCosts = {
         "flux-schnell": 1,
         "flux-dev": 4,
-        "flux-kontext-dev": 8, // Define cost
+        "flux-kontext-pro": 8, // Define cost
         "ideogram-ai/ideogram-v2-turbo": 8,
       };
 
@@ -197,7 +197,7 @@ export const generateRouter = createTRPCRouter({
             Body: Buffer.from(b64Image, "base64"),
             Key: icon.id,
             ContentEncoding: "base64",
-            ContentType: input.model === 'flux-kontext-dev' ? 'image/png' : 'image/webp',
+            ContentType: input.model === 'flux-kontext-pro' ? 'image/png' : 'image/webp',
           }).promise();
 
           return icon;
