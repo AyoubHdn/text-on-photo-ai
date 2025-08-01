@@ -142,7 +142,7 @@ const PersonalizedGiftsGeneratorPage: NextPage = () => {
       numberOfVariants: parseInt(form.numberofImages, 10),
     });
 
-    let finalPrompt = form.basePrompt.replace(/\[NAME\]/gi, form.name);
+    let finalPrompt = form.basePrompt.replace(/'Text'/gi, form.name);
     finalPrompt += ", beautiful gift art, high resolution";
 
     generateIcon.mutate({
