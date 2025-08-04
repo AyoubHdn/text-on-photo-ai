@@ -5,9 +5,59 @@ import { useState } from "react";
 import { api } from "~/utils/api";
 import { ShareModal } from '~/component/ShareModal';
 
+  interface VisibilityToggleProps {
+    iconId: string;
+    initialIsPublic: boolean;
+    isSubscriber: boolean;
+    onToggle: (iconId: string, newIsPublic: boolean) => void;
+    isLoading: boolean;
+  }
+
+  const VisibilityToggle: React.FC<VisibilityToggleProps> = ({ iconId, initialIsPublic, isSubscriber, onToggle, isLoading }) => {
+  const isEnabled = isSubscriber;
+  const toggleId = `toggle-${iconId}`;
+
+  const handleChange = () => {
+    if (!isEnabled || isLoading) return;
+    onToggle(iconId, !initialIsPublic);
+  };
+  return (
+    <div className="flex flex-col items-center gap-2 mt-2" title={!isEnabled ? "This feature is for subscribers only." : ""}>
+      <label htmlFor={toggleId} className={`relative inline-flex items-center cursor-pointer ${!isEnabled ? 'cursor-not-allowed opacity-50' : ''}`}>
+        <input
+          type="checkbox"
+          id={toggleId}
+          className="sr-only peer"
+          checked={initialIsPublic}
+          disabled={!isEnabled || isLoading}
+          onChange={handleChange}
+        />
+        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+      </label>
+      <span className={`text-xs font-medium ${initialIsPublic ? 'text-gray-900 dark:text-gray-300' : 'text-gray-500'}`}>
+        {initialIsPublic ? 'Public' : 'Private'}
+      </span>
+    </div>
+  );
+};
+
 const CollectionPage: NextPage = () => {
-  const icons = api.icons.getIcons.useQuery();
   const [popupImage, setPopupImage] = useState<string | null>(null);
+  const utils = api.useContext();
+
+  const { data, isLoading: isLoadingIcons } = api.icons.getIconsForUser.useQuery();
+  const { icons, userPlan, isSubscriber } = data || { icons: [], userPlan: null, isSubscriber: false };
+
+  const updateVisibility = api.icons.updateIconVisibility.useMutation({
+    onSuccess: () => {
+      // After a successful update, invalidate the query to refetch the fresh data
+      void utils.icons.getIconsForUser.invalidate();
+    },
+    onError: (error) => {
+      // Handle potential errors, e.g., show a toast notification
+      console.error("Failed to update visibility:", error);
+    }
+  });
 
   const openPopup = (imageUrl: string) => {
     setPopupImage(imageUrl);
@@ -69,6 +119,10 @@ const CollectionPage: NextPage = () => {
       console.error("Error downloading the image:", error);
     }
   };
+  function handleToggle(iconId: string, newIsPublic: boolean): void {
+    updateVisibility.mutate({ iconId, isPublic: newIsPublic });
+  }
+
   // Add this function inside your component, alongside handleDownload, etc.
 
   return (
@@ -82,7 +136,7 @@ const CollectionPage: NextPage = () => {
         <h1 className="text-4xl">Your Generated Images</h1>
 
         <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
-          {icons.data?.map((icon) => (
+          {icons.map((icon) => (
             <li key={icon.id} className="relative">
               <Image
                 className="w-full rounded"
@@ -122,6 +176,13 @@ const CollectionPage: NextPage = () => {
                   📤
                 </button>
               </div>
+              <VisibilityToggle
+                iconId={icon.id}
+                initialIsPublic={icon.isPublic}
+                isSubscriber={isSubscriber}
+                onToggle={handleToggle}
+                isLoading={updateVisibility.isLoading && updateVisibility.variables?.iconId === icon.id}
+              />
             </li>
           ))}
         </ul>
