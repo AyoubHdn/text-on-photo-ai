@@ -4,7 +4,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
@@ -13,7 +13,7 @@ import { Input } from "~/component/Input";
 import { AiStyle, weddingStylesData, type WeddingStyle } from "~/data/weddingStylesData"; 
 import { useSession, signIn } from "next-auth/react";
 import { ShareModal } from '~/component/ShareModal';
-import { FiUploadCloud } from "react-icons/fi";
+import { FiUploadCloud, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 type HostingOption = 'couple' | 'coupleAndParents' | 'parents';
 type ReceptionOption = 'none' | 'differentLocation' | 'sameLocation';
@@ -23,6 +23,9 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
   const { data: session } = useSession();
   const isLoggedIn = !!session;
 
+  const aiStyleScrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState<WeddingStyle | null>(null);
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState<string>("");
@@ -38,6 +41,27 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
 
   const createPresignedUrl = api.s3.createPresignedUrl.useMutation();
   
+const handleAiScroll = () => {
+    if (aiStyleScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = aiStyleScrollRef.current;
+      setShowLeftArrow(scrollLeft > 10); // Show if scrolled more than 10px
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10); // Hide if at the end
+    }
+  };
+
+  const scrollLeft = () => {
+    aiStyleScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    aiStyleScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' });
+  };
+
+  // Check scroll position on mount and when styles change
+  useLayoutEffect(() => {
+    handleAiScroll();
+  }, [selectedStyle]);
+
   const generateStage1 = api.wedding.generateInvitation.useMutation({
     onSuccess: (data) => { setStage1ImageUrl(data[0]?.imageUrl ?? null); setFinalImageUrl(null); setError(""); },
     onError: (error) => setError(error.message),
@@ -69,28 +93,49 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
 
   
 
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // This function is NOT async. It just kicks off the async process.
+    // It is safe to use in onSubmit.
+    void performGeneration(); 
+  };
+
+  const performGeneration = async () => {
+    // --- THIS IS THE CRITICAL FIX ---
+    // Check for login status as the VERY FIRST step.
+    if (!isLoggedIn) {
+      void signIn(); // Redirect to sign-in page
+      return;       // Stop the function here
+    }
+    // --- END OF CRITICAL FIX ---
+
     if (!selectedStyle) { setError("Please select a style."); return; }
     if (selectedStyle.templateType === 'photo' && !uploadedPhoto) {
       setError("This style requires you to upload a photo."); return;
     }
     
-    setIsGenerating(true); setError("");
+    setIsGenerating(true);
+    setError("");
+
     let finalUserImageUrl = "";
     if (selectedStyle.templateType === 'photo' && uploadedPhoto) {
       try {
         const presignedData = await createPresignedUrl.mutateAsync({ filename: uploadedPhoto.name, filetype: uploadedPhoto.type });
         const formDataToUpload = new FormData();
-        Object.entries(presignedData.fields).forEach(([key, value]) => formDataToUpload.append(key, value));
+        Object.entries(presignedData.fields).forEach(([key, value]) => {
+          formDataToUpload.append(key, value);
+        });
         formDataToUpload.append("file", uploadedPhoto);
         const uploadResponse = await fetch(presignedData.url, { method: "POST", body: formDataToUpload });
         if (!uploadResponse.ok) throw new Error("Upload to S3 failed.");
         finalUserImageUrl = presignedData.publicUrl;
       } catch (uploadError) {
-        setError("Failed to upload your photo. Please try again."); setIsGenerating(false); return;
+        console.error("Upload Error:", uploadError);
+        setError("Failed to upload your photo. Please try again.");
+        setIsGenerating(false); return;
       }
     }
+    
     generateStage1.mutate({
       isHybridGeneration: true,
       prompt: `Wedding invitation preview for ${formData.brideName}`,
@@ -100,6 +145,8 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
       styleRules: selectedStyle.styleRules,
       brideName: formData.brideName, groomName: formData.groomName, weddingDate: formData.weddingDate,
       weddingTime: formData.weddingTime, venueName: formData.venueName, venueAddress: formData.venueAddress,
+      receptionOption: formData.receptionOption,
+      receptionVenue: formData.receptionVenue,
     });
   };
 
@@ -169,9 +216,22 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
                         <div key={subcategory}><h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">{subcategory}</h4>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {styles.map((style) => (
-                                    <div key={style.id} onClick={() => handleStyleSelect(style)} className={`relative rounded-lg shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer overflow-hidden ${selectedStyle?.id === style.id ? "ring-4 ring-blue-500" : ""}`}>
-                                        <Image src={style.src} alt={style.title} width={300} height={420} className="w-full h-auto object-cover aspect-[9/16]" />
-                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 text-white"><p className="font-semibold text-sm">{style.title}</p></div>
+                                    <div 
+                                      key={style.id} 
+                                      onClick={() => handleStyleSelect(style)} 
+                                      className={`group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedStyle?.id === style.id ? "ring-4 ring-offset-2 ring-blue-500" : ""}`}
+                                    >
+                                      <Image 
+                                        src={style.src} 
+                                        alt={style.title}
+                                        width={1024}
+                                        height={1434}
+                                        className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105" 
+                                        unoptimized={true}
+                                      />
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-white">
+                                          {/* <p className="font-semibold text-sm">{style.title}</p> */}
+                                      </div>
                                     </div>
                                 ))}
                             </div>
@@ -187,10 +247,11 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
             
             <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-6 border p-6 rounded-lg">
               <legend className="px-2 font-semibold">The Couple</legend>
-              <FormGroup><label>Bride&apos;s Full Name *</label><Input required name="brideName" value={formData.brideName} onChange={handleInputChange} /></FormGroup>
-              <FormGroup><label>Groom&apos;s Full Name *</label><Input required name="groomName" value={formData.groomName} onChange={handleInputChange} /></FormGroup>
+              <FormGroup><label>Bride&apos;s Name *</label><Input required name="brideName" value={formData.brideName} onChange={handleInputChange} /></FormGroup>
+              <FormGroup><label>Groom&apos;s Name *</label><Input required name="groomName" value={formData.groomName} onChange={handleInputChange} /></FormGroup>
             </fieldset>
 
+            {/*
             <fieldset className="border p-6 rounded-lg">
               <legend className="px-2 font-semibold">The Hosts</legend>
               <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -205,6 +266,7 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
                 </div>
               )}
             </fieldset>
+            */}
 
             <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-6 border p-6 rounded-lg">
                 <legend className="px-2 font-semibold">The Event</legend>
@@ -259,8 +321,8 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
           )}
             
             <div className="mt-10">
-                <Button isLoading={isGenerating} disabled={isGenerating} className="w-full py-4 text-lg">
-                    {generateStage1.isLoading ? 'Generating Preview...' : (isGenerating ? 'Working...' : 'Generate My Invitation')}
+                <Button isLoading={isGenerating} disabled={isGenerating || !selectedStyle} className="w-full py-4 text-lg">
+                    {isGenerating ? 'Working...' : `Generate Invitation (${selectedStyle?.creditCost ?? 0} Credits)`}
                 </Button>
             </div>
         </form>
@@ -283,19 +345,34 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
               {selectedStyle?.aiStyles && selectedStyle.aiStyles.length > 0 && (
                 <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-lg shadow-inner">
                   <h3 className="text-xl font-semibold mb-2">✨ Enhance with AI</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">Love the layout? Now, let our AI transform your photo into a beautiful cartoon style for a truly magical touch.</p>
-                  <div className="flex gap-4 overflow-x-auto pb-4">
-                    {selectedStyle.aiStyles.map(aiStyle => (
-                        <div key={aiStyle.id} onClick={() => setSelectedAiStyle(aiStyle)} className={`cursor-pointer text-center p-2 rounded-lg border-2 ${selectedAiStyle?.id === aiStyle.id ? 'border-blue-500' : 'border-transparent'}`}>
-                            <Image src={aiStyle.previewImage} alt={aiStyle.name} width={80} height={80} className="rounded-md shadow-md" />
-                            <p className="text-sm font-medium mt-2">{aiStyle.name}</p>
-                        </div>
-                    ))}
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Love the layout? Now, apply a unique artistic style to your photo.</p>
+                  <div className="relative flex items-center">
+                    {showLeftArrow && (
+                        <button onClick={scrollLeft} className="absolute -left-4 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600">
+                            <FiChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                    )}
+                    <div ref={aiStyleScrollRef} onScroll={handleAiScroll} className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                        {selectedStyle.aiStyles.map(aiStyle => (
+                            <div 
+                                key={aiStyle.id} 
+                                onClick={() => setSelectedAiStyle(aiStyle)} 
+                                className={`flex flex-col items-center flex-shrink-0 w-24 cursor-pointer text-center p-2 rounded-lg border-2 transition-colors ${selectedAiStyle?.id === aiStyle.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                            >
+                                <Image src={aiStyle.previewImage} alt={aiStyle.name} width={80} height={80} className="rounded-md shadow-sm" unoptimized={true} />
+                                <p className="text-sm font-medium mt-2 w-full">{aiStyle.name}</p>
+                            </div>
+                        ))}
+                    </div>
+                    {showRightArrow && (
+                        <button onClick={scrollRight} className="absolute -right-4 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600">
+                            <FiChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                    )}
                   </div>
-                  <Button isLoading={generateStage2.isLoading} disabled={isGenerating} className="w-full py-3 text-lg" onClick={handleEnhanceWithAI}>
-                      {generateStage2.isLoading ? 'Styling Your Photo...' : `Apply ${selectedAiStyle?.name ?? ''} Style`}
+                  <Button isLoading={generateStage2.isLoading} disabled={isGenerating || !selectedAiStyle} className="w-full py-3 text-lg mt-6" onClick={handleEnhanceWithAI}>
+                      {generateStage2.isLoading ? 'Applying Style...' : `Apply ${selectedAiStyle?.name ?? ''} Style (${selectedAiStyle?.creditCost ?? 0} Credits)`}
                   </Button>
-                  <p className="text-xs text-center mt-2 text-gray-500">This is a premium feature.</p>
                 </div>
               )}
             </div>
@@ -305,7 +382,7 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
           <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="bg-black bg-opacity-50 absolute inset-0" onClick={closePopup} />
             <div className="bg-white rounded-lg overflow-hidden shadow-lg z-10">
-              <Image src={popupImage} alt="Popup Image" width={800} height={600} />
+              <Image src={popupImage} alt="Popup Image" width={800} height={600} unoptimized={true}/>
               <button className="absolute top-2 right-2 text-white" onClick={closePopup}>✖️</button>
             </div>
           </div>

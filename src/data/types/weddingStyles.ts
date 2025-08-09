@@ -58,5 +58,6 @@ export interface StyleRules {
     dateFormat?: Intl.DateTimeFormatOptions;
     dateSeparator?: string;
     dateCase?: 'uppercase' | 'none';
+    timeFormat?: 'ampm' | 'words';
   };
 }

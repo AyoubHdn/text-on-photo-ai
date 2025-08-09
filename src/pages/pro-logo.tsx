@@ -9,15 +9,15 @@ import { FiBriefcase, FiLayers, FiTarget } from "react-icons/fi";
 // --- Data for the Curated Pro Logo Gallery ---
 // These tags should correspond to the industries in your generator
 const galleryItems = [
-  { src: "/pro-logo/abstract-opt.jpeg", title: "Abstract & Modern", tags: ["technology", "finance"] },
-  { src: "/pro-logo/combination-opt.jpeg", title: "Combination Mark", tags: ["food", "retail", "technology"] },
-  { src: "/pro-logo/wordmark-opt.jpeg", title: "Elegant Wordmark", tags: ["fashion", "finance", "services"] },
-  { src: "/pro-logo/brandmark-opt.jpeg", title: "Iconic Brandmark", tags: ["technology", "sports"] },
-  { src: "/pro-logo/emblem-opt.jpeg", title: "Classic Emblem", tags: ["food", "sports"] },
-  { src: "/pro-logo/lettermark-opt.jpeg", title: "Minimalist Lettermark", tags: ["fashion", "services", "technology"] },
+  { src: "/pro-logo/abstract-opt.webp", title: "Abstract & Modern", tags: ["technology", "finance"] },
+  { src: "/pro-logo/combination-opt.webp", title: "Combination Mark", tags: ["food", "retail", "technology"] },
+  { src: "/pro-logo/wordmark-opt.webp", title: "Elegant Wordmark", tags: ["fashion", "finance", "services"] },
+  { src: "/pro-logo/brandmark-opt.webp", title: "Iconic Brandmark", tags: ["technology", "sports"] },
+  { src: "/pro-logo/emblem-opt.webp", title: "Classic Emblem", tags: ["food", "sports"] },
+  { src: "/pro-logo/lettermark-opt.webp", title: "Minimalist Lettermark", tags: ["fashion", "services", "technology"] },
   // Add 2-4 more strong, diverse examples to fill out the grid
-  { src: "/pro-logo/food.jpeg", title: "Handcrafted Look", tags: ["food", "retail"] }, // Example from another set
-  { src: "/pro-logo/finance.jpeg", title: "Luxury & Premium", tags: ["fashion", "finance"] }, // Example from another set
+  { src: "/pro-logo/food.webp", title: "Handcrafted Look", tags: ["food", "retail"] }, // Example from another set
+  { src: "/pro-logo/finance.webp", title: "Luxury & Premium", tags: ["fashion", "finance"] }, // Example from another set
 ];
 
 const galleryTabs = [

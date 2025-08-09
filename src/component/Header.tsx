@@ -59,7 +59,7 @@ export function Header() {
                 <li>
                     <PrimaryLink href="/">
                         <Image
-                            src="/logo.png"
+                            src="/logo.webp"
                             alt="Name Design AI Logo"
                             width={50}
                             height={50}

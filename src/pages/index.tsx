@@ -56,12 +56,13 @@ function HeroBanner() {
         </div>
         <div className="flex justify-center">
           <Image
-            src="/banner.png" // This image should be high quality
+            src="/banner.webp" // This image should be high quality
             alt="A collage of beautiful name art and logo designs"
             width={500}
             height={400}
             priority // Load this image first
             className="rounded-lg shadow-2xl"
+            unoptimized={true}
           />
         </div>
       </div>
@@ -76,21 +77,21 @@ function ProductsSection() {
       title: "Personalized Gifts",
       description: "Create heartfelt art for anniversaries, birthdays, and special occasions they'll never forget.",
       href: "/personalized-gifts", // Links to the new LANDING PAGE
-      image: "/icons/gift-icon.png", // Suggest creating new, high-quality icons
+      image: "/icons/gift-icon.webp", // Suggest creating new, high-quality icons
       id: "product-personalized-gifts"
     },
     {
       title: "Name Art",
       description: "Turn your name into a masterpiece with creative styles, from graffiti to elegant calligraphy.",
       href: "/name-art", // Links to the new LANDING PAGE
-      image: "/icons/name-art.png",
+      image: "/icons/name-art.webp",
       id: "product-name-art"
     },
     {
       title: "Professional Logos",
       description: "Design a unique, high-quality logo for your business, brand, or project in minutes.",
       href: "/pro-logo", // This will eventually be a landing page too
-      image: "/icons/pro-logo.png",
+      image: "/icons/pro-logo.webp",
       id: "product-pro-logo"
     },
   ];
@@ -136,17 +137,17 @@ function WhyChooseUsSection() {
     {
       title: "Create a Cherished Gift in Minutes",
       description: "No design experience? No problem. Our intuitive tools make it simple to create something beautiful and personal, perfect for surprising loved ones.",
-      image: "/features/gift-feature.png", // Suggest creating new feature images
+      image: "/features/gift-feature.webp", // Suggest creating new feature images
     },
     {
       title: "Endless Inspiration, Unique Results",
       description: "With a massive library of artistic styles, you'll never run out of ideas. From modern logos to heartfelt name art, every design you create is one-of-a-kind.",
-      image: "/features/styles-feature.png",
+      image: "/features/styles-feature.webp",
     },
     {
       title: "Professional Quality for Any Project",
       description: "Download your creations in high-resolution, ready for printing, framing, or using online. Get premium-quality results without the premium price tag.",
-      image: "/features/quality-feature.png",
+      image: "/features/quality-feature.webp",
     }
   ];
 
@@ -197,7 +198,7 @@ function UserFeedbackSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {feedbacks.map((item, index) => (
             <div key={index} className="flex flex-col items-center bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-              <Image src={item.image} alt={`Feedback from ${item.name}`} width={1024} height={1024} className="rounded-lg mb-6 w-full aspect-square object-cover" />
+              <Image src={item.image} alt={`Feedback from ${item.name}`} width={1024} height={1024} className="rounded-lg mb-6 w-full aspect-square object-cover" unoptimized={true} />
               <p className="text-gray-600 dark:text-gray-300 italic flex-grow">&quot;{item.feedback}&quot;</p>
               <p className="mt-4 font-bold text-gray-800 dark:text-white">— {item.name}</p>
             </div>

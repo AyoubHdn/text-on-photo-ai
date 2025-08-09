@@ -10,6 +10,8 @@ import { type StyleRules, type FontRule, type LineRule, type LayoutRules } from 
 import puppeteer from 'puppeteer';
 import { env } from "~/env.mjs";
 import AWS from "aws-sdk";
+import { toWords as toWordsUntyped } from 'number-to-words'; 
+const toWords: (n: number) => string = toWordsUntyped;
 
 // --- CONFIGURATION ---
 const s3 = new AWS.S3({
@@ -77,65 +79,45 @@ export const weddingRouter = createTRPCRouter({
           return `@font-face { font-family: '${escapeXml(font.family)}'; src: url(data:font/ttf;base64,${fontBase64}) format('truetype'); }`;
         }).join('\n');
         
-        const date = new Date(input.weddingDate ?? '');
-        let formattedDate = '';
+        const date = new Date(`${input.weddingDate}T${input.weddingTime || '00:00'}:00Z`);
+        const formattedDate = '';
         const formatting = input.styleRules.formatting;
-        if (formatting?.dateFormat) {
-            const options: Intl.DateTimeFormatOptions = {
-                month: formatting.dateFormat.month,
-                day: formatting.dateFormat.day,
-                year: formatting.dateFormat.year,
-                timeZone: 'UTC',
-            };
-            const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
-            // This is the robust way to build the string, ignoring the default literals
-            formattedDate = parts
-                .filter(part => part.type !== 'literal')
-                .map(part => part.value)
-                .join(formatting.dateSeparator ?? ' ');
-
-            if (formatting.dateCase === 'uppercase') {
-                formattedDate = formattedDate.toUpperCase();
-            }
-        } else {
-            // A safe fallback if no formatting is specified
-            formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-        }
+        const day = date.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'UTC' });
+        const monthFormat: "numeric" | "2-digit" | "long" | "short" | "narrow" = formatting?.dateFormat?.month ?? "long";
+        const month = date.toLocaleDateString('en-US', { month: monthFormat, timeZone: 'UTC' }).toUpperCase();
+        const year = date.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' });
+        const weekdayFormat: "long" | "short" | "narrow" | undefined = formatting?.dateFormat?.weekday;
+        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: weekdayFormat ?? 'long', timeZone: 'UTC' }).toUpperCase();
+        const fullDate = `${dayOfWeek}, ${day}TH ${month}`;
+        const classicDate = `${day}th · ${month} · ${year}`;
+        const pastelDate = `${day}th ${month}`;
+        const MaxDate = `${dayOfWeek}, ${day} ${month} ${year}`;
         let formattedTime = '';
         if (input.weddingTime) {
-            const [hoursRaw, minutesRaw] = input.weddingTime.split(':');
-            const hours = hoursRaw ?? "0";
-            const minutes = minutesRaw ?? "0";
-            const dateForTime = new Date();
-            dateForTime.setUTCHours(parseInt(hours, 10));
-            dateForTime.setUTCMinutes(parseInt(minutes, 10));
-            
-            // This robustly formats to 12-hour with AM/PM, e.g., "2:00 PM"
-            const timeString = dateForTime.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'UTC'
-            });
-            formattedTime = `AT ${timeString}`;
+            // Check the rule from the data file
+            if (formatting?.timeFormat === 'words') {
+                const hour = date.getUTCHours();
+                const minute = date.getUTCMinutes();
+                const hourWord = toWords(hour % 12 === 0 ? 12 : hour % 12);
+                const minuteWord = minute === 0 ? "o'clock" : toWords(minute);
+                const period = hour >= 12 ? "in the afternoon" : "in the morning";
+                formattedTime = `${hourWord} ${minuteWord} ${period}`;
+                formattedTime = formattedTime.charAt(0).toUpperCase() + formattedTime.slice(1);
+            } else {
+                // Default to the AM/PM format
+                const timeString = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' });
+                formattedTime = `AT ${timeString}`;
+            }
         }
-        const day = date.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'UTC' });
-        const month = date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toUpperCase();
-        const year = date.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' });
-
-        let receptionText = '';
-        if (input.receptionOption === 'sameLocation') {
-            receptionText = elements.reception?.content ?? 'Reception to follow';
-        } else if (input.receptionOption === 'differentLocation' && input.receptionVenue) {
-            // Use the user-provided venue if it exists
-            receptionText = input.receptionVenue;
-        }
+        
 
         const textData: { [key: string]: string } = {
-          headline: elements.headline?.content ?? '', day, month, year, time: formattedTime, date: formattedDate,
-          brideName: input.brideName ?? '', groomName: input.groomName ?? '',
-          venue: input.venueName ?? '', address: input.venueAddress ?? '',
-          reception: receptionText,
+          headline: elements.headline?.content ?? '', day, month, year, time: formattedTime, date: formattedDate, fullDate: fullDate, 
+          brideName: input.brideName ?? '', groomName: input.groomName ?? '', classicDate: classicDate, pastelDate: pastelDate, MaxDate: MaxDate,
+          venue: input.venueName ?? '', address: input.venueAddress ?? '', reception: input.receptionOption === 'none' ? '' :
+            input.receptionOption === 'sameLocation' ? "Reception to follow" :
+            input.receptionOption === 'differentLocation' ? (input.receptionVenue ?? '') :
+            '', dayOfWeek: dayOfWeek,
         };
         
         const textElements = (Object.keys(elements) as Array<keyof LayoutRules>).map(key => {
