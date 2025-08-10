@@ -10,12 +10,12 @@ import { FiEdit3, FiHeart, FiCamera, FiCheckCircle } from "react-icons/fi";
 // --- Data for the Curated Gallery ---
 // These are your best styles to showcase the feature's capabilities.
 const galleryItems = [
-  { src: "/styles/wedding/w-photo-cartoon-preview.webp", title: "AI Cartoon Photo", tags: ["photo", "unique"] },
-  { src: "/styles/wedding/w001.webp", title: "Classic Floral", tags: ["text-only", "romantic"] },
-  { src: "/styles/wedding/w007.webp", title: "Modern Wreath", tags: ["text-only", "modern"] },
-  { src: "/styles/wedding/w-photo-01.webp", title: "Elegant Photo Frame", tags: ["photo", "romantic"] },
-  { src: "/styles/wedding/w-navy-01.webp", title: "Navy & Gold", tags: ["text-only", "classic"] },
-  { src: "/styles/wedding/w-watercolor-preview.webp", title: "AI Watercolor Photo", tags: ["photo", "unique"] },
+  { src: "/styles/wedding/w-veil-photo-01.webp", title: "Classic Veil Photo", tags: ["photo", "unique"] },
+  { src: "/styles/wedding/w-classic-floral-01.webp", title: "Classic Floral", tags: ["text-only", "romantic"] },
+  { src: "/styles/wedding/w001.webp", title: "Modern Wreath", tags: ["text-only", "modern"] },
+  { src: "/styles/wedding/w-marble-blossom-01.webp", title: "Marble & Blossom", tags: ["text-only", "modern"] },
+  { src: "/styles/wedding/w-photo-01.webp", title: "Classic Photo Frame", tags: ["photo", "romantic"] },
+  { src: "/styles/wedding/w-pastel-bouquet-01.webp", title: "Pastel Bouquet", tags: ["photo", "unique"] },
   // Add 2-6 more of your best-looking styles here
 ];
 
@@ -58,7 +58,7 @@ const WeddingInvitationsLandingPage: NextPage = () => {
             </p>
             <div className="mt-10">
               <Link href="/wedding-invitation-generator">
-                <Button className="px-10 py-4 text-lg">Design Your Invitation Card</Button>
+                <button className="inline-block px-8 py-4 text-lg font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Design Your Invitation Card</button>
               </Link>
             </div>
           </div>

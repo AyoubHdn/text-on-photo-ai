@@ -47,12 +47,14 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/name-art',
     '/pro-logo',
     '/couples-art',
+    '/wedding-invitation',
 
     // Generator Pages (Medium Priority)
     '/personalized-gifts-generator',
     '/name-art-generator',
     '/pro-logo-generator',
     '/couples-name-art-generator',
+    '/wedding-invitation-generator',
 
     // --- START: NEW BLOG PAGES TO ADD ---
     '/blog', // The main blog page
