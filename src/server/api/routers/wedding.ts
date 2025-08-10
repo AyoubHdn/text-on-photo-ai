@@ -97,6 +97,7 @@ export const weddingRouter = createTRPCRouter({
         const classicDate = `${day}th · ${month} · ${year}`;
         const pastelDate = `${day}th ${month}`;
         const MaxDate = `${dayOfWeek}, ${day} ${month} ${year}`;
+        const navyDate = `${day} . ${month} . ${year}`;
         let formattedTime = '';
         if (input.weddingTime) {
             // Check the rule from the data file
@@ -117,7 +118,7 @@ export const weddingRouter = createTRPCRouter({
         
 
         const textData: { [key: string]: string } = {
-          headline: elements.headline?.content ?? '', day, month, year, time: formattedTime, date: formattedDate, fullDate: fullDate, 
+          headline: elements.headline?.content ?? '', day, month, year, time: formattedTime, date: formattedDate, fullDate: fullDate, navyDate: navyDate,
           brideName: input.brideName ?? '', groomName: input.groomName ?? '', classicDate: classicDate, pastelDate: pastelDate, MaxDate: MaxDate,
           venue: input.venueName ?? '', address: input.venueAddress ?? '', reception: input.receptionOption === 'none' ? '' :
             input.receptionOption === 'sameLocation' ? "Reception to follow" :

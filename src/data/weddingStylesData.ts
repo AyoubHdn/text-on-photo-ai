@@ -1,4 +1,5 @@
 // src/data/weddingStylesData.ts
+import { date } from 'zod';
 import { type StyleRules } from '~/data/types/weddingStyles';
 
 export interface AiStyle {
@@ -200,11 +201,11 @@ const modernWreathRules: StyleRules = {
     dateCase: 'uppercase', // e.g., AUGUST
   },
   elements: {
-    day:          { x: 490, y: 530, fontSize: 180, color: "#363636", fontFamily: "headline" },
+    day:          { x: 490, y: 530, fontSize: 180, color: "#696969", fontFamily: "headline" },
     month:        { x: 490, y: 635, fontSize: 50, color: "#8a8a8a", letterSpacing: 4, textTransform: "uppercase", fontFamily: "body" },
     year:         { x: 490, y: 710, fontSize: 40, color: "#8a8a8a", letterSpacing: 4, fontFamily: "body" },
-    brideName:    { x: 750, y: 1205, fontSize: 70, color: "#363636", fontFamily: "headline" },
-    groomName:    { x: 250, y: 1205, fontSize: 70, color: "#363636", fontFamily: "headline" },
+    brideName:    { x: 750, y: 1205, fontSize: 70, color: "#696969", fontFamily: "headline" },
+    groomName:    { x: 250, y: 1205, fontSize: 70, color: "#696969", fontFamily: "headline" },
     venue:        { x: 512, y: 1340, fontSize: 30, color: "#6e6e6e", letterSpacing: 2, textTransform: "uppercase", fontFamily: "body" },
     address:       { x: 512, y: 1390, fontSize: 30, color: "#8a8a8a", letterSpacing: 1.5, fontFamily: "body" },
   },
@@ -229,7 +230,7 @@ const navyCartoonStyleRules: StyleRules = {
   elements: {
     groomName:    { x: 768, y: 960, fontSize: 100, color: "#FDB813", fontFamily: "script" },
     brideName:    { x: 256, y: 960, fontSize: 100, color: "#FDB813", fontFamily: "script" },
-    date:         { x: 512, y: 1172, fontSize: 50, color: "#FDB813", letterSpacing: 2, textTransform: "lowercase", fontFamily: "serif" },
+    navyDate:     { x: 512, y: 1172, fontSize: 50, color: "#FDB813", letterSpacing: 2, textTransform: "lowercase", fontFamily: "serif" },
     time:         { x: 512, y: 1225, fontSize: 30, color: "#FFFFFF", textTransform: "lowercase", fontFamily: "serif" },
     venue:        { x: 512, y: 1280, fontSize: 50, color: "#FFFFFF", letterSpacing: 3, fontWeight: "bold", textTransform: "lowercase", fontFamily: "serif" },
     address:      { x: 512, y: 1330, fontSize: 40, color: "#FFFFFF", textTransform: "lowercase", letterSpacing: 1.5, fontFamily: "serif" },
@@ -273,8 +274,8 @@ const pastelBouquetRules: StyleRules = {
     y: 0,
   },
   elements: {
-    brideName:    { x: 256, y: 980, fontSize: 100, color: "#ca8213", fontFamily: "script" },
-    groomName:    { x: 768, y: 980, fontSize: 100, color: "#ca8213", fontFamily: "script" },
+    brideName:    { x: 256, y: 900, fontSize: 100, color: "#ca8213", fontFamily: "script" },
+    groomName:    { x: 768, y: 900, fontSize: 100, color: "#ca8213", fontFamily: "script" },
     pastelDate:   { x: 512, y: 1115, fontSize: 60, color: "#505153", letterSpacing: 2, fontFamily: "serif" },
     venue:        { x: 512, y: 1240, fontSize: 50, color: "#505153", letterSpacing: 1.5, fontFamily: "serif" },
     time:         { x: 512, y: 1290, fontSize: 40, color: "#505153", fontFamily: "serif" },
