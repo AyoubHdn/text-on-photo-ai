@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/await-thenable */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // ~/server/api/routers/wedding.ts
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -7,7 +11,8 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import { type StyleRules, type FontRule, type LineRule, type LayoutRules } from "~/data/types/weddingStyles";
-import puppeteer from 'puppeteer';
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 import { env } from "~/env.mjs";
 import AWS from "aws-sdk";
 import { toWords as toWordsUntyped } from 'number-to-words'; 
@@ -144,7 +149,15 @@ export const weddingRouter = createTRPCRouter({
         `;
         
         try {
-            const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+            const browser = await puppeteer.launch({
+              args: chromium.args,
+              defaultViewport: null, // Puppeteer will use your own setViewport later
+              executablePath:
+                process.env.NODE_ENV === "development"
+                  ? (await import("puppeteer")).executablePath() // Local full Puppeteer
+                  : await chromium.executablePath(), // Vercel / serverless
+              headless: true, // chromium.headless is no longer provided
+            });
             const page = await browser.newPage();
             await page.setViewport({ width: 1024, height: 1434, deviceScaleFactor: 2 });
             await page.setContent(finalSvgString, { waitUntil: 'domcontentloaded' });
