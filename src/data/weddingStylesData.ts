@@ -20,86 +20,94 @@ export interface WeddingStyle {
   creditCost: number;
 }
 const photoUpsellStyles: AiStyle[] = [
-    {
-                    id: 'ai-cartoon',
-                    name: 'Cartoon',
-                    previewImage: '/styles/ai-previews/cartoon.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Transform the couple in the photo into a beautiful, elegant cartoon style, matching the aesthetic of the invitation. Keep all other elements unchanged.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'ai-watercolor',
-                    name: 'Watercolor',
-                    previewImage: '/styles/ai-previews/watercolor.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Transform the couple in the photo into a beautiful, elegant watercolor painting style, matching the aesthetic of the invitation. Keep all other elements unchanged.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Oil-Painting',
-                    name: 'Oil Painting',
-                    previewImage: '/styles/ai-previews/oil-painting.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Render the couple in the photo in a rich, detailed oil painting style, with smooth brush strokes and classic tones. Match the invitation’s elegance and keep all other elements intact.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Soft-Focus-Photo',
-                    name: 'Soft Focus Photo',
-                    previewImage: '/styles/ai-previews/soft-focus-photo.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Apply a soft, dreamy photo enhancement to the couple in the photo with delicate lighting and smooth background blur. Maintain the original invitation elements.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Vintage-Illustration',
-                    name: 'Vintage Illustration',
-                    previewImage: '/styles/ai-previews/vintage-illustration.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Convert the couple into a romantic vintage-style illustration, with sepia tones, fine ink lines, and a nostalgic touch. Preserve all other parts of the invitation.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Fairytale/Fantasy',
-                    name: 'Fairytale/Fantasy',
-                    previewImage: '/styles/ai-previews/fairytale-fantasy.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Reimagine the couple in a dreamy fairytale art style, with magical lighting, sparkles, and fantasy-like elegance. Keep all invitation design elements untouched.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Minimalist Flat Art',
-                    name: 'Minimalist Flat Art',
-                    previewImage: '/styles/ai-previews/minimalist-flat-art.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Transform the couple into a modern minimalist flat design, using clean lines, soft shadows, and solid colors. Keep the rest of the invitation layout unchanged.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Classical Renaissance',
-                    name: 'Classical Renaissance',
-                    previewImage: '/styles/ai-previews/classical-renaissance.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Turn the couple into a timeless Renaissance-style portrait, with dramatic lighting and classical details. Leave all other invitation elements as they are.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Cinematic Portrait',
-                    name: 'Cinematic Portrait',
-                    previewImage: '/styles/ai-previews/cinematic-portrait.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: 'Stylize the couple with a dramatic, elegant cinematic look, including soft depth of field and film-like tones. Keep all other invitation elements unchanged.',
-                    creditCost: 5,
-                  },
-                  {
-                    id: 'AI-Glitter & Glam',
-                    name: 'Glitter & Glam',
-                    previewImage: '/styles/ai-previews/glitter-glam.webp', // Create this preview image
-                    model: 'flux-kontext-pro',
-                    prompt: "Add a glamorous glitter effect to the couple's portrait, with light sparkle overlays and a luxurious glow. Don’t alter the rest of the invitation.",
-                    creditCost: 5,
-                  },
+  {
+    id: 'AI-Wedding-Elegance',
+    name: 'Wedding Elegance',
+    previewImage: '/styles/ai-previews/wedding-elegance.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Transform the couple in the photo, wearing wedding attire, into a beautifully enhanced and refined artistic style that highlights their love and elegance. Match the overall aesthetic of the invitation while keeping all other elements unchanged.',
+    creditCost: 5,
+  },
+  {
+    id: 'ai-cartoon',
+    name: 'Cartoon',
+    previewImage: '/styles/ai-previews/cartoon.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Transform the couple in the photo into a beautiful, elegant cartoon style, matching the aesthetic of the invitation. Keep all other elements unchanged.',
+    creditCost: 5,
+  },
+  {
+    id: 'ai-watercolor',
+    name: 'Watercolor',
+    previewImage: '/styles/ai-previews/watercolor.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Transform the couple in the photo into a beautiful, elegant watercolor painting style, matching the aesthetic of the invitation. Keep all other elements unchanged.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Oil-Painting',
+    name: 'Oil Painting',
+    previewImage: '/styles/ai-previews/oil-painting.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Render the couple in the photo in a rich, detailed oil painting style, with smooth brush strokes and classic tones. Match the invitation’s elegance and keep all other elements intact.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Soft-Focus-Photo',
+    name: 'Soft Focus Photo',
+    previewImage: '/styles/ai-previews/soft-focus-photo.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Apply a soft, dreamy photo enhancement to the couple in the photo with delicate lighting and smooth background blur. Maintain the original invitation elements.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Vintage-Illustration',
+    name: 'Vintage Illustration',
+    previewImage: '/styles/ai-previews/vintage-illustration.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Convert the couple into a romantic vintage-style illustration, with sepia tones, fine ink lines, and a nostalgic touch. Preserve all other parts of the invitation.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Fairytale/Fantasy',
+    name: 'Fairytale/Fantasy',
+    previewImage: '/styles/ai-previews/fairytale-fantasy.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Reimagine the couple in a dreamy fairytale art style, with magical lighting, sparkles, and fantasy-like elegance. Keep all invitation design elements untouched.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Minimalist Flat Art',
+    name: 'Minimalist Flat Art',
+    previewImage: '/styles/ai-previews/minimalist-flat-art.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Transform the couple into a modern minimalist flat design, using clean lines, soft shadows, and solid colors. Keep the rest of the invitation layout unchanged.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Classical Renaissance',
+    name: 'Classical Renaissance',
+    previewImage: '/styles/ai-previews/classical-renaissance.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Turn the couple into a timeless Renaissance-style portrait, with dramatic lighting and classical details. Leave all other invitation elements as they are.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Cinematic Portrait',
+    name: 'Cinematic Portrait',
+    previewImage: '/styles/ai-previews/cinematic-portrait.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: 'Stylize the couple with a dramatic, elegant cinematic look, including soft depth of field and film-like tones. Keep all other invitation elements unchanged.',
+    creditCost: 5,
+  },
+  {
+    id: 'AI-Glitter & Glam',
+    name: 'Glitter & Glam',
+    previewImage: '/styles/ai-previews/glitter-glam.webp', // Create this preview image
+    model: 'flux-kontext-pro',
+    prompt: "Add a glamorous glitter effect to the couple's portrait, with light sparkle overlays and a luxurious glow. Don’t alter the rest of the invitation.",
+    creditCost: 5,
+  },
 ];
 
 const bohemianGreenRules: StyleRules = {
