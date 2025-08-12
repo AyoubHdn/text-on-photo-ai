@@ -45,14 +45,11 @@ export function Footer() {
 
           {/* Column 3: Company */}
           <div>
-             <h3 className="font-semibold text-lg mb-4">Community</h3>
+             <h3 className="font-semibold text-lg mb-4">Explore</h3>
              <ul className="flex flex-col gap-3">
                 <li><PrimaryLink href="/community" className="text-sm">Gallery</PrimaryLink></li>
-                {/* Add About or Contact links here if you create them */}
-             </ul>
-             <ul className="flex flex-col gap-3">
+                <li><PrimaryLink href="/buy-credits" className="text-sm">Pricing</PrimaryLink></li>
                 <li><PrimaryLink href="/blog" className="text-sm">Blog</PrimaryLink></li>
-                {/* Add About or Contact links here if you create them */}
              </ul>
           </div>
 

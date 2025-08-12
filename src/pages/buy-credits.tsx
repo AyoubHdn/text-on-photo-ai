@@ -2,8 +2,11 @@ import Head from "next/head";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useBuyCredits } from "~/hook/useBuyCredits";
+import { useSession, signIn } from "next-auth/react";
 
 const BuyCredits: React.FC = () => {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session;
   const { buyCredits } = useBuyCredits();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null); // Track loading state for each plan
 
@@ -46,6 +49,12 @@ const BuyCredits: React.FC = () => {
   })) as Offer[]; // Use type assertion here  
 
   const handleBuy = async (plan: "starter" | "pro" | "elite") => {
+    if (!isLoggedIn) {
+      // If not, trigger the sign-in flow.
+      // After they sign in, they will be redirected back to this page.
+      void signIn();
+      return; // Stop the function here
+    }
     try {
       setLoadingPlan(plan); // Set loading state
       await buyCredits(plan); // Trigger buyCredits with the selected plan
