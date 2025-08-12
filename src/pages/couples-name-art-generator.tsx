@@ -364,7 +364,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                         <button type="button" onClick={() => void handleDownload(imageUrl)} className="text-white hover:text-blue-300 p-2 focus:outline-none" title="Download">⬇️</button>
                         <button type="button" onClick={() => openShareModal(imageUrl)} className="text-white hover:text-blue-300 p-2 focus:outline-none" title="Share">📤</button>
                     </div>
-                    <Image src={imageUrl} alt="Generated couples art" width={512} height={512} className="w-full rounded" />
+                    <Image src={imageUrl} alt="Generated couples art" width={512} height={512} className="w-full rounded" unoptimized={true} />
                 </div>
               ))}
             </section>

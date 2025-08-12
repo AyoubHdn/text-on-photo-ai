@@ -300,7 +300,7 @@ const handleAiScroll = () => {
                       <span className="text-sm block">(JPG or PNG)</span>
                       <input id="photoUpload" type="file" className="hidden" accept="image/jpeg, image/png" onChange={handlePhotoChange} />
                   </label>
-                  {photoPreview && <Image src={photoPreview} alt="Couple photo preview" width={150} height={210} className="rounded-lg shadow-md aspect-[9/16] object-cover" />}
+                  {photoPreview && <Image src={photoPreview} alt="Couple photo preview" width={150} height={210} className="rounded-lg shadow-md aspect-[9/16] object-cover" unoptimized={true}/>}
                 </div>
               </fieldset>
             )}
@@ -334,7 +334,7 @@ const handleAiScroll = () => {
               <div className="flex flex-col items-center">
                 <h3 className="text-xl font-semibold mb-4">Your Design:</h3>
                 <div className="relative group rounded-lg shadow-xl max-w-md">
-                   <Image src={currentImage!} alt="Generated wedding invitation" width={512} height={716} className="w-full rounded-lg" />
+                   <Image src={currentImage!} alt="Generated wedding invitation" width={512} height={716} className="w-full rounded-lg" unoptimized={true}/>
                    <div className="absolute top-2 right-2 flex gap-1 bg-black bg-opacity-30 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button type="button" onClick={() => openPopup(stage1ImageUrl)} className="text-white p-2 hover:bg-white/20 rounded-full" title="View Fullscreen">🔍</button>
                     <button type="button" onClick={() => handleDownload(stage1ImageUrl)} className="text-white p-2 hover:bg-white/20 rounded-full" title="Download">⬇️</button>

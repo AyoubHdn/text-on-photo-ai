@@ -60,6 +60,7 @@ function HeroBanner() {
             alt="A collage of AI-generated name art, logos, and wedding invitations"
             width={500} height={400}
             priority className="rounded-lg shadow-2xl"
+            unoptimized={true}
           />
         </div>
       </div>
@@ -178,7 +179,7 @@ function WhyChooseUsSection() {
                 <p className="text-lg text-gray-600 dark:text-gray-400">{feature.description}</p>
               </div>
               <div className={`order-1 ${index % 2 === 0 ? 'md:order-2' : 'md:order-1'}`}>
-                <Image src={feature.image} alt={feature.title} width={500} height={400} className="rounded-lg shadow-xl" />
+                <Image src={feature.image} alt={feature.title} width={500} height={400} className="rounded-lg shadow-xl" unoptimized={true}/>
               </div>
             </div>
           ))}
@@ -207,7 +208,7 @@ function UserFeedbackSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {feedbacks.map((item, index) => (
             <div key={index} className="flex flex-col items-center bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-              <Image src={item.image} alt={`Feedback from ${item.name}`} width={512} height={512} className="rounded-lg mb-6 w-full aspect-square object-cover" />
+              <Image src={item.image} alt={`Feedback from ${item.name}`} width={512} height={512} className="rounded-lg mb-6 w-full aspect-square object-cover" unoptimized={true}/>
               <p className="text-gray-600 dark:text-gray-300 italic flex-grow">&quot;{item.feedback}&quot;</p>
               <p className="mt-4 font-bold text-gray-800 dark:text-white">— {item.name}</p>
             </div>
