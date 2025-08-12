@@ -1083,7 +1083,6 @@ const ProLogoPage: NextPage = () => {
                     width={512}
                     height={512}
                     className="w-full rounded"
-                    unoptimized={true}
                   />
                 </div>
               ))}
