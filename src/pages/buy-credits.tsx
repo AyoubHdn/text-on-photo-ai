@@ -84,7 +84,7 @@ const BuyCredits: React.FC = () => {
             <Link href="/refund" className="dark:text-gray-100 underline">
               Refund Policy
             </Link>{" "}
-            before buying credits. We do not issue refunds at this time.
+            before buying credits.
           </p>
           <p className="text-center dark:text-gray-300 mb-10">
             Choose the perfect plan for your design needs.
