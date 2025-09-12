@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PrimaryLink } from "./PrimaryLink";
+import { FaFacebook, FaInstagram, FaTwitter, FaPinterest } from "react-icons/fa";
 
 export function Footer() {
 
@@ -14,6 +15,12 @@ export function Footer() {
     // { href: "/anniversary-art-generator", name: "Anniversary Art Generator" },
     // { href: "/gaming-logo-generator", name: "Gaming Logo Generator" },
   ];
+  const socialLinks = [
+    { href: "https://www.facebook.com/profile.php?id=61571453621496", name: "Facebook", icon: <FaFacebook size={24} /> },
+    { href: "https://x.com/name_design_ai", name: "Twitter", icon: <FaTwitter size={24} /> },
+    { href: "https://www.pinterest.com/namedesignai/", name: "Pinterest", icon: <FaPinterest size={24} /> },
+    // TODO: Update these with your actual social media URLs
+  ];
 
   return (
     <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
@@ -27,7 +34,26 @@ export function Footer() {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               © {new Date().getFullYear()} HDN STUDIO LTD
             </p>
+            <div>
+            <h3 className="font-semibold text-lg mb-4">Follow Us</h3>
+            <div className="flex gap-4">
+              {socialLinks.map(social => (
+                <a 
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  aria-label={social.name}
+                  title={social.name}
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </div>
           </div>
+          </div>
+          
 
           {/* Column 2: Our Generators */}
           <div>
@@ -62,6 +88,8 @@ export function Footer() {
               <li><PrimaryLink href="/refund" className="text-sm">Refund Policy</PrimaryLink></li>
             </ul>
           </div>
+
+          
 
         </div>
       </div>

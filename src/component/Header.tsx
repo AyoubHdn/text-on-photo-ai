@@ -107,8 +107,8 @@ export function Header() {
                     </PrimaryLink>
                 </li>
                 <li>
-                    <PrimaryLink id="blog-header-button" href="/blog" className="hidden md:block">
-                        Blog
+                    <PrimaryLink id="pricing-header-button" href="/buy-credits" className="hidden md:block">
+                        Pricing
                     </PrimaryLink>
                 </li>
                 {isLoggedIn && (
