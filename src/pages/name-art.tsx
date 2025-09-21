@@ -8,18 +8,18 @@ import { FiEdit3, FiHeart, FiDownload } from "react-icons/fi";
 
 // --- Data for the Curated "Name Art" Gallery ---
 const galleryItems = [
-  { src: "/styles/s34e.webp", title: "3D Floral", tags: ["artistic", "playful"] },
-  { src: "/styles/s118e.webp", title: "Graffiti Art", tags: ["modern", "playful"] },
-  { src: "/styles/s251e.webp", title: "Carved Wood", tags: ["artistic"] },
-  { src: "/styles/s18e.webp", title: "Neon Sign", tags: ["modern"] },
-  { src: "/styles/s184e.webp", title: "Golden Glitter", tags: ["playful", "artistic"] },
-  { src: "/styles/s179e.webp", title: "Abstract Ink", tags: ["artistic", "modern"] },
-  { src: "/styles/s5e.webp", title: "Watercolor Flowers", tags: ["artistic"] },
-  { src: "/styles/s87e.webp", title: "Pastel Clouds", tags: ["playful"] },
-  { src: "/styles/s13e.webp", title: "Gold on Marble", tags: ["modern", "artistic"] },
-  { src: "/styles/s259e.webp", title: "Vintage Letter", tags: ["artistic"] },
-  { src: "/styles/s92e.webp", title: "Heart Balloons", tags: ["playful"] },
-  { src: "/styles/s276e.webp", title: "Celtic Knotwork", tags: ["artistic"] },
+  { src: "/styles/name-art/Cute/s34e.webp", title: "3D Floral", tags: ["artistic", "playful"] },
+  { src: "/styles/name-art/Graffiti/s118e.webp", title: "Graffiti Art", tags: ["modern", "playful"] },
+  { src: "/styles/name-art/Landscapes/s251e.webp", title: "Carved Wood", tags: ["artistic"] },
+  { src: "/styles/name-art/Gaming/s18e.webp", title: "Neon Sign", tags: ["modern"] },
+  { src: "/styles/name-art/Abstract/s184e.webp", title: "Golden Glitter", tags: ["playful", "artistic"] },
+  { src: "/styles/name-art/Abstract/s179e.webp", title: "Abstract Ink", tags: ["artistic", "modern"] },
+  { src: "/styles/name-art/Floral/s5e.webp", title: "Watercolor Flowers", tags: ["artistic"] },
+  { src: "/styles/name-art/Cute/s87e.webp", title: "Pastel Clouds", tags: ["playful"] },
+  { src: "/styles/name-art/Typography/s13e.webp", title: "Gold on Marble", tags: ["modern", "artistic"] },
+  { src: "/styles/name-art/Vintage/s259e.webp", title: "Vintage Letter", tags: ["artistic"] },
+  { src: "/styles/name-art/Cute/s92e.webp", title: "Heart Balloons", tags: ["playful"] },
+  { src: "/styles/name-art/Christian/s276e.webp", title: "Celtic Knotwork", tags: ["artistic"] },
 ];
 
 const galleryTabs = [

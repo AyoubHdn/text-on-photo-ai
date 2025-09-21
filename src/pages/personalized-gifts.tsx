@@ -9,18 +9,18 @@ import { FiGift, FiHeart, FiStar } from "react-icons/fi"; // Icons for "How it w
 // --- DATA STRUCTURE FOR THE NEW INTERACTIVE GALLERY ---
 // We use tags to filter styles, which is much more flexible and scalable.
 const galleryItems = [
-  { src: "/styles/s114e.webp", title: "Flowers letters", tags: ["birthday", "family", "thoughtful"] },
-  { src: "/styles/s63e.webp", title: "3D Cute Bear", tags: ["anniversary", "thoughtful"] },
-  { src: "/styles/s57e.webp", title: "Heart Balloons", tags: ["anniversary", "family"] },
-  { src: "/styles/s276e.webp", title: "Celtic Knotwork", tags: ["family", "thoughtful"] },
-  { src: "/styles/s274e.webp", title: "Stained Glass Grace", tags: ["family", "thoughtful"] },
-  { src: "/styles/s70e.webp", title: "Golden Glitter", tags: ["birthday"] },
-  { src: "/styles/s42e.webp", title: "Baby Mobile", tags: ["new-baby", "family"] },
-  { src: "/styles/s62e.webp", title: "Elegant Gold on Marble", tags: ["anniversary", "thoughtful"] },
-  { src: "/styles/s73e.webp", title: "Pastel Sky & Clouds", tags: ["new-baby"] },
-  { src: "/styles/s176e.webp", title: "Vintage Paper & Wax Seal", tags: ["family", "thoughtful"] },
-  { src: "/styles/s43e.webp", title: "Happy Birthday Cake", tags: ["birthday", "thoughtful"] },
-  { src: "/styles/s55e.webp", title: "Majestic Pink Butterfly", tags: ["anniversary", "family"] },
+  { src: "/styles/name-art/Floral/s114e.webp", title: "Flowers letters", tags: ["birthday", "family", "thoughtful"] },
+  { src: "/styles/name-art/3D/s63e.webp", title: "3D Cute Bear", tags: ["anniversary", "thoughtful"] },
+  { src: "/styles/name-art/Cute/s57e.webp", title: "Heart Balloons", tags: ["anniversary", "family"] },
+  { src: "/styles/name-art/Christian/s276e.webp", title: "Celtic Knotwork", tags: ["family", "thoughtful"] },
+  { src: "/styles/name-art/Christian/s274e.webp", title: "Stained Glass Grace", tags: ["family", "thoughtful"] },
+  { src: "/styles/name-art/Cute/s70e.webp", title: "Golden Glitter", tags: ["birthday"] },
+  { src: "/styles/name-art/Cute/s42e.webp", title: "Baby Mobile", tags: ["new-baby", "family"] },
+  { src: "/styles/name-art/Typography/s62e.webp", title: "Elegant Gold on Marble", tags: ["anniversary", "thoughtful"] },
+  { src: "/styles/name-art/Cute/s73e.webp", title: "Pastel Sky & Clouds", tags: ["new-baby"] },
+  { src: "/styles/name-art/Vintage/s176e.webp", title: "Vintage Paper & Wax Seal", tags: ["family", "thoughtful"] },
+  { src: "/styles/name-art/Celebrations/s43e.webp", title: "Happy Birthday Cake", tags: ["birthday", "thoughtful"] },
+  { src: "/styles/name-art/Cute/s55e.webp", title: "Majestic Pink Butterfly", tags: ["anniversary", "family"] },
   // Add more styles here with their respective tags
 ];
 

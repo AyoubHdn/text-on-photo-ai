@@ -1,3 +1,4 @@
+// pages/name-art-generator.tsx
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
@@ -6,193 +7,115 @@ import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "~/component/Input";
-import { stylesData } from "~/data/stylesData"; // For Name Art
+import { stylesData } from "~/data/stylesData";
 import { useSession, signIn } from "next-auth/react";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
-import { colorFamilies } from "~/data/colors";
-import Link from "next/link";
+import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
-
-/**
- * This page is dedicated to generating Name Art only.
- * It uses the same subcategory & scrolling logic from your original code,
- * but references only `stylesData`.
- */
+import Link from "next/link";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3";
-type ColorMode = "bg" | "text";
 
-const NameArtPage: NextPage = () => {
+const NameArtGeneratorPage: NextPage = () => {
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+  const router = useRouter();
 
-  const [form, setForm] = useState({
-    name: "",
-    basePrompt: "",
-    numberofImages: "1",
-  });
+  const [form, setForm] = useState({ name: "", basePrompt: "", numberofImages: "1" });
   const [error, setError] = useState<string>("");
   const [imagesUrl, setImagesUrl] = useState<{ imageUrl: string }[]>([]);
   const [allowCustomColors, setAllowCustomColors] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [popupImage, setPopupImage] = useState<string | null>(null);
-
-  // We'll keep the same tab logic for categories & subcategories
   const [activeTab, setActiveTab] = useState<string>("");
   const [activeSubTab, setActiveSubTab] = useState<string>("");
-
-  // For scrolling references
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const subcategoryScrollRef = useRef<HTMLDivElement>(null);
   const [showLeftCategoryArrow, setShowLeftCategoryArrow] = useState<boolean>(false);
   const [showRightCategoryArrow, setShowRightCategoryArrow] = useState<boolean>(false);
   const [showLeftSubCategoryArrow, setShowLeftSubCategoryArrow] = useState<boolean>(false);
   const [showRightSubCategoryArrow, setShowRightSubCategoryArrow] = useState<boolean>(false);
-
-  // AI Model
   const [selectedModel, setSelectedModel] = useState<AIModel>("flux-schnell");
-
-  // Aspect Ratios
-  const aspectRatios: { label: string; value: AspectRatio; visual: string }[] = [
-    { label: "1:1", value: "1:1", visual: "aspect-square" },
-    { label: "16:9", value: "16:9", visual: "aspect-video" },
-    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
-    { label: "4:3", value: "4:3", visual: "aspect-classic" },
-  ];
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
+  const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
 
-  // Colors
-  const [colorMode, setColorMode] = useState<ColorMode>("bg");
-  const [selectedBgColor, setSelectedBgColor] = useState<string>("#FFFFFF");
-  const [selectedTextColor, setSelectedTextColor] = useState<string>("#000000");
-  const colorFamilyNames: string[] = Object.keys(colorFamilies);
-  const [showLeftColorFamArrow, setShowLeftColorFamArrow] = useState<boolean>(false);
-  const [showRightColorFamArrow, setShowRightColorFamArrow] = useState<boolean>(false);
-  const colorFamilyScrollRef = useRef<HTMLDivElement>(null);
-  const [activeColorFamily, setActiveColorFamily] = useState<string>(
-    colorFamilyNames[0] ?? "Reds"
-  );
-
+  // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
   useEffect(() => {
-    const categoryKeys = Object.keys(stylesData);
-    if (categoryKeys.length > 0) {
-      setActiveTab(categoryKeys[0] ?? "");
+    if (!router.isReady) return; // Wait until the router is fully initialized
+
+    const { name } = router.query;
+    const hash = window.location.hash.substring(1); // e.g., "Vintage"
+
+    // 1. Pre-fill the name field if it exists in the URL
+    if (typeof name === 'string' && name) {
+      setForm(prev => ({ ...prev, name }));
     }
-  }, []);
 
-  useEffect(() => {
-    if (!activeTab) return;
-    const subKeys = Object.keys(stylesData[activeTab] ?? {});
-    if (subKeys.length > 0) {
-      setActiveSubTab(subKeys[0] ?? "");
+    let hashFoundAndSet = false;
+
+    // 2. Handle the jump link if a hash exists
+    if (hash) {
+      // Loop through each main category (e.g., "Themes", "Artistic")
+      for (const mainCategory in stylesData) {
+        const subcategories = stylesData[mainCategory];
+        if (subcategories && Object.keys(subcategories).includes(hash)) {
+          console.log(`[DEBUG] Jump link found! Setting tabs to: ${mainCategory} -> ${hash}`);
+          setActiveTab(mainCategory);
+          setActiveSubTab(hash);
+          hashFoundAndSet = true;
+          
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+          }, 150);
+
+          break; // Exit the loop once we've found the match
+        }
+      }
     }
-  }, [activeTab]);
 
-  useLayoutEffect(() => {
-    handleCategoryScroll();
-    handleSubCategoryScroll();
-  }, [activeTab]);
+    // 3. If no hash was found or provided, set the default state
+    if (!hashFoundAndSet) {
+      const firstCategory = Object.keys(stylesData)[0];
+      if (firstCategory) {
+        setActiveTab(firstCategory);
+        const firstSubCategory = Object.keys(stylesData[firstCategory]!)?.[0];
+        if (firstSubCategory) {
+          setActiveSubTab(firstSubCategory);
+        }
+      }
+    }
+  }, [router.isReady, router.query]);
+  // --- END: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
 
-const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({
-    isOpen: false,
-    imageUrl: null,
-  });
-
-  const openShareModal = (imageUrl: string) => {
-  setShareModalData({ isOpen: true, imageUrl });
-};
-
-const closeShareModal = () => {
-  setShareModalData({ isOpen: false, imageUrl: null });
-};
-
-  const handleCategoryScroll = () => {
-    if (!categoryScrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
-    setShowLeftCategoryArrow(scrollLeft > 0);
-    setShowRightCategoryArrow(scrollLeft + clientWidth < scrollWidth - 1);
-  };
-  const scrollCategoriesLeft = () => {
-    categoryScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
-  };
-  const scrollCategoriesRight = () => {
-    categoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
-  };
-
-  const handleSubCategoryScroll = () => {
-    if (!subcategoryScrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = subcategoryScrollRef.current;
-    setShowLeftSubCategoryArrow(scrollLeft > 0);
-    setShowRightSubCategoryArrow(scrollLeft + clientWidth < scrollWidth - 1);
-  };
-  const scrollSubCategoriesLeft = () => {
-    subcategoryScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
-  };
-  const scrollSubCategoriesRight = () => {
-    subcategoryScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
+  const handleScroll = (ref: React.RefObject<HTMLDivElement>, setLeft: (val: boolean) => void, setRight: (val: boolean) => void) => {
+      if(ref.current) {
+          const { scrollLeft, scrollWidth, clientWidth } = ref.current;
+          setLeft(scrollLeft > 10);
+          setRight(scrollLeft < scrollWidth - clientWidth - 10);
+      }
   };
 
   useLayoutEffect(() => {
-    handleColorFamilyScroll();
-  }, [activeColorFamily]);
-
-  const handleColorFamilyScroll = () => {
-    if (!colorFamilyScrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = colorFamilyScrollRef.current;
-    setShowLeftColorFamArrow(scrollLeft > 0);
-    setShowRightColorFamArrow(scrollLeft + clientWidth < scrollWidth - 1);
-  };
-  const scrollColorFamilyLeft = () => {
-    colorFamilyScrollRef.current?.scrollBy({ left: -150, behavior: "smooth" });
-  };
-  const scrollColorFamilyRight = () => {
-    colorFamilyScrollRef.current?.scrollBy({ left: 150, behavior: "smooth" });
-  };
+    handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow);
+    handleScroll(subcategoryScrollRef, setShowLeftSubCategoryArrow, setShowRightSubCategoryArrow);
+  }, [activeTab, activeSubTab]);
 
   const generateIcon = api.generate.generateIcon.useMutation({
-    onSuccess(data) {
-      setImagesUrl(data);
-    },
-    onError(error) {
-      console.error(error);
-      setError(error.message);
-    },
+    onSuccess: (data) => setImagesUrl(data),
+    onError: (error) => setError(error.message),
   });
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isLoggedIn) {
-      signIn().catch(console.error);
-      return;
-    }
+    if (!isLoggedIn) { void signIn(); return; }
     if (!form.name || !form.basePrompt) {
-      setError("Please select a style and enter a name.");
-      return;
+      setError("Please select a style and enter a name."); return;
     }
-
-    (window.dataLayer = window.dataLayer || []).push({
-      event: "form_submission",
-      designType: "NameArt",
-      category: activeTab,
-      subcategory: activeSubTab,
-      styleImage: selectedImage || "none",
-      aspectRatio: selectedAspectRatio,
-      model: selectedModel,
-      numberOfVariants: parseInt(form.numberofImages, 10),
-      selectedBgColor,
-      selectedTextColor,
-      allowCustomColors,
-    });
-
-    let finalPrompt = form.basePrompt;
-    if (allowCustomColors) {
-      finalPrompt = finalPrompt
-        .replace(/'background color'/gi, `${selectedBgColor} (${findColorName(selectedBgColor)})`)
-        .replace(/'Text color'/gi, `${selectedTextColor} (${findColorName(selectedTextColor)})`);
-    }
-    finalPrompt = finalPrompt.replace(/'Text'/gi, form.name);
+    
+    let finalPrompt = form.basePrompt.replace(/'Text'/gi, form.name);
     finalPrompt += " designed to cover the entire screen, high resolution";
 
     generateIcon.mutate({
@@ -202,14 +125,6 @@ const closeShareModal = () => {
       model: selectedModel,
     });
   };
-
-  function findColorName(hex: string): string {
-    for (const famArr of Object.values(colorFamilies)) {
-      const found = famArr.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
-      if (found) return found.name;
-    }
-    return "Unknown Color";
-  }
 
   const handleImageSelect = (basePrompt: string, src: string, allowColors = true) => {
     setSelectedImage(src);
@@ -249,222 +164,75 @@ const closeShareModal = () => {
       console.error("Error downloading the image:", error);
     }
   };
+  const openPopup = (imageUrl: string) => setPopupImage(imageUrl);
+  const closePopup = () => setPopupImage(null);
+  const openShareModal = (imageUrl: string) => setShareModalData({ isOpen: true, imageUrl });
+  const closeShareModal = () => setShareModalData({ isOpen: false, imageUrl: null });
 
-  const openPopup = (imageUrl: string) => {
-    setPopupImage(imageUrl);
+  const scrollCategories = (direction: 'left' | 'right') => {
+      categoryScrollRef.current?.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: "smooth"});
   };
-  const closePopup = () => {
-    setPopupImage(null);
+  const scrollSubCategories = (direction: 'left' | 'right') => {
+      subcategoryScrollRef.current?.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: "smooth"});
   };
+  
+  const aspectRatios: { label: string; value: AspectRatio; visual: string }[] = [
+    { label: "1:1", value: "1:1", visual: "aspect-square" },
+    { label: "16:9", value: "16:9", visual: "aspect-video" },
+    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
+    { label: "4:3", value: "4:3", visual: "aspect-classic" },
+  ];
 
   return (
     <>
       <Head>
-        <title>Name Art Generator| Name Design AI</title>
-        <meta
-          name="description"
-          content="Generate unique name art designs for social media, gifts, or fun. Choose from various styles and sizes with our easy-to-use name art generator."
-        />
+        <title>Name Art Generator | Name Design AI</title>
       </Head>
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
         <h1 className="text-4xl font-bold">Name Art Generator: Create Personalized Designs</h1>
-        <p className="text-1xl mt-4">
-          Unleash your creativity with our Name Art Generator! Design beautiful and unique name art for yourself, friends, or loved ones. Whether you want a standout profile picture, a personalized gift, or just something fun to share, our tool makes it easy to turn any name into a work of art. Follow the simple steps below and watch your ideas come to life!
-        </p>
-        <div className="mt-4 mb-8 p-4 border border-gray-300 rounded-md dark:bg-gray-700 text-sm leading-relaxed">
-          <h2 className="text-lg font-semibold mb-2">Here’s how it works:</h2>
-          <ol className="list-decimal list-inside">
-            <li><b>Enter a Name to Get Started</b><br/>
-            Type in any name or word—this could be your name, a friend’s, or something meaningful to you. Keep it simple for the best results!
-            </li>
-            <li><b>Choose Your Favorite Style</b><br/>
-            Pick an artistic style that matches your vision:
-              <ul className="list-disc ml-5">
-                  <li><b>Calligraphy:</b> Elegant and flowing designs.</li>
-                  <li><b>Graffiti:</b> Bold, street-art-inspired looks.</li>
-                  <li><b>Abstract:</b> Creative, non-literal shapes and patterns.</li>
-                  <li><b>Playful:</b> Fun and colorful for a lighthearted touch.</li>
-              </ul>
-            </li>
-            <li>Select AI Model:
-              <ul className="list-disc ml-5">
-                <li><b>Standard:</b> Quick and fun designs, perfect for casual use.</li>
-                <li><b>Optimized:</b> More detailed and polished designs for special occasions or gifts.</li>
-              </ul>
-            </li>
-            <li>Select Image Size:
-              <ul className="list-disc ml-5">
-                <li><b>1:1 (Square)</b>: Ideal for social media profiles or small prints.</li>
-                <li><b>16:9 (Landscape)</b>: Great for desktop wallpapers or larger displays.</li>
-                <li><b>9:16 (Portrait)</b>: Perfect for mobile wallpapers or vertical prints.</li>
-                <li><b>4:3 (Classic)</b>: Versatile for various uses, from digital to print.</li>
-              </ul>
-            </li>
-            <li><b>Choose How Many Designs You Want.</b><br/>Decide how many unique designs you’d like to generate—try a few to find your favorite!</li>
-          </ol>
-
-          <h3 className="text-md font-semibold mt-3">Tips for Creating Beautiful Name Art:</h3>
-          <ul className="list-disc list-inside">
-            <li>Use a name or word that holds personal meaning.</li>
-            <li>Experiment with different styles to match the personality of the name.</li>
-            <li>If it’s for a gift, think about the recipient’s taste and the occasion.</li>
-            <li>Have fun and be creative—there’s no right or wrong way to make name art!</li>
-          </ul>
-          <h4 className="text-md font-semibold mt-3"><b>Start Creating Your Name Art Now!</b> See what your name looks like in art and share it with the world.</h4>
-        </div>
-
+        <p className="text-lg mt-4">Unleash your creativity with our Name Art Generator! ...</p>
+        
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
-          {/* 1. Enter name */}
-          <h2 className="text-xl">1. Enter a Name/Text</h2>
           <FormGroup className="mb-12">
-            <Input
-              required
-              value={form.name}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, name: e.target.value }))
-              }
-              placeholder="Type your name here"
-            />
+            <label className="text-xl font-semibold mb-2">1. Enter a Name/Text</label>
+            <Input required value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Type your name here" />
           </FormGroup>
 
-          {/* 2. Pick style (category, subcategory) */}
-          <h2 className="text-xl">2. Choose Your Favorite Style</h2>
-          <div className="mb-12">
-            {/* Category scroller */}
-            <div className="relative border-b mb-0 mt-4 flex items-center">
-              {showLeftCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollCategoriesLeft}
-                  className="absolute left-[-1.5rem] top-1/2 -translate-y-1/2 w-5 h-10 rounded-md bg-gray-700 text-white hover:bg-gray-200 border border-gray-300 shadow z-10 flex items-center justify-center"
-                  title="Scroll Categories Left"
-                  aria-label="Scroll Categories Left"
-                >
-                  <AiOutlineLeft className="text-xl" />
-                </button>
-              )}
-
-              <div
-                ref={categoryScrollRef}
-                onScroll={handleCategoryScroll}
-                className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1"
-              >
-                {Object.keys(stylesData ?? {}).map((catKey) => (
-                  <button
-                    key={catKey}
-                    type="button"
-                    onClick={() => setActiveTab(catKey)}
-                    className={`px-4 py-2 ${
-                      activeTab === catKey
-                        ? "font-semibold border-b-2 border-blue-500 text-blue-500"
-                        : "font-semibold text-gray-500"
-                    }`}
-                  >
+          <div>
+            <h2 className="text-xl font-semibold mb-4">2. Choose Your Favorite Style</h2>
+            <div className="relative border-b dark:border-gray-700">
+              {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
+              <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
+                {Object.keys(stylesData).map((catKey) => (
+                  <button key={catKey} type="button" onClick={() => { setActiveTab(catKey); setActiveSubTab(Object.keys(stylesData[catKey]!)[0]!); }} className={`px-4 py-2 whitespace-nowrap font-semibold ${activeTab === catKey ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}`}>
                     {catKey}
                   </button>
                 ))}
               </div>
-
-              {showRightCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollCategoriesRight}
-                  className="absolute right-[-1.5rem] top-1/2 -translate-y-1/2 w-5 h-10 rounded-md bg-gray-700 text-white hover:bg-gray-200 border border-gray-300 shadow z-10 flex items-center justify-center"
-                  title="Scroll Categories Right"
-                  aria-label="Scroll Categories Right"
-                >
-                  <AiOutlineRight className="text-xl" />
-                </button>
-              )}
+              {showRightCategoryArrow && <button type="button" onClick={() => scrollCategories('right')} className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineRight className="h-5 w-5"/></button>}
             </div>
 
-            {/* Subcategory scroller */}
-            <div className="relative border-b mb-4 mt-4 flex items-center">
-              {showLeftSubCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollSubCategoriesLeft}
-                  className="absolute left-[-1.5rem] top-1/2 -translate-y-1/2 w-5 h-10 rounded-md bg-gray-700 text-white hover:bg-gray-200 border border-gray-300 shadow z-10 flex items-center justify-center"
-                  title="Scroll Subcategories Left"
-                  aria-label="Scroll Subcategories Left"
-                >
-                  <AiOutlineLeft className="text-xl" />
-                </button>
-              )}
-
-              <div
-                ref={subcategoryScrollRef}
-                onScroll={handleSubCategoryScroll}
-                className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1"
-              >
+            <div className="relative mt-4">
+              {showLeftSubCategoryArrow && <button type="button" onClick={() => scrollSubCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
+              <div ref={subcategoryScrollRef} onScroll={() => handleScroll(subcategoryScrollRef, setShowLeftSubCategoryArrow, setShowRightSubCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(stylesData[activeTab] ?? {}).map((sub) => (
-                  <button
-                    key={sub}
-                    type="button"
-                    onClick={() => setActiveSubTab(sub)}
-                    className={`px-4 py-2 ${
-                      activeSubTab === sub
-                        ? "text-sm border-b-2 border-blue-500 text-blue-500"
-                        : "text-sm text-gray-500"
-                    }`}
-                  >
+                  <button key={sub} type="button" id={sub} onClick={() => setActiveSubTab(sub)} className={`px-3 py-1.5 whitespace-nowrap text-sm rounded-full ${activeSubTab === sub ? 'bg-blue-500 text-white font-semibold' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
                     {sub}
                   </button>
                 ))}
               </div>
-
-              {showRightSubCategoryArrow && (
-                <button
-                  type="button"
-                  onClick={scrollSubCategoriesRight}
-                  className="absolute right-[-1.5rem] top-1/2 -translate-y-1/2 w-5 h-10 rounded-md bg-gray-700 text-white hover:bg-gray-200 border border-gray-300 shadow z-10 flex items-center justify-center"
-                  title="Scroll Subcategories Right"
-                  aria-label="Scroll Subcategories Right"
-                >
-                  <AiOutlineRight className="text-xl" />
-                </button>
-              )}
+              {showRightSubCategoryArrow && <button type="button" onClick={() => scrollSubCategories('right')} className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineRight className="h-5 w-5"/></button>}
             </div>
 
-            {/* Thumbnails */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {(stylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => {
-                const allowColors = item.allowCustomColors !== false; // default true
-                const styleImagePath = item.src.replace(/\.webp$/, "e.webp");
-
-                return (
-                  <div
-                    key={idx}
-                    className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${
-                      selectedImage === item.src ? "ring-4 ring-blue-500" : ""
-                    }`}
-                    onClick={() =>
-                      handleImageSelect(item.basePrompt, item.src, allowColors)
-                    }
-                  >
-                    <img
-                      src={styleImagePath}
-                      alt={item.basePrompt}
-                      className="rounded w-full h-auto object-cover mx-auto"
-                    />
-                    <button
-                      type="button"
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        openPopup(styleImagePath);
-                      }}
-                      className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
-                      title="View Fullscreen"
-                      aria-label="View Fullscreen"
-                    >
-                      🔍
-                    </button>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
+              {(stylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
+                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.allowCustomColors)}>
+                    <Image src={item.src.replace(/\.webp$/, "e.webp")} alt={item.basePrompt} width={200} height={200} className="w-full h-auto aspect-square object-cover"/>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); openPopup(item.src.replace(/\.webp$/, "e.webp")); }} className="absolute top-1 right-1 bg-black bg-opacity-40 text-white rounded-full p-1 text-xs hover:bg-opacity-60" aria-label="View Fullscreen">🔍</button>
                   </div>
-                );
-              })}
+              ))}
             </div>
           </div>
-
           {/* 3. Select AI Model */}
           <h2 className="text-xl">3. Select AI Model</h2>
           <FormGroup className="mb-12">
@@ -528,7 +296,7 @@ const closeShareModal = () => {
               ))}
             </div>
           </FormGroup>
-
+          
           {/* 4. Aspect Ratio */}
           <h2 className="text-xl">4. Select Image Size</h2>
           <FormGroup className="mb-12">
@@ -604,12 +372,12 @@ const closeShareModal = () => {
               )}
             </div>
           )}
-
+          
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
             {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
         </form>
-
+        
         {imagesUrl.length > 0 && (
           <>
             <h2 className="text-xl mt-8 mb-2">Your Custom Name Art</h2>
@@ -661,6 +429,7 @@ const closeShareModal = () => {
           </>
         )}
 
+
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
@@ -681,14 +450,10 @@ const closeShareModal = () => {
             </div>
           </div>
         )}
-        <ShareModal 
-          isOpen={shareModalData.isOpen}
-          onClose={closeShareModal}
-          imageUrl={shareModalData.imageUrl}
-        />
+        
+        <ShareModal isOpen={shareModalData.isOpen} onClose={closeShareModal} imageUrl={shareModalData.imageUrl} />
       </main>
     </>
   );
 };
-
-export default NameArtPage;
+export default NameArtGeneratorPage;
