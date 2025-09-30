@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PrimaryLink } from "./PrimaryLink";
-import { FaFacebook, FaInstagram, FaTwitter, FaPinterest } from "react-icons/fa";
+import { FaTwitter, FaPinterest, FaFacebook } from "react-icons/fa";
+
 
 export function Footer() {
 
