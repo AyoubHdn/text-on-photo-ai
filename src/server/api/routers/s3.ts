@@ -9,14 +9,14 @@ import { env } from "~/env.mjs";
 import { TRPCError } from "@trpc/server";
 
 const s3Client = new S3Client({
-  region: "us-east-1",
+  region: env.S3_REGION,
   credentials: {
     accessKeyId: env.ACCESS_KEY_ID,
     secretAccessKey: env.SECRET_ACCESS_KEY,
   },
 });
 
-const BUCKET_NAME = "name-design-ai";
+const BUCKET_NAME = env.S3_BUCKET;
 
 export const s3Router = createTRPCRouter({
   createPresignedUrl: protectedProcedure
@@ -43,7 +43,7 @@ export const s3Router = createTRPCRouter({
         });
 
         // This is the final, public URL the file will have after upload
-        const publicUrl = `https://${BUCKET_NAME}.s3.us-east-1.amazonaws.com/${key}`;
+        const publicUrl = `https://${BUCKET_NAME}.s3.${env.S3_REGION}.amazonaws.com/${key}`;
 
         return { url, fields, publicUrl };
       } catch (error) {

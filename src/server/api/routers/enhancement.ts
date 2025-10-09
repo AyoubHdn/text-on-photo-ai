@@ -12,9 +12,9 @@ import { Readable } from "stream";
 // --- CONFIGURATION ---
 const s3 = new AWS.S3({
   credentials: { accessKeyId: env.ACCESS_KEY_ID, secretAccessKey: env.SECRET_ACCESS_KEY },
-  region: "us-east-1",
+  region: env.S3_REGION,
 });
-const BUCKET_NAME = "name-design-ai";
+const BUCKET_NAME = env.S3_BUCKET;
 const replicate = new Replicate({ auth: env.REPLICATE_API_TOKEN });
 
 const modelMap = {
@@ -113,8 +113,8 @@ export const enhancementRouter = createTRPCRouter({
             Key: icon.id,
             ContentType: 'image/png',
         }).promise();
-      
-        const finalS3Url = `https://${BUCKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`;
+
+        const finalS3Url = `https://${BUCKET_NAME}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`;
         console.log(`[ENHANCE_ROUTER] Successfully uploaded to S3: ${finalS3Url}`);
         
         return [{ imageUrl: finalS3Url }];

@@ -4,6 +4,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { api } from "~/utils/api";
 import { useState } from "react"; // <-- Import useState
+import { env } from "~/env.mjs";
 
 const CommunityPage: NextPage = () => {
     const { data: icons, isLoading } = api.icons.getCommunityIcons.useQuery();
@@ -34,12 +35,12 @@ const CommunityPage: NextPage = () => {
                 <li 
                     key={icon.id} 
                     className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
-                    onClick={() => openPopup(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`)}
+                    onClick={() => openPopup(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`)}
                 >
                     {/* This wrapper div enforces a square aspect ratio for a uniform grid */}
                     <div className="aspect-square w-full bg-gray-200 dark:bg-gray-800">
                         <Image 
-                            src={`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`}
+                            src={`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`}
                             alt={icon.prompt ?? "A community-generated design"}
                             fill // The 'fill' prop is essential
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { api } from "~/utils/api";
 import { ShareModal } from '~/component/ShareModal';
+import { env } from "~/env.mjs";
 
   interface VisibilityToggleProps {
     iconId: string;
@@ -143,13 +144,13 @@ const CollectionPage: NextPage = () => {
                 width="512"
                 height="512"
                 alt={icon.prompt ?? "an image of an icon"}
-                src={`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`}
+                src={`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`}
               />
               {/* Button Container */}
               <div className="absolute top-0 right-0 flex gap-0">
                 {/* View Button */}
                 <button
-                  onClick={() => openPopup(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`)}
+                  onClick={() => openPopup(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`)}
                   className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="View Fullscreen"
                 >
@@ -158,7 +159,7 @@ const CollectionPage: NextPage = () => {
                 {/* Download Button */}
                 <button
                   onClick={() => {
-                    void handleDownload(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`);
+                    void handleDownload(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`);
                   }}
                   className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="Download"
@@ -167,7 +168,7 @@ const CollectionPage: NextPage = () => {
                 </button>
                 <button
                   onClick={() => {
-                    openShareModal(`https://name-design-ai.s3.us-east-1.amazonaws.com/${icon.id}`);
+                    openShareModal(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`);
                   }}
                   className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="Share"

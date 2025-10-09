@@ -21,9 +21,9 @@ const toWords: (n: number) => string = toWordsUntyped;
 // --- CONFIGURATION ---
 const s3 = new AWS.S3({
   credentials: { accessKeyId: env.ACCESS_KEY_ID, secretAccessKey: env.SECRET_ACCESS_KEY },
-  region: "us-east-1",
+  region: env.S3_REGION,
 });
-const BUCKET_NAME = "name-design-ai";
+const BUCKET_NAME = env.S3_BUCKET;
 
 // --- HELPER FUNCTIONS ---
 function escapeXml(unsafe: string): string {
@@ -180,7 +180,7 @@ export const weddingRouter = createTRPCRouter({
       await s3.putObject({
         Bucket: BUCKET_NAME, Body: finalImageBuffer, Key: icon.id, ContentType: 'image/png',
       }).promise();
-      
-      return [{ imageUrl: `https://${BUCKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}` }];
+
+      return [{ imageUrl: `https://${BUCKET_NAME}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}` }];
     }),
 });
