@@ -35,6 +35,8 @@ const server = z.object({
   MAUTIC_USERNAME: z.string(),
   MAUTIC_PASSWORD: z.string(),
   CRON_SECRET: z.string(),
+  S3_REGION: z.string(),
+  S3_BUCKET: z.string(),
 });
 
 /**
@@ -74,6 +76,11 @@ const processEnv = {
   MAUTIC_USERNAME: process.env.MAUTIC_USERNAME,
   MAUTIC_PASSWORD: process.env.MAUTIC_PASSWORD,
   CRON_SECRET: process.env.CRON_SECRET,
+  S3_REGION: process.env.S3_REGION,
+  S3_BUCKET: process.env.S3_BUCKET,
+  // Add more client-side env vars here
+  // Make sure to prefix them with `NEXT_PUBLIC_`
+  // e.g.
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

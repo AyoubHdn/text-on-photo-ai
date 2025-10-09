@@ -7,6 +7,8 @@ import { mauticRouter } from "~/server/api/routers/mautic";
 import { s3Router } from "~/server/api/routers/s3";
 import { weddingRouter } from "~/server/api/routers/wedding"; 
 import { enhancementRouter } from "~/server/api/routers/enhancement";
+import { photoGiftRouter } from "~/server/api/routers/photoGift";
+
 
 
 /**
@@ -23,6 +25,7 @@ export const appRouter = createTRPCRouter({
   s3: s3Router,
   wedding: weddingRouter,
   enhancement: enhancementRouter,
+  photoGift: photoGiftRouter,
 });
 
 // export type definition of API

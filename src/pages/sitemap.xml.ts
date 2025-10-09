@@ -50,6 +50,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/personalized-gifts', '/name-art', '/pro-logo', '/couples-art', '/wedding-invitations',
     '/personalized-gifts-generator', '/name-art-generator', '/pro-logo-generator',
     '/couples-name-art-generator', '/wedding-invitation-generator',
+    '/ai-portrait-generator', '/ai-image-generator',
     '/blog/how-to-give-a-thoughtful-gift',
     '/blog/why-couple-name-art-is-the-perfect-keepsake',
     '/privacy-policy', '/terms-of-service', '/refund',

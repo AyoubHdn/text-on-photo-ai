@@ -25,6 +25,7 @@ export function Header() {
         { href: "/pro-logo", name: "Pro Logo" },
         { href: "/couples-art", name: "Couples Art" },
         { href: "/wedding-invitation", name: "Wedding Invitation" },
+        { href: "/ai-image-generator", name: "AI Portrait" },
         // TODO: Add more landing pages here as you create them
         // { href: "/anniversary-art", name: "Anniversary Art" },
         // { href: "/gaming-logos", name: "Gaming Logos" },

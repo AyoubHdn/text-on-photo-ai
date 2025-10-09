@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // ~/server/api/routers/generate.ts
 
 import { TRPCError } from "@trpc/server";
@@ -18,10 +20,10 @@ const s3 = new AWS.S3({
     accessKeyId: env.ACCESS_KEY_ID,
     secretAccessKey: env.SECRET_ACCESS_KEY,
   },
-  region: "us-east-1",
+  region: env.S3_REGION,
 });
 
-const BUCKET_NAME = "name-design-ai"; // Replace with your S3 bucket name
+const BUCKET_NAME = env.S3_BUCKET;
 
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
@@ -297,7 +299,7 @@ export const generateRouter = createTRPCRouter({
 
       // Return the URLs
       return createdIcons.map((icon) => ({
-        imageUrl: `https://${BUCKET_NAME}.s3.us-east-1.amazonaws.com/${icon.id}`,
+        imageUrl: `https://${BUCKET_NAME}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`,
       }));
     }),
 });
