@@ -22,10 +22,10 @@ const s3 = new AWS.S3({
     accessKeyId: env.ACCESS_KEY_ID,
     secretAccessKey: env.SECRET_ACCESS_KEY,
   },
-  region:  env.S3_REGION,
+  region:  env.NEXT_PUBLIC_S3_REGION,
 });
 
-const BUCKET_NAME = env.S3_BUCKET;
+const BUCKET_NAME = env.NEXT_PUBLIC_S3_BUCKET_NAME;
 if (!BUCKET_NAME) {
   throw new Error("S3_BUCKET_NAME env var is not set.");
 }
@@ -156,7 +156,7 @@ export const photoGiftRouter = createTRPCRouter({
 
       return {
         // CORRECTED: Changed createdImage.id to createdIcon.id
-        imageUrl: `https://${BUCKET_NAME}.s3.${env.S3_REGION}.amazonaws.com/${createdIcon.id}`,
+        imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${createdIcon.id}`,
       };
     }),
 });

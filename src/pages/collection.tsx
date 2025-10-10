@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
@@ -144,13 +145,13 @@ const CollectionPage: NextPage = () => {
                 width="512"
                 height="512"
                 alt={icon.prompt ?? "an image of an icon"}
-                src={`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`}
+                src={`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`}
               />
               {/* Button Container */}
               <div className="absolute top-0 right-0 flex gap-0">
                 {/* View Button */}
                 <button
-                  onClick={() => openPopup(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`)}
+                  onClick={() => openPopup(`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`)}
                   className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="View Fullscreen"
                 >
@@ -159,7 +160,7 @@ const CollectionPage: NextPage = () => {
                 {/* Download Button */}
                 <button
                   onClick={() => {
-                    void handleDownload(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`);
+                    void handleDownload(`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`);
                   }}
                   className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="Download"
@@ -168,7 +169,7 @@ const CollectionPage: NextPage = () => {
                 </button>
                 <button
                   onClick={() => {
-                    openShareModal(`https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}`);
+                    openShareModal(`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`);
                   }}
                   className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                   title="Share"

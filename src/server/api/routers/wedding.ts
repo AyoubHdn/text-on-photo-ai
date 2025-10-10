@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/await-thenable */
@@ -21,9 +22,9 @@ const toWords: (n: number) => string = toWordsUntyped;
 // --- CONFIGURATION ---
 const s3 = new AWS.S3({
   credentials: { accessKeyId: env.ACCESS_KEY_ID, secretAccessKey: env.SECRET_ACCESS_KEY },
-  region: env.S3_REGION,
+  region: env.NEXT_PUBLIC_S3_REGION,
 });
-const BUCKET_NAME = env.S3_BUCKET;
+const BUCKET_NAME = env.NEXT_PUBLIC_S3_BUCKET_NAME;
 
 // --- HELPER FUNCTIONS ---
 function escapeXml(unsafe: string): string {
@@ -181,6 +182,6 @@ export const weddingRouter = createTRPCRouter({
         Bucket: BUCKET_NAME, Body: finalImageBuffer, Key: icon.id, ContentType: 'image/png',
       }).promise();
 
-      return [{ imageUrl: `https://${BUCKET_NAME}.s3.${env.S3_REGION}.amazonaws.com/${icon.id}` }];
+      return [{ imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}` }];
     }),
 });

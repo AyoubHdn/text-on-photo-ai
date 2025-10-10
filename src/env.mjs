@@ -35,8 +35,7 @@ const server = z.object({
   MAUTIC_USERNAME: z.string(),
   MAUTIC_PASSWORD: z.string(),
   CRON_SECRET: z.string(),
-  S3_REGION: z.string(),
-  S3_BUCKET: z.string(),
+  
 });
 
 /**
@@ -46,6 +45,8 @@ const server = z.object({
 const client = z.object({
   // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
   NEXT_PUBLIC_STRIPE_KEY: z.string(),
+  NEXT_PUBLIC_S3_REGION: z.string(),
+  NEXT_PUBLIC_S3_BUCKET_NAME: z.string(),
 });
 
 /**
@@ -76,8 +77,8 @@ const processEnv = {
   MAUTIC_USERNAME: process.env.MAUTIC_USERNAME,
   MAUTIC_PASSWORD: process.env.MAUTIC_PASSWORD,
   CRON_SECRET: process.env.CRON_SECRET,
-  S3_REGION: process.env.S3_REGION,
-  S3_BUCKET: process.env.S3_BUCKET,
+  NEXT_PUBLIC_S3_REGION: process.env.NEXT_PUBLIC_S3_REGION,
+  NEXT_PUBLIC_S3_BUCKET_NAME: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
   // Add more client-side env vars here
   // Make sure to prefix them with `NEXT_PUBLIC_`
   // e.g.
