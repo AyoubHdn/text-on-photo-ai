@@ -26,6 +26,7 @@ export function Header() {
         { href: "/couples-art", name: "Couples Art" },
         { href: "/wedding-invitation", name: "Wedding Invitation" },
         { href: "/ai-image-generator", name: "AI Portrait" },
+        { href: "/baby-photoshoot", name: "Baby Photoshoot" },
         // TODO: Add more landing pages here as you create them
         // { href: "/anniversary-art", name: "Anniversary Art" },
         // { href: "/gaming-logos", name: "Gaming Logos" },
