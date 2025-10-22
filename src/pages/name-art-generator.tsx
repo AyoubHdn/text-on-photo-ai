@@ -252,7 +252,7 @@ const NameArtGeneratorPage: NextPage = () => {
                 {
                   name: "Optimized",
                   value: "flux-dev" as AIModel,
-                  cost: 4,
+                  cost: 3,
                   image:
                     selectedStyleImage && selectedStyleImage.includes(".")
                       ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")

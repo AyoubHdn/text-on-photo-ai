@@ -49,7 +49,7 @@ export const weddingRouter = createTRPCRouter({
       receptionVenue: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const creditsNeeded = 10; // Stage 1 cost
+      const creditsNeeded = 5; // Stage 1 cost
       const { count } = await ctx.prisma.user.updateMany({
           where: { id: ctx.session.user.id, credits: { gte: creditsNeeded } },
           data: { credits: { decrement: creditsNeeded } },

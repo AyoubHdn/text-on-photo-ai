@@ -260,7 +260,7 @@ const PersonalizedGiftsGeneratorPage: NextPage = () => {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
               {[
                 { name: "Standard", value: "flux-schnell" as AIModel, cost: 1, image: selectedStyleImage && selectedStyleImage.includes(".") ? selectedStyleImage : "/images/placeholder.png", recommended: false },
-                { name: "Optimized", value: "flux-dev" as AIModel, cost: 4, image: selectedStyleImage && selectedStyleImage.includes(".") ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1") : "/images/placeholder.png", recommended: true },
+                { name: "Optimized", value: "flux-dev" as AIModel, cost: 3, image: selectedStyleImage && selectedStyleImage.includes(".") ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1") : "/images/placeholder.png", recommended: true },
               ].map((model) => (
                 <button key={model.value} type="button" onClick={() => setSelectedModel(model.value)} className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${selectedModel === model.value ? "border-blue-500 ring-2 ring-blue-500" : "border-gray-300 hover:border-gray-500"}`}>
                   <div className="relative w-22 h-22 mb-2 overflow-hidden rounded"><img src={model.image} alt={model.name} className="w-full h-full object-cover" />{model.recommended && (<span className="absolute top-1 right-1 bg-yellow-400 text-black px-2 text-xs rounded">Recommended</span>)}</div>

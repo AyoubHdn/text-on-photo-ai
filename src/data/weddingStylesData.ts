@@ -322,7 +322,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Modern Wreath",
         styleRules: modernWreathRules,
         templateType: 'text-only',
-        creditCost: 10,
+        creditCost: 5,
       },
       {
         id: "boho-green-01",
@@ -331,7 +331,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Bohemian Green",
         templateType: 'text-only',
         styleRules: bohemianGreenRules,
-        creditCost: 10,
+        creditCost: 5,
       },
       {
         id: "classic-floral-01",
@@ -340,7 +340,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Classic Floral",
         templateType: 'text-only',
         styleRules: classicFloralRules,
-        creditCost: 10,
+        creditCost: 5,
       },
       {
         id: "marble-blossom-01",
@@ -349,7 +349,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Marble & Blossom",
         templateType: 'text-only',
         styleRules: marbleBlossomRules,
-        creditCost: 10,
+        creditCost: 5,
       }
     ],
   },
@@ -362,7 +362,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
           title: "Classic Photo Frame",
           templateType: 'photo', // <-- Specify the type
           styleRules: navyCartoonStyleRules,
-          creditCost: 10,
+          creditCost: 5,
           aiStyles: photoUpsellStyles,
       },
       {
@@ -372,7 +372,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Classic Rings Photo",
         templateType: 'photo',
         styleRules: classicRingsPhotoRules,
-        creditCost: 10,
+        creditCost: 5,
         aiStyles: photoUpsellStyles,
       },
       {
@@ -382,7 +382,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Pastel Bouquet",
         templateType: 'photo',
         styleRules: pastelBouquetRules,
-        creditCost: 10,
+        creditCost: 5,
         aiStyles: photoUpsellStyles,
       },
       {
@@ -392,7 +392,7 @@ export const weddingStylesData: { [category: string]: { [subcategory: string]: W
         title: "Classic Veil Photo",
         templateType: 'photo',
         styleRules: classicVeilPhotoRules,
-        creditCost: 10,
+        creditCost: 5,
         aiStyles: photoUpsellStyles,
       }
     ],

@@ -192,8 +192,8 @@ export const generateRouter = createTRPCRouter({
       // Define credit costs
       const modelConfig = {
         "flux-schnell": { credits: 1 },
-        "flux-dev": { credits: 4 },
-        "ideogram-ai/ideogram-v2-turbo": { credits: 8 },
+        "flux-dev": { credits: 3 },
+        "ideogram-ai/ideogram-v2-turbo": { credits: 5 },
       }[input.model];
 
       if (!modelConfig) {

@@ -915,7 +915,7 @@ const ProLogoPage: NextPage = () => {
                     </div>
                   )}
                   <span className="font-medium mt-2">Optimized</span>
-                  <span className="text-sm text-gray-500">Cost: 4 credits</span>
+                  <span className="text-sm text-gray-500">Cost: 3 credits</span>
                 </div>
                 {/* --- ADDED: Third Model (Ideogram) --- */}
                 <div
@@ -936,7 +936,7 @@ const ProLogoPage: NextPage = () => {
                     </div>
                   )}
                   <span className="font-medium mt-2">Ultimate</span>
-                  <span className="text-sm text-gray-500">Cost: 8 credits</span>
+                  <span className="text-sm text-gray-500">Cost: 5 credits</span>
                 </div>
               </div>
             </div>

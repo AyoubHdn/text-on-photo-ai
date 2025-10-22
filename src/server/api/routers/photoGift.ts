@@ -116,7 +116,7 @@ export const photoGiftRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const creditsNeeded = 10;
+      const creditsNeeded = 4;
       const { count } = await ctx.prisma.user.updateMany({
         where: { id: ctx.session.user.id, credits: { gte: creditsNeeded } },
         data: { credits: { decrement: creditsNeeded } },

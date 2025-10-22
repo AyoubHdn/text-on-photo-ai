@@ -128,8 +128,8 @@ const AIBabyPhotoshootGeneratorPage: NextPage = () => {
     const handleScroll = (ref: React.RefObject<HTMLDivElement>, setLeft: (val: boolean) => void, setRight: (val: boolean) => void) => {
             if(ref.current) {
                 const { scrollLeft, scrollWidth, clientWidth } = ref.current;
-                setLeft(scrollLeft > 10);
-                setRight(scrollLeft < scrollWidth - clientWidth - 10);
+                setLeft(scrollLeft > 4);
+                setRight(scrollLeft < scrollWidth - clientWidth - 4);
             }
         };
     const scrollCategories = (direction: 'left' | 'right') => categoryScrollRef.current?.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: "smooth"});
@@ -232,7 +232,7 @@ const AIBabyPhotoshootGeneratorPage: NextPage = () => {
     const openPopup = (imageUrl: string) => setPopupImage(imageUrl);
     const closePopup = () => setPopupImage(null);
     const getButtonText = () => {
-        const COST_PER_GENERATION = 10;
+        const COST_PER_GENERATION = 4;
         if (!isLoggedIn) return "Sign In to Create";
         if (generationStatus === 'uploading') return 'Uploading Photo...';
         if (generationStatus === 'generating') return 'Creating a Magical Photoshoot...';

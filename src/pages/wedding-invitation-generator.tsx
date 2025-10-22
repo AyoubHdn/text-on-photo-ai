@@ -44,8 +44,8 @@ const WeddingInvitationGeneratorPage: NextPage = () => {
 const handleAiScroll = () => {
     if (aiStyleScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = aiStyleScrollRef.current;
-      setShowLeftArrow(scrollLeft > 10); // Show if scrolled more than 10px
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10); // Hide if at the end
+      setShowLeftArrow(scrollLeft > 5); // Show if scrolled more than 10px
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 5); // Hide if at the end
     }
   };
 
