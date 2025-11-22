@@ -33,7 +33,7 @@ const AIPortraitLandingPage: NextPage = () => {
           name="keywords" 
           content="ai portrait generator, turn photo into art, ai photo generator, custom photo gifts, personalized portrait from photo, ai headshot generator, photo to painting ai" 
         />
-        <link rel="canonical" href="https://www.namedesignai.com/ai-image-generator" />
+        <link rel="canonical" href="https://www.namedesignai.com/ai-portrait" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 

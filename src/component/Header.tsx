@@ -21,11 +21,11 @@ export function Header() {
 
     const productLinks = [
         { href: "/name-art", name: "Name Art" },
-        { href: "/personalized-gifts", name: "Personalized Gifts" },
+        { href: "/arabic-name-art", name: "Arabic Name Art" },
         { href: "/pro-logo", name: "Pro Logo" },
         { href: "/couples-art", name: "Couples Art" },
         { href: "/wedding-invitation", name: "Wedding Invitation" },
-        { href: "/ai-image-generator", name: "AI Portrait" },
+        { href: "/ai-portrait", name: "AI Portrait" },
         { href: "/baby-photoshoot", name: "Baby Photoshoot" },
         // TODO: Add more landing pages here as you create them
         // { href: "/anniversary-art", name: "Anniversary Art" },

@@ -3,26 +3,37 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 // pages/sitemap.xml.ts
 import { type GetServerSideProps } from 'next';
-import { popularNames } from '~/lib/names'; // <-- 1. Import your master name list
+import { popularNames } from '~/lib/names';
 
-// This function generates the XML content for your sitemap.
 const generateSiteMap = (allPages: string[]) => {
   const baseUrl = 'https://www.namedesignai.com';
 
   const getPriority = (page: string) => {
-    // Give the highest priority to the homepage
+    // 1.0: Homepage
     if (page === '/') return '1.0';
-    // Give high priority to your main product landing pages
-    if (['/name-art', '/pro-logo', '/personalized-gifts', '/couples-art', '/wedding-invitations'].includes(page)) return '0.9';
-    // --- START: NEW RULE FOR PSEO PAGES ---
-    // Give your programmatic name pages a solid priority
+    
+    // 0.9: Main Product Landing Pages
+    if ([
+      '/name-art', 
+      '/pro-logo', 
+      '/couples-art', 
+      '/wedding-invitations', 
+      '/ai-portrait',
+      '/baby-photoshoot', 
+      '/arabic-name-art',    // English Landing
+      '/ar/arabic-name-art'  // Arabic Landing
+    ].includes(page)) return '0.9';
+
+    // 0.7: Programmatic SEO Pages
     if (page.startsWith('/name-art/')) return '0.7';
-    // --- END: NEW RULE FOR PSEO PAGES ---
-    // Give generator and other pages a medium priority
+
+    // 0.6: Generators, Community, Blog Hub
     if (page.endsWith('-generator') || page === '/community' || page === '/blog') return '0.6';
-    // Give individual blog posts a lower priority
+
+    // 0.5: Individual Blog Posts
     if (page.startsWith('/blog/')) return '0.5';
-    // Legal pages have the lowest priority
+
+    // 0.3: Legal & Misc
     return '0.3';
   };
   
@@ -44,28 +55,51 @@ const generateSiteMap = (allPages: string[]) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  // --- This is the list of your STATIC pages ---
+  // --- 1. STATIC PAGES ---
   const staticPages = [
-    '/', '/community', '/collection', '/buy-credits', '/blog',
-    '/personalized-gifts', '/name-art', '/pro-logo', '/couples-art', '/wedding-invitations',
-    '/personalized-gifts-generator', '/name-art-generator', '/pro-logo-generator',
-    '/couples-name-art-generator', '/wedding-invitation-generator',
-    '/ai-portrait-generator', '/ai-image-generator',
-    '/baby-photoshoot-generator', '/baby-photoshoot',
+    // Core
+    '/', 
+    '/community', 
+    '/collection', 
+    '/buy-credits', 
+    '/blog',
+    
+    // Original Products
+    '/name-art', 
+    '/name-art-generator',
+    '/pro-logo', 
+    '/pro-logo-generator',
+    '/couples-art', 
+    '/couples-name-art-generator',
+    '/wedding-invitations', 
+    '/wedding-invitation-generator',
+
+    // New AI Photo Products
+    '/ai-portrait', 
+    '/ai-portrait-generator', 
+    '/baby-photoshoot', 
+    '/baby-photoshoot-generator',
+
+    // Arabic Name Art
+    '/arabic-name-art', 
+    '/arabic-name-art-generator',
+    '/ar/arabic-name-art', 
+    '/ar/arabic-name-art-generator',
+
+    // Blog Posts
     '/blog/how-to-give-a-thoughtful-gift',
     '/blog/why-couple-name-art-is-the-perfect-keepsake',
-    '/privacy-policy', '/terms-of-service', '/refund',
+    
+    // Legal
+    '/privacy-policy', 
+    '/terms-of-service', 
+    '/refund',
   ];
 
-  // --- 2. DYNAMICALLY GENERATE the pSEO pages ---
+  // --- 2. DYNAMIC PAGES ---
   const nameArtPages = popularNames.map(item => `/name-art/${item.name.toLowerCase()}`);
   
-  // TODO: In the future, when you build the [name]/[style] pages, you will add another block here:
-  // const nameArtStylePages = popularNames.flatMap(nameItem => 
-  //   styles.map(styleItem => `/name-art/${nameItem.name.toLowerCase()}/${styleItem.id}`)
-  // );
-
-  // --- 3. COMBINE all pages into one final list ---
+  // --- 3. COMBINE ---
   const allPages = [...staticPages, ...nameArtPages];
 
   const sitemap = generateSiteMap(allPages);

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // ~/server/api/routers/generate.ts
 
 import { TRPCError } from "@trpc/server";
@@ -11,7 +9,6 @@ import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
 import AWS from "aws-sdk";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
-// Rename this import to avoid clashing with local variables
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { Readable } from "stream";
 
@@ -31,6 +28,7 @@ const replicate = new Replicate({
 
 // Helper function to fetch an image from a URL and encode it as Base64
 async function fetchAndEncodeImage(url: string): Promise<string> {
+  console.log("Fetching image from:", url);
   const response = await fetch(url);
   if (!response.ok) {
     throw new TRPCError({
@@ -47,14 +45,23 @@ const generateIcon = async (
   prompt: string,
   numberOfImages = 1,
   aspectRatio = "1:1",
-  model = "flux-schnell"
+  model: "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo" | "google/nano-banana-pro"
 ): Promise<string[]> => {
   let path: `${string}/${string}`;
   let input: Record<string, any>;
   let outputs: string[] = [];
 
-  // Model-specific settings
-  if (model === "flux-schnell") {
+  // --- 1. CONFIGURATION ---
+  if (model === "google/nano-banana-pro") {
+    path = "google/nano-banana-pro";
+    input = {
+      prompt,
+      aspect_ratio: aspectRatio,
+      output_format: "png",
+      resolution: "2K",
+      safety_filter_level: "block_only_high",
+    };
+  } else if (model === "flux-schnell") {
     path = "black-forest-labs/flux-schnell";
     input = {
       prompt,
@@ -87,11 +94,7 @@ const generateIcon = async (
       style_type: "General",
       magic_prompt_option: "Auto",
     };
-    // Ideogram generates only one image at a time
-    if (numberOfImages > 1) {
-      console.warn("Ideogram only supports one image per request; ignoring additional images.");
-      numberOfImages = 1;
-    }
+    if (numberOfImages > 1) numberOfImages = 1;
   } else {
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -104,32 +107,39 @@ const generateIcon = async (
     return Array(numberOfImages).fill(b64Image) as string[];
   }
 
-  // Actual API calls
-  if (model === "ideogram-ai/ideogram-v2-turbo") {
-    const output = await replicate.run(path, { input });
-    console.log("Ideogram output type:", typeof output);
-    console.log("Ideogram output:", output);
+  // --- 2. EXECUTION ---
+  console.log(`Calling Replicate model: ${model}`);
+  const rawOutput = await replicate.run(path, { input });
+  console.log("Replicate output type:", typeof rawOutput);
+  // console.log("Replicate raw output:", rawOutput); // Uncomment to debug structure if needed
 
+  // --- 3. OUTPUT PARSING (FIXED) ---
+
+  // Helper type guards
+  function isNodeReadableStream(obj: any): obj is Readable { return obj instanceof Readable; }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  function isWebReadableStream(obj: any): obj is ReadableStream<Uint8Array> { return typeof obj?.getReader === "function"; }
+
+  // Case A: Single String URL
+  if (typeof rawOutput === "string") {
+    outputs = [await fetchAndEncodeImage(rawOutput)];
+  }
+  // Case B: Array of Strings
+  else if (Array.isArray(rawOutput)) {
+    if (rawOutput.length === 0) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Empty output array" });
+    outputs = await Promise.all(rawOutput.map((item) => fetchAndEncodeImage(String(item))));
+  }
+  // Case C: Object / Stream (Generic handling for ANY model)
+  else if (rawOutput && typeof rawOutput === 'object') {
     let base64Image: string;
 
-    // Type-guard for Node.js Readable stream
-    function isNodeReadableStream(obj: any): obj is Readable {
-      return obj instanceof Readable;
-    }
-
-    // Type-guard for Web ReadableStream
-    function isWebReadableStream(obj: any): obj is ReadableStream<Uint8Array> {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      return typeof obj?.getReader === "function";
-    }
-
-    if (isNodeReadableStream(output)) {
-      // It's a Node.js Readable stream
-      const streamBuffer = await readStreamIntoBuffer(output);
+    if (isNodeReadableStream(rawOutput)) {
+      // Node.js Stream
+      const streamBuffer = await readStreamIntoBuffer(rawOutput);
       base64Image = streamBuffer.toString("base64");
-    } else if (isWebReadableStream(output)) {
-      // It's a Web ReadableStream
-      const reader = output.getReader();
+    } else if (isWebReadableStream(rawOutput)) {
+      // Web Stream
+      const reader = rawOutput.getReader();
       const chunks: Uint8Array[] = [];
       while (true) {
         const { value, done } = await reader.read();
@@ -137,38 +147,26 @@ const generateIcon = async (
         if (value) chunks.push(value);
       }
       base64Image = Buffer.concat(chunks).toString("base64");
-    } else if (Buffer.isBuffer(output)) {
-      // Already a Buffer
-      base64Image = output.toString("base64");
-    } else if (typeof output === "string") {
-      // If it's a URL, fetch and encode
-      base64Image = await fetchAndEncodeImage(output);
-    } else if (
-      typeof output === "object" &&
-      output !== null &&
-      "url" in output &&
-      typeof output.url === "string"
-    ) {
-      // If it's an object with a .url property
-      base64Image = await fetchAndEncodeImage(output.url);
+    } else if (Buffer.isBuffer(rawOutput)) {
+      // Buffer
+      base64Image = rawOutput.toString("base64");
+    } else if ('url' in rawOutput && typeof (rawOutput).url === "string") {
+      // Object with URL property
+      base64Image = await fetchAndEncodeImage((rawOutput).url);
     } else {
+      console.error("Unknown Object Structure:", JSON.stringify(rawOutput));
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Unexpected output type from Ideogram model",
+        message: "Unexpected object structure from AI model",
       });
     }
     outputs = [base64Image];
-  } else {
-    // For flux models, we expect an array of URLs
-    const output = (await replicate.run(path, { input })) as string[];
-    if (!Array.isArray(output) || output.length === 0) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to generate image URLs",
-      });
-    }
-    // Convert each URL to base64
-    outputs = await Promise.all(output.map(fetchAndEncodeImage));
+  } 
+  else {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Unexpected output format from AI model",
+    });
   }
 
   return outputs;
@@ -185,6 +183,7 @@ export const generateRouter = createTRPCRouter({
           "flux-schnell",
           "flux-dev",
           "ideogram-ai/ideogram-v2-turbo",
+          "google/nano-banana-pro",
         ]),
       })
     )
@@ -194,6 +193,7 @@ export const generateRouter = createTRPCRouter({
         "flux-schnell": { credits: 1 },
         "flux-dev": { credits: 3 },
         "ideogram-ai/ideogram-v2-turbo": { credits: 5 },
+        "google/nano-banana-pro": { credits: 4 },
       }[input.model];
 
       if (!modelConfig) {
@@ -206,7 +206,7 @@ export const generateRouter = createTRPCRouter({
       // Calculate total credits needed
       const totalCredits =
         modelConfig.credits *
-        (input.model === "ideogram-ai/ideogram-v2-turbo"
+        (input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro"
           ? 1
           : input.numberOfImages);
 
@@ -255,7 +255,7 @@ export const generateRouter = createTRPCRouter({
       // Generate images
       const b64Images: string[] = await generateIcon(
         input.prompt,
-        input.model === "ideogram-ai/ideogram-v2-turbo"
+        input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro"
           ? 1
           : input.numberOfImages,
         input.aspectRatio,
@@ -273,16 +273,16 @@ export const generateRouter = createTRPCRouter({
           });
 
           try {
+            // Determine Content Type
+            const isPng = input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro";
+
             await s3
               .putObject({
                 Bucket: BUCKET_NAME,
                 Body: Buffer.from(image, "base64"),
                 Key: icon.id,
                 ContentEncoding: "base64",
-                ContentType:
-                  input.model === "ideogram-ai/ideogram-v2-turbo"
-                    ? "image/png"
-                    : "image/webp",
+                ContentType: isPng ? "image/png" : "image/webp",
               })
               .promise();
           } catch (s3Error) {
