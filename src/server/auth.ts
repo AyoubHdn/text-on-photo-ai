@@ -1,3 +1,4 @@
+// src/server/auth.ts
 import { type GetServerSidePropsContext } from "next";
 import {
   getServerSession,
