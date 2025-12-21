@@ -1,9 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from 'next/link';
+import { api } from "~/utils/api";
 import { useSession, signIn } from "next-auth/react";
 import { Button } from "~/component/Button";
+import { Key } from "react";
+import { env } from "~/env.mjs";
 
 // Main Component
 const HomePage: NextPage = () => {
@@ -21,9 +28,10 @@ const HomePage: NextPage = () => {
       <main className="bg-white dark:bg-gray-900">
         <HeroBanner />
         <ProductsSection />
-        <WhyChooseUsSection />
-        <UserFeedbackSection />
+        <HowItWorksSection />
+        <PopularTodaySection />
         <FinalCTASection />
+        <FAQSection />
       </main>
     </>
   );
@@ -42,7 +50,7 @@ function HeroBanner() {
         <div className="flex flex-col gap-6 text-center md:text-left">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Where Your Words Become Art</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            Instantly create beautiful, one-of-a-kind designs from any name, text, or idea. Perfect for personalized gifts, unique logos, and stunning home decor.
+            Create personalized name art, logos, and AI designs in minutes beautiful, meaningful, and ready to share or print.
           </p>
           <div className="mt-4">
             <Button
@@ -71,28 +79,48 @@ function HeroBanner() {
 }
 
 function ProductsSection() {
-  // --- STRATEGIC CHANGE: This array now drives the main product offerings ---
   const products = [
     {
-      title: "Personalized Gifts",
-      description: "Create heartfelt art for anniversaries, birthdays, and special occasions they'll never forget.",
-      href: "/personalized-gifts", // Links to the new LANDING PAGE
-      image: "/icons/gift-icon.webp", // Suggest creating new, high-quality icons
-      id: "product-personalized-gifts"
-    },
-    {
-      title: "Name Art",
-      description: "Turn your name into a masterpiece with creative styles, from graffiti to elegant calligraphy.",
-      href: "/name-art", // Links to the new LANDING PAGE
+      title: "Name Art Generator",
+      description: "Turn any name into stunning visual art using dozens of creative styles. Perfect for decor, profiles, and gifts.",
+      href: "/name-art",
       image: "/icons/name-art.webp",
-      id: "product-name-art"
+      id: "product-name-art",
     },
     {
-      title: "Professional Logos",
-      description: "Design a unique, high-quality logo for your business, brand, or project in minutes.",
-      href: "/pro-logo", // This will eventually be a landing page too
+      title: "Arabic Name Art",
+      description: "Create beautiful Arabic name art with authentic calligraphy styles and modern artistic designs.",
+      href: "/arabic-name-art",
+      image: "/icons/arabic-name-art.webp",
+      id: "product-arabic-name-art",
+    },
+    {
+      title: "Couples Name Art",
+      description: "Design romantic couple name art for anniversaries, weddings, and meaningful personalized gifts.",
+      href: "/couples-art",
+      image: "/icons/couples-art.webp",
+      id: "product-couples-art",
+    },
+    {
+      title: "AI Portrait Generator",
+      description: "Generate stunning AI portraits for personal branding, social media, and professional profiles.",
+      href: "/ai-portrait",
+      image: "/icons/ai-portrait.webp",
+      id: "product-ai-portrait",
+    },
+    {
+      title: "AI Baby Photoshoot",
+      description: "Create adorable AI baby photoshoots and keepsakes without a real studio session.",
+      href: "/baby-photoshoot",
+      image: "/icons/baby-photoshoot.webp",
+      id: "product-baby-photoshoot",
+    },
+    {
+      title: "Professional Logo Design",
+      description: "Design a professional business logo using AI—perfect for startups, brands, and online creators.",
+      href: "/pro-logo",
       image: "/icons/pro-logo.webp",
-      id: "product-pro-logo"
+      id: "product-pro-logo",
     },
   ];
 
@@ -100,18 +128,24 @@ function ProductsSection() {
     <section id="products-section" className="py-24">
       <div className="container mx-auto px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold">What Do You Want to Create?</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
-            Choose a category to start your creative journey. Each is packed with unique styles tailored to your needs.
+          <h2 className="text-4xl font-bold">AI Design Tools for Every Idea</h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-3xl mx-auto">
+            From name art and Arabic calligraphy to AI portraits and baby photoshoots, explore powerful tools designed to turn your ideas into beautiful visuals.
           </p>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
-            <Link key={product.href} href={product.href} id={product.id} className="group block">
+            <Link
+              key={product.href}
+              href={product.href}
+              id={product.id}
+              className="group block"
+            >
               <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-lg h-full flex flex-col items-center text-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
                 <Image
                   src={product.image}
-                  alt={`${product.title} icon`}
+                  alt={`${product.title} AI tool`}
                   width={80}
                   height={80}
                   className="mb-6"
@@ -121,7 +155,7 @@ function ProductsSection() {
                   {product.description}
                 </p>
                 <span className="font-semibold text-blue-500 group-hover:underline">
-                  Explore Styles →
+                  Try Now →
                 </span>
               </div>
             </Link>
@@ -132,78 +166,126 @@ function ProductsSection() {
   );
 }
 
-function WhyChooseUsSection() {
-  const features = [
+function HowItWorksSection() {
+  const steps = [
     {
-      title: "Create a Cherished Gift in Minutes",
-      description: "No design experience? No problem. Our intuitive tools make it simple to create something beautiful and personal, perfect for surprising loved ones.",
-      image: "/features/gift-feature.webp", // Suggest creating new feature images
+      title: "Choose Your Design Tool",
+      description:
+        "Select the AI tool that fits your idea—Name Art, Arabic Calligraphy, Couples Art, AI Portraits, Baby Photoshoots, or Logo Design.",
     },
     {
-      title: "Endless Inspiration, Unique Results",
-      description: "With a massive library of artistic styles, you'll never run out of ideas. From modern logos to heartfelt name art, every design you create is one-of-a-kind.",
-      image: "/features/styles-feature.webp",
+      title: "Enter Your Name or Idea",
+      description:
+        "Simply type a name, text, or concept. No design skills needed—our AI handles the creative process for you.",
     },
     {
-      title: "Professional Quality for Any Project",
-      description: "Download your creations in high-resolution, ready for printing, framing, or using online. Get premium-quality results without the premium price tag.",
-      image: "/features/quality-feature.webp",
-    }
+      title: "Generate & Customize",
+      description:
+        "Instantly generate multiple unique designs. Explore styles, colors, and layouts until it feels perfect.",
+    },
+    {
+      title: "Download & Use Anywhere",
+      description:
+        "Download your design in high resolution—ready for printing, framing, gifting, or using online.",
+    },
+  ];
+
+  const trustPoints = [
+    "Used by thousands of customers worldwide",
+    "High-resolution downloads included",
+    "No design experience required",
+    "Perfect for gifts, branding, and personal use",
   ];
 
   return (
     <section className="py-24 bg-gray-50 dark:bg-gray-800">
       <div className="container mx-auto px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold">Why Name Design AI?</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
-            We empower you to create meaningful designs with ease and confidence.
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold">
+            How Name Design AI Works
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mt-4">
+            Create beautiful, personalized designs in minutes using AI—no design skills required.
           </p>
         </div>
-        <div className="flex flex-col gap-20">
-          {features.map((feature, index) => (
-            <div key={feature.title} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div className={`order-2 ${index % 2 === 0 ? 'md:order-1' : 'md:order-2'}`}>
-                <h3 className="text-3xl font-bold mb-4">{feature.title}</h3>
-                <p className="text-lg text-gray-600 dark:text-gray-400">{feature.description}</p>
+
+        {/* Steps */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          {steps.map((step, index) => (
+            <div
+              key={index}
+              className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-lg text-center"
+            >
+              <div className="text-4xl font-bold text-blue-500 mb-4">
+                {index + 1}
               </div>
-              <div className={`order-1 ${index % 2 === 0 ? 'md:order-2' : 'md:order-1'}`}>
-                <Image
-                  src={feature.image}
-                  alt={feature.title}
-                  width={500}
-                  height={400}
-                  className="rounded-lg shadow-xl"
-                />
-              </div>
+              <h3 className="text-xl font-semibold mb-3">
+                {step.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {step.description}
+              </p>
             </div>
           ))}
+        </div>
+
+        {/* Trust Signals */}
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {trustPoints.map((point, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md"
+              >
+                <span className="text-green-500 text-2xl">✓</span>
+                <p className="text-gray-700 dark:text-gray-300 font-medium">
+                  {point}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-function UserFeedbackSection() {
-  const feedbacks = [
-    { image: "/user-gift-fiance.webp", feedback: "I designed a name art keepsake for my fiancé—he absolutely loved it! It was so personal and looked amazing.", name: "Emma T." },
-    { image: "/user-birthday-design.webp", feedback: "I made a gift for my friend’s birthday and it was a total hit! So much better than a generic store-bought present.", name: "Ashley K." },
-    { image: "/user-social-media.webp", feedback: "My new name art boosted my social media profile instantly! I've gotten so many compliments on the unique design.", name: "Samantha B." },
-  ];
+function PopularTodaySection() {
+  const { data: icons, isLoading } =
+    api.icons.getPopularPaidIcons.useQuery({ limit: 12 });
+
+  if (isLoading || !icons?.length) return null;
 
   return (
-    <section className="py-24">
-      <div className="container mx-auto px-8 text-center">
-        <h2 className="text-4xl font-bold mb-12">Hear From Our Happy Creators</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {feedbacks.map((item, index) => (
-            <div key={index} className="flex flex-col items-center bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-              <Image src={item.image} alt={`Feedback from ${item.name}`} width={1024} height={1024} className="rounded-lg mb-6 w-full aspect-square object-cover" unoptimized={true} />
-              <p className="text-gray-600 dark:text-gray-300 italic flex-grow">&quot;{item.feedback}&quot;</p>
-              <p className="mt-4 font-bold text-gray-800 dark:text-white">— {item.name}</p>
-            </div>
-          ))}
+    <section className="py-24 bg-gray-50 dark:bg-gray-800">
+      <div className="container mx-auto px-8">
+        <div className="text-center mb-14">
+          <h2 className="text-4xl font-bold">Popular Today</h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
+            High-quality designs created by customers with active plans.
+          </p>
         </div>
+
+        <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {icons.map((icon: { id: string; prompt: string | null }) => (
+            <li
+              key={icon.id}
+              className="group overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
+            >
+              <Link href="/community">
+                <div className="relative aspect-square w-full bg-gray-200 dark:bg-gray-800">
+                  <Image
+                    src={`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`}
+                    alt={icon.prompt ?? "Design created by a paid user"}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -229,6 +311,71 @@ function FinalCTASection() {
                 {isLoggedIn ? "Start Creating Now" : "Sign Up & Get Started"}
             </button>
           </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+function FAQSection() {
+  const faqs = [
+    {
+      question: "What is Name Design AI?",
+      answer:
+        "Name Design AI is an online platform that uses artificial intelligence to create personalized name art, Arabic calligraphy, couples name designs, AI portraits, baby photoshoots, and professional logos."
+    },
+    {
+      question: "Can I create Arabic name art online?",
+      answer:
+        "Yes. We offer a dedicated Arabic Name Art tool that creates beautiful designs using authentic Arabic calligraphy styles combined with modern artistic layouts."
+    },
+    {
+      question: "Is Name Design AI good for personalized gifts?",
+      answer:
+        "Absolutely. Many customers use Name Design AI to create meaningful gifts such as name art, couples designs, and baby photoshoots for birthdays, anniversaries, and special occasions."
+    },
+    {
+      question: "Do I need design skills to use Name Design AI?",
+      answer:
+        "No design skills are required. Our AI tools guide you step by step and automatically generate high-quality designs in just a few minutes."
+    },
+    {
+      question: "Can I download my designs in high resolution?",
+      answer:
+        "Yes. All designs can be downloaded in high resolution, making them perfect for printing, framing, or using online."
+    }
+  ];
+
+  return (
+    <section className="py-24">
+      <div className="container mx-auto px-8 max-w-4xl">
+        <div className="text-center mb-14">
+          <h2 className="text-4xl font-bold">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mt-4">
+            Everything you need to know before creating your first design.
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {faqs.map((faq, index) => (
+            <details
+              key={index}
+              className="group bg-gray-50 dark:bg-gray-800 rounded-xl p-6 shadow-md"
+            >
+              <summary className="cursor-pointer list-none flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  {faq.question}
+                </h3>
+                <span className="text-2xl font-bold transition-transform duration-300 group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p className="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                {faq.answer}
+              </p>
+            </details>
+          ))}
         </div>
       </div>
     </section>

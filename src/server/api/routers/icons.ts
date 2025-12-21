@@ -101,4 +101,33 @@ export const iconRouter = createTRPCRouter({
       return updatedIcon;
     }),
     // --- END: NEW PROCEDURE ---
+
+    getPopularPaidIcons: publicProcedure
+  .input(
+    z.object({
+      limit: z.number().min(1).max(30).default(12),
+    })
+  )
+  .query(async ({ ctx, input }) => {
+    const icons = await ctx.prisma.icon.findMany({
+      where: {
+        isPublic: true,
+        User: {
+          plan: {
+            not: Plan.None, // Starter | Pro | Elite only
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: input.limit,
+      select: {
+        id: true,
+        prompt: true,
+      },
+    });
+
+    return icons;
+  }),
 });

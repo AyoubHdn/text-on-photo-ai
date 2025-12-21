@@ -16,7 +16,6 @@ export function Footer() {
   const photoGenerators = [
     { href: "/ai-portrait-generator", name: "AI Portrait Generator" },
     { href: "/baby-photoshoot-generator", name: "Baby Photoshoot Generator" },
-    { href: "/wedding-invitation-generator", name: "Wedding Invitation Generator" },
   ];
 
   const socialLinks = [

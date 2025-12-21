@@ -16,15 +16,24 @@ const config = {
     ],
   },
 
-  /**
-   * If you have the "experimental: { appDir: true }" setting enabled, then you
-   * must comment the below `i18n` config out.
-   *
-   * @see https://github.com/vercel/next.js/issues/41980
-   */
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
+  },
+
+  async redirects() {
+    return [
+      {
+        source: "/wedding-invitations",
+        destination: "https://www.bloominvite.com/",
+        permanent: true, // 301
+      },
+      {
+        source: "/wedding-invitation-generator",
+        destination: "https://www.bloominvite.com/generator",
+        permanent: true, // 301
+      },
+    ];
   },
 };
 

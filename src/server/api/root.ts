@@ -5,11 +5,7 @@ import { checkoutRouter } from "~/server/api/routers/checkout";
 import { iconRouter } from "./routers/icons";
 import { mauticRouter } from "~/server/api/routers/mautic";
 import { s3Router } from "~/server/api/routers/s3";
-import { weddingRouter } from "~/server/api/routers/wedding"; 
-import { enhancementRouter } from "~/server/api/routers/enhancement";
 import { photoGiftRouter } from "~/server/api/routers/photoGift";
-
-
 
 /**
  * This is the primary router for your server.
@@ -23,8 +19,6 @@ export const appRouter = createTRPCRouter({
   icons: iconRouter,
   mautic: mauticRouter,
   s3: s3Router,
-  wedding: weddingRouter,
-  enhancement: enhancementRouter,
   photoGift: photoGiftRouter,
 });
 

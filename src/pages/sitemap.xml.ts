@@ -71,8 +71,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/pro-logo-generator',
     '/couples-art', 
     '/couples-name-art-generator',
-    '/wedding-invitations', 
-    '/wedding-invitation-generator',
 
     // New AI Photo Products
     '/ai-portrait', 
