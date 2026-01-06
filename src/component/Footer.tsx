@@ -9,13 +9,6 @@ export function Footer() {
     { href: "/name-art-generator", name: "Name Art Generator" },
     { href: "/arabic-name-art-generator", name: "Arabic Name Art Generator" },
     { href: "/couples-name-art-generator", name: "Couples Art Generator" },
-    { href: "/pro-logo-generator", name: "Pro Logo Generator" },
-  ];
-
-  // Group 2: Photo & Event Based
-  const photoGenerators = [
-    { href: "/ai-portrait-generator", name: "AI Portrait Generator" },
-    { href: "/baby-photoshoot-generator", name: "Baby Photoshoot Generator" },
   ];
 
   const socialLinks = [
@@ -32,7 +25,7 @@ export function Footer() {
           {/* Column 1: Brand Info & Socials */}
           <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-lg">NameDesignAi.com</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">AI-powered art & logo creation for everyone.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Personalized name art & Arabic calligraphy, created with AI.</p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               © {new Date().getFullYear()} HDN STUDIO LTD
             </p>
@@ -71,21 +64,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Photo & Event Generators */}
-          <div>
-             <h3 className="font-semibold text-lg mb-4">Photo & Occasions</h3>
-             <ul className="flex flex-col gap-3">
-                {photoGenerators.map(link => (
-                  <li key={link.href}>
-                    <PrimaryLink href={link.href} className="text-sm">
-                      {link.name}
-                    </PrimaryLink>
-                  </li>
-                ))}
-             </ul>
-          </div>
-
-          {/* Column 4: Company & Legal (Merged for better space) */}
+          {/* Column 3: Company */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Company</h3>
             <ul className="flex flex-col gap-3 mb-6">
@@ -93,6 +72,10 @@ export function Footer() {
               <li><PrimaryLink href="/buy-credits" className="text-sm">Pricing</PrimaryLink></li>
               <li><PrimaryLink href="/blog" className="text-sm">Blog</PrimaryLink></li>
             </ul>
+          </div>
+
+          {/* Column 4: Company & Legal*/}
+          <div>
 
             <h3 className="font-semibold text-lg mb-4">Legal</h3>
             <ul className="flex flex-col gap-3">

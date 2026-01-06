@@ -17,12 +17,18 @@ const HomePage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Name Design AI – Create Custom Name Art & Professional Logos</title>
-        <meta
-          name="description"
-          content="Transform your words into stunning art. Create personalized name art, meaningful gifts, and professional logos with the power of AI. Simple, fast, and beautiful."
-        />
-        <meta name="keywords" content="name art generator, personalized gifts, custom logo maker, AI design tool" />
+      <title>Name Design AI – Personalized Name Art & Arabic Calligraphy</title>
+
+      <meta
+        name="description"
+        content="Create beautiful personalized name art, Arabic calligraphy, and couple name designs with AI. Perfect for meaningful gifts, home decor, and personal keepsakes."
+      />
+
+      <meta
+        name="keywords"
+        content="name art generator, personalized name art, arabic name art, couple name art, custom name gifts"
+      />
+
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="bg-white dark:bg-gray-900">
@@ -48,9 +54,9 @@ function HeroBanner() {
     <section className="bg-gray-50 dark:bg-gray-800">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 px-8 py-20 items-center">
         <div className="flex flex-col gap-6 text-center md:text-left">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Where Your Words Become Art</h1>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Turn Names Into Meaningful Art</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            Create personalized name art, logos, and AI designs in minutes beautiful, meaningful, and ready to share or print.
+            Create personalized name art, Arabic calligraphy, and couple designs in minutes. Perfect for gifts, home decor, and special moments.
           </p>
           <div className="mt-4">
             <Button
@@ -58,7 +64,7 @@ function HeroBanner() {
               className="px-10 py-4 text-lg"
               id="try-it-free-button-heroBanner"
             >
-              Explore Our Designs
+              Explore Name Art Styles
             </Button>
           </div>
         </div>
@@ -101,36 +107,15 @@ function ProductsSection() {
       image: "/icons/couples-art.webp",
       id: "product-couples-art",
     },
-    {
-      title: "AI Portrait Generator",
-      description: "Generate stunning AI portraits for personal branding, social media, and professional profiles.",
-      href: "/ai-portrait",
-      image: "/icons/ai-portrait.webp",
-      id: "product-ai-portrait",
-    },
-    {
-      title: "AI Baby Photoshoot",
-      description: "Create adorable AI baby photoshoots and keepsakes without a real studio session.",
-      href: "/baby-photoshoot",
-      image: "/icons/baby-photoshoot.webp",
-      id: "product-baby-photoshoot",
-    },
-    {
-      title: "Professional Logo Design",
-      description: "Design a professional business logo using AI—perfect for startups, brands, and online creators.",
-      href: "/pro-logo",
-      image: "/icons/pro-logo.webp",
-      id: "product-pro-logo",
-    },
   ];
 
   return (
     <section id="products-section" className="py-24">
       <div className="container mx-auto px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold">AI Design Tools for Every Idea</h2>
+          <h2 className="text-4xl font-bold">Personalized Name Art Tools</h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-3xl mx-auto">
-            From name art and Arabic calligraphy to AI portraits and baby photoshoots, explore powerful tools designed to turn your ideas into beautiful visuals.
+            Choose a style that fits your story. Every design is created around names, meaning, and personal expression.
           </p>
         </div>
 
@@ -169,24 +154,24 @@ function ProductsSection() {
 function HowItWorksSection() {
   const steps = [
     {
-      title: "Choose Your Design Tool",
+      title: "Choose a Name Art Style",
       description:
-        "Select the AI tool that fits your idea—Name Art, Arabic Calligraphy, Couples Art, AI Portraits, Baby Photoshoots, or Logo Design.",
+        "Pick from name art, Arabic calligraphy, or couple designs—each built around personal meaning.",
     },
     {
-      title: "Enter Your Name or Idea",
+      title: "Enter the Name(s)",
       description:
-        "Simply type a name, text, or concept. No design skills needed—our AI handles the creative process for you.",
+        "Type a name or two. No design skills needed—our AI handles the creativity.",
     },
     {
-      title: "Generate & Customize",
+      title: "Generate & Refine",
       description:
-        "Instantly generate multiple unique designs. Explore styles, colors, and layouts until it feels perfect.",
+        "Explore multiple styles, colors, and variations until it feels just right.",
     },
     {
-      title: "Download & Use Anywhere",
+      title: "Download or Gift",
       description:
-        "Download your design in high resolution—ready for printing, framing, gifting, or using online.",
+        "Download high-resolution artwork ready for printing, framing, or sharing.",
     },
   ];
 
@@ -262,7 +247,7 @@ function PopularTodaySection() {
         <div className="text-center mb-14">
           <h2 className="text-4xl font-bold">Popular Today</h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 max-w-2xl mx-auto">
-            High-quality designs created by customers with active plans.
+            Real name art designs created by our community.
           </p>
         </div>
 
@@ -298,9 +283,9 @@ function FinalCTASection() {
   return (
     <section className="relative bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white">
       <div className="container mx-auto text-center px-6 py-20">
-        <h2 className="text-3xl md:text-4xl font-bold">Ready to Create Something Amazing?</h2>
+        <h2 className="text-3xl md:text-4xl font-bold">Create a Name That Means Something</h2>
         <p className="mt-4 text-lg dark:text-blue-100 text-blue-500 max-w-xl mx-auto">
-          Your perfect design is just a few clicks away. Explore our tools and bring your ideas to life.
+          A personalized design can be a memory, a gift, or a keepsake. Start creating your name art today.
         </p>
         <div className="mt-8">
           <Link href={isLoggedIn ? "/personalized-gifts" : "#"} passHref>
@@ -308,7 +293,7 @@ function FinalCTASection() {
                 className="inline-block px-8 py-4 text-lg font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
                 onClick={!isLoggedIn ? () => signIn().catch(console.error) : undefined}
             >
-                {isLoggedIn ? "Start Creating Now" : "Sign Up & Get Started"}
+                {isLoggedIn ? "Create Name Art" : "Sign Up & Create Your First Design"}
             </button>
           </Link>
         </div>
@@ -318,10 +303,10 @@ function FinalCTASection() {
 }
 function FAQSection() {
   const faqs = [
-    {
+        {
       question: "What is Name Design AI?",
       answer:
-        "Name Design AI is an online platform that uses artificial intelligence to create personalized name art, Arabic calligraphy, couples name designs, AI portraits, baby photoshoots, and professional logos."
+        "Name Design AI is a platform that creates personalized name art, Arabic calligraphy, and couple name designs using artificial intelligence. It’s designed for meaningful gifts, decor, and personal keepsakes."
     },
     {
       question: "Can I create Arabic name art online?",
@@ -331,7 +316,7 @@ function FAQSection() {
     {
       question: "Is Name Design AI good for personalized gifts?",
       answer:
-        "Absolutely. Many customers use Name Design AI to create meaningful gifts such as name art, couples designs, and baby photoshoots for birthdays, anniversaries, and special occasions."
+        "Absolutely. Many customers use Name Design AI to create meaningful gifts such as name art, couples designs, birthdays, anniversaries, and special occasions."
     },
     {
       question: "Do I need design skills to use Name Design AI?",
