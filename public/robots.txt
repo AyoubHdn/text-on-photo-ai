@@ -1,6 +1,7 @@
 # *
 User-agent: *
-Allow: /
+Disallow: /unlock/
+Disallow: /api/cpa/
 
 # Host
 Host: https://www.namedesignai.com
