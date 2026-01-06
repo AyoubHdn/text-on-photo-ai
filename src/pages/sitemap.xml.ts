@@ -2,94 +2,112 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 // pages/sitemap.xml.ts
+
 import { type GetServerSideProps } from 'next';
 import { popularNames } from '~/lib/names';
 
+const BASE_URL = 'https://www.namedesignai.com';
+
+/**
+ * Normalize paths:
+ * - remove trailing slash (except '/')
+ * - ensure leading slash
+ */
+const normalizePath = (path: string) => {
+  if (!path.startsWith('/')) path = `/${path}`;
+  if (path !== '/' && path.endsWith('/')) {
+    return path.slice(0, -1);
+  }
+  return path;
+};
+
+const getPriority = (rawPage: string): string => {
+  const page = normalizePath(rawPage);
+
+  // 1.0 — Homepage
+  if (page === '/') return '1.0';
+
+  // 0.9 — Main product landing pages ONLY (exact match)
+  const mainLandingPages = new Set([
+    '/name-art',
+    '/pro-logo',
+    '/couples-art',
+    '/arabic-name-art',
+    '/ar/arabic-name-art',
+  ]);
+
+  if (mainLandingPages.has(page)) return '0.9';
+
+  // 0.7 — Programmatic SEO pages ONLY: /name-art/{slug}
+  if (/^\/name-art\/[^/]+$/.test(page)) return '0.7';
+
+  // 0.6 — Generators & hubs
+  if (
+    page.endsWith('-generator') ||
+    page === '/community' ||
+    page === '/blog'
+  ) {
+    return '0.6';
+  }
+
+  // 0.5 — Blog posts
+  if (/^\/blog\/[^/]+$/.test(page)) return '0.5';
+
+  // 0.3 — Legal & misc
+  return '0.3';
+};
+
 const generateSiteMap = (allPages: string[]) => {
-  const baseUrl = 'https://www.namedesignai.com';
+  const today = new Date().toISOString().split('T')[0];
 
-  const getPriority = (page: string) => {
-    // 1.0: Homepage
-    if (page === '/') return '1.0';
-    
-    // 0.9: Main Product Landing Pages
-    if ([
-      '/name-art', 
-      '/pro-logo', 
-      '/couples-art', 
-      '/wedding-invitations', 
-      '/ai-portrait',
-      '/baby-photoshoot', 
-      '/arabic-name-art',    // English Landing
-      '/ar/arabic-name-art'  // Arabic Landing
-    ].includes(page)) return '0.9';
-
-    // 0.7: Programmatic SEO Pages
-    if (page.startsWith('/name-art/')) return '0.7';
-
-    // 0.6: Generators, Community, Blog Hub
-    if (page.endsWith('-generator') || page === '/community' || page === '/blog') return '0.6';
-
-    // 0.5: Individual Blog Posts
-    if (page.startsWith('/blog/')) return '0.5';
-
-    // 0.3: Legal & Misc
-    return '0.3';
-  };
-  
   return `<?xml version="1.0" encoding="UTF-8"?>
-   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-     ${allPages
-       .map((page) => {
-         return `
-       <url>
-           <loc>${`${baseUrl}${page}`}</loc>
-           <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-           <priority>${getPriority(page)}</priority>
-       </url>
-     `;
-       })
-       .join('')}
-   </urlset>
- `;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allPages
+  .map((rawPage) => {
+    const page = normalizePath(rawPage);
+    return `
+  <url>
+    <loc>${BASE_URL}${page}</loc>
+    <lastmod>${today}</lastmod>
+    <priority>${getPriority(page)}</priority>
+  </url>`;
+  })
+  .join('')}
+</urlset>`;
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   // --- 1. STATIC PAGES ---
   const staticPages = [
-    // Core
-    '/', 
-    '/community', 
-    '/collection', 
-    '/buy-credits', 
+    '/',
+    '/community',
+    '/collection',
+    '/buy-credits',
     '/blog',
-    
-    // Original Products
-    '/name-art', 
+
+    '/name-art',
     '/name-art-generator',
-    '/couples-art', 
+    '/couples-art',
     '/couples-name-art-generator',
 
-    // Arabic Name Art
-    '/arabic-name-art', 
+    '/arabic-name-art',
     '/arabic-name-art-generator',
-    '/ar/arabic-name-art', 
+    '/ar/arabic-name-art',
     '/ar/arabic-name-art-generator',
 
-    // Blog Posts
     '/blog/how-to-give-a-thoughtful-gift',
     '/blog/why-couple-name-art-is-the-perfect-keepsake',
-    
-    // Legal
-    '/privacy-policy', 
-    '/terms-of-service', 
+
+    '/privacy-policy',
+    '/terms-of-service',
     '/refund',
   ];
 
-  // --- 2. DYNAMIC PAGES ---
-  const nameArtPages = popularNames.map(item => `/name-art/${item.name.toLowerCase()}`);
-  
-  // --- 3. COMBINE ---
+  // --- 2. DYNAMIC PROGRAMMATIC PAGES ---
+  const nameArtPages = popularNames.map(
+    (item) => `/name-art/${item.name.toLowerCase()}`
+  );
+
   const allPages = [...staticPages, ...nameArtPages];
 
   const sitemap = generateSiteMap(allPages);
@@ -98,10 +116,8 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   res.write(sitemap);
   res.end();
 
-  return {
-    props: {},
-  };
+  return { props: {} };
 };
 
-const Sitemap = () => {};
+const Sitemap = () => null;
 export default Sitemap;
