@@ -64,6 +64,7 @@ model User {
     accounts      Account[]
     sessions      Session[]
     icons         Icon[]
+    cpaUnlocks    CpaUnlock[]
 }
 
 model Icon {
@@ -81,4 +82,41 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+enum CpaStatus {
+    pending
+    approved
+    rejected
+}
+
+enum CpaResult {
+    complete
+    screenout_bonus
+    screenout_no_bonus
+    reversed
+}
+
+enum CpaNetwork {
+    cpx
+}
+
+model CpaUnlock {
+    id            String     @id @default(cuid())
+    userId        String
+    user          User       @relation(fields: [userId], references: [id])
+
+    token         String     @unique
+    network       CpaNetwork
+    status        CpaStatus  @default(pending)
+    result        CpaResult?
+
+    transactionId String?
+    payout        Float?
+    currency      String?
+    leadIp        String?
+
+    createdAt     DateTime   @default(now())
+    approvedAt    DateTime?
+    expiredAt     DateTime?
 }

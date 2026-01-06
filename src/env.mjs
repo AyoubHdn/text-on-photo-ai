@@ -35,7 +35,9 @@ const server = z.object({
   MAUTIC_USERNAME: z.string(),
   MAUTIC_PASSWORD: z.string(),
   CRON_SECRET: z.string(),
-  
+  CPX_SECURITY_HASH: z.string(),
+  CPX_APP_ID: z.string(),
+  IPAPI_KEY: z.string(),
 });
 
 /**
@@ -79,6 +81,9 @@ const processEnv = {
   CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_S3_REGION: process.env.NEXT_PUBLIC_S3_REGION,
   NEXT_PUBLIC_S3_BUCKET_NAME: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
+  CPX_SECURITY_HASH: process.env.CPX_SECURITY_HASH,
+  CPX_APP_ID: process.env.CPX_APP_ID,
+  IPAPI_KEY: process.env.IPAPI_KEY,
   // Add more client-side env vars here
   // Make sure to prefix them with `NEXT_PUBLIC_`
   // e.g.
