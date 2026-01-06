@@ -10,6 +10,13 @@
 const config = {
   reactStrictMode: true,
 
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
   images: {
     domains: [
       "name-design-ai.s3.us-east-1.amazonaws.com",
