@@ -288,7 +288,7 @@ function FinalCTASection() {
           A personalized design can be a memory, a gift, or a keepsake. Start creating your name art today.
         </p>
         <div className="mt-8">
-          <Link href={isLoggedIn ? "/personalized-gifts" : "#"} passHref>
+          <Link href={isLoggedIn ? "/name-art" : "#"} passHref>
              <button 
                 className="inline-block px-8 py-4 text-lg font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
                 onClick={!isLoggedIn ? () => signIn().catch(console.error) : undefined}
