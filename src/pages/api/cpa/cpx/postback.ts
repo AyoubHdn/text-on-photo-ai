@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import { prisma } from "~/server/db";
 import { env } from "~/env.mjs";
+import { Prisma } from "@prisma/client";
 
 const CPX_SECRET = env.CPX_SECURITY_HASH;
 
@@ -85,10 +86,20 @@ export default async function handler(
     });
 
     if (finalStatus === "approved" && result !== "screenout_no_bonus") {
-      await prisma.user.update({
+      const user = await prisma.user.findUnique({
         where: { id: user_id },
-        data: { credits: { increment: 1 } },
+        select: { credits: true },
       });
+
+      if (user) {
+        const updatedCredits = new Prisma.Decimal(user.credits).plus(
+          new Prisma.Decimal(3)
+        );
+        await prisma.user.update({
+          where: { id: user_id },
+          data: { credits: updatedCredits },
+        });
+      }
     }
 
     return res.status(200).json({ success: true });
