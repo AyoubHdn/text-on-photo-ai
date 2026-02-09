@@ -120,6 +120,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       numberOfImages: 1,
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      metadata: {
+        category: activeTab || undefined,
+        subcategory: activeSubTab || undefined,
+      },
     });
   };
 

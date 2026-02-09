@@ -34,10 +34,15 @@ const server = z.object({
   MAUTIC_BASE_URL: z.string(),
   MAUTIC_USERNAME: z.string(),
   MAUTIC_PASSWORD: z.string(),
+  MAUTIC_TRACKING_NUMBER_FIELD: z.string().optional(),
+  MAUTIC_TRACKING_URL_FIELD: z.string().optional(),
+  MAUTIC_TRACKING_CARRIER_FIELD: z.string().optional(),
   CRON_SECRET: z.string(),
   CPX_SECURITY_HASH: z.string(),
   CPX_APP_ID: z.string(),
   IPAPI_KEY: z.string(),
+  PRINTFUL_API_KEY: z.string(),
+  PRINTFUL_WEBHOOK_SECRET: z.string().optional(),
 });
 
 /**
@@ -78,12 +83,17 @@ const processEnv = {
   MAUTIC_BASE_URL: process.env.MAUTIC_BASE_URL,
   MAUTIC_USERNAME: process.env.MAUTIC_USERNAME,
   MAUTIC_PASSWORD: process.env.MAUTIC_PASSWORD,
+  MAUTIC_TRACKING_NUMBER_FIELD: process.env.MAUTIC_TRACKING_NUMBER_FIELD,
+  MAUTIC_TRACKING_URL_FIELD: process.env.MAUTIC_TRACKING_URL_FIELD,
+  MAUTIC_TRACKING_CARRIER_FIELD: process.env.MAUTIC_TRACKING_CARRIER_FIELD,
   CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_S3_REGION: process.env.NEXT_PUBLIC_S3_REGION,
   NEXT_PUBLIC_S3_BUCKET_NAME: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
   CPX_SECURITY_HASH: process.env.CPX_SECURITY_HASH,
   CPX_APP_ID: process.env.CPX_APP_ID,
   IPAPI_KEY: process.env.IPAPI_KEY,
+  PRINTFUL_API_KEY: process.env.PRINTFUL_API_KEY,
+  PRINTFUL_WEBHOOK_SECRET: process.env.PRINTFUL_WEBHOOK_SECRET,
   // Add more client-side env vars here
   // Make sure to prefix them with `NEXT_PUBLIC_`
   // e.g.

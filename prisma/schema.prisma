@@ -59,12 +59,15 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
-    credits       Int       @default(1)
+    credits       Decimal   @default(1.0) @db.Decimal(10, 2)
     plan          Plan      @default(None) // New field to track plan
     accounts      Account[]
     sessions      Session[]
     icons         Icon[]
     cpaUnlocks    CpaUnlock[]
+
+    productOrders ProductOrder[]
+    stripeWebhookEvents StripeWebhookEvent[]
 }
 
 model Icon {
@@ -74,6 +77,9 @@ model Icon {
     userId        String?
     createdAt DateTime @default(now()) 
     isPublic  Boolean  @default(true)
+    metadata  Json?
+    transparentImageUrl String?
+    backgroundRemovedAt DateTime?
 }
 
 model VerificationToken {
@@ -119,4 +125,79 @@ model CpaUnlock {
     createdAt     DateTime   @default(now())
     approvedAt    DateTime?
     expiredAt     DateTime?
+}
+
+model PrintfulOrder {
+    id               String   @id @default(cuid())
+    productOrderId   String   @unique
+    productOrder     ProductOrder @relation(fields: [productOrderId], references: [id])
+
+    printfulOrderId  String
+    status           String   // draft | submitted | fulfilled | canceled
+    trackingNumber   String?
+    trackingUrl      String?
+    trackingCarrier  String?
+    trackingStatus   String?
+    shippedAt        DateTime?
+    trackingUpdatedAt DateTime?
+
+    createdAt        DateTime @default(now())
+}
+
+model ProductOrder {
+    id           String   @id @default(cuid())
+    userId       String
+    user         User     @relation(fields: [userId], references: [id])
+
+    productKey   String   // poster | tshirt | mug
+    variantId    Int
+    variantName  String?
+    size         String?
+    color        String?
+    colorHex     String?
+    aspect       String?
+    previewMode  String?  // for mug: two-side | center
+    previewVariantId Int?
+    isBackgroundRemoved Boolean? @default(false)
+    snapshotVariantId Int?
+    snapshotSize     String?
+    snapshotColor    String?
+    snapshotPrintPosition String?
+    snapshotBackgroundRemoved Boolean? @default(false)
+
+    imageUrl     String
+    mockupUrl    String
+
+    basePrice    Float    // Printful base price
+    margin       Float    // Your margin
+    shippingPrice Float?
+    shippingCurrency String?
+    totalPrice   Float    // basePrice + margin (NO shipping yet)
+    currency     String   @default("USD")
+
+    name         String?
+    address1     String?
+    city         String?
+    zip          String?
+    country      String?
+    state        String?
+
+    status       String   @default("pending") 
+    
+    stripeSessionId String?   // set after Stripe checkout
+    paidAt          DateTime?
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    printfulOrder PrintfulOrder?
+}
+
+model StripeWebhookEvent {
+    id              String   @id
+    type            String
+    stripeSessionId String?
+    userId          String?
+    user            User?    @relation(fields: [userId], references: [id])
+    createdAt       DateTime @default(now())
 }

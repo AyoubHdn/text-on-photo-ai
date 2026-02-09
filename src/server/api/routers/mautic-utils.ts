@@ -1,4 +1,5 @@
 // ~/server/api/routers/mautic-utils.ts
+import type { Prisma } from "@prisma/client";
 import { env } from "~/env.mjs"; // Ensure this path is correct
 
 // Define a more structured response type, can be expanded
@@ -31,8 +32,9 @@ export async function updateMauticContact(
     email: string;
     name?: string | null;
     // These will be specific to the brand calling the function
-    brand_specific_credits?: number | null;
+    brand_specific_credits?: number | string | Prisma.Decimal | null;
     brand_specific_plan?: string | null;
+    customFields?: Record<string, string | number | null | undefined>;
   },
   currentBrand: 'namedesignai' | 'gaminglogoai'
 ): Promise<MauticApiResponse> {
@@ -52,7 +54,7 @@ export async function updateMauticContact(
   const lastnameFromInput = restName.join(" ") || "";
 
   // Prepare the base payload for Mautic
-  const mauticPayloadForApi: Partial<MauticContactPayload> = {
+  const mauticPayloadForApi: Partial<MauticContactPayload> & Record<string, unknown> = {
     email: contactInput.email,
     ...(firstnameFromInput && { firstname: firstnameFromInput }),
     ...(lastnameFromInput && { lastname: lastnameFromInput }),
@@ -82,6 +84,14 @@ export async function updateMauticContact(
     }
     mauticPayloadForApi.credits = undefined;
     mauticPayloadForApi.plan = undefined;
+  }
+
+  if (contactInput.customFields) {
+    for (const [key, value] of Object.entries(contactInput.customFields)) {
+      if (value !== null && value !== undefined && value !== "") {
+        mauticPayloadForApi[key] = value;
+      }
+    }
   }
 
   try {

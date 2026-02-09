@@ -2,6 +2,7 @@ import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import Script from "next/script";
+import { useRouter } from "next/router";
 
 import { api } from "~/utils/api";
 
@@ -13,6 +14,10 @@ const MyApp: AppType<{ session: Session | null }> = ({
   Component,
   pageProps: { session, ...pageProps },
 }) => {
+  const router = useRouter();
+  const isCancelPage =
+    router.pathname === "/cancel" || router.pathname === "/order/cancel";
+
   return (
     <SessionProvider session={session}>
       {/* Google Tag Manager Script */}
@@ -41,9 +46,21 @@ const MyApp: AppType<{ session: Session | null }> = ({
       </noscript>
 
       {/* Main App */}
-      <Header />
-      <Component {...pageProps} />
-      <Footer />
+      {isCancelPage ? (
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-grow">
+            <Component {...pageProps} />
+          </main>
+          <Footer />
+        </div>
+      ) : (
+        <>
+          <Header />
+          <Component {...pageProps} />
+          <Footer />
+        </>
+      )}
     </SessionProvider>
   );
 };

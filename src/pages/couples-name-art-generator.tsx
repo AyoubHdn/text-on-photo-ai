@@ -136,6 +136,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       numberOfImages: parseInt(form.numberofImages, 10),
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      metadata: {
+        category: activeTab || undefined,
+        subcategory: activeSubTab || undefined,
+      },
     });
   };
 

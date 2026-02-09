@@ -1,10 +1,23 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // ~/server/api/stripe.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { env } from "~/env.mjs";
 import { buffer } from "micro";
 import { prisma } from "~/server/db";
+import { Prisma } from "@prisma/client";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import { printfulRequest } from "~/server/printful/client";
+import sharp from "sharp";
+import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
+import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
+import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
+import type { AspectRatio } from "~/server/printful/aspects";
+import type { MugPreviewMode } from "~/server/printful/previewModes";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -36,98 +49,334 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   switch (event.type) {
-    case "checkout.session.completed":
-      console.log("Processing checkout.session.completed event...");
-      const completedEvent = event.data.object;
+    case "checkout.session.completed": {
+        console.log("Processing checkout.session.completed event...");
+        const completedEvent = event.data.object;
 
-      const userId = completedEvent.metadata?.userId;
-      if (!userId) {
-        console.error("User ID missing in session metadata.");
-        return res.status(400).send("Invalid metadata in session.");
+        /* ------------------------------------
+          PRINTFUL PHYSICAL ORDER FLOW
+        ------------------------------------ */
+        const orderId =
+          completedEvent.metadata?.orderId ??
+          completedEvent.client_reference_id;
+        if (orderId) {
+      // Printful: use orderId to create/confirm order after payment
+
+      if (!orderId) {
+        console.error("Missing orderId in product_order metadata");
+        break;
       }
 
-      console.log(`User ID from metadata: ${userId}`);
+      const order = await prisma.productOrder.findUnique({
+        where: { id: orderId },
+      });
 
-      let lineItems;
-      try {
-        lineItems = await stripe.checkout.sessions.listLineItems(completedEvent.id);
-      } catch (err) {
-        console.error("Error fetching line items:", err);
-        return res.status(500).send("Failed to fetch line items.");
+      if (!order) {
+        console.error("ProductOrder not found:", orderId);
+        break;
       }
 
-      const priceId = lineItems.data[0]?.price?.id;
-      console.log("Price ID from line items:", priceId);
+      const existingPrintfulOrder = await prisma.printfulOrder.findUnique({
+        where: { productOrderId: orderId },
+      });
 
-      if (!priceId) {
-        console.error("Missing priceId in line items.");
-        return;
+      // 🛑 Idempotency: if Printful order already created, do nothing
+      if (existingPrintfulOrder) {
+        console.log("Printful order already created:", orderId);
+        break;
       }
 
-      const creditsMap: Record<string, number> = {
-        [env.PRICE_ID_STARTER]: 20,
-        [env.PRICE_ID_PRO]: 50,
-        [env.PRICE_ID_ELITE]: 100,
-      };
-
-      const planMap: Record<number, string> = {
-        20: "Starter",
-        50: "Pro",
-        100: "Elite",
-      };
-
-      const incrementCredits = creditsMap[priceId] ?? 0;
-      const plan = planMap[incrementCredits] ?? "None";
-
-      if (incrementCredits === 0) {
-        console.warn(`Unhandled priceId: ${priceId}`);
-        return;
-      }
-
-      console.log(`Credits to increment: ${incrementCredits}, Plan: ${plan}`);
-
-      try {
-        const userBeforeUpdate = await prisma.user.findUnique({
-          where: { id: userId },
-        });
-
-        console.log("User before update:", userBeforeUpdate);
-
-        const updatedUser = await prisma.user.update({
-          where: { id: userId },
+      if (order.status !== "paid") {
+        await prisma.productOrder.update({
+          where: { id: orderId },
           data: {
-            credits: {
-              increment: incrementCredits,
-            },
-            plan: plan as "None" | "Starter" | "Pro" | "Elite", // Type-safe with Plan enum
+            status: "paid",
+            paidAt: order.paidAt ?? new Date(),
+            stripeSessionId: order.stripeSessionId ?? completedEvent.id,
           },
         });
-
-        console.log("User after update:", updatedUser);
-
-        if (updatedUser.email) {
-          try {
-            const mauticResult = await updateMauticContact({
-              email: updatedUser.email,
-              name: updatedUser.name,
-              brand_specific_credits: updatedUser.credits,
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              brand_specific_plan: updatedUser.plan, // Now recognized
-            },
-          'namedesignai');
-            console.log("Mautic updated after purchase:", mauticResult);
-          } catch (err) {
-            console.error("Error updating Mautic after purchase:", err);
-          }
-        } else {
-          console.error("Updated user has no email; cannot update Mautic.");
-        }
-      } catch (err) {
-        console.error("Error updating user credits or plan:", err);
-        return res.status(500).send("Failed to update user credits or plan.");
       }
 
+      const countryCode = (order.country ?? "").trim().toUpperCase();
+      const stateCode = (order.state ?? "").trim().toUpperCase();
+
+      const rawZip = (order.zip ?? "").trim();
+      const zip =
+        countryCode === "US"
+          ? rawZip.replace(/\s+/g, "").split("-")[0]
+          : rawZip;
+
+      const recipient = {
+        name: order.name,
+        address1: order.address1,
+        city: order.city,
+        zip,
+        country_code: countryCode,
+        state_code: countryCode === "US" ? stateCode : undefined,
+      };
+
+      if (
+        !recipient.name ||
+        !recipient.address1 ||
+        !recipient.city ||
+        !recipient.zip ||
+        !recipient.country_code ||
+        (recipient.country_code === "US" && recipient.state_code?.length !== 2)
+      ) {
+        const missing = {
+          name: !!recipient.name,
+          address1: !!recipient.address1,
+          city: !!recipient.city,
+          zip: !!recipient.zip,
+          country_code: !!recipient.country_code,
+          state_code: recipient.state_code?.length === 2,
+        };
+        console.error("Missing Printful recipient fields:", missing);
+        throw new Error("Missing recipient fields for Printful order");
+      }
+
+      let printImageUrl: string;
+      try {
+        const imageRes = await fetch(order.imageUrl);
+        if (!imageRes.ok) {
+          throw new Error("Failed to fetch image for Printful");
+        }
+
+        const buffer = Buffer.from(await imageRes.arrayBuffer());
+
+        const printReadyBuffer = await sharp(buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer();
+
+        if (order.productKey === "mug") {
+          const mugConfig = MUG_PRINT_CONFIG[order.variantId];
+          if (!mugConfig) {
+            throw new Error(`Invalid mug variant: ${order.variantId}`);
+          }
+
+          const wrappedBuffer = await generateMugWrapImage({
+            inputBuffer: printReadyBuffer,
+            outputWidth: mugConfig.areaWidth,
+            outputHeight: mugConfig.areaHeight,
+            mode: (order.previewMode ?? "two-side") as MugPreviewMode,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            wrappedBuffer,
+            order.userId
+          );
+        } else if (order.productKey === "tshirt") {
+          const tshirtBuffer = await generateTshirtPrintImage({
+            inputBuffer: buffer,
+            printWidth: 3810,
+            printHeight: 4572,
+            aspect: (order.aspect ?? "1:1") as AspectRatio,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            tshirtBuffer,
+            order.userId
+          );
+        } else {
+          printImageUrl = await convertWebpToPngAndUpload(
+            printReadyBuffer,
+            order.userId
+          );
+        }
+      } catch (err) {
+        console.error("Printful image preparation error:", err);
+        throw err;
+      }
+
+      console.log("Printful print image URL:", printImageUrl);
+
+      let draftOrder: { result?: { id?: number } };
+      try {
+        draftOrder = await printfulRequest("/orders", "POST", {
+          // Draft order created after payment
+          recipient,
+          external_id: order.id,
+          items: [
+            {
+              variant_id: order.variantId,
+              quantity: 1,
+              files: [{ url: printImageUrl }],
+            },
+          ],
+          confirm: false,
+        });
+        console.log("Printful draft order response:", draftOrder);
+      } catch (err) {
+        console.error("Printful draft order error:", err);
+        throw err;
+      }
+
+      const printfulId = draftOrder?.result?.id;
+      if (!printfulId) {
+        console.error("Invalid Printful draft order response:", draftOrder);
+        throw new Error("Invalid Printful draft order response");
+      }
+
+      let confirmResult: unknown;
+      try {
+        confirmResult = await printfulRequest(
+          `/orders/${printfulId}/confirm`,
+          "POST"
+        );
+        console.log("Printful confirm response:", confirmResult);
+      } catch (err) {
+        console.error("Printful confirm error:", err);
+        throw err;
+      }
+
+      // ✅ Mark as fulfilled and store Printful order id
+      await prisma.printfulOrder.create({
+        data: {
+          productOrderId: order.id,
+          printfulOrderId: String(printfulId),
+          status: "submitted",
+        },
+      });
+
+      await prisma.productOrder.update({
+        where: { id: orderId },
+        data: {
+          status: "fulfilled",
+        },
+      });
+
+      console.log("ProductOrder marked as FULFILLED:", orderId);
+
       break;
+    }
+
+    /* ------------------------------------
+      CREDITS PURCHASE FLOW (EXISTING)
+    ------------------------------------ */
+    const userId = completedEvent.metadata?.userId;
+    if (!userId) {
+      console.error("User ID missing in session metadata.");
+      break;
+    }
+
+    let lineItems;
+    try {
+      lineItems = await stripe.checkout.sessions.listLineItems(completedEvent.id);
+    } catch (err) {
+      console.error("Error fetching line items:", err);
+      break;
+    }
+
+    const priceId = lineItems.data[0]?.price?.id;
+    if (!priceId) {
+      console.error("Missing priceId in line items.");
+      break;
+    }
+
+    const creditsMap: Record<string, number> = {
+      [env.PRICE_ID_STARTER]: 20,
+      [env.PRICE_ID_PRO]: 50,
+      [env.PRICE_ID_ELITE]: 100,
+    };
+
+    const planMap: Record<number, string> = {
+      20: "Starter",
+      50: "Pro",
+      100: "Elite",
+    };
+
+    const incrementCredits = creditsMap[priceId] ?? 0;
+    const plan = planMap[incrementCredits] ?? "None";
+
+    if (incrementCredits === 0) {
+      console.warn(`Unhandled priceId: ${priceId}`);
+      break;
+    }
+
+    try {
+      const incrementCreditsDecimal = new Prisma.Decimal(incrementCredits);
+      let updatedUser:
+        | {
+            email: string | null;
+            name: string | null;
+            credits: Prisma.Decimal;
+            plan: "None" | "Starter" | "Pro" | "Elite";
+          }
+        | null = null;
+      let alreadyProcessed = false;
+
+      await prisma.$transaction(async (tx) => {
+        try {
+          await tx.stripeWebhookEvent.create({
+            data: {
+              id: event.id,
+              type: event.type,
+              stripeSessionId: completedEvent.id,
+              userId,
+            },
+          });
+        } catch (err) {
+          if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2002"
+          ) {
+            alreadyProcessed = true;
+            return;
+          }
+          throw err;
+        }
+
+        const existingUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { credits: true },
+        });
+
+        if (!existingUser) {
+          throw new Error("User not found for credits purchase.");
+        }
+
+        const updatedCredits = new Prisma.Decimal(existingUser.credits).plus(
+          incrementCreditsDecimal
+        );
+
+        updatedUser = await tx.user.update({
+          where: { id: userId },
+          data: {
+            credits: updatedCredits,
+            plan: plan as "None" | "Starter" | "Pro" | "Elite",
+          },
+          select: {
+            email: true,
+            name: true,
+            credits: true,
+            plan: true,
+          },
+        });
+      });
+
+      if (alreadyProcessed) {
+        console.log("Stripe event already processed:", event.id);
+        break;
+      }
+
+      if (updatedUser?.email) {
+        await updateMauticContact(
+          {
+            email: updatedUser.email,
+            name: updatedUser.name,
+            brand_specific_credits: updatedUser.credits,
+            brand_specific_plan: updatedUser.plan,
+          },
+          "namedesignai"
+        );
+      }
+    } catch (err) {
+      console.error("Error updating user credits or plan:", err);
+    }
+
+    break;
+  }
 
     default:
       console.log(`Unhandled event type: ${event.type}`);

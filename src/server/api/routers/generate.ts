@@ -1,6 +1,7 @@
 // ~/server/api/routers/generate.ts
 
 import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -185,6 +186,12 @@ export const generateRouter = createTRPCRouter({
           "ideogram-ai/ideogram-v2-turbo",
           "google/nano-banana-pro",
         ]),
+        metadata: z
+          .object({
+            category: z.string().optional(),
+            subcategory: z.string().optional(),
+          })
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -203,41 +210,45 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
-      // Calculate total credits needed
-      const totalCredits =
-        modelConfig.credits *
-        (input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro"
+      // Calculate total credits needed (Decimal-safe)
+      const creditsPerImage = new Prisma.Decimal(modelConfig.credits);
+      const imageCount = new Prisma.Decimal(
+        input.model === "ideogram-ai/ideogram-v2-turbo" ||
+          input.model === "google/nano-banana-pro"
           ? 1
-          : input.numberOfImages);
+          : input.numberOfImages
+      );
+      const totalCredits = creditsPerImage.times(imageCount);
 
       // Deduct credits
-      const { count } = await ctx.prisma.user.updateMany({
-        where: {
-          id: ctx.session.user.id,
-          credits: { gte: totalCredits },
-        },
-        data: {
-          credits: { decrement: totalCredits },
-        },
-      });
-
-      if (count <= 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You do not have enough credits",
+      const updatedUser = await ctx.prisma.$transaction(async (tx) => {
+        const existingUser = await tx.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { credits: true, email: true, name: true },
         });
-      }
 
-      // Fetch updated user data
-      const updatedUser = await ctx.prisma.user.findUnique({
-        where: { id: ctx.session.user.id },
-      });
-      if (!updatedUser || !updatedUser.email) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User not found after credit update",
+        if (!existingUser) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "User not found after credit update",
+          });
+        }
+
+        const creditsDecimal = new Prisma.Decimal(existingUser.credits);
+        if (creditsDecimal.lessThan(totalCredits)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You do not have enough credits",
+          });
+        }
+
+        const updatedCredits = creditsDecimal.minus(totalCredits);
+        return tx.user.update({
+          where: { id: ctx.session.user.id },
+          data: { credits: updatedCredits },
+          select: { credits: true, email: true, name: true },
         });
-      }
+      });
 
       // Update Mautic contact
       try {
@@ -269,6 +280,12 @@ export const generateRouter = createTRPCRouter({
             data: {
               prompt: input.prompt,
               userId: ctx.session.user.id,
+              metadata: {
+                aspectRatio: input.aspectRatio ?? null,
+                model: input.model,
+                category: input.metadata?.category ?? null,
+                subcategory: input.metadata?.subcategory ?? null,
+              },
             },
           });
 

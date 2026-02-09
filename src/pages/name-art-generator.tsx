@@ -13,9 +13,19 @@ import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
+import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
-type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3";
+type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
+type SavedDesign = {
+  imageUrl: string;
+  prompt: string;
+  model: AIModel;
+  createdAt: string;
+  hasBackgroundRemoved: boolean;
+};
+
+const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
 
 const NameArtGeneratorPage: NextPage = () => {
   const { data: session } = useSession();
@@ -40,6 +50,17 @@ const NameArtGeneratorPage: NextPage = () => {
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
+  const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
+  const [generatedAspect, setGeneratedAspect] = useState<AspectRatio | null>(null);
+  const [transparentUrls, setTransparentUrls] = useState<Record<string, string>>({});
+  const [useTransparentMap, setUseTransparentMap] = useState<Record<string, boolean>>({});
+  const [removingBackgroundMap, setRemovingBackgroundMap] = useState<Record<string, boolean>>({});
+  const [removeBgCreditAlertMap, setRemoveBgCreditAlertMap] = useState<Record<string, boolean>>({});
+  const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
+  const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
+  const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
   useEffect(() => {
@@ -90,6 +111,36 @@ const NameArtGeneratorPage: NextPage = () => {
   }, [router.isReady, router.query]);
   // --- END: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
 
+  useEffect(() => {
+    if (imagesUrl.length > 0) return;
+    try {
+      const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as SavedDesign;
+      if (parsed?.imageUrl) {
+        setImagesUrl([{ imageUrl: parsed.imageUrl }]);
+        setSelectedModel(parsed.model ?? "flux-schnell");
+      }
+    } catch {
+      // ignore invalid cache
+    }
+  }, [imagesUrl.length]);
+
+  useEffect(() => {
+    if (previewCooldown === null) return;
+
+    if (previewCooldown <= 0) {
+      setPreviewCooldown(null);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setPreviewCooldown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [previewCooldown]);
+
   const handleScroll = (ref: React.RefObject<HTMLDivElement>, setLeft: (val: boolean) => void, setRight: (val: boolean) => void) => {
       if(ref.current) {
           const { scrollLeft, scrollWidth, clientWidth } = ref.current;
@@ -104,7 +155,29 @@ const NameArtGeneratorPage: NextPage = () => {
   }, [activeTab, activeSubTab]);
 
   const generateIcon = api.generate.generateIcon.useMutation({
-    onSuccess: (data) => setImagesUrl(data),
+    onSuccess: (data) => {
+      setImagesUrl(data);
+      setGeneratedAspect(selectedAspectRatio);
+      setTransparentUrls({});
+      setUseTransparentMap({});
+      setRemovingBackgroundMap({});
+      setRemoveBgCreditAlertMap({});
+      const firstImageUrl = data?.[0]?.imageUrl;
+      if (firstImageUrl) {
+        const saved: SavedDesign = {
+          imageUrl: firstImageUrl,
+          prompt: form.basePrompt ? form.basePrompt.replace(/'Text'/gi, form.name) : form.name,
+          model: selectedModel,
+          createdAt: new Date().toISOString(),
+          hasBackgroundRemoved: false,
+        };
+        try {
+          window.localStorage.setItem(LAST_DESIGN_STORAGE_KEY, JSON.stringify(saved));
+        } catch {
+          // ignore storage errors
+        }
+      }
+    },
     onError: (error) => setError(error.message),
   });
 
@@ -123,6 +196,10 @@ const NameArtGeneratorPage: NextPage = () => {
       numberOfImages: parseInt(form.numberofImages, 10),
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      metadata: {
+        category: activeTab || undefined,
+        subcategory: activeSubTab || undefined,
+      },
     });
   };
 
@@ -164,6 +241,101 @@ const NameArtGeneratorPage: NextPage = () => {
       console.error("Error downloading the image:", error);
     }
   };
+  const extractImageId = (value: string | null) => {
+    if (!value) return null;
+    try {
+      const url = new URL(value);
+      const parts = url.pathname.split("/").filter(Boolean);
+      return parts[parts.length - 1] ?? null;
+    } catch {
+      const parts = value.split("/").filter(Boolean);
+      return parts[parts.length - 1] ?? null;
+    }
+  };
+  const getDisplayImageUrl = (imageUrl: string | null) => {
+    if (!imageUrl) return null;
+    const imageId = extractImageId(imageUrl);
+    if (imageId && useTransparentMap[imageId] && transparentUrls[imageId]) {
+      return transparentUrls[imageId];
+    }
+    return imageUrl;
+  };
+  const getTransparentInfo = (imageUrl: string | null) => {
+    if (!imageUrl) return { transparentImageUrl: null, useTransparent: false };
+    const imageId = extractImageId(imageUrl);
+    if (!imageId) return { transparentImageUrl: null, useTransparent: false };
+    return {
+      transparentImageUrl: transparentUrls[imageId] ?? null,
+      useTransparent: Boolean(useTransparentMap[imageId]),
+    };
+  };
+  const handleToggleBackground = async (imageUrl: string) => {
+    const imageId = extractImageId(imageUrl);
+    if (!imageId) return;
+
+    const isRemoving = removingBackgroundMap[imageId];
+    if (isRemoving) return;
+
+    const currentlyTransparent = useTransparentMap[imageId] ?? false;
+    if (currentlyTransparent) {
+      setUseTransparentMap((prev) => ({ ...prev, [imageId]: false }));
+      setRemoveBgCreditAlertMap((prev) => ({ ...prev, [imageId]: false }));
+      return;
+    }
+
+    const existingTransparent = transparentUrls[imageId];
+    if (existingTransparent) {
+      setUseTransparentMap((prev) => ({ ...prev, [imageId]: true }));
+      setRemoveBgCreditAlertMap((prev) => ({ ...prev, [imageId]: false }));
+      return;
+    }
+
+    if (!hasBackgroundCredits) {
+      setRemoveBgCreditAlertMap((prev) => ({ ...prev, [imageId]: true }));
+      return;
+    }
+
+    try {
+      setRemovingBackgroundMap((prev) => ({ ...prev, [imageId]: true }));
+      setRemoveBgCreditAlertMap((prev) => ({ ...prev, [imageId]: false }));
+
+      const res = await fetch("/api/image/remove-background", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "Background removal failed");
+      }
+
+      const nextTransparentUrl = data?.transparentImageUrl as string | undefined;
+      if (!nextTransparentUrl) {
+        throw new Error("Background removal failed");
+      }
+
+      setTransparentUrls((prev) => ({ ...prev, [imageId]: nextTransparentUrl }));
+      setUseTransparentMap((prev) => ({ ...prev, [imageId]: true }));
+      try {
+        const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as SavedDesign;
+          if (parsed?.imageUrl === imageUrl) {
+            parsed.hasBackgroundRemoved = true;
+            window.localStorage.setItem(LAST_DESIGN_STORAGE_KEY, JSON.stringify(parsed));
+          }
+        }
+      } catch {
+        // ignore storage errors
+      }
+    } catch (err) {
+      console.error("[REMOVE_BACKGROUND_UI]", err);
+      alert("Background removal failed. Please try again.");
+    } finally {
+      setRemovingBackgroundMap((prev) => ({ ...prev, [imageId]: false }));
+    }
+  };
   const openPopup = (imageUrl: string) => setPopupImage(imageUrl);
   const closePopup = () => setPopupImage(null);
   const openShareModal = (imageUrl: string) => setShareModalData({ isOpen: true, imageUrl });
@@ -176,12 +348,41 @@ const NameArtGeneratorPage: NextPage = () => {
       subcategoryScrollRef.current?.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: "smooth"});
   };
   
-  const aspectRatios: { label: string; value: AspectRatio; visual: string }[] = [
-    { label: "1:1", value: "1:1", visual: "aspect-square" },
-    { label: "16:9", value: "16:9", visual: "aspect-video" },
-    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
-    { label: "4:3", value: "4:3", visual: "aspect-classic" },
+  const aspectRatios: {
+    label: string;
+    value: AspectRatio;
+    description: string;
+  }[] = [
+    {
+      label: "1:1",
+      value: "1:1",
+      description: "Best for posters, profile images, and square designs",
+    },
+    {
+      label: "4:5",
+      value: "4:5",
+      description: "Best choice for posters and wall art",
+    },
+    {
+      label: "3:2",
+      value: "3:2",
+      description: "Ideal for wide posters and horizontal designs",
+    },
+    {
+      label: "16:9",
+      value: "16:9",
+      description: "Best for screens, wallpapers, and digital use",
+    },
   ];
+
+  const aspectVisualMap: Record<AspectRatio, string> = {
+    "1:1": "aspect-[1/1]",
+    "4:5": "aspect-[4/5]",
+    "3:2": "aspect-[3/2]",
+    "16:9": "aspect-[16/9]",
+  };
+
+  const previewImageInfo = getTransparentInfo(previewImage);
 
   return (
     <>
@@ -302,16 +503,7 @@ const NameArtGeneratorPage: NextPage = () => {
           <FormGroup className="mb-12">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {aspectRatios.map((ratio) => {
-                const aspectClass =
-                  ratio.visual === "aspect-square"
-                    ? "aspect-[1/1]"
-                    : ratio.visual === "aspect-video"
-                    ? "aspect-[16/9]"
-                    : ratio.visual === "aspect-portrait"
-                    ? "aspect-[9/16]"
-                    : ratio.visual === "aspect-classic"
-                    ? "aspect-[4/3]"
-                    : "";
+                const aspectClass = aspectVisualMap[ratio.value];
                 return (
                   <button
                     key={ratio.value}
@@ -327,7 +519,12 @@ const NameArtGeneratorPage: NextPage = () => {
                       className={`w-full h-21 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
                       style={{ backgroundColor: "#ddd" }}
                     >
-                      <span className="text-gray-600 font-medium">{ratio.label}</span>
+                      <div className="text-center">
+                        <div className="font-semibold">{ratio.label}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {ratio.description}
+                        </div>
+                      </div>
                     </div>
                   </button>
                 );
@@ -372,8 +569,16 @@ const NameArtGeneratorPage: NextPage = () => {
               )}
             </div>
           )}
+          {isCreditLocked && (
+            <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+              This design is saved. Add credits to continue.{" "}
+              <Link href="/buy-credits" className="underline font-semibold">
+                Buy credits
+              </Link>
+            </div>
+          )}
           
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
+          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
             {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
         </form>
@@ -382,15 +587,22 @@ const NameArtGeneratorPage: NextPage = () => {
           <>
             <h2 className="text-xl mt-8 mb-2">Your Custom Name Art</h2>
             <section className="grid grid-cols-4 gap-4 mb-12">
-              {imagesUrl.map(({ imageUrl }, index) => (
-                <div
-                  key={index}
-                  className="relative rounded shadow-md hover:shadow-lg transition"
-                >
+              {imagesUrl.map(({ imageUrl }, index) => {
+                const imageId = extractImageId(imageUrl);
+                const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
+                const isTransparent = imageId ? useTransparentMap[imageId] : false;
+                const showRemoveBgAlert = imageId ? removeBgCreditAlertMap[imageId] : false;
+                const displayUrl =
+                  imageId && isTransparent && transparentUrls[imageId]
+                    ? transparentUrls[imageId]
+                    : imageUrl;
+                return (
+                <div key={index} className="flex flex-col">
+                <div className="relative rounded shadow-md hover:shadow-lg transition">
                   <div className="absolute top-0 right-0 flex gap-0">
                     <button
                       type="button"
-                      onClick={() => openPopup(imageUrl)}
+                      onClick={() => openPopup(displayUrl)}
                       className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
                       title="View Fullscreen"
                       aria-label="View Fullscreen"
@@ -399,7 +611,7 @@ const NameArtGeneratorPage: NextPage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void handleDownload(imageUrl)}
+                      onClick={() => void handleDownload(displayUrl)}
                       className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
                       title="Download"
                       aria-label="Download"
@@ -408,7 +620,7 @@ const NameArtGeneratorPage: NextPage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => openShareModal(imageUrl)} // This now opens the modal
+                      onClick={() => openShareModal(displayUrl)} // This now opens the modal
                       className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
                       title="Share"
                       aria-label="Share"
@@ -417,23 +629,129 @@ const NameArtGeneratorPage: NextPage = () => {
                     </button>
                   </div>
                   <Image
-                    src={imageUrl}
+                    src={displayUrl}
                     alt="Generated output"
                     width={512}
                     height={512}
-                    className="w-full rounded"
+                    className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}
+                  />
+                  {isCreditLocked && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded bg-black/30 text-xs font-semibold text-white">
+                      Saved design locked
+                    </div>
+                  )}
+                  {showRemoveBgAlert && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      Removing the background costs 1 credit.{" "}
+                      <Link href="/buy-credits" className="underline">
+                        Buy credits to continue.
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3 rounded bg-gray-900/80 px-2 py-1.5 text-xs text-white">
+                  <span className="opacity-80">Costs 1 credit</span>
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleBackground(imageUrl)}
+                    disabled={!!isRemoving || isCreditLocked}
+                    className="rounded bg-white/10 px-2 py-1 font-semibold hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    title="Remove background"
+                    aria-label="Remove background"
+                  >
+                    {isRemoving ? "Removing..." : isTransparent ? "Background removed" : "Remove background"}
+                  </button>
+                </div>
+                </div>
+                );
+              })}
+            </section>
+          
+        
+
+        <section className="mt-10">
+          <h3 className="text-2xl font-semibold mb-6 text-center">
+            Turn your design into a real product
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              {
+                key: "poster",
+                label: "Poster",
+                description: "Perfect for walls, frames, and gifts",
+                image: "/images/products/poster.jpg",
+              },
+              {
+                key: "tshirt",
+                label: "T-Shirt",
+                description: "Wear your name art every day",
+                image: "/images/products/tshirt.jpg",
+              },
+              {
+                key: "mug",
+                label: "Mug",
+                description: "A daily reminder with your design",
+                image: "/images/products/mug.jpg",
+              },
+            ].map((p) => (
+              <div
+                key={p.key}
+                className="group relative rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition"
+              >
+                {/* Product Image */}
+                <div className="relative h-44 bg-gray-100 dark:bg-gray-800">
+                  <img
+                    src={p.image}
+                    alt={p.label}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-              ))}
-            </section>
-          </>
+
+                {/* Content */}
+                <div className="p-4 text-center">
+                  <h4 className="text-lg font-semibold mb-1">{p.label}</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    {p.description}
+                  </p>
+
+                  {previewCooldown !== null && (
+                    <div className="mb-4 rounded-lg bg-yellow-100 text-yellow-900 px-4 py-3 text-sm">
+                      ⏳ Preview temporarily paused due to high demand.
+                      <br />
+                      You can try again in <strong>{previewCooldown}s</strong>.
+                    </div>
+                  )}
+                  <button 
+                    className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                    disabled={previewCooldown !== null || isCreditLocked}
+                    onClick={() => {
+                      // Hide 16:9 for Poster & Mug
+                      if (
+                        selectedAspectRatio === "16:9" &&
+                        (p.key === "poster" || p.key === "mug")
+                      ) {
+                        alert("This image size is not supported for this product.");
+                        return;
+                      }
+
+                      setPreviewProduct(p.key as "poster" | "tshirt" | "mug");
+                      setPreviewImage(imagesUrl[0]?.imageUrl ?? null);
+                    }}
+                  >
+                    {previewCooldown !== null? `Please wait ${previewCooldown}s`: "Preview (0.1 credit)"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+        </>
         )}
-
-
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
-              <button
+              <button 
                 type="button"
                 onClick={closePopup}
                 className="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700 focus:outline-none"
@@ -452,6 +770,18 @@ const NameArtGeneratorPage: NextPage = () => {
         )}
         
         <ShareModal isOpen={shareModalData.isOpen} onClose={closeShareModal} imageUrl={shareModalData.imageUrl} />
+
+        <ProductPreviewModal
+          isOpen={!!previewProduct}
+          onClose={() => setPreviewProduct(null)}
+          productKey={previewProduct}
+          imageUrl={previewImage}
+          aspect={generatedAspect ?? selectedAspectRatio}
+          onCooldownStart={setPreviewCooldown}
+          transparentImageUrl={previewImageInfo.transparentImageUrl}
+          useTransparent={previewImageInfo.useTransparent}
+        />
+
       </main>
     </>
   );
