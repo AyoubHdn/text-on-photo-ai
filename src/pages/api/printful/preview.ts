@@ -12,24 +12,7 @@ import { CREDIT_COSTS } from "~/server/credits/constants";
 import { deductCreditsOrThrow } from "~/server/credits/deductCredits";
 
 import { createMockupTask } from "~/server/printful/mockup";
-import { pollMockupTask } from "~/server/printful/pollMockup";
-
-const PREVIEW_CACHE_TTL_MS = 60 * 60 * 1000;
-const PREVIEW_PENDING_TTL_MS = 20 * 1000;
-
-type CachedPreview = {
-  mockupUrl: string;
-  expiresAt: number;
-};
-
-type PendingPreview = {
-  expiresAt: number;
-  taskKey?: string;
-  regenAttempts: number;
-};
-
-const previewCache = new Map<string, CachedPreview>();
-const pendingCache = new Map<string, PendingPreview>();
+import { previewStore } from "~/server/printful/previewStore";
 
 const buildCacheKey = (params: {
   productKey: string;
@@ -51,7 +34,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   let cacheKey: string | null = null;
-  let lastTaskKey: string | undefined;
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
@@ -188,100 +170,14 @@ export default async function handler(
       previewMode: effectivePreviewMode,
     });
 
-    const cached = previewCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
+    const cached = previewStore.getCached(cacheKey);
+    if (cached) {
       return res.status(200).json({
         success: true,
-        mockupUrl: cached.mockupUrl,
+        mockupUrl: cached,
         product,
         cached: true,
       });
-    }
-
-    const pending = pendingCache.get(cacheKey);
-    if (pending?.taskKey) {
-      try {
-        const pendingUrl = await pollMockupTask(pending.taskKey);
-        if (pendingUrl) {
-          previewCache.set(cacheKey, {
-            mockupUrl: pendingUrl,
-            expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS,
-          });
-          pendingCache.delete(cacheKey);
-          return res.status(200).json({
-            success: true,
-            mockupUrl: pendingUrl,
-            product,
-          });
-        }
-      } catch (pollError) {
-        const pollMessage =
-          pollError instanceof Error ? pollError.message : "Unknown error";
-        if (!pollMessage.toLowerCase().includes("mockup timeout")) {
-          throw pollError;
-        }
-      }
-    }
-
-    if (pending) {
-      if (pending.expiresAt > Date.now()) {
-        const retryAfter = Math.ceil((pending.expiresAt - Date.now()) / 1000);
-        return res.status(200).json({
-          status: "PENDING",
-          retryAfter,
-          taskKey: pending.taskKey,
-        });
-      }
-
-      const regenAttempts = pending.regenAttempts ?? 0;
-      if (regenAttempts < 1) {
-        const regenTask = await createMockupTask(
-          product,
-          printImageUrl,
-          variantId,
-          effectiveAspect
-        );
-
-        if (!regenTask?.result?.task_key) {
-          console.error("Printful task regeneration failed:", regenTask);
-          throw new Error("Printful did not return task_key");
-        }
-
-        try {
-          const regenUrl = await pollMockupTask(regenTask.result.task_key);
-          if (regenUrl) {
-            previewCache.set(cacheKey, {
-              mockupUrl: regenUrl,
-              expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS,
-            });
-            pendingCache.delete(cacheKey);
-            return res.status(200).json({
-              success: true,
-              mockupUrl: regenUrl,
-              product,
-            });
-          }
-        } catch (regenError) {
-          const regenMessage =
-            regenError instanceof Error ? regenError.message : "Unknown error";
-          if (!regenMessage.toLowerCase().includes("mockup timeout")) {
-            throw regenError;
-          }
-        }
-
-        pendingCache.set(cacheKey, {
-          expiresAt: Date.now() + PREVIEW_PENDING_TTL_MS,
-          taskKey: regenTask.result.task_key,
-          regenAttempts: regenAttempts + 1,
-        });
-
-        const retryAfter = Math.ceil(PREVIEW_PENDING_TTL_MS / 1000);
-        return res.status(200).json({
-          status: "PENDING",
-          retryAfter,
-          taskKey: regenTask.result.task_key,
-        });
-      }
     }
 
     const task = await createMockupTask(
@@ -295,25 +191,18 @@ export default async function handler(
       console.error("Printful task creation failed:", task);
       throw new Error("Printful did not return task_key");
     }
-    lastTaskKey = task.result.task_key;
 
-    // âœ… 3. Poll until mockup is ready
-    const mockupUrl = await pollMockupTask(task.result.task_key);
-
-    if (!mockupUrl) {
-      throw new Error("Mockup not generated");
+    if (cacheKey) {
+      previewStore.setTask(task.result.task_key, {
+        status: "PENDING",
+        cacheKey,
+        createdAt: Date.now(),
+      });
     }
 
-    previewCache.set(cacheKey, {
-      mockupUrl,
-      expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS,
-    });
-    pendingCache.delete(cacheKey);
-
     return res.status(200).json({
-      success: true,
-      mockupUrl,
-      product,
+      status: "PENDING",
+      taskKey: task.result.task_key,
     });
   } catch (error) {
     console.error("[PRINTFUL_PREVIEW_ERROR]", error);
@@ -322,22 +211,6 @@ export default async function handler(
     if (errorMessage.toLowerCase().includes("not enough credits")) {
       return res.status(402).json({
         error: "INSUFFICIENT_CREDITS",
-      });
-    }
-
-    if (errorMessage.toLowerCase().includes("mockup timeout")) {
-      if (cacheKey) {
-        pendingCache.set(cacheKey, {
-          expiresAt: Date.now() + PREVIEW_PENDING_TTL_MS,
-          taskKey: lastTaskKey,
-          regenAttempts: 0,
-        });
-      }
-      const fallbackRetryAfter = Math.ceil(PREVIEW_PENDING_TTL_MS / 1000);
-      return res.status(200).json({
-        status: "PENDING",
-        retryAfter: fallbackRetryAfter,
-        taskKey: lastTaskKey,
       });
     }
 
