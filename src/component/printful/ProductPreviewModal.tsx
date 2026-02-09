@@ -80,8 +80,6 @@ export function ProductPreviewModal({
   const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);
-  const [previewPendingMessage, setPreviewPendingMessage] = useState<string | null>(null);
-  const [previewTaskKey, setPreviewTaskKey] = useState<string | null>(null);
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const hasInitializedRef = useRef(false);
@@ -94,8 +92,6 @@ export function ProductPreviewModal({
     if (isOpen) return;
     hasInitializedRef.current = false;
     lastProductKeyRef.current = null;
-    setPreviewTaskKey(null);
-    setPreviewPendingMessage(null);
   }, [isOpen]);
 
   const selectedVariant = variants.find(v => v.id === variantId);
@@ -333,8 +329,6 @@ export function ProductPreviewModal({
 
     setLoadingPreview(true);
     setError(null);
-    setPreviewPendingMessage(null);
-    setPreviewTaskKey(null);
     if (!hasInitializedRef.current || lastProductKeyRef.current !== productKey) {
       setMockupUrl(null);
       setPreviewVariantId(null);
@@ -360,19 +354,6 @@ export function ProductPreviewModal({
       throw new Error(fallbackError);
     }
 
-    if (data.status === "PENDING" || data.status === "PREVIEW_PENDING") {
-      setPreviewPendingMessage("Preview is taking longer than usual.");
-      const retryAfter = Number(data.retryAfter ?? 4);
-      if (Number.isFinite(retryAfter)) {
-        setPreviewCooldown(retryAfter);
-        onCooldownStart?.(retryAfter);
-      }
-      if (data.taskKey) {
-        setPreviewTaskKey(String(data.taskKey));
-      }
-      return null;
-    }
-
     if (data.error === "INSUFFICIENT_CREDITS") {
       setError("INSUFFICIENT_CREDITS");
       return null;
@@ -394,8 +375,6 @@ export function ProductPreviewModal({
     if (!data || !data.mockupUrl) return;
     setMockupUrl(data.mockupUrl);
     setPreviewVariantId(null);
-    setPreviewPendingMessage(null);
-    setPreviewTaskKey(null);
   })
   .catch((err) => setError(err.message))
   .finally(() => setLoadingPreview(false));
@@ -441,46 +420,6 @@ export function ProductPreviewModal({
 
     return () => clearInterval(timer);
   }, [previewCooldown]);
-
-  useEffect(() => {
-    if (!previewTaskKey || !isOpen) return;
-
-    let isActive = true;
-    const pollStatus = async () => {
-      try {
-        const res = await fetch(
-          `/api/printful/preview-status?taskKey=${encodeURIComponent(previewTaskKey)}`
-        );
-        const data = await parseJsonSafely(res);
-        if (!isActive || !data) return;
-
-        if (data.status === "COMPLETED" && data.mockupUrl) {
-          setMockupUrl(data.mockupUrl);
-          setPreviewPendingMessage(null);
-          setPreviewTaskKey(null);
-          setLoadingPreview(false);
-          return;
-        }
-
-        if (data.status === "FAILED") {
-          setPreviewTaskKey(null);
-          setLoadingPreview(false);
-          return;
-        }
-      } catch {
-        // Ignore transient status errors
-      }
-    };
-
-    void pollStatus();
-    const intervalId = setInterval(pollStatus, 4000);
-
-    return () => {
-      isActive = false;
-      clearInterval(intervalId);
-    };
-  }, [previewTaskKey, isOpen]);
-
 
   useEffect(() => {
     if (!isTshirt || !selectedColor || !selectedSize) return;
@@ -644,19 +583,6 @@ export function ProductPreviewModal({
         throw new Error(fallbackError);
       }
 
-      if (data.status === "PENDING" || data.status === "PREVIEW_PENDING") {
-        setPreviewPendingMessage("Preview is taking longer than usual.");
-        const retryAfter = Number(data.retryAfter ?? 4);
-        if (Number.isFinite(retryAfter)) {
-          setPreviewCooldown(retryAfter);
-          onCooldownStart?.(retryAfter);
-        }
-        if (data.taskKey) {
-          setPreviewTaskKey(String(data.taskKey));
-        }
-        return;
-      }
-
       if (data.error === "INSUFFICIENT_CREDITS") {
         setError("INSUFFICIENT_CREDITS");
         return;
@@ -674,8 +600,6 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(variantId);
-      setPreviewPendingMessage(null);
-      setPreviewTaskKey(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -716,19 +640,6 @@ export function ProductPreviewModal({
         throw new Error(fallbackError);
       }
 
-      if (data.status === "PENDING" || data.status === "PREVIEW_PENDING") {
-        setPreviewPendingMessage("Preview is taking longer than usual.");
-        const retryAfter = Number(data.retryAfter ?? 4);
-        if (Number.isFinite(retryAfter)) {
-          setPreviewCooldown(retryAfter);
-          onCooldownStart?.(retryAfter);
-        }
-        if (data.taskKey) {
-          setPreviewTaskKey(String(data.taskKey));
-        }
-        return;
-      }
-
       if (data.error === "INSUFFICIENT_CREDITS") {
         setError("INSUFFICIENT_CREDITS");
         return;
@@ -746,8 +657,6 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(nextPreviewVariantId);
-      setPreviewPendingMessage(null);
-      setPreviewTaskKey(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -960,16 +869,11 @@ export function ProductPreviewModal({
               )}
             </div>
 
-            {(previewPendingMessage || previewCooldown !== null) && (
+            {previewCooldown !== null && (
               <div className="mb-4 rounded-lg bg-yellow-100 text-yellow-900 px-4 py-3 text-sm">
-                ⏳{" "}
-                {previewPendingMessage ?? "Preview temporarily paused due to high demand."}
-                {previewCooldown !== null && (
-                  <>
-                    <br />
-                    You can try again in <strong>{previewCooldown}s</strong>.
-                  </>
-                )}
+                ⏳ Preview temporarily paused due to high demand.
+                <br />
+                You can try again in <strong>{previewCooldown}s</strong>.
               </div>
             )}
 
