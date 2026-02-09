@@ -79,14 +79,6 @@ export function ProductPreviewModal({
 
   const router = useRouter();
 
-  const [country, setCountry] = useState("US");
-  const [shipping, setShipping] = useState<{
-    price: string;
-    currency: string;
-    minDays: number;
-    maxDays: number;
-  } | null>(null);
-
   const [error, setError] = useState<string | null>(null);
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
@@ -110,6 +102,16 @@ export function ProductPreviewModal({
     useTransparent && transparentImageUrl
       ? transparentImageUrl
       : originalImageUrl;
+
+  const parseJsonSafely = async (res: Response) => {
+    const text = await res.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text) as any;
+    } catch {
+      return null;
+    }
+  };
 
   const extractImageId = (value: string | null) => {
     if (!value) return null;
@@ -332,7 +334,6 @@ export function ProductPreviewModal({
       setPreviewVariantId(null);
       setVariants([]);
       setVariantId(null);
-      setShipping(null);
       setSelectedColor(null);
       setSelectedSize(null);
       setMugVariantId(null);
@@ -346,7 +347,12 @@ export function ProductPreviewModal({
   body: JSON.stringify({ productKey, imageUrl: originalImageUrl, aspect }),
 })
   .then(async (res) => {
-    const data = await res.json();
+    const data = await parseJsonSafely(res);
+    const fallbackError = "Preview unavailable. Please try again in a moment.";
+
+    if (!data) {
+      throw new Error(fallbackError);
+    }
 
     if (data.error === "INSUFFICIENT_CREDITS") {
       setError("INSUFFICIENT_CREDITS");
@@ -360,7 +366,7 @@ export function ProductPreviewModal({
         return null; // ⛔ stop chain safely
       }
 
-      throw new Error(data.error || "Preview failed");
+      throw new Error(data.error || fallbackError);
     }
 
     return data;
@@ -399,29 +405,6 @@ export function ProductPreviewModal({
         setError("Failed to load product options");
       });
   }, [productKey]);
-
-  /* ---------------------------------------------------
-     3) Fetch shipping when variant + country selected
-  --------------------------------------------------- */
-  useEffect(() => {
-    if (!variantId || !country) return;
-
-    setShipping(null);
-
-    fetch("/api/printful/shipping", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        variantId,
-        countryCode: country,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => setShipping(data))
-      .catch(() => {
-        setError("Failed to calculate shipping");
-      });
-  }, [variantId, country]);
 
   useEffect(() => {
     if (previewCooldown === null) return;
@@ -590,7 +573,12 @@ export function ProductPreviewModal({
         }),
       });
 
-      const data = await res.json();
+      const data = await parseJsonSafely(res);
+      const fallbackError = "Preview unavailable. Please try again in a moment.";
+
+      if (!data) {
+        throw new Error(fallbackError);
+      }
 
       if (data.error === "INSUFFICIENT_CREDITS") {
         setError("INSUFFICIENT_CREDITS");
@@ -604,7 +592,7 @@ export function ProductPreviewModal({
           return;
         }
 
-        throw new Error(data.error || "Preview update failed");
+        throw new Error(data.error || fallbackError);
       }
 
       setMockupUrl(data.mockupUrl);
@@ -642,7 +630,12 @@ export function ProductPreviewModal({
         }),
       });
 
-      const data = await res.json();
+      const data = await parseJsonSafely(res);
+      const fallbackError = "Preview unavailable. Please try again in a moment.";
+
+      if (!data) {
+        throw new Error(fallbackError);
+      }
 
       if (data.error === "INSUFFICIENT_CREDITS") {
         setError("INSUFFICIENT_CREDITS");
@@ -656,7 +649,7 @@ export function ProductPreviewModal({
           return;
         }
 
-        throw new Error(data.error || "Preview update failed");
+        throw new Error(data.error || fallbackError);
       }
 
       setMockupUrl(data.mockupUrl);
