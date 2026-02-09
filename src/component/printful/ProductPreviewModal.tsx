@@ -356,7 +356,7 @@ export function ProductPreviewModal({
       throw new Error(fallbackError);
     }
 
-    if (data.status === "PREVIEW_PENDING") {
+    if (data.status === "PENDING" || data.status === "PREVIEW_PENDING") {
       setPreviewPendingMessage("Preview is taking longer than usual.");
       const retryAfter = Number(data.retryAfter ?? 20);
       if (Number.isFinite(retryAfter)) {
@@ -595,7 +595,7 @@ export function ProductPreviewModal({
         throw new Error(fallbackError);
       }
 
-      if (data.status === "PREVIEW_PENDING") {
+      if (data.status === "PENDING" || data.status === "PREVIEW_PENDING") {
         setPreviewPendingMessage("Preview is taking longer than usual.");
         const retryAfter = Number(data.retryAfter ?? 20);
         if (Number.isFinite(retryAfter)) {
@@ -663,7 +663,7 @@ export function ProductPreviewModal({
         throw new Error(fallbackError);
       }
 
-      if (data.status === "PREVIEW_PENDING") {
+      if (data.status === "PENDING" || data.status === "PREVIEW_PENDING") {
         setPreviewPendingMessage("Preview is taking longer than usual.");
         const retryAfter = Number(data.retryAfter ?? 20);
         if (Number.isFinite(retryAfter)) {
