@@ -2,7 +2,8 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { trackEvent } from "~/lib/ga";
 
 export default function OrderSuccess() {
   const { orderId } = useRouter().query;
@@ -15,6 +16,7 @@ export default function OrderSuccess() {
   const [previewLoadFailed, setPreviewLoadFailed] = useState(false);
 
   const order = orderQuery.data;
+  const hasTrackedPurchaseRef = useRef(false);
   const productLabel =
     order?.productKey === "tshirt"
       ? "T-shirt"
@@ -35,6 +37,24 @@ export default function OrderSuccess() {
 
   const previewUrl = order?.mockupUrl || order?.imageUrl || "";
   const shouldShowPreview = !!previewUrl && !previewLoadFailed;
+
+  useEffect(() => {
+    if (!order || hasTrackedPurchaseRef.current) return;
+    if (typeof window !== "undefined" && orderIdValue) {
+      const key = `ga4_purchase_${orderIdValue}`;
+      if (window.sessionStorage.getItem(key)) {
+        hasTrackedPurchaseRef.current = true;
+        return;
+      }
+      window.sessionStorage.setItem(key, "1");
+    }
+    trackEvent("purchase", {
+      value: Number(order.totalPrice ?? 0),
+      currency: "USD",
+      order_id: orderIdValue,
+    });
+    hasTrackedPurchaseRef.current = true;
+  }, [order, orderIdValue]);
 
   return (
     <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">

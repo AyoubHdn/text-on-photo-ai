@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "~/component/Input";
 import { Select } from "~/component/Select";
 import { TRPCClientError } from "@trpc/client";
+import { trackEvent } from "~/lib/ga";
 
 export function formatPrice(value: number) {
   return value.toFixed(2);
@@ -59,6 +60,7 @@ export default function CheckoutPage() {
     const [variantIdUsedForPreview, setVariantIdUsedForPreview] = useState<number | null>(null);
     const hasAttemptedFinalizeRef = useRef(false);
     const autoFinalizeStartedRef = useRef(false);
+    const hasTrackedBeginCheckoutRef = useRef(false);
 
     type OrderType = {
         id: string;
@@ -244,6 +246,22 @@ export default function CheckoutPage() {
         !effectivePreviewVariantId
     );
     const isPreviewReady = !isApparel || (previewStatus === "ready" && !previewMismatch);
+
+    useEffect(() => {
+        if (!order || hasTrackedBeginCheckoutRef.current) return;
+        if (typeof window !== "undefined") {
+            const key = `ga4_begin_checkout_${order.id}`;
+            if (window.sessionStorage.getItem(key)) {
+                hasTrackedBeginCheckoutRef.current = true;
+                return;
+            }
+            window.sessionStorage.setItem(key, "1");
+        }
+        trackEvent("begin_checkout", {
+            product: order.productKey,
+        });
+        hasTrackedBeginCheckoutRef.current = true;
+    }, [order]);
 
     useEffect(() => {
         if (!order || !isApparel) return;
@@ -678,7 +696,12 @@ export default function CheckoutPage() {
                 },
             });
 
-            if (res.url) window.location.href = res.url;
+            if (res.url) {
+                trackEvent("add_shipping_info", {
+                    country: address.country,
+                });
+                window.location.href = res.url;
+            }
             } catch (err: unknown) {
             setShowShippingValidation(true);
             setShippingNotice("Please fix the highlighted shipping fields before continuing.");

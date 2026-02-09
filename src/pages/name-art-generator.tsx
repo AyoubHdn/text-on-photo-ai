@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
+import { trackGA, trackEvent } from "~/lib/ga";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
@@ -25,7 +26,14 @@ type SavedDesign = {
   hasBackgroundRemoved: boolean;
 };
 
+trackGA("view_generator");
+
 const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
+const MODEL_CREDITS: Record<AIModel, number> = {
+  "flux-schnell": 1,
+  "flux-dev": 3,
+  "ideogram-ai/ideogram-v2-turbo": 5,
+};
 
 const NameArtGeneratorPage: NextPage = () => {
   const { data: session } = useSession();
@@ -177,6 +185,14 @@ const NameArtGeneratorPage: NextPage = () => {
           // ignore storage errors
         }
       }
+      const imagesCount = Number.parseInt(form.numberofImages, 10);
+      const perImageCredits = MODEL_CREDITS[selectedModel] ?? 1;
+      const creditsUsed =
+        perImageCredits * (Number.isFinite(imagesCount) && imagesCount > 0 ? imagesCount : 1);
+      trackEvent("generate_design", {
+        model: selectedModel,
+        credits_used: creditsUsed,
+      });
     },
     onError: (error) => setError(error.message),
   });
@@ -329,6 +345,9 @@ const NameArtGeneratorPage: NextPage = () => {
       } catch {
         // ignore storage errors
       }
+      trackEvent("remove_background", {
+        source: "preview",
+      });
     } catch (err) {
       console.error("[REMOVE_BACKGROUND_UI]", err);
       alert("Background removal failed. Please try again.");

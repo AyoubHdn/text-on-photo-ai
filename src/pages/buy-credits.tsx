@@ -57,6 +57,17 @@ const BuyCredits: React.FC = () => {
     }
     try {
       setLoadingPlan(plan); // Set loading state
+      const selectedOffer = offers.find((offer) => offer.plan === plan);
+      if (typeof window !== "undefined" && selectedOffer) {
+        window.sessionStorage.setItem(
+          "last_credit_purchase",
+          JSON.stringify({
+            credits: selectedOffer.images,
+            value: selectedOffer.price,
+          })
+        );
+        window.sessionStorage.removeItem("ga4_purchase_credits");
+      }
       await buyCredits(plan); // Trigger buyCredits with the selected plan
     } catch (error) {
       console.error("Error during purchase:", error);

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/router";
+import { trackEvent } from "~/lib/ga";
 
 const SuccessPage: React.FC = () => {
   const router = useRouter();
@@ -18,6 +19,28 @@ const SuccessPage: React.FC = () => {
     };
     
     gtagEvent();
+
+    if (typeof window !== "undefined") {
+      const trackedKey = "ga4_purchase_credits";
+      if (!window.sessionStorage.getItem(trackedKey)) {
+        const raw = window.sessionStorage.getItem("last_credit_purchase");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as { credits?: number; value?: number };
+            if (typeof parsed?.credits === "number" && typeof parsed?.value === "number") {
+              trackEvent("purchase_credits", {
+                credits: parsed.credits,
+                value: parsed.value,
+              });
+              window.sessionStorage.setItem(trackedKey, "1");
+              window.sessionStorage.removeItem("last_credit_purchase");
+            }
+          } catch {
+            // ignore invalid storage
+          }
+        }
+      }
+    }
   }, []);
 
   return (

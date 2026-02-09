@@ -12,6 +12,7 @@ import { Button } from "~/component/Button";
 import { api } from "~/utils/api";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { useRouter } from "next/router";
+import { trackEvent } from "~/lib/ga";
 import {
   POSTER_VARIANT_INFO,
   MUG_VARIANT_INFO,
@@ -375,6 +376,10 @@ export function ProductPreviewModal({
     if (!data || !data.mockupUrl) return;
     setMockupUrl(data.mockupUrl);
     setPreviewVariantId(null);
+    trackEvent("generate_product_preview", {
+      product: productKey,
+      variantId: variantId ?? undefined,
+    });
   })
   .catch((err) => setError(err.message))
   .finally(() => setLoadingPreview(false));
@@ -600,6 +605,10 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(variantId);
+      trackEvent("generate_product_preview", {
+        product: productKey,
+        variantId,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -657,6 +666,10 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(nextPreviewVariantId);
+      trackEvent("generate_product_preview", {
+        product: productKey,
+        variantId: nextPreviewVariantId ?? undefined,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -717,6 +730,9 @@ export function ProductPreviewModal({
 
       setTransparentImageUrl(nextTransparentUrl);
       setUseTransparent(true);
+      trackEvent("remove_background", {
+        source: "preview",
+      });
       await refreshPreview(nextTransparentUrl, previewOverride);
     } catch (err: any) {
       setError(err.message);
