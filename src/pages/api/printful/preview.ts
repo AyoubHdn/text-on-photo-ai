@@ -14,10 +14,41 @@ import { deductCreditsOrThrow } from "~/server/credits/deductCredits";
 import { createMockupTask } from "~/server/printful/mockup";
 import { pollMockupTask } from "~/server/printful/pollMockup";
 
+const PREVIEW_CACHE_TTL_MS = 60 * 60 * 1000;
+const PREVIEW_PENDING_TTL_MS = 20 * 1000;
+
+type CachedPreview = {
+  mockupUrl: string;
+  expiresAt: number;
+};
+
+type PendingPreview = {
+  expiresAt: number;
+};
+
+const previewCache = new Map<string, CachedPreview>();
+const pendingCache = new Map<string, PendingPreview>();
+
+const buildCacheKey = (params: {
+  productKey: string;
+  imageUrl: string;
+  aspect?: string;
+  variantId: number;
+  previewMode?: string;
+}) =>
+  JSON.stringify({
+    productKey: params.productKey,
+    imageUrl: params.imageUrl,
+    aspect: params.aspect ?? "",
+    variantId: params.variantId,
+    previewMode: params.previewMode ?? "",
+  });
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  let cacheKey: string | null = null;
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
@@ -146,6 +177,33 @@ export default async function handler(
       previewMode: effectivePreviewMode,
     });
 
+    cacheKey = buildCacheKey({
+      productKey: product.key,
+      imageUrl,
+      aspect: effectiveAspect,
+      variantId,
+      previewMode: effectivePreviewMode,
+    });
+
+    const cached = previewCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return res.status(200).json({
+        success: true,
+        mockupUrl: cached.mockupUrl,
+        product,
+        cached: true,
+      });
+    }
+
+    const pending = pendingCache.get(cacheKey);
+    if (pending && pending.expiresAt > Date.now()) {
+      const retryAfter = Math.ceil((pending.expiresAt - Date.now()) / 1000);
+      return res.status(200).json({
+        status: "PREVIEW_PENDING",
+        retryAfter,
+      });
+    }
+
     const task = await createMockupTask(
       product,
       printImageUrl,
@@ -165,6 +223,12 @@ export default async function handler(
       throw new Error("Mockup not generated");
     }
 
+    previewCache.set(cacheKey, {
+      mockupUrl,
+      expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS,
+    });
+    pendingCache.delete(cacheKey);
+
     return res.status(200).json({
       success: true,
       mockupUrl,
@@ -177,6 +241,19 @@ export default async function handler(
     if (errorMessage.toLowerCase().includes("not enough credits")) {
       return res.status(402).json({
         error: "INSUFFICIENT_CREDITS",
+      });
+    }
+
+    if (errorMessage.toLowerCase().includes("mockup timeout")) {
+      if (cacheKey) {
+        pendingCache.set(cacheKey, {
+          expiresAt: Date.now() + PREVIEW_PENDING_TTL_MS,
+        });
+      }
+      const fallbackRetryAfter = Math.ceil(PREVIEW_PENDING_TTL_MS / 1000);
+      return res.status(200).json({
+        status: "PREVIEW_PENDING",
+        retryAfter: fallbackRetryAfter,
       });
     }
 

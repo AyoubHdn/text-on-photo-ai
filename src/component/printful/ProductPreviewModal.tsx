@@ -1,4 +1,4 @@
-// src/component/printful/ProductPreviewModal.tsx
+﻿// src/component/printful/ProductPreviewModal.tsx
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-misused-promises */
@@ -80,6 +80,7 @@ export function ProductPreviewModal({
   const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);
+  const [previewPendingMessage, setPreviewPendingMessage] = useState<string | null>(null);
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const hasInitializedRef = useRef(false);
@@ -329,6 +330,7 @@ export function ProductPreviewModal({
 
     setLoadingPreview(true);
     setError(null);
+    setPreviewPendingMessage(null);
     if (!hasInitializedRef.current || lastProductKeyRef.current !== productKey) {
       setMockupUrl(null);
       setPreviewVariantId(null);
@@ -354,6 +356,16 @@ export function ProductPreviewModal({
       throw new Error(fallbackError);
     }
 
+    if (data.status === "PREVIEW_PENDING") {
+      setPreviewPendingMessage("Preview is taking longer than usual.");
+      const retryAfter = Number(data.retryAfter ?? 20);
+      if (Number.isFinite(retryAfter)) {
+        setPreviewCooldown(retryAfter);
+        onCooldownStart?.(retryAfter);
+      }
+      return null;
+    }
+
     if (data.error === "INSUFFICIENT_CREDITS") {
       setError("INSUFFICIENT_CREDITS");
       return null;
@@ -375,6 +387,7 @@ export function ProductPreviewModal({
     if (!data || !data.mockupUrl) return;
     setMockupUrl(data.mockupUrl);
     setPreviewVariantId(null);
+    setPreviewPendingMessage(null);
   })
   .catch((err) => setError(err.message))
   .finally(() => setLoadingPreview(false));
@@ -561,6 +574,8 @@ export function ProductPreviewModal({
     try {
       setLoadingPreview(true);
       setError(null);
+      setPreviewPendingMessage(null);
+      setPreviewPendingMessage(null);
 
       const res = await fetch("/api/printful/preview", {
         method: "POST",
@@ -580,6 +595,16 @@ export function ProductPreviewModal({
         throw new Error(fallbackError);
       }
 
+      if (data.status === "PREVIEW_PENDING") {
+        setPreviewPendingMessage("Preview is taking longer than usual.");
+        const retryAfter = Number(data.retryAfter ?? 20);
+        if (Number.isFinite(retryAfter)) {
+          setPreviewCooldown(retryAfter);
+          onCooldownStart?.(retryAfter);
+        }
+        return;
+      }
+
       if (data.error === "INSUFFICIENT_CREDITS") {
         setError("INSUFFICIENT_CREDITS");
         return;
@@ -597,6 +622,7 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(variantId);
+      setPreviewPendingMessage(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -637,6 +663,16 @@ export function ProductPreviewModal({
         throw new Error(fallbackError);
       }
 
+      if (data.status === "PREVIEW_PENDING") {
+        setPreviewPendingMessage("Preview is taking longer than usual.");
+        const retryAfter = Number(data.retryAfter ?? 20);
+        if (Number.isFinite(retryAfter)) {
+          setPreviewCooldown(retryAfter);
+          onCooldownStart?.(retryAfter);
+        }
+        return;
+      }
+
       if (data.error === "INSUFFICIENT_CREDITS") {
         setError("INSUFFICIENT_CREDITS");
         return;
@@ -654,6 +690,7 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(nextPreviewVariantId);
+      setPreviewPendingMessage(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -866,11 +903,16 @@ export function ProductPreviewModal({
               )}
             </div>
 
-            {previewCooldown !== null && (
+            {(previewPendingMessage || previewCooldown !== null) && (
               <div className="mb-4 rounded-lg bg-yellow-100 text-yellow-900 px-4 py-3 text-sm">
-                ⏳ Preview temporarily paused due to high demand.
-                <br />
-                You can try again in <strong>{previewCooldown}s</strong>.
+                ⏳{" "}
+                {previewPendingMessage ?? "Preview temporarily paused due to high demand."}
+                {previewCooldown !== null && (
+                  <>
+                    <br />
+                    You can try again in <strong>{previewCooldown}s</strong>.
+                  </>
+                )}
               </div>
             )}
 
