@@ -26,8 +26,6 @@ type SavedDesign = {
   hasBackgroundRemoved: boolean;
 };
 
-trackGA("view_generator");
-
 const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
 const MODEL_CREDITS: Record<AIModel, number> = {
   "flux-schnell": 1,
@@ -36,6 +34,7 @@ const MODEL_CREDITS: Record<AIModel, number> = {
 };
 
 const NameArtGeneratorPage: NextPage = () => {
+  const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
   const router = useRouter();
@@ -71,6 +70,12 @@ const NameArtGeneratorPage: NextPage = () => {
   const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
+  useEffect(() => {
+    if (hasTrackedViewRef.current) return;
+    trackEvent("view_generator");
+    hasTrackedViewRef.current = true;
+  }, []);
+
   useEffect(() => {
     if (!router.isReady) return; // Wait until the router is fully initialized
 
