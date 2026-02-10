@@ -18,6 +18,7 @@ import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 import type { AspectRatio } from "~/server/printful/aspects";
 import type { MugPreviewMode } from "~/server/printful/previewModes";
+import crypto from "crypto";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -28,6 +29,89 @@ export const config = {
     bodyParser: false,
   },
 };
+
+type MetaPurchaseInput = {
+  eventId: string;
+  value: number;
+  currency: string;
+  contentType: "credits" | "product";
+  contentIds: string[];
+  email?: string | null;
+};
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function hashEmail(email: string) {
+  return crypto.createHash("sha256").update(email).digest("hex");
+}
+
+async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
+  if (!env.META_PIXEL_ID || !env.META_ACCESS_TOKEN) return;
+
+  try {
+    const userData: Record<string, string[]> = {};
+    if (input.email) {
+      const normalized = normalizeEmail(input.email);
+      if (normalized) {
+        userData.em = [hashEmail(normalized)];
+      }
+    }
+
+    const payload: {
+      data: Array<{
+        event_name: "Purchase";
+        event_time: number;
+        event_id: string;
+        action_source: "website";
+        user_data?: Record<string, string[]>;
+        custom_data: {
+          value: number;
+          currency: string;
+          content_type: string;
+          content_ids: string[];
+        };
+      }>;
+      test_event_code?: string;
+    } = {
+      data: [
+        {
+          event_name: "Purchase",
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: input.eventId,
+          action_source: "website",
+          ...(Object.keys(userData).length > 0 ? { user_data: userData } : {}),
+          custom_data: {
+            value: input.value,
+            currency: input.currency,
+            content_type: input.contentType,
+            content_ids: input.contentIds,
+          },
+        },
+      ],
+      ...(env.META_TEST_EVENT_CODE
+        ? { test_event_code: env.META_TEST_EVENT_CODE }
+        : {}),
+    };
+
+    const res = await fetch(
+      `https://graph.facebook.com/v18.0/${env.META_PIXEL_ID}/events?access_token=${env.META_ACCESS_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Meta CAPI error:", res.status, text);
+    }
+  } catch (err) {
+    console.error("Meta CAPI request failed:", err);
+  }
+}
 
 const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "POST") {
@@ -69,6 +153,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
       const order = await prisma.productOrder.findUnique({
         where: { id: orderId },
+        include: { user: true },
       });
 
       if (!order) {
@@ -247,6 +332,14 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
       });
 
       console.log("ProductOrder marked as FULFILLED:", orderId);
+      await sendMetaPurchaseEvent({
+        eventId: event.id,
+        value: Number(order.totalPrice ?? 0),
+        currency: "USD",
+        contentType: "product",
+        contentIds: [order.productKey],
+        email: completedEvent.customer_details?.email ?? order.user?.email ?? null,
+      });
 
       break;
     }
@@ -371,6 +464,14 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           "namedesignai"
         );
       }
+      await sendMetaPurchaseEvent({
+        eventId: event.id,
+        value: (completedEvent.amount_total ?? 0) / 100,
+        currency: "USD",
+        contentType: "credits",
+        contentIds: ["credits"],
+        email: completedEvent.customer_details?.email ?? updatedUser?.email ?? null,
+      });
     } catch (err) {
       console.error("Error updating user credits or plan:", err);
     }

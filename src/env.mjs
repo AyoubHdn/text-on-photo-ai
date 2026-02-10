@@ -43,6 +43,9 @@ const server = z.object({
   IPAPI_KEY: z.string(),
   PRINTFUL_API_KEY: z.string(),
   PRINTFUL_WEBHOOK_SECRET: z.string().optional(),
+  META_PIXEL_ID: z.string(),
+  META_ACCESS_TOKEN: z.string(),
+  META_TEST_EVENT_CODE: z.string().optional(),
 });
 
 /**
@@ -94,6 +97,9 @@ const processEnv = {
   IPAPI_KEY: process.env.IPAPI_KEY,
   PRINTFUL_API_KEY: process.env.PRINTFUL_API_KEY,
   PRINTFUL_WEBHOOK_SECRET: process.env.PRINTFUL_WEBHOOK_SECRET,
+  META_PIXEL_ID: process.env.META_PIXEL_ID,
+  META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
+  META_TEST_EVENT_CODE: process.env.META_TEST_EVENT_CODE,
   // Add more client-side env vars here
   // Make sure to prefix them with `NEXT_PUBLIC_`
   // e.g.
