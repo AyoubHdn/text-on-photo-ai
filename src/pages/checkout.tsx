@@ -264,15 +264,8 @@ export default function CheckoutPage() {
     }, [order]);
 
     useEffect(() => {
-        if (!order || !isApparel) return;
-        if (!previewMismatch && !shouldAutoFinalize) return;
-        if (previewStatus === "generating") return;
-        if (previewCooldown !== null) return;
-        if (autoFinalizeStartedRef.current) return;
-
-        autoFinalizeStartedRef.current = true;
-        void finalizePreviewById(order.id);
-    }, [order, isApparel, previewMismatch, shouldAutoFinalize, previewStatus, previewCooldown]);
+        return;
+    }, []);
 
     const fetchShippingQuote = async () => {
         if (!order) return null;
@@ -449,7 +442,7 @@ export default function CheckoutPage() {
                 </div>
                 )}
             </div>
-            {isApparel && (previewMismatch || (shouldAutoFinalize && previewStatus !== "ready") || previewStatus === "generating") && (
+            {false && (
             <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
                 <div className="font-semibold">Finalizing preview</div>
                 <div className="mt-1 text-xs text-gray-500">
