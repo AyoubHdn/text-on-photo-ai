@@ -167,6 +167,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       customFields[env.MAUTIC_TRACKING_CARRIER_FIELD] = trackingCarrier;
     }
 
+    // Added: extend existing Mautic payload with shipment fields.
+    customFields.physical_order_status = "shipped";
+    if (trackingCarrier) {
+      customFields.physical_carrier = trackingCarrier;
+    }
+    if (trackingNumber) {
+      customFields.physical_tracking_number = trackingNumber;
+    }
+    if (trackingUrl) {
+      customFields.physical_tracking_url = trackingUrl;
+    }
     if (Object.keys(customFields).length > 0) {
       await updateMauticContact(
         {
@@ -181,3 +192,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return res.status(200).json({ received: true });
 }
+

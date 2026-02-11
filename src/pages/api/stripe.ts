@@ -71,9 +71,9 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
           currency: string;
           content_type: string;
           content_ids: string[];
+          content_category: "credits" | "physical_product";
         };
       }>;
-      test_event_code?: string;
     } = {
       data: [
         {
@@ -87,12 +87,12 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
             currency: input.currency,
             content_type: input.contentType,
             content_ids: input.contentIds,
+            // Added for Meta custom conversions: distinguish credits vs physical product purchases.
+            content_category:
+              input.contentType === "credits" ? "credits" : "physical_product",
           },
         },
       ],
-      ...(env.META_TEST_EVENT_CODE
-        ? { test_event_code: env.META_TEST_EVENT_CODE }
-        : {}),
     };
 
     const res = await fetch(
@@ -332,14 +332,90 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
       });
 
       console.log("ProductOrder marked as FULFILLED:", orderId);
+      const signedInEmail = order.user?.email ?? null;
+      const stripeCheckoutEmail = completedEvent.customer_details?.email ?? null;
+      const preferredEmail = signedInEmail ?? stripeCheckoutEmail;
+
+      if (
+        signedInEmail &&
+        stripeCheckoutEmail &&
+        signedInEmail.toLowerCase() !== stripeCheckoutEmail.toLowerCase()
+      ) {
+        console.warn("Stripe checkout email differs from signed-in account email", {
+          orderId: order.id,
+          signedInEmail,
+          stripeCheckoutEmail,
+        });
+      }
+
       await sendMetaPurchaseEvent({
         eventId: event.id,
         value: Number(order.totalPrice ?? 0),
         currency: "USD",
         contentType: "product",
         contentIds: [order.productKey],
-        email: completedEvent.customer_details?.email ?? order.user?.email ?? null,
+        email: preferredEmail,
       });
+
+      // Mautic: mark/update physical purchase fields for this contact.
+      const physicalPurchaseEmail = preferredEmail;
+      if (!physicalPurchaseEmail) {
+        console.error(
+          "Mautic physical purchase sync skipped: missing customer email",
+          { orderId: order.id, stripeSessionId: completedEvent.id },
+        );
+      } else {
+        try {
+          const physicalPurchaseCount = await prisma.productOrder.count({
+            where: {
+              userId: order.userId,
+              status: { in: ["paid", "fulfilled"] },
+            },
+          });
+
+          // Added: extend existing Mautic payload with physical order metadata.
+          const physicalVariant = [order.size, order.color]
+            .filter(
+              (value): value is string =>
+                typeof value === "string" && value.trim().length > 0,
+            )
+            .join(" + ");
+          const payload = {
+            has_purchased_physical: true,
+            physical_purchase_count: physicalPurchaseCount || 1,
+            last_physical_purchase_da: new Date().toISOString(),
+            last_physical_product_typ: order.productKey,
+            physical_order_id: order.id,
+            physical_product_name:
+              (order as { productName?: string | null }).productName ??
+              order.variantName ??
+              order.productKey,
+            physical_variant: physicalVariant || undefined,
+            physical_order_status: "confirmed",
+          };
+          const mauticResponse = await updateMauticContact(
+            {
+              email: physicalPurchaseEmail,
+              name: order.user?.name ?? null,
+              customFields: payload,
+            },
+            "namedesignai",
+          );
+
+          if (mauticResponse.errors?.length) {
+            console.error(
+              "Mautic physical purchase sync returned errors:",
+              mauticResponse.errors,
+            );
+          }
+        } catch (mauticErr) {
+          console.error("Failed to sync physical purchase fields to Mautic:", {
+            orderId: order.id,
+            email: physicalPurchaseEmail,
+            error: mauticErr,
+          });
+        }
+      }
 
       break;
     }
@@ -487,3 +563,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 };
 
 export default webhook;
+
+
+
+
