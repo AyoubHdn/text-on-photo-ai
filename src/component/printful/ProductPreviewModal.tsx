@@ -1011,9 +1011,9 @@ export function ProductPreviewModal({
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-semibold text-white">Size</h4>
-                    <button className="text-xs text-blue-400 hover:underline">
+                    {/*<button className="text-xs text-blue-400 hover:underline">
                       Size guide
-                    </button>
+                    </button>*/}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
