@@ -738,9 +738,9 @@ export function ProductPreviewModal({
           <h3 className="text-lg font-semibold">
             Product Preview
           </h3>
-          <button
+        <button
           onClick={onClose}
-          className="text-gray-500 hover:text-black"
+          className="text-gray-500 hover:text-black dark:hover:text-white"
         >
           ✕
         </button>
@@ -881,13 +881,13 @@ export function ProductPreviewModal({
               </div>
             )}
 
-            <p className="text-sm text-gray-300 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
               Printed on demand • High-quality materials
             </p>
 
             {productKey === "poster" && (
             <div className="mb-4">
-              <h4 className="text-sm font-semibold mb-2 text-white">
+              <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
                 Poster size
               </h4>
 
@@ -903,7 +903,7 @@ export function ProductPreviewModal({
                         ${
                           variantId === v.id
                             ? "bg-blue-500 border-blue-500 text-white"
-                            : "border-gray-600 text-white hover:border-gray-400"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }
                       `}
                     >
@@ -924,7 +924,7 @@ export function ProductPreviewModal({
             <>
               {/* Mug size selector */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold mb-2 text-white">Mug size</h4>
+                <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Mug size</h4>
 
                 <div className="flex gap-2">
                   {variants.map((v) => (
@@ -938,7 +938,7 @@ export function ProductPreviewModal({
                         ${
                           mugVariantId === v.id
                             ? "bg-blue-500 border-blue-500 text-white"
-                            : "border-gray-600 text-white hover:border-gray-400"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }
                       `}
                     >
@@ -950,7 +950,7 @@ export function ProductPreviewModal({
 
               {/* Print position selector */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold mb-2 text-white">Print position</h4>
+                <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Print position</h4>
 
                 <div className="flex gap-2">
                   {["two-side", "center"].map((mode) => (
@@ -961,7 +961,7 @@ export function ProductPreviewModal({
                         ${
                           mugPreviewMode === mode
                             ? "bg-blue-500 border-blue-500 text-white"
-                            : "border-gray-600 text-white hover:border-gray-400"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }
                       `}
                     >
@@ -978,7 +978,7 @@ export function ProductPreviewModal({
               <>
                 {/* Color selector */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold mb-2 text-white">Color</h4>
+                  <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Color</h4>
 
                   <div className="flex flex-wrap gap-2">
                     {availableColors.map((color) => {
@@ -996,7 +996,7 @@ export function ProductPreviewModal({
                             ${
                               selectedColor === color
                                 ? "border-blue-500 ring-2 ring-blue-500"
-                                : "border-gray-600"
+                                : "border-gray-400 dark:border-gray-600"
                             }
                           `}
                           style={{ backgroundColor: hex }}
@@ -1010,7 +1010,7 @@ export function ProductPreviewModal({
                 {/* Size selector */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-white">Size</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Size</h4>
                     {/*<button className="text-xs text-blue-400 hover:underline">
                       Size guide
                     </button>*/}
@@ -1026,7 +1026,7 @@ export function ProductPreviewModal({
                           ${
                             selectedSize === size
                               ? "border-blue-500 bg-blue-500 text-white"
-                              : "border-gray-600 text-white hover:border-gray-400"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                           }
                         `}
                       >
@@ -1083,7 +1083,7 @@ export function ProductPreviewModal({
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
                   {getProductSelectionLabel()}
                 </div>
-                <div className="text-sm text-gray-400 mb-1">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   Price
                 </div>
 
@@ -1091,7 +1091,7 @@ export function ProductPreviewModal({
                   ${finalPrice}
                 </div>
 
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                   Shipping calculated at checkout
                 </p>
               </div>
@@ -1138,7 +1138,7 @@ export function ProductPreviewModal({
               Continue to checkout
             </Button>
 
-            <p className="text-xs text-center text-gray-400 mt-2">
+            <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-2">
               Payments secured by Stripe
             </p>
           </div>

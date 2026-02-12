@@ -27,6 +27,7 @@ type SavedDesign = {
 };
 
 const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
+const MAX_GENERATION_IMAGES = 4;
 const MODEL_CREDITS: Record<AIModel, number> = {
   "flux-schnell": 1,
   "flux-dev": 3,
@@ -68,6 +69,11 @@ const NameArtGeneratorPage: NextPage = () => {
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
   const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
+  const isIdeogramModel = selectedModel === "ideogram-ai/ideogram-v2-turbo";
+  const generatedImagesGridClass =
+    imagesUrl.length === 1
+      ? "grid grid-cols-1 gap-4 mb-12"
+      : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12";
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
   useEffect(() => {
@@ -154,6 +160,20 @@ const NameArtGeneratorPage: NextPage = () => {
     return () => clearInterval(timer);
   }, [previewCooldown]);
 
+  useEffect(() => {
+    if (isIdeogramModel) {
+      if (form.numberofImages !== "1") {
+        setForm((prev) => ({ ...prev, numberofImages: "1" }));
+      }
+      return;
+    }
+
+    const parsed = Number.parseInt(form.numberofImages, 10);
+    if (Number.isFinite(parsed) && parsed > MAX_GENERATION_IMAGES) {
+      setForm((prev) => ({ ...prev, numberofImages: String(MAX_GENERATION_IMAGES) }));
+    }
+  }, [form.numberofImages, isIdeogramModel]);
+
   const handleScroll = (ref: React.RefObject<HTMLDivElement>, setLeft: (val: boolean) => void, setRight: (val: boolean) => void) => {
       if(ref.current) {
           const { scrollLeft, scrollWidth, clientWidth } = ref.current;
@@ -212,9 +232,17 @@ const NameArtGeneratorPage: NextPage = () => {
     let finalPrompt = form.basePrompt.replace(/'Text'/gi, form.name);
     finalPrompt += " designed to cover the entire screen, high resolution";
 
+    const rawCount = Number.parseInt(form.numberofImages, 10);
+    const numberOfImages = isIdeogramModel
+      ? 1
+      : Math.min(
+          MAX_GENERATION_IMAGES,
+          Math.max(1, Number.isFinite(rawCount) ? rawCount : 1),
+        );
+
     generateIcon.mutate({
       prompt: finalPrompt,
-      numberOfImages: parseInt(form.numberofImages, 10),
+      numberOfImages,
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
       metadata: {
@@ -565,16 +593,27 @@ const NameArtGeneratorPage: NextPage = () => {
               id="numberofImages"
               type="number"
               min={1}
-              max={selectedModel === "ideogram-ai/ideogram-v2-turbo" ? 1 : 10}
+              max={isIdeogramModel ? 1 : MAX_GENERATION_IMAGES}
               value={form.numberofImages}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, numberofImages: e.target.value }))
-              }
-              disabled={selectedModel === "ideogram-ai/ideogram-v2-turbo"}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") {
+                  setForm((prev) => ({ ...prev, numberofImages: raw }));
+                  return;
+                }
+
+                const parsed = Number.parseInt(raw, 10);
+                if (!Number.isFinite(parsed)) return;
+
+                const maxImages = isIdeogramModel ? 1 : MAX_GENERATION_IMAGES;
+                const clamped = Math.min(maxImages, Math.max(1, parsed));
+                setForm((prev) => ({ ...prev, numberofImages: String(clamped) }));
+              }}
+              disabled={isIdeogramModel}
               placeholder={
-                selectedModel === "ideogram-ai/ideogram-v2-turbo"
+                isIdeogramModel
                   ? "1 (Fixed)"
-                  : "1-10"
+                  : `1-${MAX_GENERATION_IMAGES}`
               }
             />
           </FormGroup>
@@ -610,7 +649,7 @@ const NameArtGeneratorPage: NextPage = () => {
         {imagesUrl.length > 0 && (
           <>
             <h2 className="text-xl mt-8 mb-2">Your Custom Name Art</h2>
-            <section className="grid grid-cols-4 gap-4 mb-12">
+            <section className={generatedImagesGridClass}>
               {imagesUrl.map(({ imageUrl }, index) => {
                 const imageId = extractImageId(imageUrl);
                 const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
