@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { appRouter } from "~/server/api/root"; // Ensure this path is correct
 import { createTRPCContext } from "~/server/api/trpc";
 import { env } from "~/env.mjs";
+import { processDueDeliveredEmailSchedules } from "~/server/mautic/deliveryScheduler";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Check the Authorization header (Vercel will include CRON_SECRET as a Bearer token)
@@ -12,13 +13,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const deliveredResult = await processDueDeliveredEmailSchedules();
+
     // Create tRPC context
     const ctx = await createTRPCContext({ req, res });
     // Create a caller from the router using the current context
     const caller = appRouter.createCaller(ctx);
     // Call the syncContacts mutation
     const result = await caller.mautic.syncContacts();
-    return res.status(200).json(result);
+    return res.status(200).json({
+      deliveredEmails: deliveredResult,
+      mauticSync: result,
+    });
   } catch (error) {
     console.error("Error syncing contacts via cron:", error);
     return res.status(500).json({ error: "Failed to sync contacts" });

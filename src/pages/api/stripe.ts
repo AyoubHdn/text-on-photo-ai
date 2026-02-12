@@ -19,6 +19,7 @@ import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintI
 import type { AspectRatio } from "~/server/printful/aspects";
 import type { MugPreviewMode } from "~/server/printful/previewModes";
 import crypto from "crypto";
+import { sendOrderConfirmedEmail } from "~/server/mautic/transactional";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -380,16 +381,18 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
                 typeof value === "string" && value.trim().length > 0,
             )
             .join(" + ");
+          const rawPhysicalProductName =
+            (order as { productName?: string | null }).productName ??
+            order.variantName ??
+            order.productKey;
+          const physicalProductName = rawPhysicalProductName.slice(0, 64);
           const payload = {
             has_purchased_physical: true,
             physical_purchase_count: physicalPurchaseCount || 1,
             last_physical_purchase_da: new Date().toISOString(),
             last_physical_product_typ: order.productKey,
             physical_order_id: order.id,
-            physical_product_name:
-              (order as { productName?: string | null }).productName ??
-              order.variantName ??
-              order.productKey,
+            physical_product_name: physicalProductName,
             physical_variant: physicalVariant || undefined,
             physical_order_status: "confirmed",
           };
@@ -415,6 +418,25 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             error: mauticErr,
           });
         }
+      }
+
+      if (physicalPurchaseEmail) {
+        const physicalVariant = [order.size, order.color]
+          .filter(
+            (value): value is string =>
+              typeof value === "string" && value.trim().length > 0,
+          )
+          .join(" + ");
+        const physicalProductName = (order.variantName ?? order.productKey).slice(0, 64);
+
+        await sendOrderConfirmedEmail(null, {
+          orderNumber: order.id,
+          customerEmail: physicalPurchaseEmail,
+          productImages: [order.mockupUrl, order.imageUrl].filter(Boolean),
+          physical_product_name: physicalProductName,
+          physical_variant: physicalVariant || undefined,
+          physical_order_id: order.id,
+        });
       }
 
       break;

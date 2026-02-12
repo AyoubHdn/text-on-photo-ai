@@ -565,10 +565,6 @@ export function ProductPreviewModal({
     try {
       setLoadingPreview(true);
       setError(null);
-      setPreviewPendingMessage(null);
-      setPreviewTaskKey(null);
-      setPreviewTaskKey(null);
-      setPreviewPendingMessage(null);
 
       const res = await fetch("/api/printful/preview", {
         method: "POST",

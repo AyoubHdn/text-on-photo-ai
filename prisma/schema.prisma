@@ -186,11 +186,29 @@ model ProductOrder {
     
     stripeSessionId String?   // set after Stripe checkout
     paidAt          DateTime?
+    shippingEmailSentAt DateTime?
 
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
     printfulOrder PrintfulOrder?
+    deliveryEmailSchedule DeliveryEmailSchedule?
+}
+
+model DeliveryEmailSchedule {
+    id             String   @id @default(cuid())
+    productOrderId String   @unique
+    productOrder   ProductOrder @relation(fields: [productOrderId], references: [id], onDelete: Cascade)
+    deliveryDate   DateTime
+    maxDeliveryDays Int
+    sentAt         DateTime?
+    processingAt   DateTime?
+    attempts       Int      @default(0)
+    lastError      String?
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+
+    @@index([deliveryDate, sentAt])
 }
 
 model StripeWebhookEvent {
