@@ -9,7 +9,13 @@ import { api } from "~/utils/api";
 import { Input } from "~/component/Input";
 import { stylesData } from "~/data/stylesData";
 import { useSession, signIn } from "next-auth/react";
-import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
+import {
+  AiOutlineDownload,
+  AiOutlineEye,
+  AiOutlineLeft,
+  AiOutlineRight,
+  AiOutlineShareAlt,
+} from "react-icons/ai";
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
@@ -72,7 +78,7 @@ const NameArtGeneratorPage: NextPage = () => {
   const isIdeogramModel = selectedModel === "ideogram-ai/ideogram-v2-turbo";
   const generatedImagesGridClass =
     imagesUrl.length === 1
-      ? "grid grid-cols-1 gap-4 mb-12"
+      ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
       : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12";
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
@@ -481,7 +487,6 @@ const NameArtGeneratorPage: NextPage = () => {
               {(stylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
                   <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.allowCustomColors)}>
                     <Image src={item.src.replace(/\.webp$/, "e.webp")} alt={item.basePrompt} width={200} height={200} className="w-full h-auto aspect-square object-cover"/>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); openPopup(item.src.replace(/\.webp$/, "e.webp")); }} className="absolute top-1 right-1 bg-black bg-opacity-40 text-white rounded-full p-1 text-xs hover:bg-opacity-60" aria-label="View Fullscreen">🔍</button>
                   </div>
               ))}
             </div>
@@ -662,33 +667,33 @@ const NameArtGeneratorPage: NextPage = () => {
                 return (
                 <div key={index} className="flex flex-col">
                 <div className="relative rounded shadow-md hover:shadow-lg transition">
-                  <div className="absolute top-0 right-0 flex gap-0">
+                  <div className="absolute right-1 top-1 flex items-center gap-1.5 rounded-full bg-black/45 px-1.5 py-1 backdrop-blur-sm sm:gap-0.5 sm:px-0.5 sm:py-0.5 md:gap-0.5 md:px-0.5 md:py-0.5">
                     <button
                       type="button"
                       onClick={() => openPopup(displayUrl)}
-                      className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                      className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60 sm:h-6 sm:w-6 md:h-5 md:w-5"
                       title="View Fullscreen"
                       aria-label="View Fullscreen"
                     >
-                      🔍
+                      <AiOutlineEye className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => void handleDownload(displayUrl)}
-                      className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none"
+                      className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60 sm:h-6 sm:w-6 md:h-5 md:w-5"
                       title="Download"
                       aria-label="Download"
                     >
-                      ⬇️
+                      <AiOutlineDownload className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => openShareModal(displayUrl)} // This now opens the modal
-                      className="bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-2"
+                      className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60 sm:h-6 sm:w-6 md:h-5 md:w-5"
                       title="Share"
                       aria-label="Share"
                     >
-                      📤
+                      <AiOutlineShareAlt className="h-4 w-4" />
                     </button>
                   </div>
                   <Image
@@ -850,3 +855,4 @@ const NameArtGeneratorPage: NextPage = () => {
   );
 };
 export default NameArtGeneratorPage;
+
