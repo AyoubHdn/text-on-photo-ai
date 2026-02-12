@@ -59,7 +59,7 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
-    credits       Decimal   @default(1.0) @db.Decimal(10, 2)
+    credits       Decimal   @default(1.1) @db.Decimal(10, 2)
     plan          Plan      @default(None) // New field to track plan
     accounts      Account[]
     sessions      Session[]

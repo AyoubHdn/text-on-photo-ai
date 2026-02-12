@@ -13,6 +13,7 @@ import { api } from "~/utils/api";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { useRouter } from "next/router";
 import { trackEvent } from "~/lib/ga";
+import { PRODUCT_MARGINS } from "~/server/credits/constants";
 import {
   POSTER_VARIANT_INFO,
   MUG_VARIANT_INFO,
@@ -131,15 +132,6 @@ export function ProductPreviewModal({
     "4:5": [3877, 4463],            // 16x20, 8x10
     "3:2": [16365, 2],              // 20x30, 24x36
     "16:9": [],                     // intentionally unsupported
-  };
-
-  const PRODUCT_MARGINS: Record<
-    NonNullable<Props["productKey"]>,
-    number
-  > = {
-    poster: 6,   // $6 margin
-    tshirt: 8,   // $8 margin
-    mug: 5,      // $5 margin
   };
 
   // Unicode-safe poster size helpers (do not touch mug/t-shirt logic).

@@ -96,7 +96,7 @@ export const authOptions: NextAuthOptions = {
           const result = await updateMauticContact({
             email: user.email,
             name: user.name,
-            brand_specific_credits: 1, // New users start with 1 credit
+            brand_specific_credits: 1.1, // New users start with 1.1 credits
             brand_specific_plan: "None",
           },
           'namedesignai');
