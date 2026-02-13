@@ -17,27 +17,14 @@ export function formatPrice(value: number) {
   return value.toFixed(2);
 }
 
-type PrintfulState = {
-    code: string;
-    name: string;
-};
-
-type PrintfulCountry = {
-    code: string;
-    name: string;
-    states?: PrintfulState[];
+type ShippingCountry = {
+  code: string;
+  name: string;
 };
 
 export default function CheckoutPage() {
     const router = useRouter();
     const { orderId } = router.query;
-
-    const [shipping, setShipping] = useState<{
-        price: number;
-        currency: string;
-        minDays: number;
-        maxDays: number;
-    } | null>(null);
 
     const [address, setAddress] = useState({
         name: "",
@@ -51,8 +38,7 @@ export default function CheckoutPage() {
     const [shippingNotice, setShippingNotice] = useState<string | null>(null);
     const [productNotice, setProductNotice] = useState<string | null>(null);
     const [backendFieldErrors, setBackendFieldErrors] = useState<Record<string, string>>({});
-    const [countries, setCountries] = useState<PrintfulCountry[]>([]);
-    const [countriesNotice, setCountriesNotice] = useState<string | null>(null);
+    const [countries, setCountries] = useState<ShippingCountry[]>([]);
     const [checkoutMockupUrl, setCheckoutMockupUrl] = useState<string | null>(null);
     const [previewStatus, setPreviewStatus] = useState<"idle" | "generating" | "error" | "ready">("idle");
     const [previewError, setPreviewError] = useState<"RATE_LIMIT" | null>(null);
@@ -95,7 +81,6 @@ export default function CheckoutPage() {
         ) as { data: OrderType | undefined, isLoading: boolean };
 
     const createStripeSession = api.printfulCheckout.createCheckout.useMutation();
-    const updateShipping = api.productOrder.updateShipping.useMutation();
     const ensureFinalPreview = api.checkout.ensureFinalPreview.useMutation();
 
 
@@ -127,26 +112,14 @@ export default function CheckoutPage() {
     };
 
     const loadCountries = async () => {
-    if (countries.length > 0) return;
-    try {
-        const res = await fetch("/api/printful/countries");
-        if (!res.ok) {
-        throw new Error("Failed to load countries");
-        }
-        const data = (await res.json()) as { countries: PrintfulCountry[]; fallback: boolean };
-        setCountries(Array.isArray(data.countries) ? data.countries : []);
-        setCountriesNotice(
-        data.fallback ? "Shipping countries are temporarily unavailable. Please try again." : null
-        );
-    } catch {
-        setCountriesNotice("Shipping countries are temporarily unavailable. Please try again.");
-    }
+      if (countries.length > 0) return;
+      setCountries([{ code: "US", name: "United States" }]);
     };
 
 
 
     const selectedCountry = countries.find((country) => country.code === address.country);
-    const requiresState = Boolean(selectedCountry?.states?.length);
+    const requiresState = address.country === "US";
 
     const validateShipping = (nextAddress = address, nextRequiresState = requiresState) => {
         const errors: Record<string, string> = {};
@@ -181,17 +154,8 @@ export default function CheckoutPage() {
     const localShippingErrors = validateShipping();
 
     // ✅ Normalize numbers ONCE
-    const basePrice = Number(order?.basePrice ?? 0);
-    const margin = Number(order?.margin ?? 0);
-
-    // Product price (no shipping)
-    const productPrice = basePrice + margin;
-
-    // Shipping price (safe)
-    const shippingPrice = shipping && typeof shipping.price === "number" ? shipping.price : null;
-
-    // Final total (safe)
-    const totalPrice = shippingPrice !== null ? productPrice + shippingPrice : null;
+    const productPrice = Number(order?.totalPrice ?? 0);
+    const totalPrice = Number(order?.totalPrice ?? 0);
 
     const PRODUCT_LABELS = {
     poster: "Premium Poster",
@@ -209,6 +173,7 @@ export default function CheckoutPage() {
     };
 
     const getProductConfigErrors = () => {
+        if (!order) return [];
         const issues: string[] = [];
         if (!order.variantId) issues.push("variantId");
 
@@ -267,69 +232,15 @@ export default function CheckoutPage() {
         return;
     }, []);
 
-    const fetchShippingQuote = async () => {
-        if (!order) return null;
-        const nextErrors = validateShipping();
-        if (Object.keys(nextErrors).length > 0) return null;
-
-        try {
-        const res = await fetch("/api/printful/shipping", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-            variantId: order.variantId,
-            countryCode: address.country,
-            stateCode: requiresState ? address.state : undefined,
-            quantity: 1,
-            }),
-        });
-        const data = await res.json();
-        if (!data || typeof data.price !== "number" || Number.isNaN(data.price)) {
-            setShipping(null);
-            return null;
-        }
-
-        const shippingPrice = Number(data.price);
-        const nextShipping = {
-            price: shippingPrice,
-            currency: data.currency,
-            minDays: data.minDays,
-            maxDays: data.maxDays,
-        };
-        setShipping(nextShipping);
-
-        updateShipping.mutate({
-            orderId: order.id,
-            shippingPrice,
-            currency: data.currency,
-        });
-
-        return nextShipping;
-        } catch {
-        setShipping(null);
-        return null;
-        }
-    };
+    useEffect(() => {
+      void loadCountries();
+    }, []);
 
     useEffect(() => {
-        if (!order) return;
-        if (!address.country) return;
-        const nextErrors = validateShipping();
-        if (Object.keys(nextErrors).length > 0) {
-            setShipping(null);
-            return;
-        }
-        void fetchShippingQuote();
-    }, [
-        order,
-        address.country,
-        address.state,
-        address.zip,
-        address.city,
-        address.address1,
-        requiresState,
-        order?.variantId,
-    ]);
+      if (countries.length === 0) return;
+      if (countries.some((country) => country.code === address.country)) return;
+      setAddress((prev) => ({ ...prev, country: countries[0]?.code ?? "US" }));
+    }, [countries, address.country]);
 
     function finalizePreviewById(orderIdValue: string) {
         if (previewStatus === "generating") return Promise.resolve({ status: "generating" as const });
@@ -598,10 +509,6 @@ export default function CheckoutPage() {
         {fieldErrorMessage("country") && (
         <div className="text-xs text-red-600">{fieldErrorMessage("country")}</div>
         )}
-        {countriesNotice && (
-        <div className="text-xs text-red-600">{countriesNotice}</div>
-        )}
-
         </div>
     </div>
   </div>
@@ -613,35 +520,22 @@ export default function CheckoutPage() {
         <h3 className="text-lg font-semibold">Order summary</h3>
 
         <div className="flex justify-between text-sm">
-        <span>Product</span>
+        <span>Product price</span>
         <span>${formatPrice(productPrice)}</span>
         </div>
 
-        {shipping && (
         <div className="flex justify-between text-sm">
             <span>Shipping</span>
-            <span>
-                <span>${formatPrice(shippingPrice!)}</span>
-            </span>
+            <span>FREE</span>
         </div>
-        )}
 
-        {shipping && (
-        <>
-            <div className="border-t pt-3 flex justify-between text-lg font-bold">
-            <span>Total</span>
-            <span>
-                {totalPrice !== null && (
-                <span>${formatPrice(totalPrice)}</span>
-                )}
-            </span>
-            </div>
+        <div className="border-t pt-3 flex justify-between text-lg font-bold">
+          <span>Total</span>
+          <span>${formatPrice(totalPrice)}</span>
+        </div>
 
-            <p className="text-xs text-gray-500">
-            Delivery in {shipping.minDays}–{shipping.maxDays} days
-            </p>
-        </>
-        )}
+
+
 
         <button
             className="w-full py-3 rounded-lg bg-black text-white font-semibold disabled:opacity-50"
@@ -668,17 +562,10 @@ export default function CheckoutPage() {
             setShippingNotice(null);
             setBackendFieldErrors({});
 
-            const effectiveShipping = shipping ?? (await fetchShippingQuote());
-            if (!effectiveShipping) {
-            setShippingNotice("Please fix the highlighted shipping fields before continuing.");
-            return;
-            }
-
-            const total = order.basePrice + order.margin + effectiveShipping.price;
-
             try {
             const res = await createStripeSession.mutateAsync({
                 orderId: order.id,
+                submittedTotalPrice: totalPrice,
                 address: {
                 name: address.name,
                 address1: address.address1,
@@ -713,6 +600,18 @@ export default function CheckoutPage() {
                     state: "State doesn't match the provided ZIP code.",
                 });
                 setShippingNotice(null);
+                return;
+                }
+                if (err.message.includes("Physical shipping is not available in this country yet.")) {
+                setBackendFieldErrors({
+                    country: "Shipping is not available in this country yet.",
+                });
+                setShippingNotice(null);
+                return;
+                }
+                if (err.message.includes("Price mismatch.")) {
+                setShippingNotice("Price changed. Please return to preview and try again.");
+                setBackendFieldErrors({});
                 return;
                 }
 

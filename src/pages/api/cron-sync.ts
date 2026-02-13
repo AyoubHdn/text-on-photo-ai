@@ -4,6 +4,7 @@ import { appRouter } from "~/server/api/root"; // Ensure this path is correct
 import { createTRPCContext } from "~/server/api/trpc";
 import { env } from "~/env.mjs";
 import { processDueDeliveredEmailSchedules } from "~/server/mautic/deliveryScheduler";
+import { runPricingSync } from "~/server/services/printfulPricingSync";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Check the Authorization header (Vercel will include CRON_SECRET as a Bearer token)
@@ -13,6 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    await runPricingSync();
     const deliveredResult = await processDueDeliveredEmailSchedules();
 
     // Create tRPC context
@@ -22,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Call the syncContacts mutation
     const result = await caller.mautic.syncContacts();
     return res.status(200).json({
+      pricingSync: { ok: true },
       deliveredEmails: deliveredResult,
       mauticSync: result,
     });

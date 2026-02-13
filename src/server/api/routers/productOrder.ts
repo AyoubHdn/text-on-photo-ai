@@ -6,7 +6,8 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/db";
-import { PRODUCT_MARGINS } from "~/server/credits/constants";
+import { TRPCError } from "@trpc/server";
+import { calculateProductPriceFromCache } from "~/server/services/priceCalculator";
 
 export const productOrderRouter = createTRPCRouter({
   createPendingOrder: protectedProcedure
@@ -29,12 +30,29 @@ export const productOrderRouter = createTRPCRouter({
         snapshotBackgroundRemoved: z.boolean().optional(),
         imageUrl: z.string(),
         mockupUrl: z.string(),
-        price: z.number(), // FINAL price incl. margin (no shipping yet)
+        pricingVariant: z.string(),
+        shippingCountry: z.string().default("US"),
+        price: z.number().optional(),
         currency: z.string().default("USD"),
       })
     )
     .mutation(async ({ ctx, input }) => {
-        const BASE_PRICE = input.price - PRODUCT_MARGINS[input.productKey]; // computed earlier
+        const pricing = await calculateProductPriceFromCache({
+          productType: input.productKey,
+          sizeKey: input.pricingVariant,
+          countryCode: input.shippingCountry,
+        });
+
+        if (
+          typeof input.price === "number" &&
+          Math.abs(input.price - pricing.totalPrice) > 0.01
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Price mismatch. Please refresh and try again.",
+          });
+        }
+
         const order = await prisma.productOrder.create({
         data: {
             userId: ctx.session.user.id,
@@ -55,10 +73,12 @@ export const productOrderRouter = createTRPCRouter({
             snapshotBackgroundRemoved: input.snapshotBackgroundRemoved ?? false,
             imageUrl: input.imageUrl,
             mockupUrl: input.mockupUrl,
-            basePrice: BASE_PRICE,
-            margin: input.price - BASE_PRICE,
-            totalPrice: input.price,
-            currency: input.currency,
+            basePrice: pricing.baseCost,
+            margin: pricing.margin,
+            shippingPrice: pricing.shippingCost,
+            shippingCurrency: pricing.currency,
+            totalPrice: pricing.totalPrice,
+            currency: pricing.currency,
             status: "pending",
         },
         });

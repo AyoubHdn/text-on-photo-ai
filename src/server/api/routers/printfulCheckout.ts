@@ -11,26 +11,63 @@ import Stripe from "stripe";
 import { env } from "~/env.mjs";
 import { z } from "zod";
 import { prisma } from "~/server/db";
-import { printfulRequest } from "~/server/printful/client";
+import {
+  calculateProductPriceFromCache,
+  type ProductType,
+} from "~/server/services/priceCalculator";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
 });
 
-type PrintfulShippingResponse = {
-  result: {
-    rate: string;
-    currency: string;
-    minDeliveryDays: number;
-    maxDeliveryDays: number;
-  }[];
-};
+function normalizePosterSize(value?: string | null): string | null {
+  if (!value) return null;
+
+  const normalized = value
+    .replace(/\u2033/g, "")
+    .replace(/"/g, "")
+    .replace(/\u00d7/g, "x")
+    .replace(/\s+/g, "")
+    .trim();
+
+  const match = normalized.match(/(\d+)x(\d+)/i);
+  if (!match) return null;
+  return `${match[1]}x${match[2]}`;
+}
+
+function resolvePricingVariant(order: {
+  productKey: string;
+  size: string | null;
+  variantName: string | null;
+}): string {
+  if (order.productKey === "tshirt") {
+    const size = order.size?.trim().toUpperCase();
+    if (!size) throw new Error("Missing t-shirt size for pricing.");
+    return size;
+  }
+
+  if (order.productKey === "poster") {
+    const posterSize = normalizePosterSize(order.size) ?? normalizePosterSize(order.variantName);
+    if (!posterSize) throw new Error("Missing poster size for pricing.");
+    return posterSize;
+  }
+
+  if (order.productKey === "mug") {
+    const source = `${order.size ?? ""} ${order.variantName ?? ""}`.trim();
+    const match = source.match(/(11|15|20)\s*oz/i);
+    if (!match) throw new Error("Missing mug size for pricing.");
+    return `${match[1]} oz`;
+  }
+
+  throw new Error("Unsupported product for pricing.");
+}
 
 export const printfulCheckoutRouter = createTRPCRouter({
   createCheckout: protectedProcedure
     .input(
       z.object({
         orderId: z.string(),
+        submittedTotalPrice: z.number(),
         address: z
           .object({
             name: z.string(),
@@ -65,7 +102,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
       const rawZip = input.address.zip.trim();
       const zip =
         countryCode === "US"
-          ? rawZip.replace(/\s+/g, "").split("-")[0]
+          ? rawZip.replace(/\s+/g, "").split("-")[0] ?? ""
           : rawZip;
 
       if (countryCode === "US") {
@@ -98,37 +135,49 @@ export const printfulCheckoutRouter = createTRPCRouter({
         }
       }
 
-      // 1️⃣ Get shipping from Printful
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      const shipping = await printfulRequest(
-      "/shipping/rates",
-      "POST",
-      {
-        recipient: {
-          country_code: countryCode,
-          city: input.address.city,
-          zip,
-          state_code:
-            countryCode === "US" ? stateCode : undefined,
-        },
-        items: [
-          {
-            variant_id: order.variantId,
-            quantity: 1,
-          },
-        ],
-      }
-    ) as PrintfulShippingResponse;
-
-      if (!shipping?.result?.[0]?.rate) {
-        throw new Error("Failed to calculate shipping");
+      const pricingVariant = resolvePricingVariant(order);
+      const productType = order.productKey as ProductType;
+      if (!["poster", "tshirt", "mug"].includes(productType)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Unsupported product type for pricing.",
+        });
       }
 
-      const shippingPrice = Number(shipping.result[0].rate);
+      let pricing;
+      try {
+        pricing = await calculateProductPriceFromCache({
+          productType,
+          sizeKey: pricingVariant,
+          countryCode,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Pricing unavailable";
+        if (message === "Pricing not available for this variant.") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Physical shipping is not available in this country yet.",
+          });
+        }
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message,
+        });
+      }
 
-      // 2️⃣ Update order totals (SOURCE OF TRUTH)
-      const totalPrice =
-        order.basePrice + order.margin + shippingPrice;
+      if (Math.abs(input.submittedTotalPrice - pricing.totalPrice) > 0.01) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Price mismatch. Please refresh and try again.",
+        });
+      }
+
+      if (Math.abs((order.totalPrice ?? 0) - pricing.totalPrice) > 0.01) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Price mismatch. Please refresh and try again.",
+        });
+      }
 
       await prisma.productOrder.update({
         where: { id: order.id },
@@ -139,13 +188,12 @@ export const printfulCheckoutRouter = createTRPCRouter({
           zip,
           country: countryCode,
           state: stateCode,
-          shippingPrice,
-          shippingCurrency: "USD",
-          totalPrice,
+          shippingPrice: pricing.shippingCost,
+          shippingCurrency: pricing.currency,
+          totalPrice: pricing.totalPrice,
         },
       });
 
-      // 3️⃣ Create Stripe session
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
@@ -158,7 +206,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
           {
             price_data: {
               currency: "usd",
-              unit_amount: Math.round(totalPrice * 100),
+              unit_amount: Math.round(pricing.totalPrice * 100),
               product_data: {
                 name: "Custom Printed Product",
               },

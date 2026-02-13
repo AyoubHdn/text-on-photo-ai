@@ -195,6 +195,18 @@ model ProductOrder {
     deliveryEmailSchedule DeliveryEmailSchedule?
 }
 
+model ProductPricingCache {
+    id            String   @id @default(cuid())
+    productType   String
+    sizeKey       String
+    countryCode   String
+    baseCost      Decimal  @db.Decimal(10, 2)
+    shippingCost  Decimal  @db.Decimal(10, 2)
+    lastSyncedAt  DateTime @default(now())
+
+    @@unique([productType, sizeKey, countryCode])
+}
+
 model DeliveryEmailSchedule {
     id             String   @id @default(cuid())
     productOrderId String   @unique

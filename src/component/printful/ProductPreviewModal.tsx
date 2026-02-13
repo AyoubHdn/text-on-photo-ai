@@ -13,7 +13,6 @@ import { api } from "~/utils/api";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { useRouter } from "next/router";
 import { trackEvent } from "~/lib/ga";
-import { PRODUCT_MARGINS } from "~/server/credits/constants";
 import {
   POSTER_VARIANT_INFO,
   MUG_VARIANT_INFO,
@@ -48,6 +47,8 @@ type SelectedProductConfig = {
   printPosition?: "two-side" | "center";
   aspect?: AspectRatio;
   variantIdUsedForPreview?: number | null;
+  pricingVariant: string;
+  shippingCountry: string;
   price: number;
   previewImageUrl: string;
   isBackgroundRemoved: boolean;
@@ -442,7 +443,10 @@ export function ProductPreviewModal({
     if (colorsForSize.length === 0) return;
 
     if (!selectedColor || !colorsForSize.includes(selectedColor)) {
-      setSelectedColor(colorsForSize[0]);
+      const firstColor = colorsForSize[0];
+      if (firstColor) {
+        setSelectedColor(firstColor);
+      }
     }
   }, [selectedSize, variants, isTshirt]);
 
@@ -457,13 +461,15 @@ export function ProductPreviewModal({
     }
   });
 
-  const basePrice = selectedVariant?.price
-    ? parseFloat(selectedVariant.price)
-    : null;
+  const [pricingCountryCode, setPricingCountryCode] = useState<string>("US");
+  const [pricingTotal, setPricingTotal] = useState<number | null>(null);
+  const [pricingError, setPricingError] = useState<string | null>(null);
+  const shippingCountries = useMemo(() => ["US"], []);
 
-  const margin = productKey ? PRODUCT_MARGINS[productKey] : 0;
-
-  const finalPrice = basePrice !== null ? (basePrice + margin).toFixed(2) : null;
+  useEffect(() => {
+    if (shippingCountries.includes(pricingCountryCode)) return;
+    setPricingCountryCode("US");
+  }, [pricingCountryCode, shippingCountries]);
 
   const createOrder = api.productOrder.createPendingOrder.useMutation();
 
@@ -501,8 +507,72 @@ export function ProductPreviewModal({
     return "";
   };
 
+  const getPricingVariant = (): string | null => {
+    if (!productKey || !selectedVariant) return null;
+
+    if (productKey === "tshirt") {
+      return selectedSize?.trim().toUpperCase() ?? null;
+    }
+
+    if (productKey === "poster") {
+      return (
+        extractPosterSizeKeySafe(selectedVariant?.size) ??
+        extractPosterSizeKeySafe(selectedVariant?.name) ??
+        normalizePosterSizeKey(selectedVariant?.size)
+      );
+    }
+
+    const mugSource = `${selectedVariant?.size ?? ""} ${selectedVariant?.name ?? ""}`.trim();
+    const mugMatch = mugSource.match(/(11|15|20)\s*oz/i);
+    return mugMatch ? `${mugMatch[1]} oz` : null;
+  };
+
+  const pricingVariant = getPricingVariant();
+
+  useEffect(() => {
+    if (!productKey || !pricingVariant || !pricingCountryCode) {
+      setPricingTotal(null);
+      setPricingError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetch("/api/pricing/product-price", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productType: productKey,
+        variant: pricingVariant,
+        countryCode: pricingCountryCode,
+      }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const payload = (await parseJsonSafely(res)) as
+          | { totalPrice?: number; error?: string }
+          | null;
+
+        if (!res.ok || !payload || typeof payload.totalPrice !== "number") {
+          throw new Error(payload?.error ?? "Failed to calculate price");
+        }
+
+        setPricingTotal(payload.totalPrice);
+        setPricingError(null);
+      })
+      .catch((err: unknown) => {
+        if ((err as Error).name === "AbortError") return;
+        setPricingTotal(null);
+        setPricingError(err instanceof Error ? err.message : "Failed to calculate price");
+      });
+
+    return () => controller.abort();
+  }, [productKey, pricingVariant, pricingCountryCode]);
+
   const selectedProductConfig = useMemo<SelectedProductConfig | null>(() => {
-    if (!productKey || !variantId || !selectedVariant || !finalPrice) return null;
+    if (!productKey || !variantId || !selectedVariant || !pricingVariant || pricingTotal === null) {
+      return null;
+    }
 
     const colorHex = selectedColor ? colorHexMap.get(selectedColor) : undefined;
     const posterSize = productKey === "poster" ? getPosterSizeLabel() : undefined;
@@ -532,7 +602,9 @@ export function ProductPreviewModal({
       printPosition,
       aspect,
       variantIdUsedForPreview: previewVariantId,
-      price: Number(finalPrice),
+      pricingVariant,
+      shippingCountry: pricingCountryCode,
+      price: pricingTotal,
       previewImageUrl: previewImageUrl ?? "",
       isBackgroundRemoved: Boolean(useTransparent && transparentImageUrl),
     };
@@ -540,7 +612,9 @@ export function ProductPreviewModal({
     productKey,
     variantId,
     selectedVariant,
-    finalPrice,
+    pricingTotal,
+    pricingVariant,
+    pricingCountryCode,
     selectedSize,
     selectedColor,
     mugPreviewMode,
@@ -1055,6 +1129,16 @@ export function ProductPreviewModal({
 
             )}
 
+            {productKey === "poster" && variantId && (
+              <Button
+                className="w-full mb-4"
+                disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
+                onClick={regeneratePreview}
+              >
+                {loadingPreview ? "Updating preview…" : "Update preview"}
+              </Button>
+            )}
+
             {productKey === "mug" && mugVariantId && (
             <Button
               className="w-full mb-4"
@@ -1078,22 +1162,46 @@ export function ProductPreviewModal({
             </Button>
           )}
 
-            {finalPrice && (
+            <div className="mb-4">
+              <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white">
+                Shipping country
+              </label>
+              <select
+                value={pricingCountryCode}
+                onChange={(e) => setPricingCountryCode(e.target.value)}
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              >
+                {shippingCountries.map((code) => (
+                  <option key={code} value={code}>
+                    United States ({code})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {pricingError && (
+              <div className="mb-4 rounded-lg bg-red-100 text-red-700 p-3 text-sm">
+                {pricingError}
+              </div>
+            )}
+
+            {pricingTotal !== null && (
               <div className="mb-4 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-center">
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
                   {getProductSelectionLabel()}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  Price
+                  Product Total
                 </div>
 
                 <div className="text-3xl font-bold">
-                  ${finalPrice}
+                  ${pricingTotal.toFixed(2)}
                 </div>
 
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                  Shipping calculated at checkout
-                </p>
+                <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  <div>Shipping: FREE</div>
+                  <div>Total: ${pricingTotal.toFixed(2)}</div>
+                </div>
               </div>
             )}
 
@@ -1128,6 +1236,8 @@ export function ProductPreviewModal({
                 snapshotBackgroundRemoved: selectedProductConfig.isBackgroundRemoved,
                 imageUrl: previewImageUrl,
                 mockupUrl,
+                pricingVariant: selectedProductConfig.pricingVariant,
+                shippingCountry: selectedProductConfig.shippingCountry,
                 price: selectedProductConfig.price,
                 currency: "USD",
               });
