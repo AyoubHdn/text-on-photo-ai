@@ -223,11 +223,25 @@ export default function CheckoutPage() {
             }
             window.sessionStorage.setItem(key, "1");
         }
+        const generatorKey =
+          typeof window !== "undefined" ? window.localStorage.getItem("last-generator") : null;
+        const sourcePage =
+          generatorKey === "arabic"
+            ? "arabic-name-art-generator"
+            : generatorKey === "couples"
+            ? "couples-art-generator"
+            : generatorKey === "default"
+            ? "name-art-generator"
+            : "checkout";
         trackEvent("begin_checkout", {
             product: order.productKey,
+            source_page: sourcePage,
+            user_credits_before_action: null,
+            required_credits: 0,
+            country: address.country,
         });
         hasTrackedBeginCheckoutRef.current = true;
-    }, [order]);
+    }, [order, address.country]);
 
     useEffect(() => {
         return;

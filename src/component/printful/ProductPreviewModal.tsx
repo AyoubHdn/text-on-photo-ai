@@ -83,6 +83,14 @@ export function ProductPreviewModal({
   >("two-side");
 
   const router = useRouter();
+  const sourcePage = useMemo(() => {
+    const pathname = router.pathname;
+    if (pathname.includes("arabic-name-art-generator")) return "arabic-name-art-generator";
+    if (pathname.includes("couples-name-art-generator") || pathname.includes("couples-art-generator")) {
+      return "couples-art-generator";
+    }
+    return "name-art-generator";
+  }, [router.pathname]);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -385,6 +393,10 @@ export function ProductPreviewModal({
       trackEvent("generate_product_preview", {
         product: productKey,
         variantId: variantId ?? undefined,
+        source_page: sourcePage,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: 0.1,
+        country: pricingCountryCode,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Preview unavailable. Please try again.");
@@ -691,6 +703,10 @@ export function ProductPreviewModal({
       trackEvent("generate_product_preview", {
         product: productKey,
         variantId,
+        source_page: sourcePage,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: 0.1,
+        country: pricingCountryCode,
       });
     } catch (err: any) {
       setError(err.message);
@@ -755,6 +771,10 @@ export function ProductPreviewModal({
       trackEvent("generate_product_preview", {
         product: productKey,
         variantId: nextPreviewVariantId ?? undefined,
+        source_page: sourcePage,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: 0.1,
+        country: pricingCountryCode,
       });
     } catch (err: any) {
       setError(err.message);
@@ -826,6 +846,10 @@ export function ProductPreviewModal({
       setUseTransparent(true);
       trackEvent("remove_background", {
         source: "preview",
+        source_page: sourcePage,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: 1,
+        country: pricingCountryCode,
       });
       await refreshPreview(nextTransparentUrl, previewOverride);
     } catch (err: any) {
@@ -1305,9 +1329,18 @@ export function ProductPreviewModal({
           requiredCredits={creditUpgradeRequired}
           currentCredits={creditsQuery.data ?? 0}
           context={creditUpgradeContext}
+          sourcePage={sourcePage}
+          country={pricingCountryCode}
           onClose={() => setCreditUpgradeOpen(false)}
           onSuccess={() => {
             setCreditUpgradeOpen(false);
+            trackEvent("generation_resumed_after_upgrade", {
+              context: creditUpgradeContext,
+              source_page: sourcePage,
+              user_credits_before_action: creditsQuery.data ?? null,
+              required_credits: creditUpgradeRequired,
+              country: pricingCountryCode,
+            });
             const action = pendingCreditActionRef.current;
             pendingCreditActionRef.current = null;
             action?.();

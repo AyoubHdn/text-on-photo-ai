@@ -65,6 +65,7 @@ type SavedDesign = {
 const LAST_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 
 const ArabicNameArtGeneratorPage: NextPage = () => {
+  const SOURCE_PAGE = "arabic-name-art-generator";
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
@@ -205,6 +206,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       trackEvent("generate_design", {
         model: selectedModel,
         credits_used: MODEL_CREDITS[selectedModel],
+        source_page: SOURCE_PAGE,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: MODEL_CREDITS[selectedModel],
+        country: null,
       });
 
       const firstImageUrl = data?.[0]?.imageUrl;
@@ -382,7 +387,13 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       } catch {
         // ignore storage errors
       }
-      trackEvent("remove_background", { source: "preview" });
+      trackEvent("remove_background", {
+        source: "preview",
+        source_page: SOURCE_PAGE,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: 1,
+        country: null,
+      });
     } catch (err) {
       console.error("[ARABIC_REMOVE_BACKGROUND_UI]", err);
       alert("Background removal failed. Please try again.");
@@ -686,9 +697,17 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           requiredCredits={creditUpgradeRequired}
           currentCredits={creditsQuery.data ?? 0}
           context={creditUpgradeContext}
+          sourcePage={SOURCE_PAGE}
           onClose={() => setCreditUpgradeOpen(false)}
           onSuccess={() => {
             setCreditUpgradeOpen(false);
+            trackEvent("generation_resumed_after_upgrade", {
+              context: creditUpgradeContext,
+              source_page: SOURCE_PAGE,
+              user_credits_before_action: creditsQuery.data ?? null,
+              required_credits: creditUpgradeRequired,
+              country: null,
+            });
             const action = pendingCreditActionRef.current;
             pendingCreditActionRef.current = null;
             action?.();

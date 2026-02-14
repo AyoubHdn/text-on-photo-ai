@@ -11,6 +11,8 @@ type Props = {
   requiredCredits: number;
   currentCredits: number;
   context: UpgradeContext;
+  sourcePage?: string;
+  country?: string;
   onSuccess: () => void;
   onClose: () => void;
 };
@@ -63,11 +65,21 @@ function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>
   }
 }
 
+function fireMetaInitiateCheckout(params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+  if (typeof maybeFbq === "function") {
+    maybeFbq("track", "InitiateCheckout", params ?? {});
+  }
+}
+
 export function CreditUpgradeModal({
   isOpen,
   requiredCredits,
   currentCredits,
   context,
+  sourcePage,
+  country,
   onSuccess,
   onClose,
 }: Props) {
@@ -106,13 +118,26 @@ export function CreditUpgradeModal({
     if (!hasFiredViewedRef.current) {
       trackEvent("credit_upgrade_viewed", {
         context,
+        source_page: sourcePage,
+        user_credits_before_action: currentCredits,
         required_credits: requiredCredits,
         current_credits: currentCredits,
+        country: country ?? null,
       });
-      fireMetaCustomEvent("credit_upgrade_viewed", { context });
+      fireMetaCustomEvent("credit_upgrade_viewed", {
+        context,
+        source_page: sourcePage,
+        required_credits: requiredCredits,
+        country: country ?? null,
+      });
+      fireMetaInitiateCheckout({
+        content_category: "credits_upgrade",
+        source_page: sourcePage,
+        context,
+      });
       hasFiredViewedRef.current = true;
     }
-  }, [isOpen, context, requiredCredits, currentCredits]);
+  }, [isOpen, context, requiredCredits, currentCredits, sourcePage, country]);
 
   useEffect(() => {
     if (!isOpen || !isPolling) return;
@@ -168,10 +193,17 @@ export function CreditUpgradeModal({
         plan: offer.plan,
         credits: offer.credits,
         value: offer.price,
+        source_page: sourcePage,
+        user_credits_before_action: currentCredits,
+        required_credits: requiredCredits,
+        country: country ?? null,
       });
       fireMetaCustomEvent("credit_purchase_initiated", {
         context,
         plan: offer.plan,
+        source_page: sourcePage,
+        required_credits: requiredCredits,
+        country: country ?? null,
       });
 
       await buyCredits(offer.plan, {

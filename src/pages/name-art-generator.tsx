@@ -43,6 +43,7 @@ const MODEL_CREDITS: Record<AIModel, number> = {
 };
 
 const NameArtGeneratorPage: NextPage = () => {
+  const SOURCE_PAGE = "name-art-generator";
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
@@ -258,6 +259,10 @@ const NameArtGeneratorPage: NextPage = () => {
       trackEvent("generate_design", {
         model: selectedModel,
         credits_used: creditsUsed,
+        source_page: SOURCE_PAGE,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: creditsUsed,
+        country: null,
       });
     },
     onError: (error) => {
@@ -451,6 +456,10 @@ const NameArtGeneratorPage: NextPage = () => {
       }
       trackEvent("remove_background", {
         source: "preview",
+        source_page: SOURCE_PAGE,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: 1,
+        country: null,
       });
     } catch (err) {
       console.error("[REMOVE_BACKGROUND_UI]", err);
@@ -911,9 +920,17 @@ const NameArtGeneratorPage: NextPage = () => {
           requiredCredits={creditUpgradeRequired}
           currentCredits={creditsQuery.data ?? 0}
           context={creditUpgradeContext}
+          sourcePage={SOURCE_PAGE}
           onClose={() => setCreditUpgradeOpen(false)}
           onSuccess={() => {
             setCreditUpgradeOpen(false);
+            trackEvent("generation_resumed_after_upgrade", {
+              context: creditUpgradeContext,
+              source_page: SOURCE_PAGE,
+              user_credits_before_action: creditsQuery.data ?? null,
+              required_credits: creditUpgradeRequired,
+              country: null,
+            });
             const action = pendingCreditActionRef.current;
             pendingCreditActionRef.current = null;
             action?.();
