@@ -12,6 +12,7 @@ import { Input } from "~/component/Input";
 import { Select } from "~/component/Select";
 import { TRPCClientError } from "@trpc/client";
 import { trackEvent } from "~/lib/ga";
+import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 
 export function formatPrice(value: number) {
   return value.toFixed(2);
@@ -534,6 +535,12 @@ export default function CheckoutPage() {
           <span>${formatPrice(totalPrice)}</span>
         </div>
 
+        {(order.productKey === "mug" || order.productKey === "tshirt" || order.productKey === "poster") && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+            <ProductNudgeBlock productType={order.productKey} />
+          </div>
+        )}
+
 
 
 
@@ -641,8 +648,15 @@ export default function CheckoutPage() {
         Continue to payment
         </button>
 
-        <p className="text-xs text-center text-gray-400">
-            Secure payment powered by Stripe
+        <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-3 text-xs text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+          <div>🔒 Secure payment powered by Stripe</div>
+          <div>✔ Free US shipping included</div>
+          <div>✔ Easy replacement if damaged</div>
+          <div>✔ Printed & shipped from the USA</div>
+        </div>
+
+        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+          Your design is printed only after you order - no mass production.
         </p>
         </div>
     </div>

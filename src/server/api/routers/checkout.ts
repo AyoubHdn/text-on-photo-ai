@@ -23,16 +23,28 @@ export const checkoutRouter = createTRPCRouter({
   .input(
     z.object({
       plan: z.enum(["starter", "pro", "elite"]), // Accept only specific plan names
+      returnPath: z.string().optional(),
+      purchaseContext: z.enum(["generate", "preview", "remove_background"]).optional(),
     })
   )
   .mutation(async ({ ctx, input }) => {
     const priceId = plans[input.plan];
+    const safeReturnPath =
+      input.returnPath && input.returnPath.startsWith("/")
+        ? input.returnPath
+        : "/success";
+    const hasQuery = safeReturnPath.includes("?");
+    const successUrl =
+      safeReturnPath === "/success"
+        ? `${env.HOST_NAME}/success`
+        : `${env.HOST_NAME}${safeReturnPath}${hasQuery ? "&" : "?"}credits_success=1${input.purchaseContext ? `&credits_context=${input.purchaseContext}` : ""}`;
 
     try {
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         metadata: {
           userId: ctx.session.user.id,
+          purchaseContext: input.purchaseContext ?? "generate",
         },
         line_items: [
           {
@@ -41,7 +53,7 @@ export const checkoutRouter = createTRPCRouter({
           },
         ],
         mode: "payment",
-        success_url: `${env.HOST_NAME}/success`,
+        success_url: successUrl,
         cancel_url: `${env.HOST_NAME}/cancel`,
       });
 

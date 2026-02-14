@@ -8,9 +8,26 @@ export function useBuyCredits() {
   const checkout = api.checkout.createCheckout.useMutation();
 
   return {
-    buyCredits: async (plan: "starter" | "pro" | "elite") => {
+    buyCredits: async (
+      plan: "starter" | "pro" | "elite",
+      options?: {
+        returnPath?: string;
+        purchaseContext?: "generate" | "preview" | "remove_background";
+        openInNewTab?: boolean;
+      }
+    ) => {
       try {
-        const response = await checkout.mutateAsync({ plan }); // Send plan instead of priceId
+        const response = await checkout.mutateAsync({
+          plan,
+          returnPath: options?.returnPath,
+          purchaseContext: options?.purchaseContext,
+        });
+
+        if (options?.openInNewTab && response.url) {
+          window.open(response.url, "_blank", "noopener,noreferrer");
+          return;
+        }
+
         const stripe = await stripePromise;
         await stripe?.redirectToCheckout({
           sessionId: response.id,

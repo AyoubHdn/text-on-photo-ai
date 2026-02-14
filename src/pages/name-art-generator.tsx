@@ -21,6 +21,8 @@ import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackGA, trackEvent } from "~/lib/ga";
+import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
+import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
@@ -72,6 +74,10 @@ const NameArtGeneratorPage: NextPage = () => {
   const [useTransparentMap, setUseTransparentMap] = useState<Record<string, boolean>>({});
   const [removingBackgroundMap, setRemovingBackgroundMap] = useState<Record<string, boolean>>({});
   const [removeBgCreditAlertMap, setRemoveBgCreditAlertMap] = useState<Record<string, boolean>>({});
+  const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
+  const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("generate");
+  const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
+  const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
   const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
@@ -80,12 +86,41 @@ const NameArtGeneratorPage: NextPage = () => {
     imagesUrl.length === 1
       ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
       : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12";
+  const getRequiredGenerateCredits = () => {
+    const rawCount = Number.parseInt(form.numberofImages, 10);
+    const numberOfImages = isIdeogramModel
+      ? 1
+      : Math.min(
+          MAX_GENERATION_IMAGES,
+          Math.max(1, Number.isFinite(rawCount) ? rawCount : 1),
+        );
+    const perImage = MODEL_CREDITS[selectedModel] ?? 1;
+    return perImage * numberOfImages;
+  };
+  const openCreditUpgrade = (
+    context: "generate" | "preview" | "remove_background",
+    requiredCredits: number,
+    retryAction: () => void,
+  ) => {
+    pendingCreditActionRef.current = retryAction;
+    setCreditUpgradeContext(context);
+    setCreditUpgradeRequired(requiredCredits);
+    setCreditUpgradeOpen(true);
+  };
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
     trackEvent("view_generator");
     hasTrackedViewRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("last-generator", "default");
+    } catch {
+      // ignore storage errors
+    }
   }, []);
 
   useEffect(() => {
@@ -225,7 +260,34 @@ const NameArtGeneratorPage: NextPage = () => {
         credits_used: creditsUsed,
       });
     },
-    onError: (error) => setError(error.message),
+    onError: (error) => {
+      if (error.message.toLowerCase().includes("enough credits")) {
+        setError("");
+        openCreditUpgrade("generate", getRequiredGenerateCredits(), () => {
+          const rawCount = Number.parseInt(form.numberofImages, 10);
+          const numberOfImages = isIdeogramModel
+            ? 1
+            : Math.min(
+                MAX_GENERATION_IMAGES,
+                Math.max(1, Number.isFinite(rawCount) ? rawCount : 1),
+              );
+          let finalPrompt = form.basePrompt.replace(/'Text'/gi, form.name);
+          finalPrompt += " designed to cover the entire screen, high resolution";
+          generateIcon.mutate({
+            prompt: finalPrompt,
+            numberOfImages,
+            aspectRatio: selectedAspectRatio,
+            model: selectedModel,
+            metadata: {
+              category: activeTab || undefined,
+              subcategory: activeSubTab || undefined,
+            },
+          });
+        });
+        return;
+      }
+      setError(error.message);
+    },
   });
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -347,6 +409,9 @@ const NameArtGeneratorPage: NextPage = () => {
 
     if (!hasBackgroundCredits) {
       setRemoveBgCreditAlertMap((prev) => ({ ...prev, [imageId]: true }));
+      openCreditUpgrade("remove_background", 1, () => {
+        void handleToggleBackground(imageUrl);
+      });
       return;
     }
 
@@ -450,6 +515,7 @@ const NameArtGeneratorPage: NextPage = () => {
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
         <h1 className="text-4xl font-bold">Name Art Generator: Create Personalized Designs</h1>
         <p className="text-lg mt-4">Unleash your creativity with our Name Art Generator! ...</p>
+        <GeneratorNudge generatorType="default" />
         
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
           <FormGroup className="mb-12">
@@ -649,6 +715,7 @@ const NameArtGeneratorPage: NextPage = () => {
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
             {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
+          <GeneratorNudge generatorType="default" section="trust" />
         </form>
         
         {imagesUrl.length > 0 && (
@@ -710,10 +777,7 @@ const NameArtGeneratorPage: NextPage = () => {
                   )}
                   {showRemoveBgAlert && (
                     <div className="mt-2 text-xs text-gray-600">
-                      Removing the background costs 1 credit.{" "}
-                      <Link href="/buy-credits" className="underline">
-                        Buy credits to continue.
-                      </Link>
+                      Removing the background costs 1 credit.
                     </div>
                   )}
                 </div>
@@ -738,6 +802,9 @@ const NameArtGeneratorPage: NextPage = () => {
         
 
         <section className="mt-10">
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+            ✨ Your design is ready! Imagine this on your favorite mug, shirt, or framed on your wall.
+          </div>
           <h3 className="text-2xl font-semibold mb-6 text-center">
             Turn your design into a real product
           </h3>
@@ -838,6 +905,20 @@ const NameArtGeneratorPage: NextPage = () => {
         )}
         
         <ShareModal isOpen={shareModalData.isOpen} onClose={closeShareModal} imageUrl={shareModalData.imageUrl} />
+
+        <CreditUpgradeModal
+          isOpen={creditUpgradeOpen}
+          requiredCredits={creditUpgradeRequired}
+          currentCredits={creditsQuery.data ?? 0}
+          context={creditUpgradeContext}
+          onClose={() => setCreditUpgradeOpen(false)}
+          onSuccess={() => {
+            setCreditUpgradeOpen(false);
+            const action = pendingCreditActionRef.current;
+            pendingCreditActionRef.current = null;
+            action?.();
+          }}
+        />
 
         <ProductPreviewModal
           isOpen={!!previewProduct}

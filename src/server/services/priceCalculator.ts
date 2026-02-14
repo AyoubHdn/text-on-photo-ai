@@ -1,14 +1,9 @@
 import { prisma } from "~/server/db";
-
-const MARGIN_CONFIG = {
-  mug: 5,
-  tshirt: 7,
-  poster: 6,
-} as const;
+import { PRODUCT_MARGINS } from "~/server/credits/constants";
 
 const SAFETY_BUFFER = 1;
 
-export type ProductType = keyof typeof MARGIN_CONFIG;
+export type ProductType = keyof typeof PRODUCT_MARGINS;
 
 export async function calculateProductPriceFromCache({
   productType,
@@ -36,7 +31,7 @@ export async function calculateProductPriceFromCache({
     throw new Error("Pricing not available for this variant.");
   }
 
-  const margin = MARGIN_CONFIG[productType] ?? 5;
+  const margin = PRODUCT_MARGINS[productType];
   const total =
     Number(cached.baseCost) +
     Number(cached.shippingCost) +

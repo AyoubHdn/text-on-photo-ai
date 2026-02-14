@@ -2,6 +2,14 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 import { trackEvent } from "~/lib/ga";
 
+function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+  if (typeof maybeFbq === "function") {
+    maybeFbq("trackCustom", eventName, params ?? {});
+  }
+}
+
 const SuccessPage: React.FC = () => {
   const router = useRouter();
 
@@ -29,6 +37,14 @@ const SuccessPage: React.FC = () => {
             const parsed = JSON.parse(raw) as { credits?: number; value?: number };
             if (typeof parsed?.credits === "number" && typeof parsed?.value === "number") {
               trackEvent("purchase_credits", {
+                credits: parsed.credits,
+                value: parsed.value,
+              });
+              trackEvent("credit_purchase_completed", {
+                credits: parsed.credits,
+                value: parsed.value,
+              });
+              fireMetaCustomEvent("credit_purchase_completed", {
                 credits: parsed.credits,
                 value: parsed.value,
               });

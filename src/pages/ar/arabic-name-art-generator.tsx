@@ -36,7 +36,7 @@ interface TypedArabicStylesData {
 const typedArabicStylesData: TypedArabicStylesData = arabicStylesData as TypedArabicStylesData;
 
 type AIModel = "google/nano-banana-pro";
-type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3";
+type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
 
 const ArabicNameArtGeneratorPageAr: NextPage = () => {
   const { data: session } = useSession();
@@ -164,9 +164,9 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
 
   const aspectRatios: { label: string; value: AspectRatio; visual: string }[] = [
     { label: "1:1", value: "1:1", visual: "aspect-square" },
+    { label: "4:5", value: "4:5", visual: "aspect-45" },
+    { label: "3:2", value: "3:2", visual: "aspect-32" },
     { label: "16:9", value: "16:9", visual: "aspect-video" },
-    { label: "9:16", value: "9:16", visual: "aspect-portrait" },
-    { label: "4:3", value: "4:3", visual: "aspect-classic" },
   ];
 
   return (
@@ -249,9 +249,10 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
               {aspectRatios.map((ratio) => {
                 const aspectClass =
                   ratio.visual === "aspect-square" ? "aspect-[1/1]" : 
+                  ratio.visual === "aspect-45" ? "aspect-[4/5]" : 
+                  ratio.visual === "aspect-32" ? "aspect-[3/2]" : 
                   ratio.visual === "aspect-video" ? "aspect-[16/9]" : 
-                  ratio.visual === "aspect-portrait" ? "aspect-[9/16]" : 
-                  "aspect-[4/3]";
+                  "aspect-[1/1]";
                 return (
                   <button
                     key={ratio.value}

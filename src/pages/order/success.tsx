@@ -6,14 +6,17 @@ import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "~/lib/ga";
 
 export default function OrderSuccess() {
-  const { orderId } = useRouter().query;
+  const router = useRouter();
+  const { orderId, generator } = router.query;
   const { data: session } = useSession();
   const orderIdValue = typeof orderId === "string" ? orderId : "";
+  const generatorFromQuery = typeof generator === "string" ? generator : null;
   const orderQuery = api.productOrder.getOrder.useQuery(
     { orderId: orderIdValue },
     { enabled: !!orderIdValue && !!session }
   );
   const [previewLoadFailed, setPreviewLoadFailed] = useState(false);
+  const [nextGeneratorHref, setNextGeneratorHref] = useState("/name-art-generator");
 
   const order = orderQuery.data;
   const hasTrackedPurchaseRef = useRef(false);
@@ -39,6 +42,26 @@ export default function OrderSuccess() {
   const shouldShowPreview = !!previewUrl && !previewLoadFailed;
 
   useEffect(() => {
+    const mapToHref = (value: string | null) => {
+      if (value === "arabic") return "/arabic-name-art-generator";
+      if (value === "couples") return "/couples-name-art-generator";
+      return "/name-art-generator";
+    };
+
+    if (generatorFromQuery) {
+      setNextGeneratorHref(mapToHref(generatorFromQuery));
+      return;
+    }
+
+    try {
+      const fromStorage = window.localStorage.getItem("last-generator");
+      setNextGeneratorHref(mapToHref(fromStorage));
+    } catch {
+      setNextGeneratorHref("/name-art-generator");
+    }
+  }, [generatorFromQuery]);
+
+  useEffect(() => {
     if (!order || hasTrackedPurchaseRef.current) return;
     if (typeof window !== "undefined" && orderIdValue) {
       const key = `ga4_purchase_${orderIdValue}`;
@@ -58,10 +81,15 @@ export default function OrderSuccess() {
 
   return (
     <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">
-      <h1 className="text-3xl font-bold mb-2">🎉 Your order is confirmed!</h1>
+      <h1 className="text-3xl font-bold mb-2">Your order is confirmed!</h1>
       <p className="text-muted-foreground mb-6">
-        We’re preparing your product and will notify you when it ships.
+        We are preparing your product and will notify you when it ships.
       </p>
+
+      <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+        <div className="font-semibold">Your personalized product is now being prepared.</div>
+        <div className="mt-1">Want another design? Create one now while your inspiration is fresh.</div>
+      </div>
 
       {shouldShowPreview && (
         <div className="mb-6 overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -94,25 +122,20 @@ export default function OrderSuccess() {
         <div className="text-sm font-semibold mb-2 text-foreground">What happens next?</div>
         <ol className="text-sm text-muted-foreground list-decimal list-inside">
           <li>Your order is sent to production</li>
-          <li>You’ll receive a shipping email</li>
-          <li>Delivery usually takes 5–10 days</li>
+          <li>You will receive a shipping email</li>
+          <li>Delivery usually takes 5-10 days</li>
         </ol>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {/*<Link
-          href={`/my-orders/${orderIdValue || ""}`}
-          className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
-        >
-          View my order
-        </Link> */}
         <Link
-          href="/name-art-generator"
+          href={nextGeneratorHref}
           className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 font-semibold text-foreground hover:border-gray-400 transition"
         >
-          Create another design
+          Create Another Design
         </Link>
       </div>
     </div>
   );
 }
+

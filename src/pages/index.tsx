@@ -156,12 +156,12 @@ function HowItWorksSection() {
     {
       title: "Choose a Name Art Style",
       description:
-        "Pick from name art, Arabic calligraphy, or couple designs—each built around personal meaning.",
+        "Pick from name art, Arabic calligraphy, or couple designs-each built around personal meaning.",
     },
     {
       title: "Enter the Name(s)",
       description:
-        "Type a name or two. No design skills needed—our AI handles the creativity.",
+        "Type a name or two. No design skills needed-our AI handles the creativity.",
     },
     {
       title: "Generate & Refine",
@@ -190,7 +190,7 @@ function HowItWorksSection() {
             How Name Design AI Works
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 mt-4">
-            Create beautiful, personalized designs in minutes using AI—no design skills required.
+            Create beautiful, personalized designs in minutes using AI-no design skills required.
           </p>
         </div>
 

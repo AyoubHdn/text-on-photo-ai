@@ -13,6 +13,8 @@ import { api } from "~/utils/api";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { useRouter } from "next/router";
 import { trackEvent } from "~/lib/ga";
+import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
+import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
   POSTER_VARIANT_INFO,
   MUG_VARIANT_INFO,
@@ -85,11 +87,25 @@ export function ProductPreviewModal({
   const [error, setError] = useState<string | null>(null);
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
+  const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
+  const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("preview");
+  const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
+  const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const hasInitializedRef = useRef(false);
   const lastProductKeyRef = useRef<Props["productKey"]>(null);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isOpen });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
   const requiresBackgroundCredits = !transparentImageUrl;
+  const openCreditUpgrade = (
+    context: "generate" | "preview" | "remove_background",
+    requiredCredits: number,
+    retryAction: () => void,
+  ) => {
+    pendingCreditActionRef.current = retryAction;
+    setCreditUpgradeContext(context);
+    setCreditUpgradeRequired(requiredCredits);
+    setCreditUpgradeOpen(true);
+  };
 
   useEffect(() => {
     if (isOpen) return;
@@ -318,7 +334,7 @@ export function ProductPreviewModal({
   /* ---------------------------------------------------
      1) Generate preview (already costs 0.1 credit)
   --------------------------------------------------- */
-  useEffect(() => {
+  const requestInitialPreview = async () => {
     if (!isOpen || !productKey || !originalImageUrl) return;
 
     setLoadingPreview(true);
@@ -335,48 +351,50 @@ export function ProductPreviewModal({
       lastProductKeyRef.current = productKey;
     }
 
-    fetch("/api/printful/preview", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ productKey, imageUrl: originalImageUrl, aspect }),
-})
-  .then(async (res) => {
-    const data = await parseJsonSafely(res);
-    const fallbackError = "Preview unavailable. Please try again in a moment.";
+    try {
+      const res = await fetch("/api/printful/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productKey, imageUrl: originalImageUrl, aspect }),
+      });
+      const data = await parseJsonSafely(res);
+      const fallbackError = "Preview unavailable. Please try again in a moment.";
 
-    if (!data) {
-      throw new Error(fallbackError);
-    }
+      if (!data) throw new Error(fallbackError);
 
-    if (data.error === "INSUFFICIENT_CREDITS") {
-      setError("INSUFFICIENT_CREDITS");
-      return null;
-    }
-
-    if (!res.ok) {
-      if (data.error === "PRINTFUL_RATE_LIMIT" && data.retryAfter) {
-        setPreviewCooldown(data.retryAfter);
-        onCooldownStart?.(data.retryAfter);
-        return null; // ⛔ stop chain safely
+      if (data.error === "INSUFFICIENT_CREDITS") {
+        setError(null);
+        openCreditUpgrade("preview", 0.1, () => {
+          void requestInitialPreview();
+        });
+        return;
       }
 
-      throw new Error(data.error || fallbackError);
+      if (!res.ok) {
+        if (data.error === "PRINTFUL_RATE_LIMIT" && data.retryAfter) {
+          setPreviewCooldown(data.retryAfter);
+          onCooldownStart?.(data.retryAfter);
+          return;
+        }
+        throw new Error(data.error || fallbackError);
+      }
+
+      if (!data.mockupUrl) return;
+      setMockupUrl(data.mockupUrl);
+      setPreviewVariantId(null);
+      trackEvent("generate_product_preview", {
+        product: productKey,
+        variantId: variantId ?? undefined,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Preview unavailable. Please try again.");
+    } finally {
+      setLoadingPreview(false);
     }
+  };
 
-    return data;
-  })
-  .then((data) => {
-    if (!data || !data.mockupUrl) return;
-    setMockupUrl(data.mockupUrl);
-    setPreviewVariantId(null);
-    trackEvent("generate_product_preview", {
-      product: productKey,
-      variantId: variantId ?? undefined,
-    });
-  })
-  .catch((err) => setError(err.message))
-  .finally(() => setLoadingPreview(false));
-
+  useEffect(() => {
+    void requestInitialPreview();
   }, [isOpen, productKey, originalImageUrl]);
 
   useEffect(() => {
@@ -651,7 +669,10 @@ export function ProductPreviewModal({
       }
 
       if (data.error === "INSUFFICIENT_CREDITS") {
-        setError("INSUFFICIENT_CREDITS");
+        setError(null);
+        openCreditUpgrade("preview", 0.1, () => {
+          void regeneratePreview();
+        });
         return;
       }
 
@@ -712,7 +733,10 @@ export function ProductPreviewModal({
       }
 
       if (data.error === "INSUFFICIENT_CREDITS") {
-        setError("INSUFFICIENT_CREDITS");
+        setError(null);
+        openCreditUpgrade("preview", 0.1, () => {
+          void refreshPreview(imageForPreview, override);
+        });
         return;
       }
 
@@ -741,7 +765,12 @@ export function ProductPreviewModal({
 
   const handleToggleTransparent = async () => {
     if (!originalImageUrl) return;
-    if (requiresBackgroundCredits && !hasBackgroundCredits) return;
+    if (requiresBackgroundCredits && !hasBackgroundCredits) {
+      openCreditUpgrade("remove_background", 1, () => {
+        void handleToggleTransparent();
+      });
+      return;
+    }
     const previewOverride =
       productKey === "mug"
         ? { variantId: mugVariantId ?? undefined, previewMode: mugPreviewMode }
@@ -779,7 +808,10 @@ export function ProductPreviewModal({
 
       if (!res.ok) {
         if (data?.error === "INSUFFICIENT_CREDITS") {
-          setError("BACKGROUND_INSUFFICIENT_CREDITS");
+          setError(null);
+          openCreditUpgrade("remove_background", 1, () => {
+            void handleToggleTransparent();
+          });
           return;
         }
         throw new Error(data?.error || "Background removal failed");
@@ -923,7 +955,6 @@ export function ProductPreviewModal({
                   onClick={handleToggleTransparent}
                   disabled={
                     !originalImageUrl ||
-                    (requiresBackgroundCredits && !hasBackgroundCredits) ||
                     isRemovingBackground ||
                     loadingPreview ||
                     previewCooldown !== null
@@ -939,10 +970,7 @@ export function ProductPreviewModal({
               </div>
               {requiresBackgroundCredits && !hasBackgroundCredits && (
                 <div className="mt-2 text-xs text-gray-500">
-                  Removing the background costs 1 credit.{" "}
-                  <Link href="/buy-credits" className="underline">
-                    Buy credits to continue.
-                  </Link>
+                  Removing the background costs 1 credit.
                 </div>
               )}
             </div>
@@ -1205,6 +1233,8 @@ export function ProductPreviewModal({
               </div>
             )}
 
+            {productKey && <ProductNudgeBlock productType={productKey} />}
+
             {/* CTA */}
             <Button
               className="w-full"
@@ -1248,12 +1278,41 @@ export function ProductPreviewModal({
               Continue to checkout
             </Button>
 
+            {productKey === "mug" && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Order today - ships in 2–4 business days.
+              </p>
+            )}
+            {productKey === "tshirt" && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Printed on demand in the USA.
+              </p>
+            )}
+            {productKey === "poster" && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Ready to frame and display.
+              </p>
+            )}
+
             <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-2">
               Payments secured by Stripe
             </p>
           </div>
         </div>
         </div>
+        <CreditUpgradeModal
+          isOpen={creditUpgradeOpen}
+          requiredCredits={creditUpgradeRequired}
+          currentCredits={creditsQuery.data ?? 0}
+          context={creditUpgradeContext}
+          onClose={() => setCreditUpgradeOpen(false)}
+          onSuccess={() => {
+            setCreditUpgradeOpen(false);
+            const action = pendingCreditActionRef.current;
+            pendingCreditActionRef.current = null;
+            action?.();
+          }}
+        />
       </div>
     </div>
   );

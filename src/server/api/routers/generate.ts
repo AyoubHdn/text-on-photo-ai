@@ -27,6 +27,9 @@ const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
 });
 
+const ASPECT_RATIO_VALUES = ["1:1", "4:5", "3:2", "16:9"] as const;
+type AspectRatioValue = (typeof ASPECT_RATIO_VALUES)[number];
+
 // Helper function to fetch an image from a URL and encode it as Base64
 async function fetchAndEncodeImage(url: string): Promise<string> {
   console.log("Fetching image from:", url);
@@ -45,7 +48,7 @@ async function fetchAndEncodeImage(url: string): Promise<string> {
 const generateIcon = async (
   prompt: string,
   numberOfImages = 1,
-  aspectRatio = "1:1",
+  aspectRatio: AspectRatioValue = "1:1",
   model: "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo" | "google/nano-banana-pro"
 ): Promise<string[]> => {
   let path: `${string}/${string}`;
@@ -179,7 +182,7 @@ export const generateRouter = createTRPCRouter({
       z.object({
         prompt: z.string(),
         numberOfImages: z.number().min(1).max(10),
-        aspectRatio: z.string().optional(),
+        aspectRatio: z.enum(ASPECT_RATIO_VALUES).default("1:1"),
         model: z.enum([
           "flux-schnell",
           "flux-dev",
