@@ -120,7 +120,19 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
-    trackEvent("view_arabic_generator");
+    trackEvent("view_arabic_name_art_generator", {
+      source_page: "arabic-name-art-generator",
+      user_credits: creditsQuery.data ?? null,
+      country: null,
+    });
+    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof maybeFbq === "function") {
+      maybeFbq("trackCustom", "view_arabic_name_art_generator", {
+        source_page: "arabic-name-art-generator",
+        user_credits: creditsQuery.data ?? null,
+        country: null,
+      });
+    }
     hasTrackedViewRef.current = true;
   }, []);
 

@@ -126,7 +126,19 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
-    trackEvent("view_couples_generator");
+    trackEvent("view_couples_name_art_generator", {
+      source_page: "couples-name-art-generator",
+      user_credits: creditsQuery.data ?? null,
+      country: null,
+    });
+    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof maybeFbq === "function") {
+      maybeFbq("trackCustom", "view_couples_name_art_generator", {
+        source_page: "couples-name-art-generator",
+        user_credits: creditsQuery.data ?? null,
+        country: null,
+      });
+    }
     hasTrackedViewRef.current = true;
   }, []);
 
