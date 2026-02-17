@@ -1,5 +1,5 @@
 // ~/server/api/routers/mautic-utils.ts
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { env } from "~/env.mjs"; // Ensure this path is correct
 
 // Define a more structured response type, can be expanded
@@ -24,6 +24,11 @@ interface MauticContactPayload {
   // Brand tracking
   brand_origin?: string[]; // For multi-select
   last_interaction_brand?: string;
+}
+
+function formatCreditsForMautic(value: number | string | Prisma.Decimal): string {
+  const creditDecimal = new Prisma.Decimal(value);
+  return creditDecimal.lte(0) ? "No credits" : creditDecimal.toString();
 }
 
 // Your existing function signature, slightly adapted for brand context
@@ -69,7 +74,7 @@ export async function updateMauticContact(
   // Add brand-specific credit/plan fields to the payload
   if (currentBrand === 'namedesignai') {
     if (contactInput.brand_specific_credits !== undefined && contactInput.brand_specific_credits !== null) {
-      mauticPayloadForApi.credits = contactInput.brand_specific_credits === 0 ? "No credits" : String(contactInput.brand_specific_credits);
+      mauticPayloadForApi.credits = formatCreditsForMautic(contactInput.brand_specific_credits);
     }
     if (contactInput.brand_specific_plan) {
       mauticPayloadForApi.plan = contactInput.brand_specific_plan; // Assuming Mautic's 'plan' field alias
@@ -77,7 +82,7 @@ export async function updateMauticContact(
   } else if (currentBrand === 'gaminglogoai') {
     if (contactInput.brand_specific_credits !== undefined && contactInput.brand_specific_credits !== null) {
       // Assuming Mautic's 'gaming_credits' field alias
-      mauticPayloadForApi.gaming_credits = contactInput.brand_specific_credits === 0 ? "No credits" : String(contactInput.brand_specific_credits);
+      mauticPayloadForApi.gaming_credits = formatCreditsForMautic(contactInput.brand_specific_credits);
     }
     if (contactInput.brand_specific_plan) {
       mauticPayloadForApi.gaming_plan = contactInput.brand_specific_plan; // Assuming Mautic's 'gaming_plan' field alias

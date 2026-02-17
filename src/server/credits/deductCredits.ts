@@ -27,10 +27,15 @@ export async function deductCreditsOrThrow(
   const updatedCredits = creditsDecimal.minus(amountDecimal);
 
   // ✅ Decimal-safe decrement
-  await prisma.user.update({
+  return prisma.user.update({
     where: { id: userId },
     data: {
       credits: updatedCredits,
+    },
+    select: {
+      credits: true,
+      email: true,
+      name: true,
     },
   });
 

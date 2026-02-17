@@ -9,6 +9,7 @@ import { authOptions } from "~/server/auth";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { CREDIT_COSTS } from "~/server/credits/constants";
 import { deductCreditsOrThrow } from "~/server/credits/deductCredits";
+import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 import { createMockupTask } from "~/server/printful/mockup";
 import { pollMockupTask } from "~/server/printful/pollMockup";
@@ -121,10 +122,24 @@ export default async function handler(
 
   try {
     // ✅ 1. Deduct credits FIRST (before Printful cost)
-    await deductCreditsOrThrow(
+    const updatedUser = await deductCreditsOrThrow(
       session.user.id,
       CREDIT_COSTS.PRODUCT_PREVIEW
     );
+    if (updatedUser.email) {
+      try {
+        await updateMauticContact(
+          {
+            email: updatedUser.email,
+            name: updatedUser.name,
+            brand_specific_credits: updatedUser.credits,
+          },
+          "namedesignai"
+        );
+      } catch (mauticErr) {
+        console.error("[PRINTFUL_PREVIEW_MAUTIC_SYNC_ERROR]", mauticErr);
+      }
+    }
 
     // ✅ 2. Create Printful mockup task
     let variantId: number;

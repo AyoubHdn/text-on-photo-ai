@@ -13,6 +13,7 @@ import { CREDIT_COSTS } from "~/server/credits/constants";
 import { Prisma } from "@prisma/client";
 import { Readable } from "stream";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
+import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 const BUCKET_NAME = env.NEXT_PUBLIC_S3_BUCKET_NAME;
 
@@ -227,6 +228,26 @@ export default async function handler(
       }
       console.error("[REMOVE_BACKGROUND_CREDIT_ERROR]", error);
       return res.status(500).json({ error: "Credit deduction failed" });
+    }
+
+    const updatedUserForMautic = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { credits: true, email: true, name: true },
+    });
+
+    if (updatedUserForMautic?.email) {
+      try {
+        await updateMauticContact(
+          {
+            email: updatedUserForMautic.email,
+            name: updatedUserForMautic.name,
+            brand_specific_credits: updatedUserForMautic.credits,
+          },
+          "namedesignai"
+        );
+      } catch (mauticErr) {
+        console.error("[REMOVE_BACKGROUND_MAUTIC_SYNC_ERROR]", mauticErr);
+      }
     }
   }
 
