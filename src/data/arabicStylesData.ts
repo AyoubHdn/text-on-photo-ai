@@ -128,11 +128,6 @@ export const arabicStylesData = {
   "Nature & Elements": {
     "Elemental": [
       {
-        src: "/styles/arabic/desert-night-ramadan.webp",
-        name: "Desert Night",
-        basePrompt: "Arabic name 'Text' written in elegant calligraphy under a Ramadan crescent moon in a calm desert night scene, centered composition, soft golden moonlight with deep blue sky, minimal clean layout, clear readable lettering, no extra text, premium printable artwork.",
-      },
-      {
         src: "/styles/arabic/smoke-art.webp",
         name: "Color Smoke",
         basePrompt: "Arabic name 'Text' formed from swirling blue and orange smoke, centered dark background composition, defined silhouette, sharp high-speed detail, controlled particle spread, readable letterforms, no extra text, premium printable effect.",
