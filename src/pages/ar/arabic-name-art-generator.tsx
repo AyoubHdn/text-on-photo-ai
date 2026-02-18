@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { FiGlobe } from "react-icons/fi";
+import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
 
 // --- TYPESCRIPT FIX START ---
 interface StyleItem {
@@ -37,6 +38,14 @@ const typedArabicStylesData: TypedArabicStylesData = arabicStylesData as TypedAr
 
 type AIModel = "google/nano-banana-pro";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
+type SavedDesign = {
+  imageUrl: string;
+  prompt: string;
+  model: AIModel;
+  createdAt: string;
+};
+
+const LAST_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 
 const ArabicNameArtGeneratorPageAr: NextPage = () => {
   const { data: session } = useSession();
@@ -61,6 +70,20 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
   const [selectedModel] = useState<AIModel>("google/nano-banana-pro"); 
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
+
+  useEffect(() => {
+    if (imagesUrl.length > 0) return;
+    try {
+      const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as SavedDesign;
+      if (parsed?.imageUrl) {
+        setImagesUrl([{ imageUrl: parsed.imageUrl }]);
+      }
+    } catch {
+      // ignore invalid cache
+    }
+  }, [imagesUrl.length]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -99,7 +122,23 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
   };
 
   const generateIcon = api.generate.generateIcon.useMutation({
-    onSuccess: (data) => setImagesUrl(data),
+    onSuccess: (data) => {
+      setImagesUrl(data);
+      const firstImageUrl = data?.[0]?.imageUrl;
+      if (firstImageUrl) {
+        const saved: SavedDesign = {
+          imageUrl: firstImageUrl,
+          prompt: form.basePrompt.replace(/'Text'/gi, form.name),
+          model: selectedModel,
+          createdAt: new Date().toISOString(),
+        };
+        try {
+          window.localStorage.setItem(LAST_DESIGN_STORAGE_KEY, JSON.stringify(saved));
+        } catch {
+          // ignore storage errors
+        }
+      }
+    },
     onError: (error) => setError(error.message),
   });
 
@@ -295,6 +334,33 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
                   <Image src={imageUrl} alt="Arabic Art" width={512} height={512} className="w-full h-auto" />
                 </div>
               ))}
+            </section>
+            <section className="mt-10">
+              <h3 className="text-2xl font-semibold mb-6 text-center">
+                Turn your design into a real product
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {GENERATOR_PRODUCT_THUMBNAILS.arabic.map((p) => (
+                  <div
+                    key={p.key}
+                    className="group relative rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition"
+                  >
+                    <div className="relative h-44 bg-gray-100 dark:bg-gray-800">
+                      <img
+                        src={p.image}
+                        alt={p.label}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-4 text-center">
+                      <h4 className="text-lg font-semibold mb-1">{p.label}</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {p.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </section>
           </>
         )}

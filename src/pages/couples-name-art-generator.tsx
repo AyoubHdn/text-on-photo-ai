@@ -22,6 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackEvent } from "~/lib/ga";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
+import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
@@ -85,6 +86,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
+  const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
   const generatedImagesGridClass =
     imagesUrl.length === 1
       ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
@@ -631,7 +633,15 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
 
           {error && (<div className="bg-red-500 text-white rounded p-4 text-xl">{error}{" "}{error.includes("credits") && (<Link href="/buy-credits" className="underline font-bold ml-2">Buy Credits</Link>)}</div>)}
 
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>{isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}</Button>
+          {isCreditLocked && (
+            <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+              This design is saved. Add credits to continue.{" "}
+              <Link href="/buy-credits" className="underline font-semibold">
+                Buy credits
+              </Link>
+            </div>
+          )}
+          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>{isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}</Button>
           <GeneratorNudge generatorType="couples" section="trust" />
         </form>
 
@@ -678,7 +688,19 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                           <AiOutlineShareAlt className="h-4 w-4" />
                         </button>
                       </div>
-                      <Image src={displayUrl} alt="Generated couples art" width={512} height={512} className="w-full rounded" unoptimized={true} />
+                      <Image
+                        src={displayUrl}
+                        alt="Generated couples art"
+                        width={512}
+                        height={512}
+                        className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}
+                        unoptimized={true}
+                      />
+                      {isCreditLocked && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded bg-black/30 text-xs font-semibold text-white">
+                          Saved design locked
+                        </div>
+                      )}
                       {showRemoveBgAlert && (
                         <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
                           Removing the background costs 1 credit.
@@ -690,7 +712,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                       <button
                         type="button"
                         onClick={() => void handleToggleBackground(imageUrl)}
-                        disabled={!!isRemoving}
+                        disabled={!!isRemoving || isCreditLocked}
                         className="rounded bg-white/10 px-2 py-1 font-semibold hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
                         title="Remove background"
                         aria-label="Remove background"
@@ -712,26 +734,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {[
-                  {
-                    key: "poster",
-                    label: "Poster",
-                    description: "Perfect for walls, frames, and gifts",
-                    image: "/images/products/poster.jpg",
-                  },
-                  {
-                    key: "tshirt",
-                    label: "T-Shirt",
-                    description: "Wear your name art every day",
-                    image: "/images/products/tshirt.jpg",
-                  },
-                  {
-                    key: "mug",
-                    label: "Mug",
-                    description: "A daily reminder with your design",
-                    image: "/images/products/mug.jpg",
-                  },
-                ].map((p) => (
+                {GENERATOR_PRODUCT_THUMBNAILS.couples.map((p) => (
                   <div
                     key={p.key}
                     className="group relative rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition"
@@ -760,7 +763,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
 
                       <button
                         className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                        disabled={previewCooldown !== null}
+                        disabled={previewCooldown !== null || isCreditLocked}
                         onClick={() => {
                           if (
                             selectedAspectRatio === "16:9" &&

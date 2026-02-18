@@ -223,7 +223,7 @@ export const generateRouter = createTRPCRouter({
       );
       const totalCredits = creditsPerImage.times(imageCount);
 
-      // Deduct credits
+      // Deduct credits before generation; refund on downstream failure.
       const updatedUser = await ctx.prisma.$transaction(async (tx) => {
         const existingUser = await tx.user.findUnique({
           where: { id: ctx.session.user.id },
@@ -254,72 +254,122 @@ export const generateRouter = createTRPCRouter({
       });
 
       // Update Mautic contact
-      try {
-        await updateMauticContact({
-          email: updatedUser.email,
-          name: updatedUser.name,
-          brand_specific_credits: updatedUser.credits,
-        },
-          'namedesignai');
-        console.log("Mautic contact updated after credit deduction.");
-      } catch (err) {
-        console.error("Error updating Mautic after credit deduction:", err);
+      if (updatedUser.email) {
+        try {
+          await updateMauticContact({
+            email: updatedUser.email,
+            name: updatedUser.name,
+            brand_specific_credits: updatedUser.credits,
+          },
+            'namedesignai');
+          console.log("Mautic contact updated after credit deduction.");
+        } catch (err) {
+          console.error("Error updating Mautic after credit deduction:", err);
+        }
       }
 
-      // Generate images
-      const b64Images: string[] = await generateIcon(
-        input.prompt,
-        input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro"
-          ? 1
-          : input.numberOfImages,
-        input.aspectRatio,
-        input.model
-      );
+      try {
+        // Generate images
+        const b64Images: string[] = await generateIcon(
+          input.prompt,
+          input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro"
+            ? 1
+            : input.numberOfImages,
+          input.aspectRatio,
+          input.model
+        );
 
-      // Store images in DB & upload to S3
-      const createdIcons = await Promise.all(
-        b64Images.map(async (image: string) => {
-          const icon = await ctx.prisma.icon.create({
-            data: {
-              prompt: input.prompt,
-              userId: ctx.session.user.id,
-              metadata: {
-                aspectRatio: input.aspectRatio ?? null,
-                model: input.model,
-                category: input.metadata?.category ?? null,
-                subcategory: input.metadata?.subcategory ?? null,
+        // Store images in DB & upload to S3
+        const createdIcons = await Promise.all(
+          b64Images.map(async (image: string) => {
+            const icon = await ctx.prisma.icon.create({
+              data: {
+                prompt: input.prompt,
+                userId: ctx.session.user.id,
+                metadata: {
+                  aspectRatio: input.aspectRatio ?? null,
+                  model: input.model,
+                  category: input.metadata?.category ?? null,
+                  subcategory: input.metadata?.subcategory ?? null,
+                },
               },
-            },
+            });
+
+            try {
+              // Determine Content Type
+              const isPng = input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro";
+
+              await s3
+                .putObject({
+                  Bucket: BUCKET_NAME,
+                  Body: Buffer.from(image, "base64"),
+                  Key: icon.id,
+                  ContentEncoding: "base64",
+                  ContentType: isPng ? "image/png" : "image/webp",
+                })
+                .promise();
+            } catch (s3Error) {
+              console.error("S3 Upload Error:", s3Error);
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to upload image to S3",
+              });
+            }
+
+            return icon;
+          })
+        );
+
+        // Return the URLs
+        return createdIcons.map((icon) => ({
+          imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
+        }));
+      } catch (generationOrStorageError) {
+        // If generation/storage fails after deduction, refund in full.
+        try {
+          const refundedUser = await ctx.prisma.$transaction(async (tx) => {
+            const existingUser = await tx.user.findUnique({
+              where: { id: ctx.session.user.id },
+              select: { credits: true, email: true, name: true },
+            });
+            if (!existingUser) return null;
+
+            const restoredCredits = new Prisma.Decimal(existingUser.credits).plus(totalCredits);
+            return tx.user.update({
+              where: { id: ctx.session.user.id },
+              data: { credits: restoredCredits },
+              select: { credits: true, email: true, name: true },
+            });
           });
 
-          try {
-            // Determine Content Type
-            const isPng = input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro";
-
-            await s3
-              .putObject({
-                Bucket: BUCKET_NAME,
-                Body: Buffer.from(image, "base64"),
-                Key: icon.id,
-                ContentEncoding: "base64",
-                ContentType: isPng ? "image/png" : "image/webp",
-              })
-              .promise();
-          } catch (s3Error) {
-            console.error("S3 Upload Error:", s3Error);
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to upload image to S3",
-            });
+          if (refundedUser?.email) {
+            try {
+              await updateMauticContact({
+                email: refundedUser.email,
+                name: refundedUser.name,
+                brand_specific_credits: refundedUser.credits,
+              }, "namedesignai");
+            } catch (mauticErr) {
+              console.error("Error updating Mautic after refund:", mauticErr);
+            }
           }
+        } catch (refundError) {
+          console.error("Credit refund failed after generation/storage error:", refundError);
+        }
 
-          return icon;
-        })
-      );
-
-      // Return the URLs
-      return createdIcons.map((icon) => ({
-        imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
-      }));
+        if (generationOrStorageError instanceof TRPCError) {
+          throw generationOrStorageError;
+        }
+        if (generationOrStorageError instanceof Error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: generationOrStorageError.message,
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Generation failed. Credits were refunded.",
+        });
+      }
     }),
 });

@@ -23,6 +23,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackGA, trackEvent } from "~/lib/ga";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
+import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
@@ -819,26 +820,7 @@ const NameArtGeneratorPage: NextPage = () => {
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                key: "poster",
-                label: "Poster",
-                description: "Perfect for walls, frames, and gifts",
-                image: "/images/products/poster.jpg",
-              },
-              {
-                key: "tshirt",
-                label: "T-Shirt",
-                description: "Wear your name art every day",
-                image: "/images/products/tshirt.jpg",
-              },
-              {
-                key: "mug",
-                label: "Mug",
-                description: "A daily reminder with your design",
-                image: "/images/products/mug.jpg",
-              },
-            ].map((p) => (
+            {GENERATOR_PRODUCT_THUMBNAILS.default.map((p) => (
               <div
                 key={p.key}
                 className="group relative rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition"
