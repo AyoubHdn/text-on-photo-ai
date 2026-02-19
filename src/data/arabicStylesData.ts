@@ -122,7 +122,7 @@ export const arabicStylesData = {
         src: "/styles/arabic/wireframe.webp",
         name: "Wireframe",
         basePrompt: "3D wireframe Arabic lettering of 'Text' with glowing orange lines on deep black background, centered blueprint-style composition, precise geometry, clean line clarity, high contrast, no extra text elements, print-ready tech art.",
-      },
+      }
     ]
   },
   "Nature & Elements": {
