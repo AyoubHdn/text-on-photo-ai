@@ -38,6 +38,7 @@ type MetaPurchaseInput = {
   contentType: "credits" | "product";
   contentIds: string[];
   email?: string | null;
+  eventSourceUrl?: string;
 };
 
 function normalizeEmail(email: string) {
@@ -66,6 +67,7 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
         event_time: number;
         event_id: string;
         action_source: "website";
+        event_source_url?: string;
         user_data?: Record<string, string[]>;
         custom_data: {
           value: number;
@@ -82,6 +84,7 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
           event_time: Math.floor(Date.now() / 1000),
           event_id: input.eventId,
           action_source: "website",
+          ...(input.eventSourceUrl ? { event_source_url: input.eventSourceUrl } : {}),
           ...(Object.keys(userData).length > 0 ? { user_data: userData } : {}),
           custom_data: {
             value: input.value,
@@ -350,12 +353,13 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       await sendMetaPurchaseEvent({
-        eventId: event.id,
+        eventId: `physical_order_${order.id}`,
         value: Number(order.totalPrice ?? 0),
         currency: "USD",
         contentType: "product",
         contentIds: [order.productKey],
         email: preferredEmail,
+        eventSourceUrl: `${env.NEXTAUTH_URL}/order/success?orderId=${order.id}`,
       });
 
       // Mautic: mark/update physical purchase fields for this contact.

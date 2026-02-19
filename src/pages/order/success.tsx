@@ -20,6 +20,7 @@ export default function OrderSuccess() {
 
   const order = orderQuery.data;
   const hasTrackedPurchaseRef = useRef(false);
+  const hasTrackedMetaPurchaseRef = useRef(false);
   const productLabel =
     order?.productKey === "tshirt"
       ? "T-shirt"
@@ -77,6 +78,37 @@ export default function OrderSuccess() {
       order_id: orderIdValue,
     });
     hasTrackedPurchaseRef.current = true;
+  }, [order, orderIdValue]);
+
+  useEffect(() => {
+    if (!order || !orderIdValue || hasTrackedMetaPurchaseRef.current) return;
+    if (typeof window === "undefined") return;
+
+    const key = `meta_purchase_${orderIdValue}`;
+    if (window.sessionStorage.getItem(key)) {
+      hasTrackedMetaPurchaseRef.current = true;
+      return;
+    }
+
+    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof maybeFbq !== "function") return;
+
+    maybeFbq(
+      "track",
+      "Purchase",
+      {
+        value: Number(order.totalPrice ?? 0),
+        currency: "USD",
+        content_type: "product",
+        content_ids: [order.productKey],
+        content_category: "physical_product",
+        order_id: orderIdValue,
+      },
+      { eventID: `physical_order_${orderIdValue}` },
+    );
+
+    window.sessionStorage.setItem(key, "1");
+    hasTrackedMetaPurchaseRef.current = true;
   }, [order, orderIdValue]);
 
   return (
@@ -138,4 +170,3 @@ export default function OrderSuccess() {
     </div>
   );
 }
-
