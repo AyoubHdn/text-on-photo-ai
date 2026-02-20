@@ -30,6 +30,29 @@ const replicate = new Replicate({
 const ASPECT_RATIO_VALUES = ["1:1", "4:5", "3:2", "16:9"] as const;
 type AspectRatioValue = (typeof ASPECT_RATIO_VALUES)[number];
 
+const FRIENDLY_GENERATION_BUSY_MESSAGE =
+  "Generation is temporarily busy due to high demand. Please try again in a minute.";
+
+function normalizeGenerationErrorMessage(error: unknown): string {
+  const raw =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+      ? error
+      : "";
+
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes("prediction failed") ||
+    lower.includes("service is currently unavailable") ||
+    lower.includes("(e003)")
+  ) {
+    return FRIENDLY_GENERATION_BUSY_MESSAGE;
+  }
+
+  return raw || "Generation failed. Please try again.";
+}
+
 // Helper function to fetch an image from a URL and encode it as Base64
 async function fetchAndEncodeImage(url: string): Promise<string> {
   console.log("Fetching image from:", url);
@@ -113,7 +136,15 @@ const generateIcon = async (
 
   // --- 2. EXECUTION ---
   console.log(`Calling Replicate model: ${model}`);
-  const rawOutput = await replicate.run(path, { input });
+  let rawOutput: unknown;
+  try {
+    rawOutput = await replicate.run(path, { input });
+  } catch (error) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: normalizeGenerationErrorMessage(error),
+    });
+  }
   console.log("Replicate output type:", typeof rawOutput);
   // console.log("Replicate raw output:", rawOutput); // Uncomment to debug structure if needed
 
@@ -363,7 +394,7 @@ export const generateRouter = createTRPCRouter({
         if (generationOrStorageError instanceof Error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: generationOrStorageError.message,
+            message: normalizeGenerationErrorMessage(generationOrStorageError),
           });
         }
         throw new TRPCError({

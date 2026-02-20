@@ -6,7 +6,7 @@ export const CREDIT_COSTS = {
 } as const;
 
 export const PRODUCT_MARGINS = {
-  poster: 6,   // $6 margin
-  tshirt: 8,   // $8 margin
-  mug: 7,       // $7 margin
+  poster: 12,   // $12 margin
+  tshirt: 12,   // $12 margin
+  mug: 12,       // $12 margin
 } as const;

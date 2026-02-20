@@ -28,7 +28,9 @@ interface MauticContactPayload {
 
 function formatCreditsForMautic(value: number | string | Prisma.Decimal): string {
   const creditDecimal = new Prisma.Decimal(value);
-  return creditDecimal.lte(0) ? "No credits" : creditDecimal.toString();
+  // The Mautic field is short text, so we keep a label for empty balance.
+  if (creditDecimal.lte(0)) return "No credits";
+  return creditDecimal.toString();
 }
 
 // Your existing function signature, slightly adapted for brand context

@@ -27,6 +27,9 @@ export const mauticRouter = createTRPCRouter({
           brand_specific_plan: contact.plan,
         },
           'namedesignai');
+        if (mauticData.errors?.length) {
+          throw new Error(mauticData.errors.map((error) => error.message).join("; "));
+        }
         console.log(`Processed contact ${contact.email}:`, mauticData);
         processedCount++;
       } catch (err) {
