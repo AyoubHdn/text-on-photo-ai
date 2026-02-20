@@ -1,10 +1,9 @@
 // pages/api/cron-sync.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { appRouter } from "~/server/api/root"; // Ensure this path is correct
-import { createTRPCContext } from "~/server/api/trpc";
 import { env } from "~/env.mjs";
 import { processDueDeliveredEmailSchedules } from "~/server/mautic/deliveryScheduler";
 import { runPricingSync } from "~/server/services/printfulPricingSync";
+import { syncAllContactsToMautic } from "~/server/mautic/syncContacts";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Check the Authorization header (Vercel will include CRON_SECRET as a Bearer token)
@@ -16,13 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await runPricingSync();
     const deliveredResult = await processDueDeliveredEmailSchedules();
-
-    // Create tRPC context
-    const ctx = await createTRPCContext({ req, res });
-    // Create a caller from the router using the current context
-    const caller = appRouter.createCaller(ctx);
-    // Call the syncContacts mutation
-    const result = await caller.mautic.syncContacts();
+    const result = await syncAllContactsToMautic();
     return res.status(200).json({
       pricingSync: { ok: true },
       deliveredEmails: deliveredResult,
