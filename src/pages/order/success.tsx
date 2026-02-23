@@ -44,6 +44,7 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     const mapToHref = (value: string | null) => {
+      if (value === "ramadan-mug") return "/ramadan-mug";
       if (value === "arabic") return "/arabic-name-art-generator";
       if (value === "couples") return "/couples-name-art-generator";
       return "/name-art-generator";
@@ -72,7 +73,9 @@ export default function OrderSuccess() {
       }
       window.sessionStorage.setItem(key, "1");
     }
-    trackEvent("purchase", {
+    const eventName =
+      order.funnelSource === "ramadan-mug-ad" ? "ramadan_mug_purchase" : "purchase";
+    trackEvent(eventName, {
       value: Number(order.totalPrice ?? 0),
       currency: "USD",
       order_id: orderIdValue,

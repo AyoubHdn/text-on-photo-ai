@@ -67,6 +67,7 @@ export default function CheckoutPage() {
         variantName?: string;
         isBackgroundRemoved?: boolean;
         previewVariantId?: number | null;
+        funnelSource?: string | null;
         snapshotVariantId?: number | null;
         snapshotSize?: string | null;
         snapshotColor?: string | null;
@@ -233,13 +234,21 @@ export default function CheckoutPage() {
             : generatorKey === "default"
             ? "name-art-generator"
             : "checkout";
-        trackEvent("begin_checkout", {
-            product: order.productKey,
-            source_page: sourcePage,
-            user_credits_before_action: null,
-            required_credits: 0,
-            country: address.country,
-        });
+        if (order.funnelSource === "ramadan-mug-ad") {
+            trackEvent("ramadan_mug_checkout_started", {
+                product: order.productKey,
+                source_page: "ramadan-mug",
+                country: address.country,
+            });
+        } else {
+            trackEvent("begin_checkout", {
+                product: order.productKey,
+                source_page: sourcePage,
+                user_credits_before_action: null,
+                required_credits: 0,
+                country: address.country,
+            });
+        }
         hasTrackedBeginCheckoutRef.current = true;
     }, [order, address.country]);
 

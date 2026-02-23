@@ -37,6 +37,8 @@ type Props = {
   imageUrl: string | null;
   aspect: AspectRatio;
   onCooldownStart?: (seconds: number) => void;
+  funnelMode?: "default" | "ramadan_mug_ad";
+  ramadanAdUser?: boolean;
 };
 
 type SelectedProductConfig = {
@@ -63,6 +65,8 @@ export function ProductPreviewModal({
   imageUrl,
   aspect,
   onCooldownStart,
+  funnelMode = "default",
+  ramadanAdUser = false,
 }: Props) {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [mockupUrl, setMockupUrl] = useState<string | null>(null);
@@ -85,12 +89,14 @@ export function ProductPreviewModal({
   const router = useRouter();
   const sourcePage = useMemo(() => {
     const pathname = router.pathname;
+    if (pathname.includes("ramadan-mug")) return "ramadan-mug";
     if (pathname.includes("arabic-name-art-generator")) return "arabic-name-art-generator";
     if (pathname.includes("couples-name-art-generator") || pathname.includes("couples-art-generator")) {
       return "couples-art-generator";
     }
     return "name-art-generator";
   }, [router.pathname]);
+  const isRamadanFunnel = funnelMode === "ramadan_mug_ad" && ramadanAdUser;
 
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +119,30 @@ export function ProductPreviewModal({
     setCreditUpgradeContext(context);
     setCreditUpgradeRequired(requiredCredits);
     setCreditUpgradeOpen(true);
+  };
+  const trackPreviewEvent = (payload: {
+    variantId?: number;
+    chargedCredits: number;
+  }) => {
+    if (isRamadanFunnel) {
+      trackEvent("ramadan_mug_preview", {
+        source_page: sourcePage,
+        variantId: payload.variantId,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: payload.chargedCredits,
+        country: pricingCountryCode,
+      });
+      return;
+    }
+
+    trackEvent("generate_product_preview", {
+      product: productKey,
+      variantId: payload.variantId,
+      source_page: sourcePage,
+      user_credits_before_action: creditsQuery.data ?? null,
+      required_credits: payload.chargedCredits,
+      country: pricingCountryCode,
+    });
   };
 
   useEffect(() => {
@@ -363,7 +393,12 @@ export function ProductPreviewModal({
       const res = await fetch("/api/printful/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productKey, imageUrl: originalImageUrl, aspect }),
+        body: JSON.stringify({
+          productKey,
+          imageUrl: originalImageUrl,
+          aspect,
+          ramadanAdUser: isRamadanFunnel,
+        }),
       });
       const data = await parseJsonSafely(res);
       const fallbackError = "Preview unavailable. Please try again in a moment.";
@@ -390,13 +425,10 @@ export function ProductPreviewModal({
       if (!data.mockupUrl) return;
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(null);
-      trackEvent("generate_product_preview", {
-        product: productKey,
+      trackPreviewEvent({
         variantId: variantId ?? undefined,
-        source_page: sourcePage,
-        user_credits_before_action: creditsQuery.data ?? null,
-        required_credits: 0.1,
-        country: pricingCountryCode,
+        chargedCredits:
+          typeof data.chargedCredits === "number" ? data.chargedCredits : 0.1,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Preview unavailable. Please try again.");
@@ -656,6 +688,7 @@ export function ProductPreviewModal({
   ]);
 
   const regeneratePreview = async () => {
+    if (isRamadanFunnel) return;
     if (!variantId || !previewImageUrl || !productKey) return;
 
     try {
@@ -670,6 +703,7 @@ export function ProductPreviewModal({
           imageUrl: previewImageUrl,
           aspect,
           variantId, // 🔥 IMPORTANT
+          ramadanAdUser: isRamadanFunnel,
         }),
       });
 
@@ -700,13 +734,10 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(variantId);
-      trackEvent("generate_product_preview", {
-        product: productKey,
+      trackPreviewEvent({
         variantId,
-        source_page: sourcePage,
-        user_credits_before_action: creditsQuery.data ?? null,
-        required_credits: 0.1,
-        country: pricingCountryCode,
+        chargedCredits:
+          typeof data.chargedCredits === "number" ? data.chargedCredits : 0.1,
       });
     } catch (err: any) {
       setError(err.message);
@@ -738,6 +769,7 @@ export function ProductPreviewModal({
           aspect,
           variantId: override?.variantId ?? variantId ?? undefined,
           previewMode: override?.previewMode,
+          ramadanAdUser: isRamadanFunnel,
         }),
       });
 
@@ -768,13 +800,10 @@ export function ProductPreviewModal({
 
       setMockupUrl(data.mockupUrl);
       setPreviewVariantId(nextPreviewVariantId);
-      trackEvent("generate_product_preview", {
-        product: productKey,
+      trackPreviewEvent({
         variantId: nextPreviewVariantId ?? undefined,
-        source_page: sourcePage,
-        user_credits_before_action: creditsQuery.data ?? null,
-        required_credits: 0.1,
-        country: pricingCountryCode,
+        chargedCredits:
+          typeof data.chargedCredits === "number" ? data.chargedCredits : 0.1,
       });
     } catch (err: any) {
       setError(err.message);
@@ -1046,7 +1075,7 @@ export function ProductPreviewModal({
             </div>
           )}
 
-            {productKey === "mug" && (
+            {productKey === "mug" && !isRamadanFunnel && (
             <>
               {/* Mug size selector */}
               <div className="mb-4">
@@ -1165,7 +1194,7 @@ export function ProductPreviewModal({
               </>
             )}
 
-            {productKey === "tshirt" && selectedColor && selectedSize && (
+            {productKey === "tshirt" && selectedColor && selectedSize && !isRamadanFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={
@@ -1181,7 +1210,7 @@ export function ProductPreviewModal({
 
             )}
 
-            {productKey === "poster" && variantId && (
+            {productKey === "poster" && variantId && !isRamadanFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -1191,7 +1220,7 @@ export function ProductPreviewModal({
               </Button>
             )}
 
-            {productKey === "mug" && mugVariantId && (
+            {productKey === "mug" && mugVariantId && !isRamadanFunnel && (
             <Button
               className="w-full mb-4"
               disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -1294,6 +1323,7 @@ export function ProductPreviewModal({
                 shippingCountry: selectedProductConfig.shippingCountry,
                 price: selectedProductConfig.price,
                 currency: "USD",
+                funnelSource: isRamadanFunnel ? "ramadan-mug-ad" : undefined,
               });
 
               void router.push(`/checkout?orderId=${res.orderId}`);

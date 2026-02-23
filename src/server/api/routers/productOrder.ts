@@ -34,6 +34,7 @@ export const productOrderRouter = createTRPCRouter({
         shippingCountry: z.string().default("US"),
         price: z.number().optional(),
         currency: z.string().default("USD"),
+        funnelSource: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -79,6 +80,7 @@ export const productOrderRouter = createTRPCRouter({
             shippingCurrency: pricing.currency,
             totalPrice: pricing.totalPrice,
             currency: pricing.currency,
+            funnelSource: input.funnelSource,
             status: "pending",
         },
         });

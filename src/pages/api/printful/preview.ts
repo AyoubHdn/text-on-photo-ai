@@ -5,10 +5,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "~/server/auth";
+import { Prisma } from "@prisma/client";
+import { prisma } from "~/server/db";
 
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { CREDIT_COSTS } from "~/server/credits/constants";
-import { deductCreditsOrThrow } from "~/server/credits/deductCredits";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 import { createMockupTask } from "~/server/printful/mockup";
@@ -38,6 +39,7 @@ export default async function handler(
     aspect?: "1:1" | "4:5" | "3:2" | "16:9";
     variantId?: number;
     previewMode?: "two-side" | "center" | "full-wrap";
+    ramadanAdUser?: boolean;
   };
 
 
@@ -64,6 +66,8 @@ export default async function handler(
     if (!product) {
       return res.status(400).json({ error: "Invalid product" });
     }
+
+    const ramadanAdUser = Boolean(req.body?.ramadanAdUser);
 
     let printImageUrl: string;
 
@@ -120,19 +124,67 @@ export default async function handler(
       );
     }
 
+  if (ramadanAdUser && product.key !== "mug") {
+    return res.status(403).json({ error: "RAMADAN_MUG_ONLY" });
+  }
+
   try {
-    // ✅ 1. Deduct credits FIRST (before Printful cost)
-    const updatedUser = await deductCreditsOrThrow(
-      session.user.id,
-      CREDIT_COSTS.PRODUCT_PREVIEW
-    );
-    if (updatedUser.email) {
+    // Deduct preview credits unless this is the one-time Ramadan free mug preview.
+    const creditUpdate = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          credits: true,
+          email: true,
+          name: true,
+          ramadanAdUser: true,
+          ramadanMugFreePreviewUsed: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const canUseRamadanFreePreview =
+        ramadanAdUser &&
+        product.key === "mug" &&
+        user.ramadanAdUser;
+
+      if (canUseRamadanFreePreview) {
+        return {
+          user,
+          chargedCredits: 0,
+          usedFreeRamadanPreview: true,
+        };
+      }
+
+      const amount = new Prisma.Decimal(CREDIT_COSTS.PRODUCT_PREVIEW);
+      const credits = new Prisma.Decimal(user.credits);
+      if (credits.lessThan(amount)) {
+        throw new Error("Not enough credits");
+      }
+
+      const updated = await tx.user.update({
+        where: { id: session.user.id },
+        data: { credits: credits.minus(amount) },
+        select: { credits: true, email: true, name: true },
+      });
+
+      return {
+        user: updated,
+        chargedCredits: Number(CREDIT_COSTS.PRODUCT_PREVIEW),
+        usedFreeRamadanPreview: false,
+      };
+    });
+
+    if (creditUpdate.chargedCredits > 0 && creditUpdate.user.email) {
       try {
         await updateMauticContact(
           {
-            email: updatedUser.email,
-            name: updatedUser.name,
-            brand_specific_credits: updatedUser.credits,
+            email: creditUpdate.user.email,
+            name: creditUpdate.user.name,
+            brand_specific_credits: creditUpdate.user.credits,
           },
           "namedesignai"
         );
@@ -221,6 +273,8 @@ export default async function handler(
       success: true,
       mockupUrl: stableMockupUrl,
       product,
+      chargedCredits: creditUpdate.chargedCredits,
+      usedFreeRamadanPreview: creditUpdate.usedFreeRamadanPreview,
     });
   } catch (error) {
     console.error("[PRINTFUL_PREVIEW_ERROR]", error);
