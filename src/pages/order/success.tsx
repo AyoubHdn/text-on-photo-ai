@@ -73,9 +73,7 @@ export default function OrderSuccess() {
       }
       window.sessionStorage.setItem(key, "1");
     }
-    const eventName =
-      order.funnelSource === "ramadan-mug-ad" ? "ramadan_mug_purchase" : "purchase";
-    trackEvent(eventName, {
+    trackEvent("purchase", {
       value: Number(order.totalPrice ?? 0),
       currency: "USD",
       order_id: orderIdValue,
