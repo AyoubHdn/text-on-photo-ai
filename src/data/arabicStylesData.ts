@@ -6,7 +6,7 @@ export const arabicStylesData = {
       {
         src: "/styles/arabic/ramadan-crescent.webp",
         name: "Crescent Glow",
-        basePrompt: "Elegant Arabic calligraphy of 'Text' integrated subtly within a glowing crescent moon, centered night composition, deep navy sky with soft golden light accents, refined Islamic ambiance, high contrast readability, no extra words or symbols, premium Ramadan print-ready artwork.",
+        basePrompt: "Elegant Arabic calligraphy of 'Text' integrated subtly within a glowing crescent moon, centered night composition, deep navy sky with soft golden light accents, refined Islamic ambiance, high contrast readability, no extra words or symbols, premium Ramadan artwork, no frame, no border, no mat, no mockup, design-only, full-bleed composition.",
       },
       {
         src: "/styles/arabic/ramadan-lantern.webp",

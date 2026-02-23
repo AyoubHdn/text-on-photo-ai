@@ -64,6 +64,7 @@ type SavedDesign = {
 };
 
 const LAST_DESIGN_STORAGE_KEY = "ramadan-mug:last-design:v1";
+const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 const RAMADAN_AD_USER_SESSION_KEY = "isRamadanMugAdUser";
 
 const RamadanMugPage: NextPage = () => {
@@ -213,7 +214,9 @@ const RamadanMugPage: NextPage = () => {
   useEffect(() => {
     if (imagesUrl.length > 0) return;
     try {
-      const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
+      const raw =
+        window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY) ??
+        window.localStorage.getItem(LEGACY_ARABIC_DESIGN_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as SavedDesign;
       if (parsed?.imageUrl) {
