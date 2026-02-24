@@ -31,7 +31,11 @@ const ASPECT_RATIO_VALUES = ["1:1", "4:5", "3:2", "16:9"] as const;
 type AspectRatioValue = (typeof ASPECT_RATIO_VALUES)[number];
 
 const FRIENDLY_GENERATION_BUSY_MESSAGE =
-  "Generation is temporarily busy due to high demand. Please try again in a minute.";
+  "Generation is temporarily busy at our AI provider due to high demand. Please try again shortly. If generation fails, your credits are refunded automatically.";
+const DEFAULT_GENERATION_TIMEOUT_MS = 120000;
+const NANO_BANANA_ATTEMPT_TIMEOUT_MS = 45000;
+const NANO_BANANA_MAX_ATTEMPTS = 3;
+const NANO_BANANA_RETRY_DELAYS_MS = [3000, 7000] as const;
 
 function normalizeGenerationErrorMessage(error: unknown): string {
   const raw =
@@ -45,12 +49,55 @@ function normalizeGenerationErrorMessage(error: unknown): string {
   if (
     lower.includes("prediction failed") ||
     lower.includes("service is currently unavailable") ||
-    lower.includes("(e003)")
+    lower.includes("(e003)") ||
+    lower.includes("timeout") ||
+    lower.includes("timed out")
   ) {
     return FRIENDLY_GENERATION_BUSY_MESSAGE;
   }
 
   return raw || "Generation failed. Please try again.";
+}
+
+function isRetryableProviderError(error: unknown): boolean {
+  const raw =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+      ? error
+      : "";
+  const lower = raw.toLowerCase();
+  return (
+    lower.includes("prediction failed") ||
+    lower.includes("service is currently unavailable") ||
+    lower.includes("(e003)") ||
+    lower.includes("timeout") ||
+    lower.includes("timed out") ||
+    lower.includes("rate limit") ||
+    lower.includes("too many requests")
+  );
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 // Helper function to fetch an image from a URL and encode it as Base64
@@ -138,7 +185,43 @@ const generateIcon = async (
   console.log(`Calling Replicate model: ${model}`);
   let rawOutput: unknown;
   try {
-    rawOutput = await replicate.run(path, { input });
+    if (model === "google/nano-banana-pro") {
+      let lastError: unknown = null;
+      for (let attempt = 1; attempt <= NANO_BANANA_MAX_ATTEMPTS; attempt++) {
+        try {
+          rawOutput = await withTimeout(
+            replicate.run(path, { input }),
+            NANO_BANANA_ATTEMPT_TIMEOUT_MS,
+            "Generation timed out while waiting for Nano Banana",
+          );
+          lastError = null;
+          break;
+        } catch (attemptError) {
+          lastError = attemptError;
+          const canRetry =
+            isRetryableProviderError(attemptError) &&
+            attempt < NANO_BANANA_MAX_ATTEMPTS;
+          if (!canRetry) {
+            throw attemptError;
+          }
+          const delayMs = NANO_BANANA_RETRY_DELAYS_MS[attempt - 1] ?? 5000;
+          console.warn(
+            `[NANO_BANANA_RETRY] attempt ${attempt} failed; retrying in ${delayMs}ms`,
+            attemptError instanceof Error ? attemptError.message : attemptError,
+          );
+          await sleep(delayMs);
+        }
+      }
+      if (lastError) {
+        throw lastError;
+      }
+    } else {
+      rawOutput = await withTimeout(
+        replicate.run(path, { input }),
+        DEFAULT_GENERATION_TIMEOUT_MS,
+        "Generation timed out while waiting for model response",
+      );
+    }
   } catch (error) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",

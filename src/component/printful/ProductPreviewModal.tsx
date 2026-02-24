@@ -342,7 +342,14 @@ export function ProductPreviewModal({
     }
 
     if (key === "mug") {
-      if (variantId || mugVariantId) return;
+      const existingVariant =
+        (variantId && nextVariants.find((v) => v.id === variantId)) ||
+        (mugVariantId && nextVariants.find((v) => v.id === mugVariantId));
+      if (existingVariant) {
+        setMugVariantId(existingVariant.id);
+        setVariantId(existingVariant.id);
+        return;
+      }
       const defaultMug =
         nextVariants.find((v) => v.id === 1320) ??
         nextVariants.find((v) => (v.size ?? v.name)?.toLowerCase().includes("11 oz")) ??
@@ -478,7 +485,7 @@ export function ProductPreviewModal({
       .catch(() => {
         setError("Failed to load product options");
       });
-  }, [productKey]);
+  }, [isOpen, productKey, aspect]);
 
   useEffect(() => {
     if (previewCooldown === null) return;
