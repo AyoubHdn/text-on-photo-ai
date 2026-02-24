@@ -112,7 +112,7 @@ const RamadanMugPage: NextPage = () => {
   const grantRamadanFreeCredits = api.user.grantRamadanFreeCredits.useMutation({
     onSuccess: async (result) => {
       if (result.granted) {
-        trackEvent("ramadan_free_credit_granted", {
+        fireRamadanCustomEvent("ramadan_free_credit_granted", {
           source_page: SOURCE_PAGE,
           granted_credits: 5.1,
         });
@@ -136,6 +136,22 @@ const RamadanMugPage: NextPage = () => {
     setCreditUpgradeContext(context);
     setCreditUpgradeRequired(requiredCredits);
     setCreditUpgradeOpen(true);
+  };
+  const fireRamadanCustomEvent = (
+    eventName:
+      | "view_ramadan_mug_page"
+      | "ramadan_free_credit_granted"
+      | "ramadan_generate_design"
+      | "ramadan_mug_checkout_started"
+      | "ramadan_mug_purchase",
+    params?: Record<string, unknown>,
+  ) => {
+    console.log("Firing Ramadan event:", eventName, params ?? {});
+    trackEvent(eventName, params);
+    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof maybeFbq !== "undefined") {
+      maybeFbq("trackCustom", eventName, params ?? {});
+    }
   };
 
   useEffect(() => {
@@ -185,21 +201,12 @@ const RamadanMugPage: NextPage = () => {
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
-    trackEvent("view_ramadan_mug_page", {
+    fireRamadanCustomEvent("view_ramadan_mug_page", {
       source_page: SOURCE_PAGE,
       is_ad_user: isRamadanAdUser,
       user_credits: creditsQuery.data ?? null,
       country: null,
     });
-    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-    if (typeof maybeFbq === "function") {
-      maybeFbq("trackCustom", "view_ramadan_mug_page", {
-        source_page: SOURCE_PAGE,
-        is_ad_user: isRamadanAdUser,
-        user_credits: creditsQuery.data ?? null,
-        country: null,
-      });
-    }
     hasTrackedViewRef.current = true;
   }, [SOURCE_PAGE, creditsQuery.data, isRamadanAdUser]);
 
@@ -303,7 +310,7 @@ const RamadanMugPage: NextPage = () => {
         country: null,
       });
       if (isRamadanAdUser) {
-        trackEvent("ramadan_generate_design", {
+        fireRamadanCustomEvent("ramadan_generate_design", {
           model: selectedModel,
           source_page: SOURCE_PAGE,
           user_credits_before_action: creditsQuery.data ?? null,

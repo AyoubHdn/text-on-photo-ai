@@ -18,6 +18,34 @@ export function formatPrice(value: number) {
   return value.toFixed(2);
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const cookies = document.cookie ? document.cookie.split("; ") : [];
+  for (const part of cookies) {
+    const [k, ...rest] = part.split("=");
+    if (k === name) {
+      return decodeURIComponent(rest.join("="));
+    }
+  }
+  return null;
+}
+
+function getMetaTrackingParams() {
+  const fbp = readCookie("_fbp");
+  let fbc = readCookie("_fbc");
+  const fbclid =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("fbclid")
+      : null;
+  if (!fbc && fbclid) {
+    fbc = `fb.1.${Date.now()}.${fbclid}`;
+  }
+  return {
+    fbp: fbp ?? undefined,
+    fbc: fbc ?? undefined,
+  };
+}
+
 type ShippingCountry = {
   code: string;
   name: string;
@@ -235,11 +263,24 @@ export default function CheckoutPage() {
             ? "name-art-generator"
             : "checkout";
         if (order.funnelSource === "ramadan-mug-ad") {
+            console.log("Firing Ramadan event:", "ramadan_mug_checkout_started", {
+                product: order.productKey,
+                source_page: "ramadan-mug",
+                country: address.country,
+            });
             trackEvent("ramadan_mug_checkout_started", {
                 product: order.productKey,
                 source_page: "ramadan-mug",
                 country: address.country,
             });
+            const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+            if (typeof maybeFbq !== "undefined") {
+                maybeFbq("trackCustom", "ramadan_mug_checkout_started", {
+                    product: order.productKey,
+                    source_page: "ramadan-mug",
+                    country: address.country,
+                });
+            }
         } else {
             trackEvent("begin_checkout", {
                 product: order.productKey,
@@ -596,6 +637,7 @@ export default function CheckoutPage() {
             const res = await createStripeSession.mutateAsync({
                 orderId: order.id,
                 submittedTotalPrice: totalPrice,
+                tracking: getMetaTrackingParams(),
                 address: {
                 name: address.name,
                 address1: address.address1,

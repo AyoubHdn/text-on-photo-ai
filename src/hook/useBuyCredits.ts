@@ -4,6 +4,34 @@ import { api } from "~/utils/api";
 
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_KEY);
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const cookies = document.cookie ? document.cookie.split("; ") : [];
+  for (const part of cookies) {
+    const [k, ...rest] = part.split("=");
+    if (k === name) {
+      return decodeURIComponent(rest.join("="));
+    }
+  }
+  return null;
+}
+
+function getMetaTrackingParams() {
+  const fbp = readCookie("_fbp");
+  let fbc = readCookie("_fbc");
+  const fbclid =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("fbclid")
+      : null;
+  if (!fbc && fbclid) {
+    fbc = `fb.1.${Date.now()}.${fbclid}`;
+  }
+  return {
+    fbp: fbp ?? undefined,
+    fbc: fbc ?? undefined,
+  };
+}
+
 export function useBuyCredits() {
   const checkout = api.checkout.createCheckout.useMutation();
 
@@ -21,6 +49,7 @@ export function useBuyCredits() {
           plan,
           returnPath: options?.returnPath,
           purchaseContext: options?.purchaseContext,
+          tracking: getMetaTrackingParams(),
         });
 
         if (options?.openInNewTab && response.url) {

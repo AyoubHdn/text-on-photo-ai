@@ -78,6 +78,22 @@ export default function OrderSuccess() {
       currency: "USD",
       order_id: orderIdValue,
     });
+    if (order.funnelSource === "ramadan-mug-ad") {
+      console.log("Firing Ramadan event:", "ramadan_mug_purchase");
+      trackEvent("ramadan_mug_purchase", {
+        value: Number(order.totalPrice ?? 0),
+        currency: "USD",
+        order_id: orderIdValue,
+      });
+      const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+      if (typeof maybeFbq === "function") {
+        maybeFbq("trackCustom", "ramadan_mug_purchase", {
+          value: Number(order.totalPrice ?? 0),
+          currency: "USD",
+          order_id: orderIdValue,
+        });
+      }
+    }
     hasTrackedPurchaseRef.current = true;
   }, [order, orderIdValue]);
 
@@ -94,6 +110,7 @@ export default function OrderSuccess() {
     const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof maybeFbq !== "function") return;
 
+    console.log("Firing standard Purchase pixel", `physical_order_${orderIdValue}`);
     maybeFbq(
       "track",
       "Purchase",

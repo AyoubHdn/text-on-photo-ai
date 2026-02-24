@@ -125,6 +125,10 @@ export function ProductPreviewModal({
     chargedCredits: number;
   }) => {
     if (isRamadanFunnel) {
+      console.log("Firing Ramadan event:", "ramadan_mug_preview", {
+        source_page: sourcePage,
+        variantId: payload.variantId,
+      });
       trackEvent("ramadan_mug_preview", {
         source_page: sourcePage,
         variantId: payload.variantId,
@@ -132,6 +136,16 @@ export function ProductPreviewModal({
         required_credits: payload.chargedCredits,
         country: pricingCountryCode,
       });
+      const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+      if (typeof maybeFbq !== "undefined") {
+        maybeFbq("trackCustom", "ramadan_mug_preview", {
+          source_page: sourcePage,
+          variantId: payload.variantId,
+          user_credits_before_action: creditsQuery.data ?? null,
+          required_credits: payload.chargedCredits,
+          country: pricingCountryCode,
+        });
+      }
       return;
     }
 

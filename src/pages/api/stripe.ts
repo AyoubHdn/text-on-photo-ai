@@ -38,6 +38,11 @@ type MetaPurchaseInput = {
   contentType: "credits" | "product";
   contentIds: string[];
   email?: string | null;
+  externalId?: string | null;
+  fbp?: string | null;
+  fbc?: string | null;
+  clientIpAddress?: string | null;
+  clientUserAgent?: string | null;
   eventSourceUrl?: string;
 };
 
@@ -47,6 +52,21 @@ function normalizeEmail(email: string) {
 
 function hashEmail(email: string) {
   return crypto.createHash("sha256").update(email).digest("hex");
+}
+
+function hashValue(value: string) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function getRequestIp(req: NextApiRequest): string | null {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  if (typeof forwardedFor === "string" && forwardedFor.length > 0) {
+    return forwardedFor.split(",")[0]?.trim() ?? null;
+  }
+  if (Array.isArray(forwardedFor) && forwardedFor.length > 0) {
+    return forwardedFor[0]?.split(",")[0]?.trim() ?? null;
+  }
+  return req.socket?.remoteAddress ?? null;
 }
 
 async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
@@ -59,6 +79,21 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
       if (normalized) {
         userData.em = [hashEmail(normalized)];
       }
+    }
+    if (input.externalId) {
+      userData.external_id = [hashValue(input.externalId)];
+    }
+    if (input.fbp) {
+      userData.fbp = [input.fbp];
+    }
+    if (input.fbc) {
+      userData.fbc = [input.fbc];
+    }
+    if (input.clientIpAddress) {
+      userData.client_ip_address = [input.clientIpAddress];
+    }
+    if (input.clientUserAgent) {
+      userData.client_user_agent = [input.clientUserAgent];
     }
 
     const payload: {
@@ -98,6 +133,8 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
         },
       ],
     };
+
+    console.log("Sending CAPI Purchase event", payload);
 
     const res = await fetch(
       `https://graph.facebook.com/v18.0/${env.META_PIXEL_ID}/events?access_token=${env.META_ACCESS_TOKEN}`,
@@ -140,6 +177,13 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
     case "checkout.session.completed": {
         console.log("Processing checkout.session.completed event...");
         const completedEvent = event.data.object;
+        const clientIpAddress = getRequestIp(req);
+        const clientUserAgent =
+          typeof req.headers["user-agent"] === "string"
+            ? req.headers["user-agent"]
+            : Array.isArray(req.headers["user-agent"])
+            ? req.headers["user-agent"][0]
+            : null;
 
         /* ------------------------------------
           PRINTFUL PHYSICAL ORDER FLOW
@@ -336,6 +380,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
       });
 
       console.log("ProductOrder marked as FULFILLED:", orderId);
+      console.log("Stripe payment succeeded for order:", order.id);
       const signedInEmail = order.user?.email ?? null;
       const stripeCheckoutEmail = completedEvent.customer_details?.email ?? null;
       const preferredEmail = signedInEmail ?? stripeCheckoutEmail;
@@ -359,6 +404,11 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         contentType: "product",
         contentIds: [order.productKey],
         email: preferredEmail,
+        externalId: order.userId ?? preferredEmail ?? null,
+        fbp: completedEvent.metadata?.fbp ?? null,
+        fbc: completedEvent.metadata?.fbc ?? null,
+        clientIpAddress,
+        clientUserAgent,
         eventSourceUrl: `${env.NEXTAUTH_URL}/order/success?orderId=${order.id}`,
       });
 
@@ -573,6 +623,11 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         contentType: "credits",
         contentIds: ["credits"],
         email: completedEvent.customer_details?.email ?? updatedUser?.email ?? null,
+        externalId: userId ?? completedEvent.customer_details?.email ?? null,
+        fbp: completedEvent.metadata?.fbp ?? null,
+        fbc: completedEvent.metadata?.fbc ?? null,
+        clientIpAddress,
+        clientUserAgent,
       });
     } catch (err) {
       console.error("Error updating user credits or plan:", err);

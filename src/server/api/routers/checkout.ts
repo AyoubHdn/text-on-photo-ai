@@ -25,6 +25,12 @@ export const checkoutRouter = createTRPCRouter({
       plan: z.enum(["starter", "pro", "elite"]), // Accept only specific plan names
       returnPath: z.string().optional(),
       purchaseContext: z.enum(["generate", "preview", "remove_background"]).optional(),
+      tracking: z
+        .object({
+          fbp: z.string().optional(),
+          fbc: z.string().optional(),
+        })
+        .optional(),
     })
   )
   .mutation(async ({ ctx, input }) => {
@@ -45,6 +51,8 @@ export const checkoutRouter = createTRPCRouter({
         metadata: {
           userId: ctx.session.user.id,
           purchaseContext: input.purchaseContext ?? "generate",
+          fbp: input.tracking?.fbp ?? "",
+          fbc: input.tracking?.fbc ?? "",
         },
         line_items: [
           {

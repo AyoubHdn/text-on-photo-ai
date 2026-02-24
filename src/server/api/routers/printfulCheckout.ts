@@ -68,6 +68,12 @@ export const printfulCheckoutRouter = createTRPCRouter({
       z.object({
         orderId: z.string(),
         submittedTotalPrice: z.number(),
+        tracking: z
+          .object({
+            fbp: z.string().optional(),
+            fbc: z.string().optional(),
+          })
+          .optional(),
         address: z
           .object({
             name: z.string(),
@@ -201,6 +207,8 @@ export const printfulCheckoutRouter = createTRPCRouter({
           type: "printful_order",
           orderId: order.id,
           userId: ctx.session.user.id,
+          fbp: input.tracking?.fbp ?? "",
+          fbc: input.tracking?.fbc ?? "",
         },
         line_items: [
           {
