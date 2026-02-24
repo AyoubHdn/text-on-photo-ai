@@ -125,10 +125,6 @@ export function ProductPreviewModal({
     chargedCredits: number;
   }) => {
     if (isRamadanFunnel) {
-      console.log("Firing Ramadan event:", "ramadan_mug_preview", {
-        source_page: sourcePage,
-        variantId: payload.variantId,
-      });
       trackEvent("ramadan_mug_preview", {
         source_page: sourcePage,
         variantId: payload.variantId,
@@ -137,7 +133,7 @@ export function ProductPreviewModal({
         country: pricingCountryCode,
       });
       const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-      if (typeof maybeFbq !== "undefined") {
+      if (typeof maybeFbq === "function") {
         maybeFbq("trackCustom", "ramadan_mug_preview", {
           source_page: sourcePage,
           variantId: payload.variantId,

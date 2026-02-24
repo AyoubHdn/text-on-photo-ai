@@ -134,8 +134,6 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
       ],
     };
 
-    console.log("Sending CAPI Purchase event", payload);
-
     const res = await fetch(
       `https://graph.facebook.com/v18.0/${env.META_PIXEL_ID}/events?access_token=${env.META_ACCESS_TOKEN}`,
       {
@@ -175,7 +173,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
   switch (event.type) {
     case "checkout.session.completed": {
-        console.log("Processing checkout.session.completed event...");
         const completedEvent = event.data.object;
         const clientIpAddress = getRequestIp(req);
         const clientUserAgent =
@@ -215,7 +212,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
       // 🛑 Idempotency: if Printful order already created, do nothing
       if (existingPrintfulOrder) {
-        console.log("Printful order already created:", orderId);
         break;
       }
 
@@ -322,8 +318,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         throw err;
       }
 
-      console.log("Printful print image URL:", printImageUrl);
-
       let draftOrder: { result?: { id?: number } };
       try {
         draftOrder = await printfulRequest("/orders", "POST", {
@@ -339,7 +333,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           ],
           confirm: false,
         });
-        console.log("Printful draft order response:", draftOrder);
       } catch (err) {
         console.error("Printful draft order error:", err);
         throw err;
@@ -357,7 +350,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           `/orders/${printfulId}/confirm`,
           "POST"
         );
-        console.log("Printful confirm response:", confirmResult);
       } catch (err) {
         console.error("Printful confirm error:", err);
         throw err;
@@ -379,8 +371,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         },
       });
 
-      console.log("ProductOrder marked as FULFILLED:", orderId);
-      console.log("Stripe payment succeeded for order:", order.id);
       const signedInEmail = order.user?.email ?? null;
       const stripeCheckoutEmail = completedEvent.customer_details?.email ?? null;
       const preferredEmail = signedInEmail ?? stripeCheckoutEmail;
@@ -601,7 +591,6 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
       });
 
       if (alreadyProcessed) {
-        console.log("Stripe event already processed:", event.id);
         break;
       }
 
@@ -637,7 +626,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
     default:
-      console.log(`Unhandled event type: ${event.type}`);
+      break;
   }
 
   res.json({ received: true });

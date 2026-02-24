@@ -97,6 +97,7 @@ const RamadanMugPage: NextPage = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const [isRamadanAdUser, setIsRamadanAdUser] = useState(false);
+  const [isAdUserResolved, setIsAdUserResolved] = useState(false);
   const hasRequestedFreeCreditsRef = useRef(false);
   const [generatedAspect, setGeneratedAspect] = useState<AspectRatio | null>(null);
   const [transparentUrls, setTransparentUrls] = useState<Record<string, string>>({});
@@ -142,14 +143,12 @@ const RamadanMugPage: NextPage = () => {
       | "view_ramadan_mug_page"
       | "ramadan_free_credit_granted"
       | "ramadan_generate_design"
-      | "ramadan_mug_checkout_started"
-      | "ramadan_mug_purchase",
+      | "ramadan_mug_checkout_started",
     params?: Record<string, unknown>,
   ) => {
-    console.log("Firing Ramadan event:", eventName, params ?? {});
     trackEvent(eventName, params);
     const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-    if (typeof maybeFbq !== "undefined") {
+    if (typeof maybeFbq === "function") {
       maybeFbq("trackCustom", eventName, params ?? {});
     }
   };
@@ -177,6 +176,7 @@ const RamadanMugPage: NextPage = () => {
     } catch {
       setIsRamadanAdUser(false);
     }
+    setIsAdUserResolved(true);
   }, [router.isReady, router.query]);
 
   useEffect(() => {
@@ -201,6 +201,7 @@ const RamadanMugPage: NextPage = () => {
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
+    if (!router.isReady || !isAdUserResolved) return;
     fireRamadanCustomEvent("view_ramadan_mug_page", {
       source_page: SOURCE_PAGE,
       is_ad_user: isRamadanAdUser,
@@ -208,7 +209,7 @@ const RamadanMugPage: NextPage = () => {
       country: null,
     });
     hasTrackedViewRef.current = true;
-  }, [SOURCE_PAGE, creditsQuery.data, isRamadanAdUser]);
+  }, [SOURCE_PAGE, creditsQuery.data, isRamadanAdUser, isAdUserResolved, router.isReady]);
 
   useEffect(() => {
     try {

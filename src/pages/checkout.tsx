@@ -263,18 +263,13 @@ export default function CheckoutPage() {
             ? "name-art-generator"
             : "checkout";
         if (order.funnelSource === "ramadan-mug-ad") {
-            console.log("Firing Ramadan event:", "ramadan_mug_checkout_started", {
-                product: order.productKey,
-                source_page: "ramadan-mug",
-                country: address.country,
-            });
             trackEvent("ramadan_mug_checkout_started", {
                 product: order.productKey,
                 source_page: "ramadan-mug",
                 country: address.country,
             });
             const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-            if (typeof maybeFbq !== "undefined") {
+            if (typeof maybeFbq === "function") {
                 maybeFbq("trackCustom", "ramadan_mug_checkout_started", {
                     product: order.productKey,
                     source_page: "ramadan-mug",
