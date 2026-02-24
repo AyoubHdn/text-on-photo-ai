@@ -2,7 +2,20 @@ import Link from "next/link";
 import { PrimaryLink } from "./PrimaryLink";
 import { FaTwitter, FaPinterest, FaFacebook } from "react-icons/fa";
 
-export function Footer() {
+type FooterProps = {
+  minimal?: boolean;
+};
+
+export function Footer({ minimal = false }: FooterProps) {
+  if (minimal) {
+    return (
+      <footer className="border-t border-gray-200 bg-gray-50 py-3 dark:border-gray-700 dark:bg-gray-900">
+        <div className="container mx-auto px-6 text-center text-xs text-gray-600 dark:text-gray-300">
+          Secure checkout • Printed in USA • Fast shipping
+        </div>
+      </footer>
+    );
+  }
 
   // Group 1: Text & Logo Based
   const textGenerators = [

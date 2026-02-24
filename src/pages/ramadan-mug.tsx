@@ -22,12 +22,12 @@ import {
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
-import { FiGlobe } from "react-icons/fi";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackEvent } from "~/lib/ga";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
+import { OnboardingModal } from "~/component/OnboardingModal";
 
 // --- TYPESCRIPT FIX START ---
 interface StyleItem {
@@ -66,10 +66,15 @@ type SavedDesign = {
 const LAST_DESIGN_STORAGE_KEY = "ramadan-mug:last-design:v1";
 const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 const RAMADAN_AD_USER_SESSION_KEY = "isRamadanMugAdUser";
+const RAMADAN_PANEL_1_SHOWN_KEY = "ramadanPanel1Shown";
+const RAMADAN_PANEL_2_SHOWN_KEY = "ramadanPanel2Shown";
+const RAMADAN_ONBOARDING_VIEWED_EVENT_KEY = "ramadanOnboardingViewedTracked";
+const RAMADAN_ONBOARDING_COMPLETED_EVENT_KEY = "ramadanOnboardingCompletedTracked";
 
 const RamadanMugPage: NextPage = () => {
   const SOURCE_PAGE = "ramadan-mug";
   const hasTrackedViewRef = useRef(false);
+  const panel1DelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
   const router = useRouter();
@@ -98,7 +103,11 @@ const RamadanMugPage: NextPage = () => {
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const [isRamadanAdUser, setIsRamadanAdUser] = useState(false);
   const [isAdUserResolved, setIsAdUserResolved] = useState(false);
+  const [showPanel1, setShowPanel1] = useState(false);
+  const [showPanel2, setShowPanel2] = useState(false);
+  const [shouldShowPanel2AfterGrant, setShouldShowPanel2AfterGrant] = useState(false);
   const hasRequestedFreeCreditsRef = useRef(false);
+  const generatorFormRef = useRef<HTMLFormElement>(null);
   const [generatedAspect, setGeneratedAspect] = useState<AspectRatio | null>(null);
   const [transparentUrls, setTransparentUrls] = useState<Record<string, string>>({});
   const [useTransparentMap, setUseTransparentMap] = useState<Record<string, boolean>>({});
@@ -117,6 +126,7 @@ const RamadanMugPage: NextPage = () => {
           source_page: SOURCE_PAGE,
           granted_credits: 5.1,
         });
+        setShouldShowPanel2AfterGrant(true);
       }
       await utils.user.getCredits.invalidate();
       await utils.user.getRamadanFunnelState.invalidate();
@@ -150,6 +160,26 @@ const RamadanMugPage: NextPage = () => {
     const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof maybeFbq === "function") {
       maybeFbq("trackCustom", eventName, params ?? {});
+    }
+  };
+
+  const fireRamadanOnboardingEvent = (
+    eventName: "ramadan_onboarding_viewed" | "ramadan_onboarding_completed",
+    sessionKey: string,
+  ) => {
+    try {
+      if (window.sessionStorage.getItem(sessionKey) === "true") return;
+    } catch {
+      // ignore storage errors
+    }
+    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof maybeFbq === "function") {
+      maybeFbq("trackCustom", eventName);
+    }
+    try {
+      window.sessionStorage.setItem(sessionKey, "true");
+    } catch {
+      // ignore storage errors
     }
   };
 
@@ -198,6 +228,71 @@ const RamadanMugPage: NextPage = () => {
     isRamadanAdUser,
     ramadanStateQuery.data,
   ]);
+
+  useEffect(() => {
+    if (!router.isReady || !isAdUserResolved) return;
+    if (isLoggedIn || !isRamadanAdUser) return;
+
+    try {
+      if (window.sessionStorage.getItem(RAMADAN_PANEL_1_SHOWN_KEY) === "true") {
+        return;
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    panel1DelayTimeoutRef.current = setTimeout(() => {
+      setShowPanel1(true);
+      try {
+        window.sessionStorage.setItem(RAMADAN_PANEL_1_SHOWN_KEY, "true");
+      } catch {
+        // ignore storage errors
+      }
+      fireRamadanOnboardingEvent(
+        "ramadan_onboarding_viewed",
+        RAMADAN_ONBOARDING_VIEWED_EVENT_KEY,
+      );
+    }, 2000);
+
+    return () => {
+      if (panel1DelayTimeoutRef.current) {
+        clearTimeout(panel1DelayTimeoutRef.current);
+        panel1DelayTimeoutRef.current = null;
+      }
+    };
+  }, [isAdUserResolved, isLoggedIn, isRamadanAdUser, router.isReady]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !isRamadanAdUser || !shouldShowPanel2AfterGrant) return;
+    if (!ramadanStateQuery.data?.ramadanFreeCreditsGranted) return;
+
+    try {
+      if (window.sessionStorage.getItem(RAMADAN_PANEL_2_SHOWN_KEY) === "true") {
+        setShouldShowPanel2AfterGrant(false);
+        return;
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    setShowPanel2(true);
+    setShouldShowPanel2AfterGrant(false);
+    fireRamadanOnboardingEvent(
+      "ramadan_onboarding_completed",
+      RAMADAN_ONBOARDING_COMPLETED_EVENT_KEY,
+    );
+  }, [
+    isLoggedIn,
+    isRamadanAdUser,
+    ramadanStateQuery.data?.ramadanFreeCreditsGranted,
+    shouldShowPanel2AfterGrant,
+  ]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setShowPanel1(false);
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
@@ -390,6 +485,25 @@ const RamadanMugPage: NextPage = () => {
     });
   };
 
+  const handlePanel1Continue = () => {
+    setShowPanel1(false);
+    void signIn("google", { callbackUrl: router.asPath });
+  };
+
+  const handlePanel2Continue = () => {
+    setShowPanel2(false);
+    try {
+      window.sessionStorage.setItem(RAMADAN_PANEL_2_SHOWN_KEY, "true");
+    } catch {
+      // ignore storage errors
+    }
+    generatorFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      const nameInput = document.getElementById("ramadan-name-input") as HTMLInputElement | null;
+      nameInput?.focus();
+    }, 350);
+  };
+
   const handleImageSelect = (basePrompt: string, src: string) => {
     setSelectedImage(src);
     setForm((prev) => ({ ...prev, basePrompt }));
@@ -556,15 +670,6 @@ const RamadanMugPage: NextPage = () => {
       </Head>
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
         
-        {/* Language Switcher - Made more visible */}
-        <div className="flex justify-end mb-4">
-            <Link href="/ar/arabic-name-art-generator">
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 border border-gray-300 rounded-full shadow-sm hover:border-blue-700 hover:text-white transition-all">
-                    <FiGlobe className="text-lg" /> 
-                    <span className="font-medium">العربية</span>
-                </button>
-            </Link>
-        </div>
 
         <h1 className="text-3xl font-bold text-center sm:text-4xl">Ramadan Mug Generator</h1>
         <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
@@ -572,12 +677,13 @@ const RamadanMugPage: NextPage = () => {
         </p>
         <GeneratorNudge generatorType="arabic" />
         
-        <form className="flex flex-col gap-6 mt-8" onSubmit={handleFormSubmit}>
+        <form ref={generatorFormRef} className="flex flex-col gap-6 mt-8" onSubmit={handleFormSubmit}>
           
           {/* 1. Enter Name - Standard English Labels, RTL Input */}
           <FormGroup>
             <label className="text-xl font-semibold mb-2 block">1. Enter Name (Arabic or English)</label>
-            <Input 
+            <Input
+                id="ramadan-name-input"
                 required 
                 value={form.name} 
                 onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} 
@@ -879,6 +985,42 @@ const RamadanMugPage: NextPage = () => {
           onCooldownStart={setPreviewCooldown}
           funnelMode={isRamadanAdUser ? "ramadan_mug_ad" : "default"}
           ramadanAdUser={isRamadanAdUser}
+        />
+        <OnboardingModal
+          isOpen={showPanel1}
+          title="🎁 Get Your Premium Arabic Name Design FREE"
+          description={(
+            <div className="space-y-2">
+              <p>Sign up to unlock:</p>
+              <ul className="list-disc pl-5">
+                <li>1 Premium AI design (worth $4)</li>
+                <li>Background removal option</li>
+                <li>Order tracking &amp; delivery updates</li>
+              </ul>
+            </div>
+          )}
+          ctaLabel="Continue with Google"
+          footerText="Takes 5 seconds. No spam."
+          onCta={handlePanel1Continue}
+          onClose={() => setShowPanel1(false)}
+        />
+        <OnboardingModal
+          isOpen={showPanel2}
+          title="🎉 You’re All Set!"
+          description={(
+            <div className="space-y-2">
+              <p>You received FREE credits to:</p>
+              <ul className="list-disc pl-5">
+                <li>Generate your Arabic name design</li>
+                <li>Remove background</li>
+                <li>Preview it on your mug</li>
+              </ul>
+              <p>Next Step: Enter a name and click Generate.</p>
+            </div>
+          )}
+          ctaLabel="Create My Design"
+          onCta={handlePanel2Continue}
+          showCloseButton={false}
         />
       </main>
     </>

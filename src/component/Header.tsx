@@ -7,7 +7,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { AiOutlineDown } from "react-icons/ai"; // Using an icon for the dropdown
 
-export function Header() {
+type HeaderProps = {
+    minimal?: boolean;
+};
+
+export function Header({ minimal = false }: HeaderProps) {
     const session = useSession();
     const credits = api.user.getCredits.useQuery();
     const isLoggedIn = !!session.data;
@@ -50,6 +54,23 @@ export function Header() {
         return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, []);
 
+
+    if (minimal) {
+        return (
+            <header className="container mx-auto flex h-16 items-center justify-center px-4 dark:bg-gray-800">
+                <PrimaryLink href="/" aria-label="Name Design AI Home">
+                    <Image
+                        src="/logo.webp"
+                        alt="Name Design AI Logo"
+                        width={50}
+                        height={50}
+                        className="rounded"
+                        unoptimized={true}
+                    />
+                </PrimaryLink>
+            </header>
+        );
+    }
 
     return (
         <header className="container mx-auto flex h-16 items-center justify-between px-4 dark:bg-gray-800">

@@ -3,6 +3,7 @@ import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import Script from "next/script";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 import { api } from "~/utils/api";
 
@@ -15,9 +16,26 @@ const MyApp: AppType<{ session: Session | null }> = ({
   pageProps: { session, ...pageProps },
 }) => {
   const router = useRouter();
+  const [isRamadanMugAdUser, setIsRamadanMugAdUser] = useState(false);
   const isCancelPage =
     router.pathname === "/cancel" || router.pathname === "/order/cancel";
+  const isRamadanMugRoute = router.pathname === "/ramadan-mug";
+  const isRamadanAdLayout = isRamadanMugRoute && isRamadanMugAdUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+
+  useEffect(() => {
+    if (!isRamadanMugRoute) {
+      setIsRamadanMugAdUser(false);
+      return;
+    }
+    try {
+      setIsRamadanMugAdUser(
+        window.sessionStorage.getItem("isRamadanMugAdUser") === "true",
+      );
+    } catch {
+      setIsRamadanMugAdUser(false);
+    }
+  }, [isRamadanMugRoute, router.asPath]);
 
   return (
     <SessionProvider session={session}>
@@ -70,17 +88,17 @@ const MyApp: AppType<{ session: Session | null }> = ({
       {/* Main App */}
       {isCancelPage ? (
         <div className="min-h-screen flex flex-col">
-          <Header />
+          <Header minimal={isRamadanAdLayout} />
           <main className="flex-grow">
             <Component {...pageProps} />
           </main>
-          <Footer />
+          <Footer minimal={isRamadanAdLayout} />
         </div>
       ) : (
         <>
-          <Header />
+          <Header minimal={isRamadanAdLayout} />
           <Component {...pageProps} />
-          <Footer />
+          <Footer minimal={isRamadanAdLayout} />
         </>
       )}
     </SessionProvider>
