@@ -770,16 +770,24 @@ const RamadanMugPage: NextPage = () => {
                 {isRamadanAdUser ? "Complete your White Glossy Mug order" : "Turn your design into a real product"}
               </h3>
 
-              <div className={`grid grid-cols-1 ${isRamadanAdUser ? "" : "sm:grid-cols-3"} gap-6`}>
+              <div
+                className={`grid grid-cols-1 ${isRamadanAdUser ? "justify-items-center" : "sm:grid-cols-3"} gap-6`}
+              >
                 {(isRamadanAdUser
                   ? GENERATOR_PRODUCT_THUMBNAILS.arabic.filter((p) => p.key === "mug")
                   : GENERATOR_PRODUCT_THUMBNAILS.arabic
                 ).map((p) => (
                   <div
                     key={p.key}
-                    className="group relative rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition"
+                    className={`group relative w-full rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition ${
+                      isRamadanAdUser ? "max-w-[22rem]" : ""
+                    }`}
                   >
-                    <div className="relative h-44 bg-gray-100 dark:bg-gray-800">
+                    <div
+                      className={`relative bg-gray-100 dark:bg-gray-800 ${
+                        isRamadanAdUser ? "aspect-square" : "h-44"
+                      }`}
+                    >
                       <img
                         src={p.image}
                         alt={p.label}
@@ -802,7 +810,7 @@ const RamadanMugPage: NextPage = () => {
                       )}
 
                       <button
-                        className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        className={`${isRamadanAdUser ? "w-full" : "inline-block"} px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition`}
                         disabled={previewCooldown !== null || isCreditLocked}
                         onClick={() => {
                           if (
