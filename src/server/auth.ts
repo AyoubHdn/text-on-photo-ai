@@ -29,8 +29,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     redirect({ url, baseUrl }) {
-      console.log("Redirect callback:", { url, baseUrl });
-      return url.startsWith(baseUrl) ? url : baseUrl;
+      // Allow safe in-site relative callback URLs like "/ramadan-mug?utm_source=facebook".
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+      try {
+        const target = new URL(url);
+        const currentBase = new URL(baseUrl);
+        if (target.origin === currentBase.origin) {
+          return url;
+        }
+      } catch {
+        // Ignore malformed URL and fall back to base URL.
+      }
+      return baseUrl;
     },
   },
   adapter: PrismaAdapter(prisma),
