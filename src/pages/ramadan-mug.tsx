@@ -149,10 +149,22 @@ const RamadanMugPage: NextPage = () => {
     params?: Record<string, unknown>,
   ) => {
     trackEvent(eventName, params);
-    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-    if (typeof maybeFbq === "function") {
+    const fireMeta = () => {
+      const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+      if (typeof maybeFbq !== "function") return false;
       maybeFbq("trackCustom", eventName, params ?? {});
-    }
+      return true;
+    };
+
+    if (fireMeta()) return;
+
+    let attempts = 0;
+    const retryTimer = window.setInterval(() => {
+      attempts += 1;
+      if (fireMeta() || attempts >= 20) {
+        window.clearInterval(retryTimer);
+      }
+    }, 250);
   };
 
   useEffect(() => {
@@ -163,13 +175,19 @@ const RamadanMugPage: NextPage = () => {
       typeof query.utm_source === "string" ? query.utm_source.toLowerCase() : "";
     const campaign =
       typeof query.campaign === "string" ? query.campaign.toLowerCase() : "";
+    const utmCampaign =
+      typeof query.utm_campaign === "string"
+        ? query.utm_campaign.toLowerCase()
+        : "";
     const hasFbclid = typeof query.fbclid === "string";
+    const campaignTag = `${campaign} ${utmCampaign}`;
     const isPaidSocialUser =
       source === "facebook" ||
       source === "instagram" ||
       utmSource === "facebook" ||
       utmSource === "instagram" ||
-      campaign === "ramadan-mug" ||
+      campaignTag.includes("ramadan-mug") ||
+      campaignTag.includes("ramadan_mug") ||
       hasFbclid;
 
     if (isPaidSocialUser) {

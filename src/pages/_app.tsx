@@ -33,13 +33,16 @@ const MyApp: AppType<{ session: Session | null }> = ({
       const source = (params.get("source") ?? "").toLowerCase();
       const utmSource = (params.get("utm_source") ?? "").toLowerCase();
       const campaign = (params.get("campaign") ?? "").toLowerCase();
+      const utmCampaign = (params.get("utm_campaign") ?? "").toLowerCase();
       const hasFbclid = params.has("fbclid");
+      const campaignTag = `${campaign} ${utmCampaign}`;
       const isAdUser =
         source === "facebook" ||
         source === "instagram" ||
         utmSource === "facebook" ||
         utmSource === "instagram" ||
-        campaign === "ramadan-mug" ||
+        campaignTag.includes("ramadan-mug") ||
+        campaignTag.includes("ramadan_mug") ||
         hasFbclid;
 
       if (isAdUser) {
