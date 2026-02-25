@@ -29,6 +29,26 @@ const MyApp: AppType<{ session: Session | null }> = ({
       return;
     }
     try {
+      const params = new URLSearchParams(window.location.search);
+      const source = (params.get("source") ?? "").toLowerCase();
+      const utmSource = (params.get("utm_source") ?? "").toLowerCase();
+      const campaign = (params.get("campaign") ?? "").toLowerCase();
+      const hasFbclid = params.has("fbclid");
+      const isAdUser =
+        source === "facebook" ||
+        source === "instagram" ||
+        utmSource === "facebook" ||
+        utmSource === "instagram" ||
+        campaign === "ramadan-mug" ||
+        hasFbclid;
+
+      if (isAdUser) {
+        window.sessionStorage.setItem("isRamadanMugAdUser", "true");
+      }
+    } catch {
+      // ignore storage/query errors
+    }
+    try {
       setIsRamadanMugAdUser(
         window.sessionStorage.getItem("isRamadanMugAdUser") === "true",
       );

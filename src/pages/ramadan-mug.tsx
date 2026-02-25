@@ -19,15 +19,14 @@ import {
   AiOutlineRight,
   AiOutlineShareAlt,
 } from "react-icons/ai";
+import { FiEdit3, FiImage, FiShoppingBag } from "react-icons/fi";
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackEvent } from "~/lib/ga";
-import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
-import { OnboardingModal } from "~/component/OnboardingModal";
 
 // --- TYPESCRIPT FIX START ---
 interface StyleItem {
@@ -66,15 +65,10 @@ type SavedDesign = {
 const LAST_DESIGN_STORAGE_KEY = "ramadan-mug:last-design:v1";
 const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 const RAMADAN_AD_USER_SESSION_KEY = "isRamadanMugAdUser";
-const RAMADAN_PANEL_1_SHOWN_KEY = "ramadanPanel1Shown";
-const RAMADAN_PANEL_2_SHOWN_KEY = "ramadanPanel2Shown";
-const RAMADAN_ONBOARDING_VIEWED_EVENT_KEY = "ramadanOnboardingViewedTracked";
-const RAMADAN_ONBOARDING_COMPLETED_EVENT_KEY = "ramadanOnboardingCompletedTracked";
 
 const RamadanMugPage: NextPage = () => {
   const SOURCE_PAGE = "ramadan-mug";
   const hasTrackedViewRef = useRef(false);
-  const panel1DelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
   const router = useRouter();
@@ -103,11 +97,10 @@ const RamadanMugPage: NextPage = () => {
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const [isRamadanAdUser, setIsRamadanAdUser] = useState(false);
   const [isAdUserResolved, setIsAdUserResolved] = useState(false);
-  const [showPanel1, setShowPanel1] = useState(false);
-  const [showPanel2, setShowPanel2] = useState(false);
-  const [shouldShowPanel2AfterGrant, setShouldShowPanel2AfterGrant] = useState(false);
   const hasRequestedFreeCreditsRef = useRef(false);
   const generatorFormRef = useRef<HTMLFormElement>(null);
+  const generatorSectionRef = useRef<HTMLElement>(null);
+  const previewSectionRef = useRef<HTMLElement>(null);
   const [generatedAspect, setGeneratedAspect] = useState<AspectRatio | null>(null);
   const [transparentUrls, setTransparentUrls] = useState<Record<string, string>>({});
   const [useTransparentMap, setUseTransparentMap] = useState<Record<string, boolean>>({});
@@ -126,7 +119,6 @@ const RamadanMugPage: NextPage = () => {
           source_page: SOURCE_PAGE,
           granted_credits: 5.1,
         });
-        setShouldShowPanel2AfterGrant(true);
       }
       await utils.user.getCredits.invalidate();
       await utils.user.getRamadanFunnelState.invalidate();
@@ -163,35 +155,24 @@ const RamadanMugPage: NextPage = () => {
     }
   };
 
-  const fireRamadanOnboardingEvent = (
-    eventName: "ramadan_onboarding_viewed" | "ramadan_onboarding_completed",
-    sessionKey: string,
-  ) => {
-    try {
-      if (window.sessionStorage.getItem(sessionKey) === "true") return;
-    } catch {
-      // ignore storage errors
-    }
-    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-    if (typeof maybeFbq === "function") {
-      maybeFbq("trackCustom", eventName);
-    }
-    try {
-      window.sessionStorage.setItem(sessionKey, "true");
-    } catch {
-      // ignore storage errors
-    }
-  };
-
   useEffect(() => {
     if (!router.isReady) return;
     const query = router.query;
-    const fromFacebook =
-      query.source === "facebook" ||
-      query.utm_source === "facebook" ||
-      query.campaign === "ramadan-mug";
+    const source = typeof query.source === "string" ? query.source.toLowerCase() : "";
+    const utmSource =
+      typeof query.utm_source === "string" ? query.utm_source.toLowerCase() : "";
+    const campaign =
+      typeof query.campaign === "string" ? query.campaign.toLowerCase() : "";
+    const hasFbclid = typeof query.fbclid === "string";
+    const isPaidSocialUser =
+      source === "facebook" ||
+      source === "instagram" ||
+      utmSource === "facebook" ||
+      utmSource === "instagram" ||
+      campaign === "ramadan-mug" ||
+      hasFbclid;
 
-    if (fromFacebook) {
+    if (isPaidSocialUser) {
       try {
         window.sessionStorage.setItem(RAMADAN_AD_USER_SESSION_KEY, "true");
       } catch {
@@ -228,71 +209,6 @@ const RamadanMugPage: NextPage = () => {
     isRamadanAdUser,
     ramadanStateQuery.data,
   ]);
-
-  useEffect(() => {
-    if (!router.isReady || !isAdUserResolved) return;
-    if (isLoggedIn || !isRamadanAdUser) return;
-
-    try {
-      if (window.sessionStorage.getItem(RAMADAN_PANEL_1_SHOWN_KEY) === "true") {
-        return;
-      }
-    } catch {
-      // ignore storage errors
-    }
-
-    panel1DelayTimeoutRef.current = setTimeout(() => {
-      setShowPanel1(true);
-      try {
-        window.sessionStorage.setItem(RAMADAN_PANEL_1_SHOWN_KEY, "true");
-      } catch {
-        // ignore storage errors
-      }
-      fireRamadanOnboardingEvent(
-        "ramadan_onboarding_viewed",
-        RAMADAN_ONBOARDING_VIEWED_EVENT_KEY,
-      );
-    }, 2000);
-
-    return () => {
-      if (panel1DelayTimeoutRef.current) {
-        clearTimeout(panel1DelayTimeoutRef.current);
-        panel1DelayTimeoutRef.current = null;
-      }
-    };
-  }, [isAdUserResolved, isLoggedIn, isRamadanAdUser, router.isReady]);
-
-  useEffect(() => {
-    if (!isLoggedIn || !isRamadanAdUser || !shouldShowPanel2AfterGrant) return;
-    if (!ramadanStateQuery.data?.ramadanFreeCreditsGranted) return;
-
-    try {
-      if (window.sessionStorage.getItem(RAMADAN_PANEL_2_SHOWN_KEY) === "true") {
-        setShouldShowPanel2AfterGrant(false);
-        return;
-      }
-    } catch {
-      // ignore storage errors
-    }
-
-    setShowPanel2(true);
-    setShouldShowPanel2AfterGrant(false);
-    fireRamadanOnboardingEvent(
-      "ramadan_onboarding_completed",
-      RAMADAN_ONBOARDING_COMPLETED_EVENT_KEY,
-    );
-  }, [
-    isLoggedIn,
-    isRamadanAdUser,
-    ramadanStateQuery.data?.ramadanFreeCreditsGranted,
-    shouldShowPanel2AfterGrant,
-  ]);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      setShowPanel1(false);
-    }
-  }, [isLoggedIn]);
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
@@ -428,6 +344,10 @@ const RamadanMugPage: NextPage = () => {
           // ignore storage errors
         }
       }
+
+      window.setTimeout(() => {
+        previewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 250);
     },
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
@@ -485,19 +405,8 @@ const RamadanMugPage: NextPage = () => {
     });
   };
 
-  const handlePanel1Continue = () => {
-    setShowPanel1(false);
-    void signIn("google", { callbackUrl: router.asPath });
-  };
-
-  const handlePanel2Continue = () => {
-    setShowPanel2(false);
-    try {
-      window.sessionStorage.setItem(RAMADAN_PANEL_2_SHOWN_KEY, "true");
-    } catch {
-      // ignore storage errors
-    }
-    generatorFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollToGenerator = () => {
+    generatorSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     window.setTimeout(() => {
       const nameInput = document.getElementById("ramadan-name-input") as HTMLInputElement | null;
       nameInput?.focus();
@@ -658,6 +567,17 @@ const RamadanMugPage: NextPage = () => {
     "3:2": "aspect-[3/2]",
     "16:9": "aspect-[16/9]",
   };
+  const socialProofItems = [
+    { name: "Ahmed", thumbnail: "/images/products/Ahmed.webp" },
+    { name: "Yusuf", thumbnail: "/images/products/Yusuf.webp" },
+    { name: "Omar", thumbnail: "/images/products/Omar.webp" },
+    { name: "Ramadan", thumbnail: "/images/products/Ramadan.webp" },
+  ];
+  const testimonials = [
+    "He smiled the moment he opened it. The quality is amazing.",
+    "Beautiful print, fast shipping, and the name design felt truly personal.",
+    "It looked even better in person. Perfect Ramadan gift.",
+  ];
 
   return (
     <>
@@ -668,20 +588,113 @@ const RamadanMugPage: NextPage = () => {
           content="Create a personalized Ramadan mug preview with AI Arabic calligraphy."
         />
       </Head>
-      <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
-        
+      <main className="mb-24 flex flex-col bg-white text-slate-900 dark:bg-gray-950 dark:text-slate-100">
+        <section className="w-full bg-gradient-to-b from-amber-50 to-white px-4 pb-12 pt-10 dark:from-gray-900 dark:to-gray-950 sm:px-8">
+          <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:items-center">
+            <div>
+              <p className="mb-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+                Ramadan Gift Special
+              </p>
+              <h1 className="text-3xl font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+                Create a Personalized Ramadan Mug He&apos;ll Treasure Every Morning
+              </h1>
+              <p className="mt-4 text-base text-slate-700 dark:text-slate-300 sm:text-lg">
+                Turn his name into beautiful Arabic calligraphy, printed and shipped in the USA.
+              </p>
+              <div className="mt-6">
+                <Button type="button" onClick={scrollToGenerator}>
+                  Create My Mug Now
+                </Button>
+                <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  Free premium design included.
+                </p>
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+              <Image
+                src="/images/products/ramadan-table.png"
+                alt="Personalized Ramadan mug in a warm morning setting"
+                width={900}
+                height={900}
+                className="h-full w-full object-cover"
+                priority
+              />
+            </div>
+          </div>
+        </section>
 
-        <h1 className="text-3xl font-bold text-center sm:text-4xl">Ramadan Mug Generator</h1>
-        <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
-          Turn your name into a Ramadan-themed Arabic calligraphy mug design.
-        </p>
-        <GeneratorNudge generatorType="arabic" />
-        
-        <form ref={generatorFormRef} className="flex flex-col gap-6 mt-8" onSubmit={handleFormSubmit}>
+        <section className="w-full px-4 py-12 sm:px-8">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-center text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">
+              Loved by Families This Ramadan
+            </h2>
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {socialProofItems.map((item) => (
+                <div key={item.name} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                  <Image
+                    src={item.thumbnail}
+                    alt={`Personalized mug mockup with the name ${item.name}`}
+                    width={512}
+                    height={512}
+                    className="h-auto w-full object-cover"
+                  />
+                  <div className="px-3 py-2 text-center text-sm font-semibold text-slate-700 dark:text-slate-200">{item.name}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 grid gap-3 md:grid-cols-3">
+              {testimonials.map((testimonial, idx) => (
+                <div key={idx} className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-slate-700 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-slate-200">
+                  <p className="mb-2 text-amber-500">★★★★★</p>
+                  <p>&ldquo;{testimonial}&rdquo;</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="w-full bg-slate-50 px-4 py-12 dark:bg-gray-900/60 sm:px-8">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="text-center text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">How It Works</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <FiEdit3 className="mx-auto h-6 w-6 text-blue-600" />
+                <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">Enter his name</h3>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <FiImage className="mx-auto h-6 w-6 text-blue-600" />
+                <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">Generate beautiful Arabic design</h3>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <FiShoppingBag className="mx-auto h-6 w-6 text-blue-600" />
+                <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">Preview and order your mug</h3>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="w-full px-4 py-10 sm:px-8">
+          <div className="mx-auto max-w-4xl rounded-xl border border-amber-300 bg-amber-50 p-5 text-center dark:border-amber-600/40 dark:bg-amber-500/10">
+            <p className="font-semibold text-amber-900 dark:text-amber-200">
+              Ramadan Special: Free premium design (worth $4) included for a limited time.
+            </p>
+            <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
+              Orders printed in the USA with fast shipping before Eid.
+            </p>
+          </div>
+        </section>
+
+        <section ref={generatorSectionRef} className="mx-auto w-full max-w-screen-md px-4 py-6 sm:px-8 sm:py-8">
+          <h2 className="text-center text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl">Create Your Design Now</h2>
+          <p className="mt-3 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
+            Enter a name, pick a style, and generate your personalized Ramadan mug design.
+          </p>
+
+          <form ref={generatorFormRef} className="mt-8 flex flex-col gap-6" onSubmit={handleFormSubmit}>
           
           {/* 1. Enter Name - Standard English Labels, RTL Input */}
           <FormGroup>
-            <label className="text-xl font-semibold mb-2 block">1. Enter Name (Arabic or English)</label>
+            <label className="mb-2 block text-xl font-semibold text-slate-900 dark:text-slate-100">1. Enter Name (Arabic or English)</label>
             <Input
                 id="ramadan-name-input"
                 required 
@@ -694,7 +707,7 @@ const RamadanMugPage: NextPage = () => {
 
           {/* 2. Choose Style */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">2. Choose Art Style</h2>
+            <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">2. Choose Art Style</h2>
             <div className="relative border-b dark:border-gray-700">
               {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
@@ -731,7 +744,7 @@ const RamadanMugPage: NextPage = () => {
           </div>
 
           {/* 3. Select Image Size (New Visual Style) */}
-          <h2 className="text-xl mt-6 mb-2">3. Select Image Size</h2>
+          <h2 className="mb-2 mt-6 text-xl text-slate-900 dark:text-slate-100">3. Select Image Size</h2>
           <FormGroup className="mb-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {aspectRatios.map((ratio) => {
@@ -758,32 +771,42 @@ const RamadanMugPage: NextPage = () => {
           </FormGroup>
 
           {error && (
-            <div className="bg-red-500 text-white rounded p-4 text-xl mb-6">
-              {error} {error.includes("credits") && <Link href="/buy-credits" className="underline font-bold ml-2">Buy Credits</Link>}
+            <div className="mb-6 rounded bg-red-500 p-4 text-xl text-white">
+              {error}{" "}
+              {!isRamadanAdUser && error.includes("credits") && (
+                <Link href="/buy-credits" className="ml-2 font-bold underline">
+                  Buy Credits
+                </Link>
+              )}
             </div>
           )}
           
           {isCreditLocked && (
             <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-              This design is saved. Add credits to continue.{" "}
-              <Link href="/buy-credits" className="underline font-semibold">
-                Buy credits
-              </Link>
+              {isRamadanAdUser ? (
+                "This design is saved. Sign in to continue this Ramadan mug checkout flow."
+              ) : (
+                <>
+                  This design is saved. Add credits to continue.{" "}
+                  <Link href="/buy-credits" className="font-semibold underline">
+                    Buy credits
+                  </Link>
+                </>
+              )}
             </div>
           )}
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
             {isLoggedIn ? "Generate My Design (4 Credits)" : "Sign in to Generate"}
           </Button>
           <p className="mt-1 text-center text-sm text-emerald-700 dark:text-emerald-300">
-            🎁 Free personalized preview included.
+            Free personalized preview included.
           </p>
-          <GeneratorNudge generatorType="arabic" section="trust" />
         </form>
         
         {/* Results Section */}
         {imagesUrl.length > 0 && (
           <>
-            <h2 className="text-xl mt-8 mb-2 text-center">Your Ramadan Design</h2>
+            <h2 className="mb-2 mt-8 text-center text-xl text-slate-900 dark:text-slate-100">Your Ramadan Design</h2>
             {isRamadanAdUser && (
               <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-300">
                 Digital download and sharing are disabled for this offer.
@@ -869,11 +892,11 @@ const RamadanMugPage: NextPage = () => {
               })}
             </section>
 
-            <section className="mt-10">
+            <section ref={previewSectionRef} className="mt-10">
               <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
                 ✨ Your design is ready! Imagine this on your favorite mug, shirt, or framed on your wall.
               </div>
-              <h3 className="text-2xl font-semibold mb-6 text-center">
+              <h3 className="mb-6 text-center text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {isRamadanAdUser ? "Complete your White Glossy Mug order" : "Turn your design into a real product"}
               </h3>
 
@@ -903,13 +926,13 @@ const RamadanMugPage: NextPage = () => {
                     </div>
 
                     <div className="p-4 text-center">
-                      <h4 className="text-lg font-semibold mb-1">{p.label}</h4>
+                      <h4 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{p.label}</h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                         {p.description}
                       </p>
 
                       {previewCooldown !== null && (
-                        <div className="mb-4 rounded-lg bg-yellow-100 text-yellow-900 px-4 py-3 text-sm">
+                        <div className="mb-4 rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-900 dark:bg-yellow-500/20 dark:text-yellow-100">
                           Preview temporarily paused due to high demand.
                           <br />
                           You can try again in <strong>{previewCooldown}s</strong>.
@@ -945,11 +968,25 @@ const RamadanMugPage: NextPage = () => {
             </section>
           </>
         )}
+        </section>
+
+        <section className="w-full px-4 pb-8 pt-2 sm:px-8">
+          <div className="mx-auto max-w-5xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <h2 className="text-center text-2xl font-semibold text-slate-900 dark:text-slate-100">Trust and Guarantee</h2>
+            <ul className="mt-5 grid gap-3 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-2">
+              <li>High-quality glossy ceramic</li>
+              <li>Dishwasher and microwave safe</li>
+              <li>Printed in the USA</li>
+              <li>Secure checkout powered by Stripe</li>
+              <li>30-day satisfaction guarantee</li>
+            </ul>
+          </div>
+        </section>
 
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
-              <button onClick={closePopup} className="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700">✖️</button>
+              <button onClick={closePopup} className="absolute top-2 right-2 rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700">X</button>
               <img src={popupImage} alt="Fullscreen" className="max-w-full max-h-screen rounded" />
             </div>
           </div>
@@ -986,45 +1023,10 @@ const RamadanMugPage: NextPage = () => {
           funnelMode={isRamadanAdUser ? "ramadan_mug_ad" : "default"}
           ramadanAdUser={isRamadanAdUser}
         />
-        <OnboardingModal
-          isOpen={showPanel1}
-          title="🎁 Get Your Premium Arabic Name Design FREE"
-          description={(
-            <div className="space-y-2">
-              <p>Sign up to unlock:</p>
-              <ul className="list-disc pl-5">
-                <li>1 Premium AI design (worth $4)</li>
-                <li>Background removal option</li>
-                <li>Order tracking &amp; delivery updates</li>
-              </ul>
-            </div>
-          )}
-          ctaLabel="Continue with Google"
-          footerText="Takes 5 seconds. No spam."
-          onCta={handlePanel1Continue}
-          onClose={() => setShowPanel1(false)}
-        />
-        <OnboardingModal
-          isOpen={showPanel2}
-          title="🎉 You’re All Set!"
-          description={(
-            <div className="space-y-2">
-              <p>You received FREE credits to:</p>
-              <ul className="list-disc pl-5">
-                <li>Generate your Arabic name design</li>
-                <li>Remove background</li>
-                <li>Preview it on your mug</li>
-              </ul>
-              <p>Next Step: Enter a name and click Generate.</p>
-            </div>
-          )}
-          ctaLabel="Create My Design"
-          onCta={handlePanel2Continue}
-          showCloseButton={false}
-        />
       </main>
     </>
   );
 };
 export default RamadanMugPage;
+
 
