@@ -39,7 +39,7 @@ export default async function handler(
     aspect?: "1:1" | "4:5" | "3:2" | "16:9";
     variantId?: number;
     previewMode?: "two-side" | "center" | "full-wrap";
-    ramadanAdUser?: boolean;
+    paidTrafficUser?: boolean;
   };
 
 
@@ -67,7 +67,7 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid product" });
     }
 
-    const ramadanAdUser = Boolean(req.body?.ramadanAdUser);
+    const paidTrafficUser = Boolean(req.body?.paidTrafficUser);
 
     let printImageUrl: string;
 
@@ -124,7 +124,7 @@ export default async function handler(
       );
     }
 
-  if (ramadanAdUser && product.key !== "mug") {
+  if (paidTrafficUser && product.key !== "mug") {
     return res.status(403).json({ error: "RAMADAN_MUG_ONLY" });
   }
 
@@ -137,8 +137,8 @@ export default async function handler(
           credits: true,
           email: true,
           name: true,
-          ramadanAdUser: true,
-          ramadanMugFreePreviewUsed: true,
+          paidTrafficUser: true,
+          paidTrafficFreePreviewUsed: true,
         },
       });
 
@@ -147,13 +147,25 @@ export default async function handler(
       }
 
       const canUseRamadanFreePreview =
-        ramadanAdUser &&
+        paidTrafficUser &&
         product.key === "mug" &&
-        user.ramadanAdUser;
+        user.paidTrafficUser &&
+        !user.paidTrafficFreePreviewUsed;
 
       if (canUseRamadanFreePreview) {
+        const updated = await tx.user.update({
+          where: { id: session.user.id },
+          data: { paidTrafficFreePreviewUsed: true },
+          select: {
+            credits: true,
+            email: true,
+            name: true,
+            paidTrafficUser: true,
+            paidTrafficFreePreviewUsed: true,
+          },
+        });
         return {
-          user,
+          user: updated,
           chargedCredits: 0,
           usedFreeRamadanPreview: true,
         };

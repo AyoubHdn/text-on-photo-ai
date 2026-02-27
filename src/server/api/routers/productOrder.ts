@@ -8,6 +8,7 @@ import { z } from "zod";
 import { prisma } from "~/server/db";
 import { TRPCError } from "@trpc/server";
 import { calculateProductPriceFromCache } from "~/server/services/priceCalculator";
+import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 export const productOrderRouter = createTRPCRouter({
   createPendingOrder: protectedProcedure
@@ -84,6 +85,30 @@ export const productOrderRouter = createTRPCRouter({
             status: "pending",
         },
         });
+
+        const user = await prisma.user.update({
+          where: { id: ctx.session.user.id },
+          data: { hasVisitedCheckout: true },
+          select: { email: true, name: true, credits: true },
+        });
+
+        if (user.email) {
+          try {
+            await updateMauticContact(
+              {
+                email: user.email,
+                name: user.name,
+                brand_specific_credits: user.credits,
+                customFields: {
+                  has_visited_checkout: 1,
+                },
+              },
+              "namedesignai",
+            );
+          } catch (err) {
+            console.error("Error updating Mautic on checkout visit:", err);
+          }
+        }
 
       return { orderId: order.id };
     }),

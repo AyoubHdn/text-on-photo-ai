@@ -262,17 +262,20 @@ export default function CheckoutPage() {
             : generatorKey === "default"
             ? "name-art-generator"
             : "checkout";
-        if (order.funnelSource === "ramadan-mug-ad") {
-            trackEvent("ramadan_mug_checkout_started", {
+        if (
+            order.funnelSource === "paid-traffic-offer" ||
+            order.funnelSource === "ramadan-mug-ad"
+        ) {
+            trackEvent("paid_traffic_checkout_started", {
                 product: order.productKey,
-                source_page: "ramadan-mug",
+                source_page: sourcePage,
                 country: address.country,
             });
             const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
             if (typeof maybeFbq === "function") {
-                maybeFbq("trackCustom", "ramadan_mug_checkout_started", {
+                maybeFbq("trackCustom", "paid_traffic_checkout_started", {
                     product: order.productKey,
-                    source_page: "ramadan-mug",
+                    source_page: sourcePage,
                     country: address.country,
                 });
             }

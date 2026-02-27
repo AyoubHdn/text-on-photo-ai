@@ -91,6 +91,11 @@ export const authOptions: NextAuthOptions = {
             name: latestUser.name,
             brand_specific_credits: latestUser.credits,
             brand_specific_plan: latestUser.plan,
+            customFields: {
+              paid_traffic_user: latestUser.paidTrafficUser ? 1 : 0,
+              has_generated_design: latestUser.hasGeneratedDesign ? 1 : 0,
+              has_visited_checkout: latestUser.hasVisitedCheckout ? 1 : 0,
+            },
           },
           'namedesignai');
           console.log("Mautic updated on signIn:", result);
@@ -110,6 +115,11 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             brand_specific_credits: 1.1, // New users start with 1.1 credits
             brand_specific_plan: "None",
+            customFields: {
+              paid_traffic_user: 0,
+              has_generated_design: 0,
+              has_visited_checkout: 0,
+            },
           },
           'namedesignai');
           console.log("Mautic updated on createUser:", result);

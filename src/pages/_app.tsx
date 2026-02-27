@@ -3,7 +3,7 @@ import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import Script from "next/script";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { api } from "~/utils/api";
 
@@ -11,54 +11,66 @@ import "~/styles/globals.css";
 import { Header } from "~/component/Header";
 import { Footer } from "~/component/Footer";
 
+const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
+
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
   pageProps: { session, ...pageProps },
 }) => {
   const router = useRouter();
-  const [isRamadanMugAdUser, setIsRamadanMugAdUser] = useState(false);
+  const [isPaidTrafficUser, setIsPaidTrafficUser] = useState(false);
+  const hasMarkedPaidTrafficUserRef = useRef(false);
+  const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
   const isCancelPage =
     router.pathname === "/cancel" || router.pathname === "/order/cancel";
   const isRamadanMugRoute = router.pathname === "/ramadan-mug";
-  const isRamadanAdLayout = isRamadanMugRoute && isRamadanMugAdUser;
+  const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
   useEffect(() => {
-    if (!isRamadanMugRoute) {
-      setIsRamadanMugAdUser(false);
-      return;
-    }
     try {
       const params = new URLSearchParams(window.location.search);
       const source = (params.get("source") ?? "").toLowerCase();
       const utmSource = (params.get("utm_source") ?? "").toLowerCase();
       const campaign = (params.get("campaign") ?? "").toLowerCase();
       const utmCampaign = (params.get("utm_campaign") ?? "").toLowerCase();
+      const utmMedium = (params.get("utm_medium") ?? "").toLowerCase();
       const hasFbclid = params.has("fbclid");
+      const hasGclid = params.has("gclid");
       const campaignTag = `${campaign} ${utmCampaign}`;
       const isAdUser =
         source === "facebook" ||
         source === "instagram" ||
         utmSource === "facebook" ||
         utmSource === "instagram" ||
-        campaignTag.includes("ramadan-mug") ||
-        campaignTag.includes("ramadan_mug") ||
-        hasFbclid;
+        utmMedium === "cpc" ||
+        utmMedium === "paid" ||
+        utmMedium === "paid-social" ||
+        campaignTag.length > 0 ||
+        hasFbclid ||
+        hasGclid;
 
       if (isAdUser) {
-        window.sessionStorage.setItem("isRamadanMugAdUser", "true");
+        window.sessionStorage.setItem(PAID_TRAFFIC_SESSION_KEY, "true");
       }
     } catch {
       // ignore storage/query errors
     }
     try {
-      setIsRamadanMugAdUser(
-        window.sessionStorage.getItem("isRamadanMugAdUser") === "true",
+      setIsPaidTrafficUser(
+        window.sessionStorage.getItem(PAID_TRAFFIC_SESSION_KEY) === "true",
       );
     } catch {
-      setIsRamadanMugAdUser(false);
+      setIsPaidTrafficUser(false);
     }
-  }, [isRamadanMugRoute, router.asPath]);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!session?.user?.id || !isPaidTrafficUser) return;
+    if (hasMarkedPaidTrafficUserRef.current) return;
+    hasMarkedPaidTrafficUserRef.current = true;
+    markPaidTrafficUser.mutate();
+  }, [isPaidTrafficUser, markPaidTrafficUser, session?.user?.id]);
 
   return (
     <SessionProvider session={session}>

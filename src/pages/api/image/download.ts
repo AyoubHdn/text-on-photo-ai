@@ -16,23 +16,23 @@ export default async function handler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { imageUrl, ramadanAdUser } = req.body as {
+  const { imageUrl, paidTrafficUser } = req.body as {
     imageUrl?: string;
-    ramadanAdUser?: boolean;
+    paidTrafficUser?: boolean;
   };
 
   if (!imageUrl) {
     return res.status(400).json({ error: "Missing imageUrl" });
   }
 
-  if (ramadanAdUser) {
+  if (paidTrafficUser) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
-        ramadanAdUser: true,
+        paidTrafficUser: true,
         productOrders: {
           where: {
-            funnelSource: "ramadan-mug-ad",
+            funnelSource: { in: ["paid-traffic-offer", "ramadan-mug-ad"] },
             status: { in: ["paid", "fulfilled"] },
           },
           select: { id: true },
@@ -41,10 +41,10 @@ export default async function handler(
       },
     });
 
-    const hasPurchasedRamadanMug = (user?.productOrders?.length ?? 0) > 0;
-    if (user?.ramadanAdUser && !hasPurchasedRamadanMug) {
+    const hasPurchasedPaidTrafficOffer = (user?.productOrders?.length ?? 0) > 0;
+    if (user?.paidTrafficUser && !hasPurchasedPaidTrafficOffer) {
       return res.status(403).json({
-        error: "DOWNLOAD_DISABLED_FOR_RAMADAN_FUNNEL",
+        error: "DOWNLOAD_DISABLED_FOR_PAID_TRAFFIC_FUNNEL",
       });
     }
   }

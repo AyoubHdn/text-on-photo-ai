@@ -64,7 +64,7 @@ type SavedDesign = {
 
 const LAST_DESIGN_STORAGE_KEY = "ramadan-mug:last-design:v1";
 const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
-const RAMADAN_AD_USER_SESSION_KEY = "isRamadanMugAdUser";
+const PAID_TRAFFIC_USER_SESSION_KEY = "isPaidTrafficUser";
 
 const RamadanMugPage: NextPage = () => {
   const SOURCE_PAGE = "ramadan-mug";
@@ -111,8 +111,8 @@ const RamadanMugPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
-  const ramadanStateQuery = api.user.getRamadanFunnelState.useQuery(undefined, { enabled: isLoggedIn });
-  const grantRamadanFreeCredits = api.user.grantRamadanFreeCredits.useMutation({
+  const paidTrafficStateQuery = api.user.getPaidTrafficFunnelState.useQuery(undefined, { enabled: isLoggedIn });
+  const grantPaidTrafficFreeCredits = api.user.grantPaidTrafficFreeCredits.useMutation({
     onSuccess: async (result) => {
       if (result.granted) {
         fireRamadanCustomEvent("ramadan_free_credit_granted", {
@@ -121,7 +121,7 @@ const RamadanMugPage: NextPage = () => {
         });
       }
       await utils.user.getCredits.invalidate();
-      await utils.user.getRamadanFunnelState.invalidate();
+      await utils.user.getPaidTrafficFunnelState.invalidate();
     },
   });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
@@ -192,7 +192,7 @@ const RamadanMugPage: NextPage = () => {
 
     if (isPaidSocialUser) {
       try {
-        window.sessionStorage.setItem(RAMADAN_AD_USER_SESSION_KEY, "true");
+        window.sessionStorage.setItem(PAID_TRAFFIC_USER_SESSION_KEY, "true");
       } catch {
         // ignore storage errors
       }
@@ -200,7 +200,7 @@ const RamadanMugPage: NextPage = () => {
 
     try {
       setIsRamadanAdUser(
-        window.sessionStorage.getItem(RAMADAN_AD_USER_SESSION_KEY) === "true",
+        window.sessionStorage.getItem(PAID_TRAFFIC_USER_SESSION_KEY) === "true",
       );
     } catch {
       setIsRamadanAdUser(false);
@@ -210,22 +210,22 @@ const RamadanMugPage: NextPage = () => {
 
   useEffect(() => {
     if (!isLoggedIn || !isRamadanAdUser) return;
-    if (!ramadanStateQuery.data) return;
+    if (!paidTrafficStateQuery.data) return;
     if (
-      ramadanStateQuery.data.ramadanFreeCreditsGranted &&
-      ramadanStateQuery.data.isRamadanAdUser
+      paidTrafficStateQuery.data.paidTrafficFreeCreditsGranted &&
+      paidTrafficStateQuery.data.isPaidTrafficUser
     ) {
       return;
     }
     if (hasRequestedFreeCreditsRef.current) return;
 
     hasRequestedFreeCreditsRef.current = true;
-    grantRamadanFreeCredits.mutate();
+    grantPaidTrafficFreeCredits.mutate();
   }, [
-    grantRamadanFreeCredits,
+    grantPaidTrafficFreeCredits,
     isLoggedIn,
     isRamadanAdUser,
-    ramadanStateQuery.data,
+    paidTrafficStateQuery.data,
   ]);
 
   useEffect(() => {
@@ -445,7 +445,7 @@ const RamadanMugPage: NextPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageUrl,
-          ramadanAdUser: isRamadanAdUser,
+          paidTrafficUser: isRamadanAdUser,
         }),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -1038,8 +1038,8 @@ const RamadanMugPage: NextPage = () => {
           imageUrl={previewImage}
           aspect={generatedAspect ?? "1:1"}
           onCooldownStart={setPreviewCooldown}
-          funnelMode={isRamadanAdUser ? "ramadan_mug_ad" : "default"}
-          ramadanAdUser={isRamadanAdUser}
+          funnelMode={isRamadanAdUser ? "paid_traffic_offer" : "default"}
+          paidTrafficUser={isRamadanAdUser}
         />
       </main>
     </>

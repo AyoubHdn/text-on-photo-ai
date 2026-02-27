@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 export const userRouter = createTRPCRouter({
   getCredits: protectedProcedure
@@ -11,30 +12,34 @@ export const userRouter = createTRPCRouter({
       });
       return user?.credits ? Number(user.credits) : 0;
     }),
-  getRamadanFunnelState: protectedProcedure.query(async ({ ctx }) => {
+  getPaidTrafficFunnelState: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
       select: {
-        ramadanAdUser: true,
-        ramadanFreeCreditsGranted: true,
-        ramadanMugFreePreviewUsed: true,
+        paidTrafficUser: true,
+        paidTrafficFreeCreditsGranted: true,
+        paidTrafficFreePreviewUsed: true,
+        hasGeneratedDesign: true,
+        hasVisitedCheckout: true,
       },
     });
 
     return {
-      isRamadanAdUser: Boolean(user?.ramadanAdUser),
-      ramadanFreeCreditsGranted: Boolean(user?.ramadanFreeCreditsGranted),
-      ramadanMugFreePreviewUsed: Boolean(user?.ramadanMugFreePreviewUsed),
+      isPaidTrafficUser: Boolean(user?.paidTrafficUser),
+      paidTrafficFreeCreditsGranted: Boolean(user?.paidTrafficFreeCreditsGranted),
+      paidTrafficFreePreviewUsed: Boolean(user?.paidTrafficFreePreviewUsed),
+      hasGeneratedDesign: Boolean(user?.hasGeneratedDesign),
+      hasVisitedCheckout: Boolean(user?.hasVisitedCheckout),
     };
   }),
-  grantRamadanFreeCredits: protectedProcedure.mutation(async ({ ctx }) => {
+  grantPaidTrafficFreeCredits: protectedProcedure.mutation(async ({ ctx }) => {
     const updated = await ctx.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
         where: { id: ctx.session.user.id },
         select: {
           credits: true,
-          ramadanFreeCreditsGranted: true,
-          ramadanAdUser: true,
+          paidTrafficFreeCreditsGranted: true,
+          paidTrafficUser: true,
         },
       });
 
@@ -42,16 +47,16 @@ export const userRouter = createTRPCRouter({
         throw new Error("User not found");
       }
 
-      if (user.ramadanFreeCreditsGranted) {
-        const patched = user.ramadanAdUser
+      if (user.paidTrafficFreeCreditsGranted) {
+        const patched = user.paidTrafficUser
           ? user
           : await tx.user.update({
               where: { id: ctx.session.user.id },
-              data: { ramadanAdUser: true },
+              data: { paidTrafficUser: true },
               select: {
                 credits: true,
-                ramadanFreeCreditsGranted: true,
-                ramadanAdUser: true,
+                paidTrafficFreeCreditsGranted: true,
+                paidTrafficUser: true,
               },
             });
 
@@ -69,8 +74,8 @@ export const userRouter = createTRPCRouter({
         where: { id: ctx.session.user.id },
         data: {
           credits: nextCredits,
-          ramadanFreeCreditsGranted: true,
-          ramadanAdUser: true,
+          paidTrafficFreeCreditsGranted: true,
+          paidTrafficUser: true,
         },
         select: {
           credits: true,
@@ -84,5 +89,32 @@ export const userRouter = createTRPCRouter({
     });
 
     return updated;
+  }),
+  markPaidTrafficUser: protectedProcedure.mutation(async ({ ctx }) => {
+    const user = await ctx.prisma.user.update({
+      where: { id: ctx.session.user.id },
+      data: { paidTrafficUser: true },
+      select: { email: true, name: true, credits: true },
+    });
+
+    if (user.email) {
+      try {
+        await updateMauticContact(
+          {
+            email: user.email,
+            name: user.name,
+            brand_specific_credits: user.credits,
+            customFields: {
+              paid_traffic_user: 1,
+            },
+          },
+          "namedesignai",
+        );
+      } catch (err) {
+        console.error("Error updating Mautic on markPaidTrafficUser:", err);
+      }
+    }
+
+    return { success: true };
   }),
 });

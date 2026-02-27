@@ -362,7 +362,10 @@ export const generateRouter = createTRPCRouter({
         const updatedCredits = creditsDecimal.minus(totalCredits);
         return tx.user.update({
           where: { id: ctx.session.user.id },
-          data: { credits: updatedCredits },
+          data: {
+            credits: updatedCredits,
+            hasGeneratedDesign: true,
+          },
           select: { credits: true, email: true, name: true },
         });
       });
@@ -374,6 +377,9 @@ export const generateRouter = createTRPCRouter({
             email: updatedUser.email,
             name: updatedUser.name,
             brand_specific_credits: updatedUser.credits,
+            customFields: {
+              has_generated_design: 1,
+            },
           },
             'namedesignai');
           console.log("Mautic contact updated after credit deduction.");

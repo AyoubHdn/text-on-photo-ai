@@ -37,8 +37,8 @@ type Props = {
   imageUrl: string | null;
   aspect: AspectRatio;
   onCooldownStart?: (seconds: number) => void;
-  funnelMode?: "default" | "ramadan_mug_ad";
-  ramadanAdUser?: boolean;
+  funnelMode?: "default" | "paid_traffic_offer";
+  paidTrafficUser?: boolean;
 };
 
 type SelectedProductConfig = {
@@ -66,7 +66,7 @@ export function ProductPreviewModal({
   aspect,
   onCooldownStart,
   funnelMode = "default",
-  ramadanAdUser = false,
+  paidTrafficUser = false,
 }: Props) {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [mockupUrl, setMockupUrl] = useState<string | null>(null);
@@ -96,7 +96,7 @@ export function ProductPreviewModal({
     }
     return "name-art-generator";
   }, [router.pathname]);
-  const isRamadanFunnel = funnelMode === "ramadan_mug_ad" && ramadanAdUser;
+  const isPaidTrafficFunnel = funnelMode === "paid_traffic_offer" && paidTrafficUser;
 
   const [error, setError] = useState<string | null>(null);
 
@@ -124,7 +124,7 @@ export function ProductPreviewModal({
     variantId?: number;
     chargedCredits: number;
   }) => {
-    if (isRamadanFunnel) {
+    if (isPaidTrafficFunnel) {
       trackEvent("ramadan_mug_preview", {
         source_page: sourcePage,
         variantId: payload.variantId,
@@ -414,7 +414,7 @@ export function ProductPreviewModal({
           productKey,
           imageUrl: originalImageUrl,
           aspect,
-          ramadanAdUser: isRamadanFunnel,
+          paidTrafficUser: isPaidTrafficFunnel,
         }),
       });
       const data = await parseJsonSafely(res);
@@ -705,7 +705,7 @@ export function ProductPreviewModal({
   ]);
 
   const regeneratePreview = async () => {
-    if (isRamadanFunnel) return;
+    if (isPaidTrafficFunnel) return;
     if (!variantId || !previewImageUrl || !productKey) return;
 
     try {
@@ -720,7 +720,7 @@ export function ProductPreviewModal({
           imageUrl: previewImageUrl,
           aspect,
           variantId, // 🔥 IMPORTANT
-          ramadanAdUser: isRamadanFunnel,
+          paidTrafficUser: isPaidTrafficFunnel,
         }),
       });
 
@@ -786,7 +786,7 @@ export function ProductPreviewModal({
           aspect,
           variantId: override?.variantId ?? variantId ?? undefined,
           previewMode: override?.previewMode,
-          ramadanAdUser: isRamadanFunnel,
+          paidTrafficUser: isPaidTrafficFunnel,
         }),
       });
 
@@ -1092,7 +1092,7 @@ export function ProductPreviewModal({
             </div>
           )}
 
-            {productKey === "mug" && !isRamadanFunnel && (
+            {productKey === "mug" && !isPaidTrafficFunnel && (
             <>
               {/* Mug size selector */}
               <div className="mb-4">
@@ -1211,7 +1211,7 @@ export function ProductPreviewModal({
               </>
             )}
 
-            {productKey === "tshirt" && selectedColor && selectedSize && !isRamadanFunnel && (
+            {productKey === "tshirt" && selectedColor && selectedSize && !isPaidTrafficFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={
@@ -1227,7 +1227,7 @@ export function ProductPreviewModal({
 
             )}
 
-            {productKey === "poster" && variantId && !isRamadanFunnel && (
+            {productKey === "poster" && variantId && !isPaidTrafficFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -1237,7 +1237,7 @@ export function ProductPreviewModal({
               </Button>
             )}
 
-            {productKey === "mug" && mugVariantId && !isRamadanFunnel && (
+            {productKey === "mug" && mugVariantId && !isPaidTrafficFunnel && (
             <Button
               className="w-full mb-4"
               disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -1340,7 +1340,7 @@ export function ProductPreviewModal({
                 shippingCountry: selectedProductConfig.shippingCountry,
                 price: selectedProductConfig.price,
                 currency: "USD",
-                funnelSource: isRamadanFunnel ? "ramadan-mug-ad" : undefined,
+                funnelSource: isPaidTrafficFunnel ? "paid-traffic-offer" : undefined,
               });
 
               void router.push(`/checkout?orderId=${res.orderId}`);
