@@ -12,6 +12,16 @@ import { Header } from "~/component/Header";
 import { Footer } from "~/component/Footer";
 
 const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
+const PAID_TRAFFIC_SOURCE_PAGE_KEY = "paidTrafficSourcePage";
+const PAID_TRAFFIC_PROMOTED_PRODUCT_KEY = "paidTrafficPromotedProduct";
+
+const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
+  string,
+  { sourcePage: string; promotedProduct: string }
+> = {
+  "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
+  "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
+};
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -23,7 +33,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
   const isCancelPage =
     router.pathname === "/cancel" || router.pathname === "/order/cancel";
-  const isRamadanMugRoute = router.pathname === "/ramadan-mug";
+  const isRamadanMugRoute =
+    router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";
   const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
@@ -52,6 +63,17 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
       if (isAdUser) {
         window.sessionStorage.setItem(PAID_TRAFFIC_SESSION_KEY, "true");
+        const offerMeta = PAID_TRAFFIC_PAGE_PRODUCT_MAP[router.pathname];
+        if (offerMeta) {
+          window.sessionStorage.setItem(
+            PAID_TRAFFIC_SOURCE_PAGE_KEY,
+            offerMeta.sourcePage,
+          );
+          window.sessionStorage.setItem(
+            PAID_TRAFFIC_PROMOTED_PRODUCT_KEY,
+            offerMeta.promotedProduct,
+          );
+        }
       }
     } catch {
       // ignore storage/query errors
@@ -68,8 +90,25 @@ const MyApp: AppType<{ session: Session | null }> = ({
   useEffect(() => {
     if (!session?.user?.id || !isPaidTrafficUser) return;
     if (hasMarkedPaidTrafficUserRef.current) return;
+
+    let sourcePage: string | undefined;
+    let promotedProduct: string | undefined;
+    try {
+      sourcePage =
+        window.sessionStorage.getItem(PAID_TRAFFIC_SOURCE_PAGE_KEY) ?? undefined;
+      promotedProduct =
+        window.sessionStorage.getItem(PAID_TRAFFIC_PROMOTED_PRODUCT_KEY) ??
+        undefined;
+    } catch {
+      sourcePage = undefined;
+      promotedProduct = undefined;
+    }
+
     hasMarkedPaidTrafficUserRef.current = true;
-    markPaidTrafficUser.mutate();
+    markPaidTrafficUser.mutate({
+      sourcePage,
+      promotedProduct,
+    });
   }, [isPaidTrafficUser, markPaidTrafficUser, session?.user?.id]);
 
   return (

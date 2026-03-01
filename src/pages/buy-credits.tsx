@@ -1,11 +1,14 @@
 import Head from "next/head";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useRouter } from "next/router";
 import { useSession, signIn } from "next-auth/react";
 import { trackEvent } from "~/lib/ga";
+import { getFunnelContext } from "~/lib/tracking/funnel";
 import { useBuyCredits } from "~/hook/useBuyCredits";
 
 const BuyCredits: React.FC = () => {
+  const router = useRouter();
   const { data: session } = useSession();
   const isLoggedIn = !!session;
   const { buyCredits } = useBuyCredits();
@@ -58,11 +61,25 @@ const BuyCredits: React.FC = () => {
     try {
       setLoadingPlan(plan);
       const selectedOffer = offers.find((offer) => offer.plan === plan);
+      const funnelContext = getFunnelContext({
+        route: router.pathname,
+        sourcePage: "buy-credits",
+        productType: "credits",
+        query: router.query as Record<string, unknown>,
+      });
 
       if (typeof window !== "undefined" && selectedOffer) {
         window.sessionStorage.setItem(
           "last_credit_purchase",
           JSON.stringify({
+            plan,
+            context: "buy_credits_page",
+            source_page: funnelContext.source_page,
+            funnel: funnelContext.funnel,
+            product_type: funnelContext.product_type,
+            niche: funnelContext.niche,
+            traffic_type: funnelContext.traffic_type,
+            country: funnelContext.country,
             credits: selectedOffer.images,
             value: selectedOffer.price,
           })
@@ -72,10 +89,14 @@ const BuyCredits: React.FC = () => {
           plan,
           credits: selectedOffer.images,
           value: selectedOffer.price,
+          context: "buy_credits_page",
+          ...funnelContext,
         });
       }
 
-      await buyCredits(plan);
+      await buyCredits(plan, {
+        sourcePage: funnelContext.source_page,
+      });
     } catch (error) {
       console.error("Error during purchase:", error);
       alert("Something went wrong. Please try again.");

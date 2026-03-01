@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
@@ -90,7 +91,16 @@ export const userRouter = createTRPCRouter({
 
     return updated;
   }),
-  markPaidTrafficUser: protectedProcedure.mutation(async ({ ctx }) => {
+  markPaidTrafficUser: protectedProcedure
+    .input(
+      z
+        .object({
+          sourcePage: z.string().optional(),
+          promotedProduct: z.string().optional(),
+        })
+        .optional(),
+    )
+    .mutation(async ({ ctx, input }) => {
     const user = await ctx.prisma.user.update({
       where: { id: ctx.session.user.id },
       data: { paidTrafficUser: true },
@@ -106,6 +116,8 @@ export const userRouter = createTRPCRouter({
             brand_specific_credits: user.credits,
             customFields: {
               paid_traffic_user: 1,
+              paid_traffic_source_page: input?.sourcePage,
+              paid_traffic_promoted_product: input?.promotedProduct,
             },
           },
           "namedesignai",
@@ -116,5 +128,5 @@ export const userRouter = createTRPCRouter({
     }
 
     return { success: true };
-  }),
+    }),
 });

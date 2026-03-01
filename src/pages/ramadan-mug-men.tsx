@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-// src/pages/ramadan-mug.tsx
+// src/pages/ramadan-mug-men.tsx
 
 import { type NextPage } from "next";
 import Head from "next/head";
@@ -63,12 +63,12 @@ type SavedDesign = {
   hasBackgroundRemoved: boolean;
 };
 
-const LAST_DESIGN_STORAGE_KEY = "ramadan-mug:last-design:v1";
+const LAST_DESIGN_STORAGE_KEY = "ramadan-mug-men:last-design:v1";
 const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 const PAID_TRAFFIC_USER_SESSION_KEY = "isPaidTrafficUser";
 
-const RamadanMugPage: NextPage = () => {
-  const SOURCE_PAGE = "ramadan-mug";
+const RamadanMugMenPage: NextPage = () => {
+  const SOURCE_PAGE = "ramadan-mug-men";
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
@@ -144,7 +144,8 @@ const RamadanMugPage: NextPage = () => {
   const funnelContext = getFunnelContext({
     route: router.pathname,
     sourcePage: SOURCE_PAGE,
-    paidTrafficUser: isRamadanAdUser,
+    paidTrafficUser: true,
+    productType: "physical_product",
     query: router.query as Record<string, unknown>,
   });
   const fireRamadanCustomEvent = (
@@ -195,6 +196,7 @@ const RamadanMugPage: NextPage = () => {
       utmSource === "facebook" ||
       utmSource === "instagram" ||
       campaignTag.includes("ramadan-mug") ||
+      campaignTag.includes("ramadan-mug-men") ||
       campaignTag.includes("ramadan_mug") ||
       hasFbclid;
 
@@ -248,7 +250,7 @@ const RamadanMugPage: NextPage = () => {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem("last-generator", "ramadan-mug");
+      window.localStorage.setItem("last-generator", "ramadan-mug-men");
     } catch {
       // ignore storage errors
     }
@@ -466,7 +468,7 @@ const RamadanMugPage: NextPage = () => {
           const blobUrl = window.URL.createObjectURL(pngBlob);
           const link = document.createElement("a");
           link.href = blobUrl;
-          link.download = "ramadan-mug-design.png";
+          link.download = "ramadan-mug-men-design.png";
           link.click();
           window.URL.revokeObjectURL(blobUrl);
         }
@@ -595,18 +597,18 @@ const RamadanMugPage: NextPage = () => {
     { name: "Ramadan", thumbnail: "/images/products/Ramadan.webp" },
   ];
   const testimonials = [
-    "He smiled the moment he opened it. The quality is amazing.",
-    "Beautiful print, fast shipping, and the name design felt truly personal.",
-    "It looked even better in person. Perfect Ramadan gift.",
+    "She was so happy when she saw her name in Arabic. It made Ramadan special.",
+    "A small gift with big meaning. My wife loved the thoughtful touch.",
+    "Quality was excellent and delivery was fast in the USA. Perfect surprise for my wife.",
   ];
 
   return (
     <>
       <Head>
-        <title>Ramadan Mug Generator | Personalized Arabic Mug Preview</title>
+        <title>Ramadan Mug for Your Wife | Personalized Arabic Gift</title>
         <meta
           name="description"
-          content="Create a personalized Ramadan mug preview with AI Arabic calligraphy."
+          content="Surprise your wife with a personalized Ramadan mug featuring beautiful Arabic calligraphy, printed and shipped in the USA."
         />
       </Head>
       <main className="mb-24 flex flex-col bg-white text-slate-900 dark:bg-gray-950 dark:text-slate-100">
@@ -614,20 +616,20 @@ const RamadanMugPage: NextPage = () => {
           <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 md:items-center">
             <div>
               <p className="mb-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
-                Ramadan Gift Special
+                Ramadan Gift for Your Wife
               </p>
               <h1 className="text-3xl font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-                Create a Personalized Ramadan Mug He&apos;ll Treasure Every Morning
+                Surprise Your Wife With a Personalized Ramadan Mug She&apos;ll Love
               </h1>
               <p className="mt-4 text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-                Turn his name into beautiful Arabic calligraphy, printed and shipped in the USA.
+                Turn her name into beautiful Arabic calligraphy — printed and shipped in the USA.
               </p>
               <div className="mt-6">
                 <Button type="button" onClick={scrollToGenerator}>
-                  Create My Mug Now
+                  Create Her Mug Now
                 </Button>
                 <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                  Free premium design included.
+                  Free premium design included for Ramadan.
                 </p>
               </div>
             </div>
@@ -647,7 +649,7 @@ const RamadanMugPage: NextPage = () => {
         <section className="w-full px-4 py-12 sm:px-8">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-center text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">
-              Loved by Families This Ramadan
+              Loved by Husbands This Ramadan
             </h2>
             <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {socialProofItems.map((item) => (
@@ -680,7 +682,7 @@ const RamadanMugPage: NextPage = () => {
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-gray-700 dark:bg-gray-900">
                 <FiEdit3 className="mx-auto h-6 w-6 text-blue-600" />
-                <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">Enter his name</h3>
+                <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">Enter her name</h3>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-gray-700 dark:bg-gray-900">
                 <FiImage className="mx-auto h-6 w-6 text-blue-600" />
@@ -697,7 +699,7 @@ const RamadanMugPage: NextPage = () => {
         <section className="w-full px-4 py-10 sm:px-8">
           <div className="mx-auto max-w-4xl rounded-xl border border-amber-300 bg-amber-50 p-5 text-center dark:border-amber-600/40 dark:bg-amber-500/10">
             <p className="font-semibold text-amber-900 dark:text-amber-200">
-              Ramadan Special: Free premium design (worth $4) included for a limited time.
+              Free premium design included for Ramadan.
             </p>
             <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
               Orders printed in the USA with fast shipping before Eid.
@@ -706,9 +708,9 @@ const RamadanMugPage: NextPage = () => {
         </section>
 
         <section ref={generatorSectionRef} className="mx-auto w-full max-w-screen-md px-4 py-6 sm:px-8 sm:py-8">
-          <h2 className="text-center text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl">Create Your Design Now</h2>
+          <h2 className="text-center text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl">Create Her Mug Now</h2>
           <p className="mt-3 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
-            Enter a name, pick a style, and generate your personalized Ramadan mug design.
+            Enter her name, choose a style, and create a thoughtful Ramadan gift in minutes.
           </p>
 
           <form ref={generatorFormRef} className="mt-8 flex flex-col gap-6" onSubmit={handleFormSubmit}>
@@ -820,14 +822,14 @@ const RamadanMugPage: NextPage = () => {
             {isLoggedIn ? "Generate My Design (4 Credits)" : "Sign in to Generate"}
           </Button>
           <p className="mt-1 text-center text-sm text-emerald-700 dark:text-emerald-300">
-            Free personalized preview included.
+            Free premium design included for Ramadan.
           </p>
         </form>
         
         {/* Results Section */}
         {imagesUrl.length > 0 && (
           <>
-            <h2 className="mb-2 mt-8 text-center text-xl text-slate-900 dark:text-slate-100">Your Ramadan Design</h2>
+            <h2 className="mb-2 mt-8 text-center text-xl text-slate-900 dark:text-slate-100">Her Ramadan Mug Design</h2>
             {isRamadanAdUser && (
               <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-300">
                 Digital download and sharing are disabled for this offer.
@@ -1047,6 +1049,6 @@ const RamadanMugPage: NextPage = () => {
     </>
   );
 };
-export default RamadanMugPage;
+export default RamadanMugMenPage;
 
 

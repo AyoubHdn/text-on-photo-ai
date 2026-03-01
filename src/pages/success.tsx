@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 import { trackEvent } from "~/lib/ga";
+import { getFunnelContext } from "~/lib/tracking/funnel";
 
 function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
@@ -34,19 +35,44 @@ const SuccessPage: React.FC = () => {
         const raw = window.sessionStorage.getItem("last_credit_purchase");
         if (raw) {
           try {
-            const parsed = JSON.parse(raw) as { credits?: number; value?: number };
+            const parsed = JSON.parse(raw) as {
+              plan?: "starter" | "pro" | "elite";
+              context?: string;
+              source_page?: string;
+              funnel?: string;
+              product_type?: string;
+              niche?: string | null;
+              traffic_type?: "paid" | "organic";
+              country?: string | null;
+              credits?: number;
+              value?: number;
+            };
             if (typeof parsed?.credits === "number" && typeof parsed?.value === "number") {
-              trackEvent("purchase_credits", {
-                credits: parsed.credits,
-                value: parsed.value,
+              const funnelContext = getFunnelContext({
+                route: router.pathname,
+                sourcePage: parsed.source_page ?? "success",
+                productType: parsed.product_type ?? "credits",
+                country: parsed.country ?? null,
+                query: router.query as Record<string, unknown>,
               });
+
               trackEvent("credit_purchase_completed", {
+                context: parsed.context ?? (typeof router.query.credits_context === "string" ? router.query.credits_context : null),
+                plan: parsed.plan ?? null,
                 credits: parsed.credits,
                 value: parsed.value,
+                previous_credits: null,
+                updated_credits: null,
+                ...funnelContext,
               });
               fireMetaCustomEvent("credit_purchase_completed", {
+                context: parsed.context ?? (typeof router.query.credits_context === "string" ? router.query.credits_context : null),
+                plan: parsed.plan ?? null,
                 credits: parsed.credits,
                 value: parsed.value,
+                previous_credits: null,
+                updated_credits: null,
+                ...funnelContext,
               });
               window.sessionStorage.setItem(trackedKey, "1");
               window.sessionStorage.removeItem("last_credit_purchase");
@@ -57,7 +83,7 @@ const SuccessPage: React.FC = () => {
         }
       }
     }
-  }, []);
+  }, [router.pathname, router.query]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

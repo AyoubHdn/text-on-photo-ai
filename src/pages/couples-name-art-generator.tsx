@@ -16,10 +16,12 @@ import {
   AiOutlineRight,
   AiOutlineShareAlt,
 } from "react-icons/ai";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import { ShareModal } from '~/component/ShareModal';
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackEvent } from "~/lib/ga";
+import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
@@ -48,6 +50,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+  const router = useRouter();
 
   // --- STRATEGIC CHANGE: Form state now handles two names ---
   const [form, setForm] = useState({
@@ -107,6 +110,11 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     setCreditUpgradeRequired(requiredCredits);
     setCreditUpgradeOpen(true);
   };
+  const funnelContext = getFunnelContext({
+    route: router.pathname,
+    sourcePage: SOURCE_PAGE,
+    query: router.query as Record<string, unknown>,
+  });
 
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({
     isOpen: false,
@@ -129,16 +137,14 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
     trackEvent("view_couples_name_art_generator", {
-      source_page: "couples-name-art-generator",
       user_credits: creditsQuery.data ?? null,
-      country: null,
+      ...funnelContext,
     });
     const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof maybeFbq === "function") {
       maybeFbq("trackCustom", "view_couples_name_art_generator", {
-        source_page: "couples-name-art-generator",
         user_credits: creditsQuery.data ?? null,
-        country: null,
+        ...funnelContext,
       });
     }
     hasTrackedViewRef.current = true;
@@ -243,10 +249,9 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       trackEvent("generate_design", {
         model: selectedModel,
         credits_used: creditsUsed,
-        source_page: SOURCE_PAGE,
         user_credits_before_action: creditsQuery.data ?? null,
         required_credits: creditsUsed,
-        country: null,
+        ...funnelContext,
       });
 
       const firstImageUrl = data?.[0]?.imageUrl;
@@ -437,10 +442,9 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       }
       trackEvent("remove_background", {
         source: "preview",
-        source_page: SOURCE_PAGE,
         user_credits_before_action: creditsQuery.data ?? null,
         required_credits: 1,
-        country: null,
+        ...funnelContext,
       });
     } catch (err) {
       console.error("[COUPLES_REMOVE_BACKGROUND_UI]", err);
@@ -804,10 +808,9 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
             setCreditUpgradeOpen(false);
             trackEvent("generation_resumed_after_upgrade", {
               context: creditUpgradeContext,
-              source_page: SOURCE_PAGE,
               user_credits_before_action: creditsQuery.data ?? null,
               required_credits: creditUpgradeRequired,
-              country: null,
+              ...funnelContext,
             });
             const action = pendingCreditActionRef.current;
             pendingCreditActionRef.current = null;

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useBuyCredits } from "~/hook/useBuyCredits";
 import { trackEvent } from "~/lib/ga";
+import { getFunnelContext } from "~/lib/tracking/funnel";
 
 type UpgradeContext = "generate" | "preview" | "remove_background";
 
@@ -65,14 +66,6 @@ function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>
   }
 }
 
-function fireMetaInitiateCheckout(params?: Record<string, unknown>) {
-  if (typeof window === "undefined") return;
-  const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-  if (typeof maybeFbq === "function") {
-    maybeFbq("track", "InitiateCheckout", params ?? {});
-  }
-}
-
 export function CreditUpgradeModal({
   isOpen,
   requiredCredits,
@@ -102,6 +95,18 @@ export function CreditUpgradeModal({
     return delta > 0 ? delta : 0;
   }, [requiredCredits, currentCredits]);
 
+  const funnelContext = useMemo(
+    () =>
+      getFunnelContext({
+        route: router.pathname,
+        sourcePage,
+        country: country ?? null,
+        productType: "credits",
+        query: router.query as Record<string, unknown>,
+      }),
+    [router.pathname, router.query, sourcePage, country],
+  );
+
   useEffect(() => {
     if (!isOpen) {
       hasFiredViewedRef.current = false;
@@ -118,26 +123,19 @@ export function CreditUpgradeModal({
     if (!hasFiredViewedRef.current) {
       trackEvent("credit_upgrade_viewed", {
         context,
-        source_page: sourcePage,
         user_credits_before_action: currentCredits,
         required_credits: requiredCredits,
         current_credits: currentCredits,
-        country: country ?? null,
+        ...funnelContext,
       });
       fireMetaCustomEvent("credit_upgrade_viewed", {
         context,
-        source_page: sourcePage,
         required_credits: requiredCredits,
-        country: country ?? null,
-      });
-      fireMetaInitiateCheckout({
-        content_category: "credits_upgrade",
-        source_page: sourcePage,
-        context,
+        ...funnelContext,
       });
       hasFiredViewedRef.current = true;
     }
-  }, [isOpen, context, requiredCredits, currentCredits, sourcePage, country]);
+  }, [isOpen, context, requiredCredits, currentCredits, funnelContext]);
 
   useEffect(() => {
     if (!isOpen || !isPolling) return;
@@ -155,14 +153,40 @@ export function CreditUpgradeModal({
     const updatedCredits = creditsQuery.data ?? currentCredits;
     const baseline = baselineCreditsRef.current;
     if (updatedCredits <= baseline) return;
+    const completionKey =
+      typeof window !== "undefined" ? window.sessionStorage.getItem("ga4_purchase_credits") : null;
+    if (completionKey === "1") {
+      setIsPolling(false);
+      setIsProcessing(false);
+      setStatusMessage(null);
+      onClose();
+      onSuccess();
+      return;
+    }
 
     if (!hasFiredCompletedRef.current) {
+      const selectedOffer = OFFERS.find((offer) => offer.plan === selectedPlan);
       trackEvent("credit_purchase_completed", {
         context,
+        plan: selectedPlan ?? null,
+        credits: selectedOffer?.credits ?? null,
+        value: selectedOffer?.price ?? null,
         previous_credits: baseline,
         updated_credits: updatedCredits,
+        ...funnelContext,
       });
-      fireMetaCustomEvent("credit_purchase_completed", { context });
+      fireMetaCustomEvent("credit_purchase_completed", {
+        context,
+        plan: selectedPlan ?? null,
+        credits: selectedOffer?.credits ?? null,
+        value: selectedOffer?.price ?? null,
+        previous_credits: baseline,
+        updated_credits: updatedCredits,
+        ...funnelContext,
+      });
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem("ga4_purchase_credits", "1");
+      }
       hasFiredCompletedRef.current = true;
     }
 
@@ -171,7 +195,7 @@ export function CreditUpgradeModal({
     setStatusMessage(null);
     onClose();
     onSuccess();
-  }, [isOpen, isPolling, creditsQuery.data, currentCredits, onClose, onSuccess, context]);
+  }, [isOpen, isPolling, creditsQuery.data, currentCredits, onClose, onSuccess, context, funnelContext, selectedPlan]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -193,23 +217,26 @@ export function CreditUpgradeModal({
         plan: offer.plan,
         credits: offer.credits,
         value: offer.price,
-        source_page: sourcePage,
         user_credits_before_action: currentCredits,
         required_credits: requiredCredits,
-        country: country ?? null,
+        ...funnelContext,
       });
       fireMetaCustomEvent("credit_purchase_initiated", {
         context,
         plan: offer.plan,
-        source_page: sourcePage,
+        credits: offer.credits,
+        value: offer.price,
         required_credits: requiredCredits,
-        country: country ?? null,
+        ...funnelContext,
       });
 
       await buyCredits(offer.plan, {
         purchaseContext: context,
         returnPath: router.asPath,
         openInNewTab: true,
+        sourcePage: funnelContext.source_page,
+        country: funnelContext.country ?? undefined,
+        paidTrafficUser: funnelContext.traffic_type === "paid",
       });
 
       setStatusMessage("Checkout opened in a new tab. Complete payment, credits activate instantly.");

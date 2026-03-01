@@ -12,6 +12,7 @@ import { Input } from "~/component/Input";
 import { Select } from "~/component/Select";
 import { TRPCClientError } from "@trpc/client";
 import { trackEvent } from "~/lib/ga";
+import { getFunnelContext, markEventTrackedOnce } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 
 export function formatPrice(value: number) {
@@ -44,6 +45,14 @@ function getMetaTrackingParams() {
     fbp: fbp ?? undefined,
     fbc: fbc ?? undefined,
   };
+}
+
+function fireMetaInitiateCheckout(params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+  if (typeof maybeFbq === "function") {
+    maybeFbq("track", "InitiateCheckout", params ?? {});
+  }
 }
 
 type ShippingCountry = {
@@ -244,14 +253,6 @@ export default function CheckoutPage() {
 
     useEffect(() => {
         if (!order || hasTrackedBeginCheckoutRef.current) return;
-        if (typeof window !== "undefined") {
-            const key = `ga4_begin_checkout_${order.id}`;
-            if (window.sessionStorage.getItem(key)) {
-                hasTrackedBeginCheckoutRef.current = true;
-                return;
-            }
-            window.sessionStorage.setItem(key, "1");
-        }
         const generatorKey =
           typeof window !== "undefined" ? window.localStorage.getItem("last-generator") : null;
         const sourcePage =
@@ -261,35 +262,59 @@ export default function CheckoutPage() {
             ? "couples-art-generator"
             : generatorKey === "default"
             ? "name-art-generator"
+            : generatorKey === "ramadan-mug-men"
+            ? "ramadan-mug-men"
+            : generatorKey === "ramadan-mug"
+            ? "ramadan-mug"
             : "checkout";
+        const funnelContext = getFunnelContext({
+            route: router.pathname,
+            sourcePage,
+            orderFunnelSource: order.funnelSource ?? null,
+            productKey: order.productKey,
+            productType: "physical_product",
+            country: address.country,
+            query: router.query as Record<string, unknown>,
+        });
+        const beginCheckoutKey = `tracking_begin_checkout_${order.id}`;
+        if (!markEventTrackedOnce(beginCheckoutKey)) {
+            hasTrackedBeginCheckoutRef.current = true;
+            return;
+        }
         if (
             order.funnelSource === "paid-traffic-offer" ||
             order.funnelSource === "ramadan-mug-ad"
         ) {
             trackEvent("paid_traffic_checkout_started", {
                 product: order.productKey,
-                source_page: sourcePage,
-                country: address.country,
+                ...funnelContext,
             });
             const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
             if (typeof maybeFbq === "function") {
                 maybeFbq("trackCustom", "paid_traffic_checkout_started", {
                     product: order.productKey,
-                    source_page: sourcePage,
-                    country: address.country,
+                    ...funnelContext,
                 });
             }
         } else {
             trackEvent("begin_checkout", {
                 product: order.productKey,
-                source_page: sourcePage,
                 user_credits_before_action: null,
                 required_credits: 0,
-                country: address.country,
+                ...funnelContext,
             });
         }
+        fireMetaInitiateCheckout({
+            content_type: "product",
+            content_ids: [order.productKey],
+            content_category: "physical_product",
+            value: Number(order.totalPrice ?? 0),
+            currency: "USD",
+            order_id: order.id,
+            ...funnelContext,
+        });
         hasTrackedBeginCheckoutRef.current = true;
-    }, [order, address.country]);
+    }, [order, address.country, router.pathname, router.query]);
 
     useEffect(() => {
         return;
@@ -647,9 +672,35 @@ export default function CheckoutPage() {
             });
 
             if (res.url) {
-                trackEvent("add_shipping_info", {
-                    country: address.country,
+                const sourcePage = typeof window !== "undefined"
+                  ? (window.localStorage.getItem("last-generator") === "arabic"
+                      ? "arabic-name-art-generator"
+                      : window.localStorage.getItem("last-generator") === "couples"
+                      ? "couples-art-generator"
+                      : window.localStorage.getItem("last-generator") === "default"
+                      ? "name-art-generator"
+                      : window.localStorage.getItem("last-generator") === "ramadan-mug-men"
+                      ? "ramadan-mug-men"
+                      : window.localStorage.getItem("last-generator") === "ramadan-mug"
+                      ? "ramadan-mug"
+                      : "checkout")
+                  : "checkout";
+                const funnelContext = getFunnelContext({
+                  route: router.pathname,
+                  sourcePage,
+                  orderFunnelSource: order.funnelSource ?? null,
+                  productKey: order.productKey,
+                  productType: "physical_product",
+                  country: address.country,
+                  query: router.query as Record<string, unknown>,
                 });
+                const addShippingInfoKey = `tracking_add_shipping_info_${order.id}`;
+                if (markEventTrackedOnce(addShippingInfoKey)) {
+                  trackEvent("add_shipping_info", {
+                    product: order.productKey,
+                    ...funnelContext,
+                  });
+                }
                 window.location.href = res.url;
             }
             } catch (err: unknown) {

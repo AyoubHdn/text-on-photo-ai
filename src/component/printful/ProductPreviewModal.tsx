@@ -13,6 +13,7 @@ import { api } from "~/utils/api";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { useRouter } from "next/router";
 import { trackEvent } from "~/lib/ga";
+import { getFunnelContext } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
@@ -97,6 +98,14 @@ export function ProductPreviewModal({
     return "name-art-generator";
   }, [router.pathname]);
   const isPaidTrafficFunnel = funnelMode === "paid_traffic_offer" && paidTrafficUser;
+  const funnelContext = getFunnelContext({
+    route: router.pathname,
+    sourcePage,
+    paidTrafficUser: isPaidTrafficFunnel,
+    productKey,
+    country: null,
+    query: router.query as Record<string, unknown>,
+  });
 
   const [error, setError] = useState<string | null>(null);
 
@@ -126,19 +135,19 @@ export function ProductPreviewModal({
   }) => {
     if (isPaidTrafficFunnel) {
       trackEvent("ramadan_mug_preview", {
-        source_page: sourcePage,
         variantId: payload.variantId,
         user_credits_before_action: creditsQuery.data ?? null,
         required_credits: payload.chargedCredits,
+        ...funnelContext,
         country: pricingCountryCode,
       });
       const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
       if (typeof maybeFbq === "function") {
         maybeFbq("trackCustom", "ramadan_mug_preview", {
-          source_page: sourcePage,
           variantId: payload.variantId,
           user_credits_before_action: creditsQuery.data ?? null,
           required_credits: payload.chargedCredits,
+          ...funnelContext,
           country: pricingCountryCode,
         });
       }
@@ -148,9 +157,9 @@ export function ProductPreviewModal({
     trackEvent("generate_product_preview", {
       product: productKey,
       variantId: payload.variantId,
-      source_page: sourcePage,
       user_credits_before_action: creditsQuery.data ?? null,
       required_credits: payload.chargedCredits,
+      ...funnelContext,
       country: pricingCountryCode,
     });
   };
@@ -892,9 +901,9 @@ export function ProductPreviewModal({
       setUseTransparent(true);
       trackEvent("remove_background", {
         source: "preview",
-        source_page: sourcePage,
         user_credits_before_action: creditsQuery.data ?? null,
         required_credits: 1,
+        ...funnelContext,
         country: pricingCountryCode,
       });
       await refreshPreview(nextTransparentUrl, previewOverride);
@@ -1383,9 +1392,9 @@ export function ProductPreviewModal({
             setCreditUpgradeOpen(false);
             trackEvent("generation_resumed_after_upgrade", {
               context: creditUpgradeContext,
-              source_page: sourcePage,
               user_credits_before_action: creditsQuery.data ?? null,
               required_credits: creditUpgradeRequired,
+              ...funnelContext,
               country: pricingCountryCode,
             });
             const action = pendingCreditActionRef.current;

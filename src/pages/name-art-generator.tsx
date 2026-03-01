@@ -21,6 +21,7 @@ import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { trackGA, trackEvent } from "~/lib/ga";
+import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
@@ -109,6 +110,11 @@ const NameArtGeneratorPage: NextPage = () => {
     setCreditUpgradeRequired(requiredCredits);
     setCreditUpgradeOpen(true);
   };
+  const funnelContext = getFunnelContext({
+    route: router.pathname,
+    sourcePage: SOURCE_PAGE,
+    query: router.query as Record<string, unknown>,
+  });
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
   useEffect(() => {
@@ -260,10 +266,9 @@ const NameArtGeneratorPage: NextPage = () => {
       trackEvent("generate_design", {
         model: selectedModel,
         credits_used: creditsUsed,
-        source_page: SOURCE_PAGE,
         user_credits_before_action: creditsQuery.data ?? null,
         required_credits: creditsUsed,
-        country: null,
+        ...funnelContext,
       });
     },
     onError: (error) => {
@@ -457,10 +462,9 @@ const NameArtGeneratorPage: NextPage = () => {
       }
       trackEvent("remove_background", {
         source: "preview",
-        source_page: SOURCE_PAGE,
         user_credits_before_action: creditsQuery.data ?? null,
         required_credits: 1,
-        country: null,
+        ...funnelContext,
       });
     } catch (err) {
       console.error("[REMOVE_BACKGROUND_UI]", err);
@@ -908,10 +912,9 @@ const NameArtGeneratorPage: NextPage = () => {
             setCreditUpgradeOpen(false);
             trackEvent("generation_resumed_after_upgrade", {
               context: creditUpgradeContext,
-              source_page: SOURCE_PAGE,
               user_credits_before_action: creditsQuery.data ?? null,
               required_credits: creditUpgradeRequired,
-              country: null,
+              ...funnelContext,
             });
             const action = pendingCreditActionRef.current;
             pendingCreditActionRef.current = null;
