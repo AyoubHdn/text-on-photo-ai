@@ -34,11 +34,16 @@ export const userRouter = createTRPCRouter({
     };
   }),
   grantPaidTrafficFreeCredits: protectedProcedure.mutation(async ({ ctx }) => {
+    console.log("PAID_TRAFFIC_DEBUG grantPaidTrafficFreeCredits called", {
+      userId: ctx.session.user.id,
+    });
     const updated = await ctx.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
         where: { id: ctx.session.user.id },
         select: {
           credits: true,
+          email: true,
+          name: true,
           paidTrafficFreeCreditsGranted: true,
           paidTrafficUser: true,
         },
@@ -56,6 +61,8 @@ export const userRouter = createTRPCRouter({
               data: { paidTrafficUser: true },
               select: {
                 credits: true,
+                email: true,
+                name: true,
                 paidTrafficFreeCreditsGranted: true,
                 paidTrafficUser: true,
               },
@@ -64,6 +71,9 @@ export const userRouter = createTRPCRouter({
         return {
           granted: false,
           credits: Number(patched.credits),
+          paidTrafficUser: Boolean(patched.paidTrafficUser),
+          email: patched.email,
+          name: patched.name,
         };
       }
 
@@ -80,14 +90,38 @@ export const userRouter = createTRPCRouter({
         },
         select: {
           credits: true,
+          email: true,
+          name: true,
+          paidTrafficUser: true,
         },
       });
 
       return {
         granted: true,
         credits: Number(patched.credits),
+        paidTrafficUser: Boolean(patched.paidTrafficUser),
+        email: patched.email,
+        name: patched.name,
       };
     });
+
+    if (updated.paidTrafficUser && updated.email) {
+      try {
+        await updateMauticContact(
+          {
+            email: updated.email,
+            name: updated.name,
+            brand_specific_credits: updated.credits,
+            customFields: {
+              paid_traffic_user: 1,
+            },
+          },
+          "namedesignai",
+        );
+      } catch (err) {
+        console.error("Error updating Mautic on grantPaidTrafficFreeCredits:", err);
+      }
+    }
 
     return updated;
   }),
@@ -101,11 +135,28 @@ export const userRouter = createTRPCRouter({
         .optional(),
     )
     .mutation(async ({ ctx, input }) => {
-    const user = await ctx.prisma.user.update({
-      where: { id: ctx.session.user.id },
-      data: { paidTrafficUser: true },
-      select: { email: true, name: true, credits: true },
+    console.log("PAID_TRAFFIC_DEBUG markPaidTrafficUser called", {
+      userId: ctx.session.user.id,
+      sourcePage: input?.sourcePage,
+      promotedProduct: input?.promotedProduct,
     });
+
+    const existingUser = await ctx.prisma.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { email: true, name: true, credits: true, paidTrafficUser: true },
+    });
+
+    if (!existingUser) {
+      throw new Error("User not found");
+    }
+
+    const user = existingUser.paidTrafficUser
+      ? existingUser
+      : await ctx.prisma.user.update({
+          where: { id: ctx.session.user.id },
+          data: { paidTrafficUser: true },
+          select: { email: true, name: true, credits: true, paidTrafficUser: true },
+        });
 
     if (user.email) {
       try {

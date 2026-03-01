@@ -819,7 +819,7 @@ const RamadanMugMenPage: NextPage = () => {
             </div>
           )}
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
-            {isLoggedIn ? "Generate My Design (4 Credits)" : "Sign in to Generate"}
+            {isLoggedIn ? "Generate My Design" : "Sign in to Generate"}
           </Button>
           <p className="mt-1 text-center text-sm text-emerald-700 dark:text-emerald-300">
             Free premium design included for Ramadan.

@@ -30,6 +30,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const router = useRouter();
   const [isPaidTrafficUser, setIsPaidTrafficUser] = useState(false);
   const hasMarkedPaidTrafficUserRef = useRef(false);
+  const isMarkingPaidTrafficUserRef = useRef(false);
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
   const isCancelPage =
     router.pathname === "/cancel" || router.pathname === "/order/cancel";
@@ -63,6 +64,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
       if (isAdUser) {
         window.sessionStorage.setItem(PAID_TRAFFIC_SESSION_KEY, "true");
+        document.cookie = `paid_traffic_landing=${encodeURIComponent(
+          `${window.location.pathname}${window.location.search}`,
+        )}; Max-Age=1800; Path=/; SameSite=Lax`;
         const offerMeta = PAID_TRAFFIC_PAGE_PRODUCT_MAP[router.pathname];
         if (offerMeta) {
           window.sessionStorage.setItem(
@@ -90,6 +94,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   useEffect(() => {
     if (!session?.user?.id || !isPaidTrafficUser) return;
     if (hasMarkedPaidTrafficUserRef.current) return;
+    if (isMarkingPaidTrafficUserRef.current) return;
 
     let sourcePage: string | undefined;
     let promotedProduct: string | undefined;
@@ -104,10 +109,19 @@ const MyApp: AppType<{ session: Session | null }> = ({
       promotedProduct = undefined;
     }
 
-    hasMarkedPaidTrafficUserRef.current = true;
+    isMarkingPaidTrafficUserRef.current = true;
     markPaidTrafficUser.mutate({
       sourcePage,
       promotedProduct,
+    }, {
+      onSuccess: () => {
+        hasMarkedPaidTrafficUserRef.current = true;
+        isMarkingPaidTrafficUserRef.current = false;
+      },
+      onError: (err) => {
+        console.error("Failed to mark paid traffic user in _app:", err);
+        isMarkingPaidTrafficUserRef.current = false;
+      },
     });
   }, [isPaidTrafficUser, markPaidTrafficUser, session?.user?.id]);
 
