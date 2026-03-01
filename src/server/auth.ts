@@ -228,11 +228,11 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
             brand_specific_credits: latestUser.credits,
             brand_specific_plan: latestUser.plan,
             customFields: {
-              paid_traffic_user: paidTrafficUserForSync ? 1 : 0,
+              is_paid_traffic_user: paidTrafficUserForSync ? 1 : 0,
               has_generated_design: latestUser.hasGeneratedDesign ? 1 : 0,
               has_visited_checkout: latestUser.hasVisitedCheckout ? 1 : 0,
               paid_traffic_source_page: paidDetection.sourcePage,
-              paid_traffic_promoted_product: paidDetection.promotedProduct,
+              paid_traffic_promoted_pro: paidDetection.promotedProduct,
             },
           },
           'namedesignai');
@@ -269,11 +269,11 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
             brand_specific_credits: 1.1, // New users start with 1.1 credits
             brand_specific_plan: "None",
             customFields: {
-              paid_traffic_user: paidDetection.isPaid ? 1 : 0,
+              is_paid_traffic_user: paidDetection.isPaid ? 1 : 0,
               has_generated_design: 0,
               has_visited_checkout: 0,
               paid_traffic_source_page: paidDetection.sourcePage,
-              paid_traffic_promoted_product: paidDetection.promotedProduct,
+              paid_traffic_promoted_pro: paidDetection.promotedProduct,
             },
           },
           'namedesignai');

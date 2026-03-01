@@ -113,7 +113,7 @@ export const userRouter = createTRPCRouter({
             name: updated.name,
             brand_specific_credits: updated.credits,
             customFields: {
-              paid_traffic_user: 1,
+              is_paid_traffic_user: 1,
             },
           },
           "namedesignai",
@@ -166,9 +166,9 @@ export const userRouter = createTRPCRouter({
             name: user.name,
             brand_specific_credits: user.credits,
             customFields: {
-              paid_traffic_user: 1,
+              is_paid_traffic_user: 1,
               paid_traffic_source_page: input?.sourcePage,
-              paid_traffic_promoted_product: input?.promotedProduct,
+              paid_traffic_promoted_pro: input?.promotedProduct,
             },
           },
           "namedesignai",
