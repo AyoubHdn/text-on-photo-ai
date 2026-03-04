@@ -206,10 +206,10 @@ const PrivacyPolicy: React.FC = () => {
             <p>
               **By email**:{" "}
               <a
-                href="mailto:contact@namedesignai.com"
+                href="mailto:support@namedesignai.com"
                 className="dark:text-gray-200 underline"
               >
-                contact@namedesignai.com
+                support@namedesignai.com
               </a>
             </p>
           </div>

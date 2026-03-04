@@ -129,8 +129,8 @@ const TermsOfService: React.FC = () => {
               If you have any questions about these Terms, you can contact us at:
             </p>
             <p>
-              <a href="mailto:contact@namedesignai.com" className="dark:text-gray-200 underline">
-                contact@namedesignai.com
+              <a href="mailto:support@namedesignai.com" className="dark:text-gray-200 underline">
+                support@namedesignai.com
               </a>
             </p>
           </div>
