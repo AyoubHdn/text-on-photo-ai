@@ -99,7 +99,7 @@ export function Header({ minimal = false }: HeaderProps) {
                         onClick={() => setIsProductsDropdownOpen(prev => !prev)}
                         className="flex items-center gap-1 font-medium text-slate-800 dark:text-slate-200 hover:text-blue-500"
                     >
-                        Products <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
+                        Create <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isProductsDropdownOpen && (
                         <div className="absolute top-full left-0 mt-2 w-56 z-20 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
@@ -122,12 +122,12 @@ export function Header({ minimal = false }: HeaderProps) {
                 {/* --- END: NEW PRODUCTS DROPDOWN --- */}
                 <li>
                     <PrimaryLink id="community-header-button" href="/community" className="hidden md:block">
-                        Community
+                        Gallery
                     </PrimaryLink>
                 </li>
                 <li>
-                    <PrimaryLink id="pricing-header-button" href="/buy-credits" className="hidden md:block">
-                        Pricing
+                    <PrimaryLink href="/products" className="hidden md:block">
+                        Print Products
                     </PrimaryLink>
                 </li>
                 {isLoggedIn && (
@@ -137,6 +137,11 @@ export function Header({ minimal = false }: HeaderProps) {
                         </PrimaryLink>
                     </li>
                 )}
+                <li>
+                    <PrimaryLink id="pricing-header-button" href="/buy-credits" className="hidden md:block">
+                        Pricing
+                    </PrimaryLink>
+                </li>
             </ul>
 
             {/* --- RIGHT NAVIGATION (DESKTOP) --- */}

@@ -209,7 +209,7 @@ const BuyCredits: React.FC = () => {
               <h2 className="mb-2 text-lg font-semibold">Typical Session Usage</h2>
               <div className="grid gap-1 text-sm text-gray-700 dark:text-gray-300">
                 <div>Cost per design: about 1 credit</div>
-                <div>Cost per preview: 0.1 credit</div>
+                <div>Cost per preview: Free</div>
                 <div>Most customers use 10-20 credits per session</div>
               </div>
             </div>

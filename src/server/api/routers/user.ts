@@ -78,7 +78,7 @@ export const userRouter = createTRPCRouter({
       }
 
       const nextCredits = new Prisma.Decimal(user.credits).plus(
-        new Prisma.Decimal("5.1"),
+        new Prisma.Decimal("4.1"),
       );
 
       const patched = await tx.user.update({

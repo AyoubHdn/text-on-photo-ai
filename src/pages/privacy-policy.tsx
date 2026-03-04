@@ -15,7 +15,7 @@ const PrivacyPolicy: React.FC = () => {
         <div className="w-full max-w-4xl px-6">
           <h1 className="text-4xl font-bold text-center mb-8">Privacy Policy</h1>
           <p className="text-sm  text-center mb-12">
-            Last updated: <strong>December 30, 2024</strong>
+            Last updated: <strong>March 4, 2026</strong>
           </p>
           <div className="prose prose-lg mx-auto  space-y-8">
             <p>
@@ -129,6 +129,75 @@ const PrivacyPolicy: React.FC = () => {
               <li>To contact You for updates, offers, or security notifications</li>
               <li>To analyze and improve the effectiveness of our Service and marketing campaigns</li>
             </ul>
+
+            <h2 className="text-2xl font-bold mt-10">AI Generation Disclosure</h2>
+            <p>
+              Our Service includes AI-powered generation features. When You submit prompts, names,
+              style selections, or related inputs, We process this content to generate design
+              outputs. Generated outputs may be stored in Your account and may be used to operate,
+              secure, and improve the Service.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Third-Party Providers</h2>
+            <p>
+              We use trusted third-party providers to operate parts of the Service, including:
+            </p>
+            <ul className="list-disc ml-6 space-y-2">
+              <li>
+                <strong>Stripe</strong> for payment processing.
+              </li>
+              <li>
+                <strong>Printful</strong> for product preview generation, fulfillment, and shipping
+                operations.
+              </li>
+              <li>
+                <strong>Analytics providers</strong> (such as Google Analytics and Meta tools) to
+                measure product usage and campaign performance.
+              </li>
+            </ul>
+            <p>
+              These providers may process Personal Data strictly as needed to provide their services
+              to Us.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Order and Shipping Data</h2>
+            <p>
+              When You purchase physical products, We collect and process order and shipping data,
+              including name, address, city, state/region, postal code, country, order metadata,
+              and fulfillment status. This information is used to process payments, submit and
+              manage fulfillment, provide delivery updates, and handle customer support.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Cookies and Tracking Technologies</h2>
+            <p>
+              We use cookies and similar technologies to keep You signed in, remember settings,
+              secure sessions, measure traffic, and evaluate advertising performance. You can manage
+              cookies through Your browser settings, but some Service features may not function
+              properly if certain cookies are disabled.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">User-Generated Content Storage</h2>
+            <p>
+              Designs, prompts, and related content You create in the Service are stored to provide
+              account history, downloads, sharing features, previews, and ordering. Content marked
+              as public may be visible in community/public areas of the platform.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Data Retention</h2>
+            <p>
+              We retain Personal Data for as long as necessary to provide the Service, comply with
+              legal obligations, resolve disputes, enforce agreements, and maintain legitimate
+              business records. Retention periods vary depending on data type, legal requirements,
+              and operational necessity.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Your Privacy Rights</h2>
+            <p>
+              Depending on Your location, You may have rights to access, correct, delete, or
+              restrict the use of certain Personal Data, and to object to or request portability of
+              Your data where applicable. To make a rights request, contact Us using the details
+              below. We may need to verify Your identity before processing requests.
+            </p>
 
             <h2 className="text-2xl font-bold mt-10">Contact Us</h2>
             <p>

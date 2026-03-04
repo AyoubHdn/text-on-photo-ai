@@ -396,7 +396,7 @@ export function ProductPreviewModal({
   };
 
   /* ---------------------------------------------------
-     1) Generate preview (already costs 0.1 credit)
+     1) Generate preview
   --------------------------------------------------- */
   const requestInitialPreview = async () => {
     if (!isOpen || !productKey || !originalImageUrl) return;
@@ -431,14 +431,6 @@ export function ProductPreviewModal({
 
       if (!data) throw new Error(fallbackError);
 
-      if (data.error === "INSUFFICIENT_CREDITS") {
-        setError(null);
-        openCreditUpgrade("preview", 0.1, () => {
-          void requestInitialPreview();
-        });
-        return;
-      }
-
       if (!res.ok) {
         if (data.error === "PRINTFUL_RATE_LIMIT" && data.retryAfter) {
           setPreviewCooldown(data.retryAfter);
@@ -454,7 +446,7 @@ export function ProductPreviewModal({
       trackPreviewEvent({
         variantId: variantId ?? undefined,
         chargedCredits:
-          typeof data.chargedCredits === "number" ? data.chargedCredits : 0.1,
+          typeof data.chargedCredits === "number" ? data.chargedCredits : 0,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Preview unavailable. Please try again.");
@@ -937,17 +929,9 @@ export function ProductPreviewModal({
           <div className="bg-red-100 text-red-700 p-3 rounded mb-3">
             {error === "INSUFFICIENT_CREDITS" ? (
               <>
-                <div className="font-semibold">Product previews require credits</div>
+                <div className="font-semibold">Preview is currently unavailable</div>
                 <div>
-                  Buy credits to generate a product preview and complete your purchase.{" "}
-                  <Link
-                    href="/buy-credits"
-                    className="underline font-semibold"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Buy credits
-                  </Link>
+                  Product preview is free now. Please try again in a moment.
                 </div>
               </>
             ) : error === "BACKGROUND_INSUFFICIENT_CREDITS" ? (

@@ -118,7 +118,7 @@ const RamadanMugPage: NextPage = () => {
       if (result.granted) {
         fireRamadanCustomEvent("ramadan_free_credit_granted", {
           source_page: SOURCE_PAGE,
-          granted_credits: 5.1,
+          granted_credits: 4.1,
         });
       }
       await utils.user.getCredits.invalidate();
@@ -980,7 +980,7 @@ const RamadanMugPage: NextPage = () => {
                           ? `Please wait ${previewCooldown}s`
                           : isRamadanAdUser
                           ? "Preview included"
-                          : "Preview (0.1 credit)"}
+                          : "Preview (Free)"}
                       </button>
                     </div>
                   </div>

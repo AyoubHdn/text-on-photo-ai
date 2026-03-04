@@ -869,7 +869,7 @@ const NameArtGeneratorPage: NextPage = () => {
                       setPreviewImage(imagesUrl[0]?.imageUrl ?? null);
                     }}
                   >
-                    {previewCooldown !== null? `Please wait ${previewCooldown}s`: "Preview (0.1 credit)"}
+                    {previewCooldown !== null? `Please wait ${previewCooldown}s`: "Preview (Free)"}
                   </button>
                 </div>
               </div>

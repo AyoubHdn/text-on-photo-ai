@@ -16,7 +16,7 @@ const TermsOfService: React.FC = () => {
         <div className="w-full max-w-4xl px-6">
           <h1 className="text-4xl font-bold text-center mb-8">Terms of Service</h1>
           <p className="text-sm  text-center mb-12">
-            Last updated: <strong>December 30, 2024</strong>
+            Last updated: <strong>March 4, 2026</strong>
           </p>
           <div className="prose prose-lg mx-auto  space-y-8">
             <h2 className="text-2xl font-bold mt-10">Introduction</h2>
@@ -51,6 +51,55 @@ const TermsOfService: React.FC = () => {
               By purchasing credits, you agree to the <Link href="/refund" className="dark:text-gray-200 underline">Refund Policy</Link>. Ensure you understand the limitations of AI-generated designs before purchasing.
             </p>
 
+            <h2 className="text-2xl font-bold mt-10">Account Responsibility</h2>
+            <p>
+              You are responsible for maintaining the confidentiality of your account credentials and
+              for all activity that occurs under your account. You must provide accurate account
+              information and promptly notify us of any unauthorized use.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">AI Content Disclaimer</h2>
+            <p>
+              The Service uses AI to generate content, which may be inaccurate, incomplete, similar
+              to third-party works, or unsuitable for specific legal/commercial purposes. You are
+              responsible for reviewing all generated outputs before use.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">User Content Responsibility</h2>
+            <p>
+              You are solely responsible for prompts, text, images, and any other content you upload
+              or submit. You must not submit content that infringes rights, violates law, or breaches
+              third-party terms.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Credits Rules</h2>
+            <p>
+              Credits are digital service units used within the platform. Unless required by law,
+              credits are non-refundable once used, non-transferable, and may expire or be adjusted
+              if abuse, fraud, chargebacks, or technical correction is required.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Physical Product Fulfillment</h2>
+            <p>
+              Physical product manufacturing and shipping are fulfilled by third-party partners. We
+              coordinate order processing but do not directly manufacture products. Delivery times,
+              carrier operations, and fulfillment availability may vary by destination and provider.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Order Accuracy</h2>
+            <p>
+              You are responsible for verifying order details, including product variant, design,
+              size, color, shipping address, and contact details before purchase. We are not liable
+              for losses caused by incorrect information provided at checkout.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Design Ownership</h2>
+            <p>
+              Subject to these Terms and applicable law, you retain rights in content you submit and
+              generated outputs associated with your account. You grant us the rights needed to host,
+              process, display, and deliver the Service (including previews, fulfillment, and support).
+            </p>
+
             <h2 className="text-2xl font-bold mt-10">Termination</h2>
             <p>
               We reserve the right to terminate or suspend your account without prior notice if you
@@ -59,8 +108,20 @@ const TermsOfService: React.FC = () => {
 
             <h2 className="text-2xl font-bold mt-10">Limitation of Liability</h2>
             <p>
-              We assume no responsibility for the outcomes of AI-generated designs and their use.
-              Please ensure compliance with relevant copyright laws in your jurisdiction.
+              To the maximum extent permitted by law, the Service is provided on an &quot;as is&quot; and
+              &quot;as available&quot; basis without warranties of any kind. We are not liable for indirect,
+              incidental, special, consequential, or punitive damages, or for loss of data, profits,
+              revenue, goodwill, business interruption, delivery delays, third-party service failures,
+              or outcomes arising from use of AI-generated content. Our total liability for any claim
+              related to the Service will not exceed the amount you paid to us in the 12 months before
+              the event giving rise to the claim.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-10">Service Modification</h2>
+            <p>
+              We may modify, suspend, or discontinue any part of the Service (including features,
+              pricing, product availability, and integrations) at any time, with or without notice,
+              as permitted by law.
             </p>
 
             <h2 className="text-2xl font-bold mt-10">Contact Us</h2>

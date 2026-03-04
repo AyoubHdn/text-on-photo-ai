@@ -1,7 +1,7 @@
 // src/server/credits/constants.ts
 export const CREDIT_COSTS = {
   NAME_ART_GENERATION: 1,
-  PRODUCT_PREVIEW: 0.1,
+  PRODUCT_PREVIEW: 0,
   BACKGROUND_REMOVAL: 1,
 } as const;
 

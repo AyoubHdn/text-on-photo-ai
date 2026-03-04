@@ -5,12 +5,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "~/server/auth";
-import { Prisma } from "@prisma/client";
-import { prisma } from "~/server/db";
 
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
-import { CREDIT_COSTS } from "~/server/credits/constants";
-import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 import { createMockupTask } from "~/server/printful/mockup";
 import { pollMockupTask } from "~/server/printful/pollMockup";
@@ -19,6 +15,64 @@ import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
 import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 import sharp from "sharp";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
+
+const MOCKUP_FETCH_ATTEMPTS = 3;
+const MOCKUP_FETCH_RETRY_MS = 1200;
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  const maybeErr = error as { code?: string; cause?: { code?: string } };
+  return maybeErr?.code ?? maybeErr?.cause?.code;
+}
+
+function isNetworkFetchError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message.toLowerCase() : "";
+  const code = (getErrorCode(error) ?? "").toUpperCase();
+  return (
+    msg.includes("fetch failed") ||
+    msg.includes("getaddrinfo") ||
+    msg.includes("enotfound") ||
+    msg.includes("eai_again") ||
+    code === "ENOTFOUND" ||
+    code === "EAI_AGAIN" ||
+    code === "ECONNRESET" ||
+    code === "ETIMEDOUT"
+  );
+}
+
+async function fetchMockupWithRetry(url: string): Promise<Response> {
+  let lastError: unknown = null;
+
+  for (let i = 0; i < MOCKUP_FETCH_ATTEMPTS; i++) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return response;
+
+      // Retry only transient upstream statuses.
+      if (response.status >= 500 || response.status === 429) {
+        lastError = new Error(`Mockup fetch upstream status: ${response.status}`);
+      } else {
+        throw new Error(`Failed to fetch mockup image (status ${response.status})`);
+      }
+    } catch (error) {
+      lastError = error;
+      if (!isNetworkFetchError(error) && i === MOCKUP_FETCH_ATTEMPTS - 1) {
+        throw error;
+      }
+    }
+
+    if (i < MOCKUP_FETCH_ATTEMPTS - 1) {
+      await delay(MOCKUP_FETCH_RETRY_MS * (i + 1));
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Failed to fetch mockup image after retries");
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -129,82 +183,6 @@ export default async function handler(
   }
 
   try {
-    // Deduct preview credits unless this is the one-time Ramadan free mug preview.
-    const creditUpdate = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.findUnique({
-        where: { id: session.user.id },
-        select: {
-          credits: true,
-          email: true,
-          name: true,
-          paidTrafficUser: true,
-          paidTrafficFreePreviewUsed: true,
-        },
-      });
-
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      const canUseRamadanFreePreview =
-        paidTrafficUser &&
-        product.key === "mug" &&
-        user.paidTrafficUser &&
-        !user.paidTrafficFreePreviewUsed;
-
-      if (canUseRamadanFreePreview) {
-        const updated = await tx.user.update({
-          where: { id: session.user.id },
-          data: { paidTrafficFreePreviewUsed: true },
-          select: {
-            credits: true,
-            email: true,
-            name: true,
-            paidTrafficUser: true,
-            paidTrafficFreePreviewUsed: true,
-          },
-        });
-        return {
-          user: updated,
-          chargedCredits: 0,
-          usedFreeRamadanPreview: true,
-        };
-      }
-
-      const amount = new Prisma.Decimal(CREDIT_COSTS.PRODUCT_PREVIEW);
-      const credits = new Prisma.Decimal(user.credits);
-      if (credits.lessThan(amount)) {
-        throw new Error("Not enough credits");
-      }
-
-      const updated = await tx.user.update({
-        where: { id: session.user.id },
-        data: { credits: credits.minus(amount) },
-        select: { credits: true, email: true, name: true },
-      });
-
-      return {
-        user: updated,
-        chargedCredits: Number(CREDIT_COSTS.PRODUCT_PREVIEW),
-        usedFreeRamadanPreview: false,
-      };
-    });
-
-    if (creditUpdate.chargedCredits > 0 && creditUpdate.user.email) {
-      try {
-        await updateMauticContact(
-          {
-            email: creditUpdate.user.email,
-            name: creditUpdate.user.name,
-            brand_specific_credits: creditUpdate.user.credits,
-          },
-          "namedesignai"
-        );
-      } catch (mauticErr) {
-        console.error("[PRINTFUL_PREVIEW_MAUTIC_SYNC_ERROR]", mauticErr);
-      }
-    }
-
     // ✅ 2. Create Printful mockup task
     let variantId: number;
     let effectiveAspect: string | undefined;
@@ -270,10 +248,7 @@ export default async function handler(
       throw new Error("Mockup not generated");
     }
 
-    const mockupRes = await fetch(mockupUrl);
-    if (!mockupRes.ok) {
-      throw new Error("Failed to fetch mockup image");
-    }
+    const mockupRes = await fetchMockupWithRetry(mockupUrl);
 
     const mockupBuffer = Buffer.from(await mockupRes.arrayBuffer());
     const stableMockupUrl = await convertWebpToPngAndUpload(
@@ -285,25 +260,37 @@ export default async function handler(
       success: true,
       mockupUrl: stableMockupUrl,
       product,
-      chargedCredits: creditUpdate.chargedCredits,
-      usedFreeRamadanPreview: creditUpdate.usedFreeRamadanPreview,
+      chargedCredits: 0,
+      usedFreeRamadanPreview: false,
     });
   } catch (error) {
     console.error("[PRINTFUL_PREVIEW_ERROR]", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorCode = getErrorCode(error)?.toUpperCase();
 
-    if (errorMessage.toLowerCase().includes("not enough credits")) {
-      return res.status(402).json({
-        error: "INSUFFICIENT_CREDITS",
+    const retryMatch = errorMessage.match(/after (\d+) seconds/i);
+    if (retryMatch) {
+      const retryAfter = Number(retryMatch[1]);
+      return res.status(429).json({
+        error: "PRINTFUL_RATE_LIMIT",
+        retryAfter: Number.isFinite(retryAfter) ? retryAfter : null,
       });
     }
 
-    const retryMatch = errorMessage.match(/after (\d+) seconds/);
-    const retryAfter = retryMatch ? Number(retryMatch[1]) : null;
+    if (
+      isNetworkFetchError(error) ||
+      errorCode === "ENOTFOUND" ||
+      errorCode === "EAI_AGAIN" ||
+      errorCode === "ETIMEDOUT" ||
+      errorCode === "ECONNRESET"
+    ) {
+      return res.status(503).json({
+        error: "MOCKUP_FETCH_NETWORK_ERROR",
+      });
+    }
 
-    return res.status(429).json({
-      error: "PRINTFUL_RATE_LIMIT",
-      retryAfter, // seconds
+    return res.status(500).json({
+      error: "PRINTFUL_PREVIEW_ERROR",
     });
   }
 }
