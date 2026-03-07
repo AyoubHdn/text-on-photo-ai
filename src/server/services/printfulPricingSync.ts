@@ -15,6 +15,17 @@ type RawVariant = {
 
 const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
 
+const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
+  string,
+  { city: string; zip: string; stateCode?: string }
+> = {
+  US: { city: "Los Angeles", zip: "90001", stateCode: "CA" },
+  GB: { city: "London", zip: "SW1A1AA" },
+  CA: { city: "Toronto", zip: "M5V2T6", stateCode: "ON" },
+  AU: { city: "Sydney", zip: "2000", stateCode: "NSW" },
+  NZ: { city: "Auckland", zip: "1010" },
+};
+
 const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProductId: number }> = [
   { productType: "mug", printfulProductId: 19 },
   { productType: "tshirt", printfulProductId: 71 },
@@ -84,14 +95,21 @@ async function fetchShippingCostByProductType(
   representativeVariantId: number,
   countryCode: string
 ): Promise<number> {
+  const usSeed = SHIPPING_RECIPIENT_BY_COUNTRY.US;
+  if (!usSeed) {
+    throw new Error("Missing default US shipping recipient seed");
+  }
+  const recipientSeed =
+    SHIPPING_RECIPIENT_BY_COUNTRY[countryCode] ?? usSeed;
+
   const shipping = await printfulRequest<{
     result: Array<{ rate: string }>;
   }>("/shipping/rates", "POST", {
     recipient: {
       country_code: countryCode,
-      city: "Los Angeles",
-      zip: "90001",
-      state_code: countryCode === "US" ? "CA" : undefined,
+      city: recipientSeed.city,
+      zip: recipientSeed.zip,
+      state_code: recipientSeed.stateCode,
     },
     items: [
       {
@@ -130,18 +148,32 @@ export async function runPricingSync() {
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
-      const firstVariant = Array.from(bySize.values())[0];
-      if (!firstVariant) {
+      const candidateVariantIds = Array.from(
+        new Set(Array.from(bySize.values()).map((entry) => entry.variantId)),
+      );
+      if (candidateVariantIds.length === 0) {
         throw new Error(`No representative variant found for ${productType}`);
       }
 
-      let shippingCost: number;
-      try {
-        shippingCost = await fetchShippingCostByProductType(firstVariant.variantId, countryCode);
-      } catch (error) {
+      let shippingCost: number | null = null;
+      for (const candidateVariantId of candidateVariantIds) {
+        try {
+          shippingCost = await fetchShippingCostByProductType(
+            candidateVariantId,
+            countryCode,
+          );
+          break;
+        } catch (error) {
+          console.warn(
+            `[PRICING_SYNC] Variant ${candidateVariantId} unavailable for ${productType} in ${countryCode}`,
+            error,
+          );
+        }
+      }
+
+      if (shippingCost === null) {
         console.error(
-          `[PRICING_SYNC] Failed shipping lookup for ${productType} in ${countryCode}:`,
-          error,
+          `[PRICING_SYNC] Skipping ${productType} in ${countryCode}: no shippable variant found`,
         );
         continue;
       }
