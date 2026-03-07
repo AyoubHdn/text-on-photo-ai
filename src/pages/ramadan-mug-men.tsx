@@ -599,7 +599,7 @@ const RamadanMugMenPage: NextPage = () => {
   const testimonials = [
     "She was so happy when she saw her name in Arabic. It made Ramadan special.",
     "A small gift with big meaning. My wife loved the thoughtful touch.",
-    "Quality was excellent and delivery was fast in the USA. Perfect surprise for my wife.",
+    "Quality was excellent and delivery was fast. Perfect surprise for my wife.",
   ];
 
   return (
@@ -608,7 +608,7 @@ const RamadanMugMenPage: NextPage = () => {
         <title>Ramadan Mug for Your Wife | Personalized Arabic Gift</title>
         <meta
           name="description"
-          content="Surprise your wife with a personalized Ramadan mug featuring beautiful Arabic calligraphy, printed and shipped in the USA."
+          content="Surprise your wife with a personalized Ramadan mug featuring beautiful Arabic calligraphy, printed and shipped worldwide."
         />
       </Head>
       <main className="mb-24 flex flex-col bg-white text-slate-900 dark:bg-gray-950 dark:text-slate-100">
@@ -622,7 +622,7 @@ const RamadanMugMenPage: NextPage = () => {
                 Surprise Your Wife With a Personalized Ramadan Mug She&apos;ll Love
               </h1>
               <p className="mt-4 text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-                Turn her name into beautiful Arabic calligraphy — printed and shipped in the USA.
+                Turn her name into beautiful Arabic calligraphy — printed and shipped worldwide.
               </p>
               <div className="mt-6">
                 <Button type="button" onClick={scrollToGenerator}>
@@ -702,7 +702,7 @@ const RamadanMugMenPage: NextPage = () => {
               Free premium design included for Ramadan.
             </p>
             <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
-              Orders printed in the USA with fast shipping before Eid.
+              Orders prepared with fast international shipping before Eid.
             </p>
           </div>
         </section>
@@ -1001,7 +1001,7 @@ const RamadanMugMenPage: NextPage = () => {
             <ul className="mt-5 grid gap-3 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-2">
               <li>High-quality glossy ceramic</li>
               <li>Dishwasher and microwave safe</li>
-              <li>Printed in the USA</li>
+              <li>Worldwide shipping available</li>
               <li>Secure checkout powered by Stripe</li>
               <li>30-day satisfaction guarantee</li>
             </ul>

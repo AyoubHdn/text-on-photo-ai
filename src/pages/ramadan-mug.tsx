@@ -620,7 +620,7 @@ const RamadanMugPage: NextPage = () => {
                 Create a Personalized Ramadan Mug He&apos;ll Treasure Every Morning
               </h1>
               <p className="mt-4 text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-                Turn his name into beautiful Arabic calligraphy, printed and shipped in the USA.
+                Turn his name into beautiful Arabic calligraphy, printed and shipped worldwide.
               </p>
               <div className="mt-6">
                 <Button type="button" onClick={scrollToGenerator}>
@@ -700,7 +700,7 @@ const RamadanMugPage: NextPage = () => {
               Ramadan Special: Free premium design (worth $4) included for a limited time.
             </p>
             <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
-              Orders printed in the USA with fast shipping before Eid.
+              Orders prepared with fast international shipping before Eid.
             </p>
           </div>
         </section>
@@ -999,7 +999,7 @@ const RamadanMugPage: NextPage = () => {
             <ul className="mt-5 grid gap-3 text-sm text-slate-700 dark:text-slate-300 sm:grid-cols-2">
               <li>High-quality glossy ceramic</li>
               <li>Dishwasher and microwave safe</li>
-              <li>Printed in the USA</li>
+              <li>Worldwide shipping available</li>
               <li>Secure checkout powered by Stripe</li>
               <li>30-day satisfaction guarantee</li>
             </ul>
