@@ -21,6 +21,7 @@ import {
   MUG_VARIANT_INFO,
   TSHIRT_SIZE_INFO,
 } from "~/config/productVariantInfo";
+import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
 type Variant = {
   id: number;
@@ -116,7 +117,9 @@ export function ProductPreviewModal({
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const hasInitializedRef = useRef(false);
   const lastProductKeyRef = useRef<Props["productKey"]>(null);
-  const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isOpen });
+  const creditsQuery = api.user.getCredits.useQuery(undefined, {
+    enabled: isOpen && !isPaidTrafficFunnel,
+  });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
   const requiresBackgroundCredits = !transparentImageUrl;
   const openCreditUpgrade = (
@@ -544,10 +547,10 @@ export function ProductPreviewModal({
   const [pricingCountryCode, setPricingCountryCode] = useState<string>("US");
   const [pricingTotal, setPricingTotal] = useState<number | null>(null);
   const [pricingError, setPricingError] = useState<string | null>(null);
-  const shippingCountries = useMemo(() => ["US"], []);
+  const shippingCountries = SHIPPING_COUNTRY_OPTIONS;
 
   useEffect(() => {
-    if (shippingCountries.includes(pricingCountryCode)) return;
+    if (shippingCountries.some((country) => country.code === pricingCountryCode)) return;
     setPricingCountryCode("US");
   }, [pricingCountryCode, shippingCountries]);
 
@@ -868,7 +871,7 @@ export function ProductPreviewModal({
       const res = await fetch("/api/image/remove-background", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageId }),
+        body: JSON.stringify({ imageId, paidTrafficUser: isPaidTrafficFunnel }),
       });
 
       const data = await res.json();
@@ -1262,9 +1265,9 @@ export function ProductPreviewModal({
                 onChange={(e) => setPricingCountryCode(e.target.value)}
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
-                {shippingCountries.map((code) => (
-                  <option key={code} value={code}>
-                    United States ({code})
+                {shippingCountries.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.name} ({country.code})
                   </option>
                 ))}
               </select>
@@ -1336,7 +1339,10 @@ export function ProductPreviewModal({
                 funnelSource: isPaidTrafficFunnel ? "paid-traffic-offer" : undefined,
               });
 
-              void router.push(`/checkout?orderId=${res.orderId}`);
+              const checkoutQuery = res.accessToken
+                ? `orderId=${res.orderId}&accessToken=${encodeURIComponent(res.accessToken)}`
+                : `orderId=${res.orderId}`;
+              void router.push(`/checkout?${checkoutQuery}`);
             }}
             >
               Continue to checkout

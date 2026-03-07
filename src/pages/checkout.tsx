@@ -14,6 +14,7 @@ import { TRPCClientError } from "@trpc/client";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext, markEventTrackedOnce } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
+import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
 export function formatPrice(value: number) {
   return value.toFixed(2);
@@ -62,9 +63,12 @@ type ShippingCountry = {
 
 export default function CheckoutPage() {
     const router = useRouter();
-    const { orderId } = router.query;
+    const { orderId, accessToken } = router.query;
+    const accessTokenValue =
+      typeof accessToken === "string" ? accessToken : undefined;
 
     const [address, setAddress] = useState({
+        email: "",
         name: "",
         address1: "",
         city: "",
@@ -115,7 +119,7 @@ export default function CheckoutPage() {
     };
 
     const { data: order, isLoading } = api.productOrder.getOrder.useQuery(
-        { orderId: String(orderId) },
+        { orderId: String(orderId), accessToken: accessTokenValue },
         { enabled: !!orderId }
         ) as { data: OrderType | undefined, isLoading: boolean };
 
@@ -152,7 +156,7 @@ export default function CheckoutPage() {
 
     const loadCountries = async () => {
       if (countries.length > 0) return;
-      setCountries([{ code: "US", name: "United States" }]);
+      setCountries(SHIPPING_COUNTRY_OPTIONS);
     };
 
 
@@ -163,19 +167,25 @@ export default function CheckoutPage() {
     const validateShipping = (nextAddress = address, nextRequiresState = requiresState) => {
         const errors: Record<string, string> = {};
         const name = (nextAddress.name ?? "").trim();
+        const email = (nextAddress.email ?? "").trim();
         const address1 = (nextAddress.address1 ?? "").trim();
         const city = (nextAddress.city ?? "").trim();
         const country = (nextAddress.country ?? "").trim();
         const zip = (nextAddress.zip ?? "").trim();
         const state = (nextAddress.state ?? "").trim();
 
+        if (!email) {
+        errors.email = "Email is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.email = "Enter a valid email address.";
+        }
         if (!name) errors.name = "Full name is required.";
         if (!address1) errors.address1 = "Address line 1 is required.";
         if (!city) errors.city = "City is required.";
         if (!country) errors.country = "Country is required.";
         if (!zip) {
         errors.zip = "ZIP / Postal code is required.";
-        } else if (country === "US" || country === "FR" || country === "MA") {
+        } else if (country === "US") {
         if (!/^\d{5}$/.test(zip)) {
             errors.zip = "ZIP code must be 5 digits.";
         }
@@ -497,6 +507,19 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <Input
+            className={`input-lg md:col-span-2 ${isFieldInvalid("email") ? "border-red-500" : ""}`}
+            placeholder="Email"
+            type="email"
+            value={address.email}
+            onChange={(e) =>
+            setAddress({ ...address, email: e.target.value })
+            }
+        />
+        {fieldErrorMessage("email") && (
+        <div className="md:col-span-2 text-xs text-red-600">{fieldErrorMessage("email")}</div>
+        )}
+
+        <Input
             className={`input-lg ${isFieldInvalid("name") ? "border-red-500" : ""}`}
             placeholder="Full name"
             value={address.name}
@@ -659,9 +682,11 @@ export default function CheckoutPage() {
             try {
             const res = await createStripeSession.mutateAsync({
                 orderId: order.id,
+                accessToken: accessTokenValue,
                 submittedTotalPrice: totalPrice,
                 tracking: getMetaTrackingParams(),
                 address: {
+                email: address.email,
                 name: address.name,
                 address1: address.address1,
                 country: address.country,
@@ -739,6 +764,7 @@ export default function CheckoutPage() {
                 const fieldErrors = err.data?.zodError?.fieldErrors ?? {};
                 const nextFieldErrors: Record<string, string> = {};
 
+                if (fieldErrors.email) nextFieldErrors.email = "Enter a valid email address.";
                 if (fieldErrors.name) nextFieldErrors.name = "This field is required.";
                 if (fieldErrors.address1) nextFieldErrors.address1 = "This field is required.";
                 if (fieldErrors.city) nextFieldErrors.city = "This field is required.";

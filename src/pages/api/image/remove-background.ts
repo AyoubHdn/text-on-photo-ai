@@ -146,7 +146,8 @@ export default async function handler(
   }
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.id) {
+  const paidTrafficUser = Boolean(req.body?.paidTrafficUser);
+  if (!session?.user?.id && !paidTrafficUser) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -155,15 +156,29 @@ export default async function handler(
     return res.status(400).json({ error: "Missing imageId" });
   }
 
-  const icon = await prisma.icon.findFirst({
-    where: { id: imageId, userId: session.user.id },
-    select: {
-      id: true,
-      userId: true,
-      transparentImageUrl: true,
-      backgroundRemovedAt: true,
-    },
-  });
+  let icon = session?.user?.id
+    ? await prisma.icon.findFirst({
+        where: { id: imageId, userId: session.user.id },
+        select: {
+          id: true,
+          userId: true,
+          transparentImageUrl: true,
+          backgroundRemovedAt: true,
+        },
+      })
+    : null;
+
+  if (!icon && paidTrafficUser) {
+    icon = await prisma.icon.findFirst({
+      where: { id: imageId, userId: null },
+      select: {
+        id: true,
+        userId: true,
+        transparentImageUrl: true,
+        backgroundRemovedAt: true,
+      },
+    });
+  }
 
   if (!icon) {
     return res.status(404).json({ error: "Image not found" });
@@ -177,7 +192,7 @@ export default async function handler(
   }
 
   // Charge only once per image (idempotent).
-  if (!icon.backgroundRemovedAt) {
+  if (!icon.backgroundRemovedAt && session?.user?.id) {
     try {
       await prisma.$transaction(async (tx) => {
         const claimed = await tx.icon.updateMany({
@@ -303,7 +318,7 @@ export default async function handler(
     const imageKeyId = getImageIdFromUrl(originalImageUrl);
     const transparentImageUrl = await uploadTransparentPng(
       buffer,
-      icon.userId ?? session.user.id,
+      icon.userId ?? session?.user?.id ?? "guest-paid-traffic",
       imageKeyId
     );
 

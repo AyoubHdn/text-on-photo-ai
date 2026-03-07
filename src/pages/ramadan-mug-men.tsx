@@ -386,6 +386,8 @@ const RamadanMugMenPage: NextPage = () => {
             numberOfImages: 1,
             aspectRatio: selectedAspectRatio,
             model: selectedModel,
+            paidTrafficUser: isRamadanAdUser,
+            sourcePage: SOURCE_PAGE,
             metadata: {
               category: activeTab || undefined,
               subcategory: activeSubTab || undefined,
@@ -400,12 +402,8 @@ const RamadanMugMenPage: NextPage = () => {
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isLoggedIn) {
-      if (isRamadanAdUser) {
-        void signIn("google", { callbackUrl: router.asPath });
-      } else {
-        void signIn();
-      }
+    if (!isLoggedIn && !isRamadanAdUser) {
+      void signIn();
       return;
     }
     if (!form.name || !form.basePrompt) {
@@ -422,6 +420,8 @@ const RamadanMugMenPage: NextPage = () => {
       numberOfImages: 1,
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      paidTrafficUser: isRamadanAdUser,
+      sourcePage: SOURCE_PAGE,
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
@@ -534,7 +534,7 @@ const RamadanMugMenPage: NextPage = () => {
       const res = await fetch("/api/image/remove-background", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageId }),
+        body: JSON.stringify({ imageId, paidTrafficUser: isRamadanAdUser }),
       });
 
       const data = await res.json();
@@ -819,7 +819,9 @@ const RamadanMugMenPage: NextPage = () => {
             </div>
           )}
           <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
-            {isLoggedIn ? "Generate My Design" : "Sign in to Generate"}
+            {!isLoggedIn && !isRamadanAdUser
+              ? "Sign in to Generate"
+              : "Generate My Design"}
           </Button>
           <p className="mt-1 text-center text-sm text-emerald-700 dark:text-emerald-300">
             Free premium design included for Ramadan.

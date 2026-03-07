@@ -83,9 +83,6 @@ export default async function handler(
   }
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.id) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
 
   const { productKey, imageUrl, aspect, variantId: variantIdFromClient, previewMode } = req.body as {
     productKey?: string;
@@ -95,11 +92,21 @@ export default async function handler(
     previewMode?: "two-side" | "center" | "full-wrap";
     paidTrafficUser?: boolean;
   };
+  const paidTrafficUser = Boolean(req.body?.paidTrafficUser);
+
+  if (!session?.user?.id && !paidTrafficUser) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
 
   if (!productKey || !imageUrl) {
     return res.status(400).json({ error: "Missing parameters" });
   }
+  if (paidTrafficUser && productKey !== "mug") {
+    return res.status(403).json({ error: "RAMADAN_MUG_ONLY" });
+  }
+
+  const uploadOwnerId = session?.user?.id ?? "guest-paid-traffic";
 
     // ALWAYS convert for Printful
     const imageRes = await fetch(imageUrl);
@@ -121,15 +128,13 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid product" });
     }
 
-    const paidTrafficUser = Boolean(req.body?.paidTrafficUser);
-
     let printImageUrl: string;
 
     /* ---------------- POSTER ---------------- */
     if (product.key === "poster") {
       printImageUrl = await convertWebpToPngAndUpload(
         printReadyBuffer,
-        session.user.id
+        uploadOwnerId
       );
     }
 
@@ -151,7 +156,7 @@ export default async function handler(
 
       printImageUrl = await convertWebpToPngAndUpload(
         wrappedBuffer,
-        session.user.id
+        uploadOwnerId
       );
     }
 
@@ -166,7 +171,7 @@ export default async function handler(
 
       printImageUrl = await convertWebpToPngAndUpload(
         tshirtBuffer,
-        session.user.id
+        uploadOwnerId
       );
     }
 
@@ -174,13 +179,9 @@ export default async function handler(
     else {
       printImageUrl = await convertWebpToPngAndUpload(
         printReadyBuffer,
-        session.user.id
+        uploadOwnerId
       );
     }
-
-  if (paidTrafficUser && product.key !== "mug") {
-    return res.status(403).json({ error: "RAMADAN_MUG_ONLY" });
-  }
 
   try {
     // ✅ 2. Create Printful mockup task
@@ -253,7 +254,7 @@ export default async function handler(
     const mockupBuffer = Buffer.from(await mockupRes.arrayBuffer());
     const stableMockupUrl = await convertWebpToPngAndUpload(
       mockupBuffer,
-      session.user.id
+      uploadOwnerId
     );
 
     return res.status(200).json({

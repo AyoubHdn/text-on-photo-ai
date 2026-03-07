@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/server/api/routers/printfulCheckout.ts
 
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { env } from "~/env.mjs";
@@ -15,6 +15,8 @@ import {
   calculateProductPriceFromCache,
   type ProductType,
 } from "~/server/services/priceCalculator";
+import { verifyGuestOrderToken } from "~/server/guestOrderToken";
+import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -63,10 +65,11 @@ function resolvePricingVariant(order: {
 }
 
 export const printfulCheckoutRouter = createTRPCRouter({
-  createCheckout: protectedProcedure
+  createCheckout: publicProcedure
     .input(
       z.object({
         orderId: z.string(),
+        accessToken: z.string().optional(),
         submittedTotalPrice: z.number(),
         tracking: z
           .object({
@@ -76,6 +79,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
           .optional(),
         address: z
           .object({
+            email: z.string().email(),
             name: z.string(),
             address1: z.string(),
             country: z.string(),
@@ -101,6 +105,101 @@ export const printfulCheckoutRouter = createTRPCRouter({
 
       if (!order) {
         throw new Error("Order not found");
+      }
+
+      const hasOwnerSession = ctx.session?.user?.id === order.userId;
+      const hasGuestAccess = verifyGuestOrderToken(input.accessToken, input.orderId);
+      if (!hasOwnerSession && !hasGuestAccess) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid checkout access token.",
+        });
+      }
+
+      const normalizedEmail = input.address.email.trim().toLowerCase();
+      const isPaidTrafficOrder =
+        order.funnelSource === "paid-traffic-offer" ||
+        order.funnelSource === "ramadan-mug-ad";
+      const currentOrderUser = await prisma.user.findUnique({
+        where: { id: order.userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          credits: true,
+          paidTrafficUser: true,
+        },
+      });
+      if (!currentOrderUser) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Order owner not found.",
+        });
+      }
+
+      let resolvedUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          credits: true,
+          paidTrafficUser: true,
+          hasVisitedCheckout: true,
+        },
+      });
+
+      if (!resolvedUser) {
+        if (!currentOrderUser.email) {
+          resolvedUser = await prisma.user.update({
+            where: { id: currentOrderUser.id },
+            data: {
+              email: normalizedEmail,
+              name: currentOrderUser.name ?? input.address.name,
+              paidTrafficUser: isPaidTrafficOrder || currentOrderUser.paidTrafficUser,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              credits: true,
+              paidTrafficUser: true,
+              hasVisitedCheckout: true,
+            },
+          });
+        } else if (currentOrderUser.email.toLowerCase() === normalizedEmail) {
+          resolvedUser = {
+            id: currentOrderUser.id,
+            email: currentOrderUser.email,
+            name: currentOrderUser.name,
+            credits: currentOrderUser.credits,
+            paidTrafficUser: currentOrderUser.paidTrafficUser,
+            hasVisitedCheckout: false,
+          };
+        } else {
+          resolvedUser = await prisma.user.create({
+            data: {
+              email: normalizedEmail,
+              name: input.address.name,
+              paidTrafficUser: isPaidTrafficOrder,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              credits: true,
+              paidTrafficUser: true,
+              hasVisitedCheckout: true,
+            },
+          });
+        }
+      }
+
+      if (!resolvedUser) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Unable to resolve checkout user.",
+        });
       }
 
       const countryCode = input.address.country.trim().toUpperCase();
@@ -188,6 +287,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
       await prisma.productOrder.update({
         where: { id: order.id },
         data: {
+          userId: resolvedUser.id,
           name: input.address.name,
           address1: input.address.address1,
           city: input.address.city,
@@ -200,13 +300,47 @@ export const printfulCheckoutRouter = createTRPCRouter({
         },
       });
 
+      const updatedCheckoutUser = await prisma.user.update({
+        where: { id: resolvedUser.id },
+        data: {
+          hasVisitedCheckout: true,
+          paidTrafficUser: isPaidTrafficOrder || resolvedUser.paidTrafficUser,
+        },
+        select: {
+          email: true,
+          name: true,
+          credits: true,
+          paidTrafficUser: true,
+        },
+      });
+
+      if (updatedCheckoutUser.email) {
+        try {
+          await updateMauticContact(
+            {
+              email: updatedCheckoutUser.email,
+              name: updatedCheckoutUser.name,
+              brand_specific_credits: updatedCheckoutUser.credits,
+              customFields: {
+                has_visited_checkout: 1,
+                is_paid_traffic_user:
+                  isPaidTrafficOrder || updatedCheckoutUser.paidTrafficUser ? 1 : 0,
+              },
+            },
+            "namedesignai",
+          );
+        } catch (err) {
+          console.error("Error updating Mautic on guest checkout visit:", err);
+        }
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
         metadata: {
           type: "printful_order",
           orderId: order.id,
-          userId: ctx.session.user.id,
+          userId: resolvedUser.id,
           fbp: input.tracking?.fbp ?? "",
           fbc: input.tracking?.fbc ?? "",
         },

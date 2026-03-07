@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { printfulRequest } from "~/server/printful/client";
+import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
 type PrintfulState = {
   code: string;
@@ -17,15 +18,11 @@ type CountriesResponse = {
   fallback: boolean;
 };
 
-const FALLBACK_COUNTRIES: PrintfulCountry[] = [
-  {
-    code: "US",
-    name: "United States",
-    states: [{ code: "US", name: "States" }],
-  },
-  { code: "FR", name: "France", states: [] },
-  { code: "MA", name: "Morocco", states: [] },
-];
+const FALLBACK_COUNTRIES: PrintfulCountry[] = SHIPPING_COUNTRY_OPTIONS.map((country) => ({
+  code: country.code,
+  name: country.name,
+  states: country.code === "US" ? [{ code: "US", name: "States" }] : [],
+}));
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 let cachedCountries: { data: PrintfulCountry[]; expiresAt: number } | null = null;

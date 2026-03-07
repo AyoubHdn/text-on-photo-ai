@@ -3,15 +3,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/db";
 import { TRPCError } from "@trpc/server";
 import { calculateProductPriceFromCache } from "~/server/services/priceCalculator";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import {
+  createGuestOrderToken,
+  verifyGuestOrderToken,
+} from "~/server/guestOrderToken";
 
 export const productOrderRouter = createTRPCRouter({
-  createPendingOrder: protectedProcedure
+  createPendingOrder: publicProcedure
     .input(
       z.object({
         productKey: z.enum(["poster", "tshirt", "mug"]),
@@ -39,6 +47,30 @@ export const productOrderRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+        const isGuest = !ctx.session?.user?.id;
+        if (isGuest) {
+          const isPaidOffer =
+            input.funnelSource === "paid-traffic-offer" ||
+            input.funnelSource === "ramadan-mug-ad";
+          if (!isPaidOffer || input.productKey !== "mug") {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "Guest checkout is only available for this ad offer.",
+            });
+          }
+        }
+        const ownerUserId = ctx.session?.user?.id
+          ? ctx.session.user.id
+          : (
+              await prisma.user.create({
+                data: {
+                  paidTrafficUser:
+                    input.funnelSource === "paid-traffic-offer" ||
+                    input.funnelSource === "ramadan-mug-ad",
+                },
+                select: { id: true },
+              })
+            ).id;
         const pricing = await calculateProductPriceFromCache({
           productType: input.productKey,
           sizeKey: input.pricingVariant,
@@ -57,7 +89,7 @@ export const productOrderRouter = createTRPCRouter({
 
         const order = await prisma.productOrder.create({
         data: {
-            userId: ctx.session.user.id,
+            userId: ownerUserId,
             productKey: input.productKey,
             variantId: input.variantId,
             variantName: input.variantName,
@@ -86,31 +118,36 @@ export const productOrderRouter = createTRPCRouter({
         },
         });
 
-        const user = await prisma.user.update({
-          where: { id: ctx.session.user.id },
-          data: { hasVisitedCheckout: true },
-          select: { email: true, name: true, credits: true },
-        });
+        if (ctx.session?.user?.id) {
+          const user = await prisma.user.update({
+            where: { id: ctx.session.user.id },
+            data: { hasVisitedCheckout: true },
+            select: { email: true, name: true, credits: true },
+          });
 
-        if (user.email) {
-          try {
-            await updateMauticContact(
-              {
-                email: user.email,
-                name: user.name,
-                brand_specific_credits: user.credits,
-                customFields: {
-                  has_visited_checkout: 1,
+          if (user.email) {
+            try {
+              await updateMauticContact(
+                {
+                  email: user.email,
+                  name: user.name,
+                  brand_specific_credits: user.credits,
+                  customFields: {
+                    has_visited_checkout: 1,
+                  },
                 },
-              },
-              "namedesignai",
-            );
-          } catch (err) {
-            console.error("Error updating Mautic on checkout visit:", err);
+                "namedesignai",
+              );
+            } catch (err) {
+              console.error("Error updating Mautic on checkout visit:", err);
+            }
           }
         }
 
-      return { orderId: order.id };
+      return {
+        orderId: order.id,
+        accessToken: isGuest ? createGuestOrderToken(order.id) : null,
+      };
     }),
     // productOrderRouter.ts
     updateShipping: protectedProcedure
@@ -142,21 +179,33 @@ export const productOrderRouter = createTRPCRouter({
         return { success: true };
     }),
 
-    getOrder: protectedProcedure
+    getOrder: publicProcedure
         .input(
             z.object({
             orderId: z.string(),
+            accessToken: z.string().optional(),
             })
         )
         .query(async ({ ctx, input }) => {
-            const order = await prisma.productOrder.findFirst({
-            where: {
-                id: input.orderId,
-                userId: ctx.session.user.id,
-            },
+            const order = await prisma.productOrder.findUnique({
+              where: { id: input.orderId },
             });
 
             if (!order) throw new Error("Order not found");
+            if (ctx.session?.user?.id) {
+              if (order.userId !== ctx.session.user.id) {
+                throw new TRPCError({ code: "UNAUTHORIZED" });
+              }
+              return order;
+            }
+
+            const isValidGuestToken = verifyGuestOrderToken(
+              input.accessToken,
+              input.orderId,
+            );
+            if (!isValidGuestToken) {
+              throw new TRPCError({ code: "UNAUTHORIZED" });
+            }
 
             return order;
         }),

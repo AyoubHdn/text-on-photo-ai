@@ -1,5 +1,6 @@
 import { prisma } from "~/server/db";
 import { printfulRequest } from "~/server/printful/client";
+import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
 type SyncProductType = "mug" | "tshirt" | "poster";
 
@@ -12,7 +13,7 @@ type RawVariant = {
   price?: string;
 };
 
-const SYNC_COUNTRIES = ["US"] as const;
+const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
 
 const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProductId: number }> = [
   { productType: "mug", printfulProductId: 19 },
@@ -134,7 +135,16 @@ export async function runPricingSync() {
         throw new Error(`No representative variant found for ${productType}`);
       }
 
-      const shippingCost = await fetchShippingCostByProductType(firstVariant.variantId, countryCode);
+      let shippingCost: number;
+      try {
+        shippingCost = await fetchShippingCostByProductType(firstVariant.variantId, countryCode);
+      } catch (error) {
+        console.error(
+          `[PRICING_SYNC] Failed shipping lookup for ${productType} in ${countryCode}:`,
+          error,
+        );
+        continue;
+      }
 
       for (const [sizeKey, record] of bySize.entries()) {
         await prisma.productPricingCache.upsert({

@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import fetch from "node-fetch";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
@@ -291,7 +291,7 @@ const generateIcon = async (
 };
 
 export const generateRouter = createTRPCRouter({
-  generateIcon: protectedProcedure
+  generateIcon: publicProcedure
     .input(
       z.object({
         prompt: z.string(),
@@ -309,9 +309,24 @@ export const generateRouter = createTRPCRouter({
             subcategory: z.string().optional(),
           })
           .optional(),
+        paidTrafficUser: z.boolean().optional(),
+        sourcePage: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session?.user?.id;
+      const sourcePage = (input.sourcePage ?? "").trim().toLowerCase();
+      const isRamadanGuestSource =
+        sourcePage === "ramadan-mug" || sourcePage === "ramadan-mug-men";
+      const isEligibleGuestGeneration = !userId && input.paidTrafficUser && isRamadanGuestSource;
+
+      if (!userId && !isEligibleGuestGeneration) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Sign in is required for this generator.",
+        });
+      }
+
       // Define credit costs
       const modelConfig = {
         "flux-schnell": { credits: 1 },
@@ -327,6 +342,77 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
+      if (isEligibleGuestGeneration) {
+        if (input.model !== "google/nano-banana-pro" || input.numberOfImages !== 1) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "This offer supports one Nano Banana generation per request.",
+          });
+        }
+        try {
+          const b64Images: string[] = await generateIcon(
+            input.prompt,
+            1,
+            input.aspectRatio,
+            input.model,
+          );
+
+          const createdIcons = await Promise.all(
+            b64Images.map(async (image: string) => {
+              const icon = await ctx.prisma.icon.create({
+                data: {
+                  prompt: input.prompt,
+                  userId: null,
+                  metadata: {
+                    aspectRatio: input.aspectRatio ?? null,
+                    model: input.model,
+                    category: input.metadata?.category ?? null,
+                    subcategory: input.metadata?.subcategory ?? null,
+                    sourcePage: input.sourcePage ?? null,
+                    paidTrafficUser: true,
+                  },
+                },
+              });
+
+              const isPng =
+                input.model === "ideogram-ai/ideogram-v2-turbo" ||
+                input.model === "google/nano-banana-pro";
+
+              await s3
+                .putObject({
+                  Bucket: BUCKET_NAME,
+                  Body: Buffer.from(image, "base64"),
+                  Key: icon.id,
+                  ContentEncoding: "base64",
+                  ContentType: isPng ? "image/png" : "image/webp",
+                })
+                .promise();
+
+              return icon;
+            }),
+          );
+
+          return createdIcons.map((icon) => ({
+            imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
+          }));
+        } catch (guestGenerationError) {
+          if (guestGenerationError instanceof TRPCError) {
+            throw guestGenerationError;
+          }
+          if (guestGenerationError instanceof Error) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: normalizeGenerationErrorMessage(guestGenerationError),
+            });
+          }
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Generation failed. Please try again.",
+          });
+        }
+      }
+      const authedUserId = userId as string;
+
       // Calculate total credits needed (Decimal-safe)
       const creditsPerImage = new Prisma.Decimal(modelConfig.credits);
       const imageCount = new Prisma.Decimal(
@@ -340,7 +426,7 @@ export const generateRouter = createTRPCRouter({
       // Deduct credits before generation; refund on downstream failure.
       const updatedUser = await ctx.prisma.$transaction(async (tx) => {
         const existingUser = await tx.user.findUnique({
-          where: { id: ctx.session.user.id },
+          where: { id: authedUserId },
           select: { credits: true, email: true, name: true },
         });
 
@@ -361,7 +447,7 @@ export const generateRouter = createTRPCRouter({
 
         const updatedCredits = creditsDecimal.minus(totalCredits);
         return tx.user.update({
-          where: { id: ctx.session.user.id },
+          where: { id: authedUserId },
           data: {
             credits: updatedCredits,
             hasGeneratedDesign: true,
@@ -405,7 +491,7 @@ export const generateRouter = createTRPCRouter({
             const icon = await ctx.prisma.icon.create({
               data: {
                 prompt: input.prompt,
-                userId: ctx.session.user.id,
+                userId: authedUserId,
                 metadata: {
                   aspectRatio: input.aspectRatio ?? null,
                   model: input.model,
@@ -449,14 +535,14 @@ export const generateRouter = createTRPCRouter({
         try {
           const refundedUser = await ctx.prisma.$transaction(async (tx) => {
             const existingUser = await tx.user.findUnique({
-              where: { id: ctx.session.user.id },
+              where: { id: authedUserId },
               select: { credits: true, email: true, name: true },
             });
             if (!existingUser) return null;
 
             const restoredCredits = new Prisma.Decimal(existingUser.credits).plus(totalCredits);
             return tx.user.update({
-              where: { id: ctx.session.user.id },
+              where: { id: authedUserId },
               data: { credits: restoredCredits },
               select: { credits: true, email: true, name: true },
             });
