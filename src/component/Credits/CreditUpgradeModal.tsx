@@ -85,6 +85,7 @@ export function CreditUpgradeModal({
   const [selectedPlan, setSelectedPlan] = useState<"starter" | "pro" | "elite" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const hasFiredViewedRef = useRef(false);
   const hasFiredCompletedRef = useRef(false);
@@ -114,6 +115,7 @@ export function CreditUpgradeModal({
       setSelectedPlan(null);
       setIsProcessing(false);
       setIsPolling(false);
+      setIsCheckingPayment(false);
       setStatusMessage(null);
       return;
     }
@@ -197,6 +199,21 @@ export function CreditUpgradeModal({
     onSuccess();
   }, [isOpen, isPolling, creditsQuery.data, currentCredits, onClose, onSuccess, context, funnelContext, selectedPlan]);
 
+  const handleManualPaymentCheck = async () => {
+    if (!isOpen) return;
+    setIsCheckingPayment(true);
+    setStatusMessage("Checking payment status...");
+    try {
+      const result = await creditsQuery.refetch();
+      const latestCredits = result.data ?? currentCredits;
+      if (latestCredits <= baselineCreditsRef.current) {
+        setStatusMessage("Payment not detected yet. Please complete checkout, then try again.");
+      }
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     if (router.query.credits_success !== "1") return;
@@ -239,6 +256,7 @@ export function CreditUpgradeModal({
         paidTrafficUser: funnelContext.traffic_type === "paid",
       });
 
+      setIsProcessing(false);
       setStatusMessage("Checkout opened in a new tab. Complete payment, credits activate instantly.");
       setIsPolling(true);
     } catch (error) {
@@ -305,10 +323,11 @@ export function CreditUpgradeModal({
           {isPolling && (
             <button
               type="button"
-              onClick={() => void creditsQuery.refetch()}
+              onClick={() => void handleManualPaymentCheck()}
+              disabled={isCheckingPayment}
               className="mt-3 rounded-md border border-gray-700 px-3 py-1.5 text-xs text-gray-200 hover:border-blue-500"
             >
-              I completed payment
+              {isCheckingPayment ? "Checking..." : "I completed payment"}
             </button>
           )}
 
