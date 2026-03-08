@@ -551,7 +551,12 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               </Link>
             </div>
           )}
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
+          <Button
+            type={isLoggedIn ? "submit" : "button"}
+            onClick={!isLoggedIn ? () => { void signIn(); } : undefined}
+            isLoading={generateIcon.isLoading}
+            disabled={generateIcon.isLoading || isCreditLocked}
+          >
             {isLoggedIn ? "Generate My Design (4 Credits)" : "Sign in to Generate"}
           </Button>
           <GeneratorNudge generatorType="arabic" section="trust" />

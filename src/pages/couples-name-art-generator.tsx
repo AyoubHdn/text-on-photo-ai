@@ -645,7 +645,14 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
               </Link>
             </div>
           )}
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>{isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}</Button>
+          <Button
+            type={isLoggedIn ? "submit" : "button"}
+            onClick={!isLoggedIn ? () => { void signIn(); } : undefined}
+            isLoading={generateIcon.isLoading}
+            disabled={generateIcon.isLoading || isCreditLocked}
+          >
+            {isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}
+          </Button>
           <GeneratorNudge generatorType="couples" section="trust" />
         </form>
 

@@ -726,7 +726,12 @@ const NameArtGeneratorPage: NextPage = () => {
             </div>
           )}
           
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
+          <Button
+            type={isLoggedIn ? "submit" : "button"}
+            onClick={!isLoggedIn ? () => { void signIn(); } : undefined}
+            isLoading={generateIcon.isLoading}
+            disabled={generateIcon.isLoading || isCreditLocked}
+          >
             {isLoggedIn ? "Generate" : "Sign in to Generate"}
           </Button>
           <GeneratorNudge generatorType="default" section="trust" />
