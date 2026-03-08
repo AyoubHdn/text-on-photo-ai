@@ -48,6 +48,34 @@ function getMetaTrackingParams() {
   };
 }
 
+function detectCountryFromBrowser(availableCodes: string[]): string | null {
+  if (typeof navigator === "undefined") return null;
+
+  const extractRegion = (value: string | undefined | null) => {
+    if (!value) return null;
+    const normalized = value.replace("_", "-");
+    const parts = normalized.split("-");
+    const region = parts.length > 1 ? parts[parts.length - 1] : null;
+    if (!region || !/^[A-Za-z]{2}$/.test(region)) return null;
+    return region.toUpperCase();
+  };
+
+  const localeCandidates = [
+    navigator.language,
+    ...(navigator.languages ?? []),
+    Intl.DateTimeFormat().resolvedOptions().locale,
+  ];
+
+  for (const locale of localeCandidates) {
+    const region = extractRegion(locale);
+    if (region && availableCodes.includes(region)) {
+      return region;
+    }
+  }
+
+  return null;
+}
+
 function fireMetaInitiateCheckout(params?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
@@ -338,6 +366,17 @@ export default function CheckoutPage() {
       if (countries.length === 0) return;
       if (countries.some((country) => country.code === address.country)) return;
       setAddress((prev) => ({ ...prev, country: countries[0]?.code ?? "US" }));
+    }, [countries, address.country]);
+
+    useEffect(() => {
+      if (countries.length === 0) return;
+      if (address.country !== "US") return;
+
+      const availableCodes = countries.map((country) => country.code);
+      const detectedCountry = detectCountryFromBrowser(availableCodes);
+      if (!detectedCountry || detectedCountry === "US") return;
+
+      setAddress((prev) => ({ ...prev, country: detectedCountry }));
     }, [countries, address.country]);
 
     function finalizePreviewById(orderIdValue: string) {
@@ -790,9 +829,9 @@ export default function CheckoutPage() {
 
         <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-3 text-xs text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
           <div>🔒 Secure payment powered by Stripe</div>
-          <div>✔ Free US shipping included</div>
+          <div>✔ Shipping available in selected countries</div>
           <div>✔ Easy replacement if damaged</div>
-          <div>✔ Printed & shipped from the USA</div>
+          <div>✔ Printed and shipped with care</div>
         </div>
 
         <p className="text-xs text-center text-gray-500 dark:text-gray-400">

@@ -11,7 +11,7 @@ const COPY: Record<
 > = {
   default: {
     hero: "Create a unique name design and bring it to life on real products.",
-    trust: "Printed in the USA • High-quality materials",
+    trust: "High-quality materials • Worldwide-ready fulfillment",
   },
   arabic: {
     hero: "Turn your name into elegant Arabic calligraphy - perfect for your home, desk, or as a meaningful gift.",
@@ -39,4 +39,3 @@ export function GeneratorNudge({
     </p>
   );
 }
-

@@ -60,6 +60,34 @@ type SelectedProductConfig = {
   isBackgroundRemoved: boolean;
 };
 
+function detectCountryFromBrowser(availableCodes: string[]): string | null {
+  if (typeof navigator === "undefined") return null;
+
+  const extractRegion = (value: string | undefined | null) => {
+    if (!value) return null;
+    const normalized = value.replace("_", "-");
+    const parts = normalized.split("-");
+    const region = parts.length > 1 ? parts[parts.length - 1] : null;
+    if (!region || !/^[A-Za-z]{2}$/.test(region)) return null;
+    return region.toUpperCase();
+  };
+
+  const localeCandidates = [
+    navigator.language,
+    ...(navigator.languages ?? []),
+    Intl.DateTimeFormat().resolvedOptions().locale,
+  ];
+
+  for (const locale of localeCandidates) {
+    const region = extractRegion(locale);
+    if (region && availableCodes.includes(region)) {
+      return region;
+    }
+  }
+
+  return null;
+}
+
 export function ProductPreviewModal({
   isOpen,
   onClose,
@@ -547,17 +575,68 @@ export function ProductPreviewModal({
   const [pricingCountryCode, setPricingCountryCode] = useState<string>("US");
   const [pricingTotal, setPricingTotal] = useState<number | null>(null);
   const [pricingError, setPricingError] = useState<string | null>(null);
+  const [hasAutoSelectedCountry, setHasAutoSelectedCountry] = useState(false);
+  const [offerEndsAtMs, setOfferEndsAtMs] = useState<number | null>(null);
+  const [offerRemainingSeconds, setOfferRemainingSeconds] = useState(0);
   const shippingCountries = SHIPPING_COUNTRY_OPTIONS;
+  const isRamadanMugOffer = productKey === "mug" && sourcePage === "ramadan-mug";
 
   useEffect(() => {
     if (shippingCountries.some((country) => country.code === pricingCountryCode)) return;
     setPricingCountryCode("US");
   }, [pricingCountryCode, shippingCountries]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setHasAutoSelectedCountry(false);
+      return;
+    }
+    if (hasAutoSelectedCountry) return;
+
+    const availableCodes = shippingCountries.map((country) => country.code);
+    const detectedCountry = detectCountryFromBrowser(availableCodes);
+
+    if (detectedCountry && detectedCountry !== pricingCountryCode) {
+      setPricingCountryCode(detectedCountry);
+    } else if (!detectedCountry && pricingCountryCode !== "US") {
+      setPricingCountryCode("US");
+    }
+
+    setHasAutoSelectedCountry(true);
+  }, [hasAutoSelectedCountry, isOpen, pricingCountryCode, shippingCountries]);
+
+  useEffect(() => {
+    if (!isOpen || !isRamadanMugOffer) {
+      setOfferEndsAtMs(null);
+      setOfferRemainingSeconds(0);
+      return;
+    }
+    setOfferEndsAtMs(Date.now() + 24 * 60 * 60 * 1000);
+  }, [isOpen, isRamadanMugOffer]);
+
+  useEffect(() => {
+    if (!offerEndsAtMs) return;
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.floor((offerEndsAtMs - Date.now()) / 1000));
+      setOfferRemainingSeconds(remaining);
+    };
+
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [offerEndsAtMs]);
+
   const createOrder = api.productOrder.createPendingOrder.useMutation();
 
   const infoText = getVariantInfo();
   const infoLines = infoText ? infoText.split("\n") : [];
+  const formatOfferCountdown = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return [hours, minutes, seconds].map((value) => String(value).padStart(2, "0")).join(":");
+  };
 
   const getPosterSizeLabel = () => {
     const sizeKey =
@@ -1287,10 +1366,25 @@ export function ProductPreviewModal({
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   Product Total
                 </div>
-
-                <div className="text-3xl font-bold">
-                  ${pricingTotal.toFixed(2)}
-                </div>
+                {isRamadanMugOffer ? (
+                  <>
+                    <div className="mb-1 flex items-center justify-center gap-2">
+                      <span className="text-base text-gray-500 line-through">
+                        ${(pricingTotal * 2).toFixed(2)}
+                      </span>
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
+                        50% OFF
+                      </span>
+                    </div>
+                    <div className="text-3xl font-bold">${pricingTotal.toFixed(2)}</div>
+                    <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                      Offer ends in: {formatOfferCountdown(offerRemainingSeconds)}
+                    </div>
+                    <div className="mt-1 text-xs text-red-600">Harry up! Offer ended</div>
+                  </>
+                ) : (
+                  <div className="text-3xl font-bold">${pricingTotal.toFixed(2)}</div>
+                )}
 
                 <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
                   <div>Shipping: FREE</div>

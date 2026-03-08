@@ -11,22 +11,22 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
         return [
           "High-quality glossy ceramic",
           "Dishwasher & microwave safe",
-          "Printed in the USA",
-          "Free US shipping",
+          "Printed with premium quality",
+          "Shipping available in selected countries",
         ];
       case "tshirt":
         return [
           "Premium Bella + Canvas 3001",
           "Soft, lightweight fabric",
           "True-to-size fit",
-          "Free US shipping",
+          "Shipping available in selected countries",
         ];
       case "poster":
         return [
           "Museum-quality print",
           "Thick matte paper",
           "Perfect for home decor",
-          "Free US shipping",
+          "Shipping available in selected countries",
         ];
       default:
         return [];
@@ -44,4 +44,3 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
     </ul>
   );
 }
-
