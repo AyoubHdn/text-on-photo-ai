@@ -127,6 +127,9 @@ const RamadanMugPage: NextPage = () => {
   });
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
   const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
+  const hasGeneratedDesign = imagesUrl.length > 0;
+  const generationLimitMessage =
+    "Only one design can be generated on this Ramadan mug page.";
   const generatedImagesGridClass =
     imagesUrl.length === 1
       ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
@@ -331,7 +334,7 @@ const RamadanMugPage: NextPage = () => {
 
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess: (data) => {
-      setImagesUrl(data);
+      setImagesUrl(data.slice(0, 1));
       setGeneratedAspect(selectedAspectRatio);
       setTransparentUrls({});
       setUseTransparentMap({});
@@ -375,6 +378,10 @@ const RamadanMugPage: NextPage = () => {
       if (error.message.toLowerCase().includes("enough credits")) {
         setError("");
         openCreditUpgrade("generate", MODEL_CREDITS[selectedModel], () => {
+          if (hasGeneratedDesign) {
+            setError(generationLimitMessage);
+            return;
+          }
           let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
           if (!finalPrompt.toLowerCase().includes("arabic")) {
             finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
@@ -406,6 +413,10 @@ const RamadanMugPage: NextPage = () => {
     }
     if (!form.name || !form.basePrompt) {
       setError("Please select a style and enter a name."); return;
+    }
+    if (hasGeneratedDesign) {
+      setError(generationLimitMessage);
+      return;
     }
     
     let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
@@ -816,9 +827,16 @@ const RamadanMugPage: NextPage = () => {
               )}
             </div>
           )}
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
+          {hasGeneratedDesign && (
+            <div className="rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              {generationLimitMessage} You can still remove the background for this design and continue to preview/order.
+            </div>
+          )}
+          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked || hasGeneratedDesign}>
             {!isLoggedIn && !isRamadanAdUser
               ? "Sign in to Generate"
+              : hasGeneratedDesign
+              ? "Design already generated"
               : "Generate My Design (4 Credits)"}
           </Button>
           <p className="mt-1 text-center text-sm text-emerald-700 dark:text-emerald-300">
@@ -836,7 +854,7 @@ const RamadanMugPage: NextPage = () => {
               </p>
             )}
             <section className={generatedImagesGridClass}>
-              {imagesUrl.map(({ imageUrl }, index) => {
+              {imagesUrl.slice(0, 1).map(({ imageUrl }, index) => {
                 const imageId = extractImageId(imageUrl);
                 const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
                 const isTransparent = imageId ? useTransparentMap[imageId] : false;
