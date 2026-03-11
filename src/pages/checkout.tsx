@@ -6,6 +6,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "~/component/Input";
@@ -91,6 +92,8 @@ type ShippingCountry = {
 
 export default function CheckoutPage() {
     const router = useRouter();
+    const { data: session } = useSession();
+    const isLoggedIn = Boolean(session?.user?.id);
     const { orderId, accessToken } = router.query;
     const accessTokenValue =
       typeof accessToken === "string" ? accessToken : undefined;
@@ -186,6 +189,13 @@ export default function CheckoutPage() {
       if (countries.length > 0) return;
       setCountries(SHIPPING_COUNTRY_OPTIONS);
     };
+
+    useEffect(() => {
+      if (!isLoggedIn) return;
+      const sessionEmail = session?.user?.email?.trim() ?? "";
+      if (!sessionEmail) return;
+      setAddress((prev) => ({ ...prev, email: sessionEmail }));
+    }, [isLoggedIn, session?.user?.email]);
 
 
 
@@ -300,6 +310,8 @@ export default function CheckoutPage() {
             ? "couples-art-generator"
             : generatorKey === "default"
             ? "name-art-generator"
+            : generatorKey === "ramadan-mug-v2"
+            ? "ramadan-mug-v2"
             : generatorKey === "ramadan-mug-men"
             ? "ramadan-mug-men"
             : generatorKey === "ramadan-mug"
@@ -545,6 +557,8 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+        {!isLoggedIn && (
+        <>
         <Input
             className={`input-lg md:col-span-2 ${isFieldInvalid("email") ? "border-red-500" : ""}`}
             placeholder="Email"
@@ -556,6 +570,8 @@ export default function CheckoutPage() {
         />
         {fieldErrorMessage("email") && (
         <div className="md:col-span-2 text-xs text-red-600">{fieldErrorMessage("email")}</div>
+        )}
+        </>
         )}
 
         <Input
@@ -743,6 +759,8 @@ export default function CheckoutPage() {
                       ? "couples-art-generator"
                       : window.localStorage.getItem("last-generator") === "default"
                       ? "name-art-generator"
+                      : window.localStorage.getItem("last-generator") === "ramadan-mug-v2"
+                      ? "ramadan-mug-v2"
                       : window.localStorage.getItem("last-generator") === "ramadan-mug-men"
                       ? "ramadan-mug-men"
                       : window.localStorage.getItem("last-generator") === "ramadan-mug"

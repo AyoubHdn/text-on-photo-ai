@@ -58,7 +58,7 @@ export function Header({ minimal = false }: HeaderProps) {
     if (minimal) {
         return (
             <header className="container mx-auto flex h-16 items-center justify-center px-4 dark:bg-gray-800">
-                <PrimaryLink href="/" aria-label="Name Design AI Home">
+                <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex items-center gap-2">
                     <Image
                         src="/logo.webp"
                         alt="Name Design AI Logo"
@@ -67,6 +67,9 @@ export function Header({ minimal = false }: HeaderProps) {
                         className="rounded"
                         unoptimized={true}
                     />
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 sm:text-base">
+                        Name Design AI
+                    </span>
                 </PrimaryLink>
             </header>
         );

@@ -615,6 +615,8 @@ const RamadanMugPage: NextPage = () => {
     <>
       <Head>
         <title>Ramadan Mug Generator | Personalized Arabic Mug Preview</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="googlebot" content="noindex, nofollow" />
         <meta
           name="description"
           content="Create a personalized Ramadan mug preview with AI Arabic calligraphy."

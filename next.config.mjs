@@ -31,6 +31,16 @@ const config = {
   async redirects() {
     return [
       {
+        source: "/ramadan-mug",
+        destination: "/ramadan-mug-v2",
+        permanent: false,
+      },
+      {
+        source: "/ramadan-mug-men",
+        destination: "/ramadan-mug-v2",
+        permanent: false,
+      },
+      {
         source: "/wedding-invitations",
         destination: "https://www.bloominvite.com/",
         permanent: true, // 301

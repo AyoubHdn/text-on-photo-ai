@@ -606,6 +606,8 @@ const RamadanMugMenPage: NextPage = () => {
     <>
       <Head>
         <title>Ramadan Mug for Your Wife | Personalized Arabic Gift</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="googlebot" content="noindex, nofollow" />
         <meta
           name="description"
           content="Surprise your wife with a personalized Ramadan mug featuring beautiful Arabic calligraphy, printed and shipped worldwide."

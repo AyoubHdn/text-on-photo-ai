@@ -29,7 +29,7 @@ const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
 });
 
-const BRIA_MODEL = "bria/remove-background";
+const RECRAFT_MODEL = "recraft-ai/recraft-remove-background";
 
 function getImageIdFromUrl(imageUrl: string): string {
   try {
@@ -168,6 +168,7 @@ export default async function handler(
       })
     : null;
 
+  let claimedGuestIconToUser = false;
   if (!icon && paidTrafficUser) {
     icon = await prisma.icon.findFirst({
       where: { id: imageId, userId: null },
@@ -176,8 +177,23 @@ export default async function handler(
         userId: true,
         transparentImageUrl: true,
         backgroundRemovedAt: true,
-      },
-    });
+        },
+      });
+
+    if (icon && session?.user?.id) {
+      await prisma.icon.update({
+        where: { id: imageId },
+        data: {
+          userId: session.user.id,
+        },
+      });
+
+      icon = {
+        ...icon,
+        userId: session.user.id,
+      };
+      claimedGuestIconToUser = true;
+    }
   }
 
   if (!icon) {
@@ -266,6 +282,15 @@ export default async function handler(
     }
   }
 
+  if (claimedGuestIconToUser && session?.user?.id) {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[REMOVE_BACKGROUND] claimed guest icon to signed-in user", {
+        imageId,
+        userId: session.user.id,
+      });
+    }
+  }
+
   const originalImageUrl = `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
 
   try {
@@ -273,12 +298,11 @@ export default async function handler(
     let outputBuffer: Buffer | null = null;
 
     if (env.MOCK_REPLICATE === "true") {
-      outputUrl = originalImageUrl;
+      throw new Error("Background removal is disabled while MOCK_REPLICATE is true");
     } else {
-      const rawOutput = await replicate.run(BRIA_MODEL, {
+      const rawOutput = await replicate.run(RECRAFT_MODEL, {
         input: {
-          image_url: originalImageUrl,
-          preserve_alpha: true,
+          image: originalImageUrl,
         },
       });
       if (process.env.NODE_ENV !== "production") {
@@ -307,6 +331,9 @@ export default async function handler(
     if (outputBuffer) {
       buffer = outputBuffer;
     } else if (outputUrl) {
+      if (outputUrl === originalImageUrl) {
+        throw new Error("Remove-background model returned the original image");
+      }
       const response = await fetch(outputUrl);
       if (!response.ok) {
         throw new Error("Failed to download transparent image");
@@ -321,6 +348,9 @@ export default async function handler(
       icon.userId ?? session?.user?.id ?? "guest-paid-traffic",
       imageKeyId
     );
+    if (transparentImageUrl === originalImageUrl) {
+      throw new Error("Transparent output matches original image");
+    }
 
     const updated = await prisma.icon.update({
       where: { id: imageId },

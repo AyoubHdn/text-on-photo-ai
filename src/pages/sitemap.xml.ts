@@ -82,6 +82,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/',
     '/community',
     '/collection',
+    '/products',
     '/buy-credits',
     '/blog',
 

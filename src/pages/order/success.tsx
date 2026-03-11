@@ -44,6 +44,7 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     const mapToHref = (value: string | null) => {
+      if (value === "ramadan-mug-v2") return "/ramadan-mug-v2";
       if (value === "ramadan-mug") return "/ramadan-mug";
       if (value === "arabic") return "/arabic-name-art-generator";
       if (value === "couples") return "/couples-name-art-generator";
@@ -65,6 +66,10 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     if (!order || hasTrackedPurchaseRef.current) return;
+    const isRamadanMugV2Flow =
+      generatorFromQuery === "ramadan-mug-v2" ||
+      (typeof window !== "undefined" &&
+        window.localStorage.getItem("last-generator") === "ramadan-mug-v2");
     if (typeof window !== "undefined" && orderIdValue) {
       const key = `ga4_purchase_${orderIdValue}`;
       if (window.sessionStorage.getItem(key)) {
@@ -77,13 +82,23 @@ export default function OrderSuccess() {
       value: Number(order.totalPrice ?? 0),
       currency: "USD",
       order_id: orderIdValue,
+      ...(isRamadanMugV2Flow
+        ? {
+            funnel: "ramadan_mug_v2",
+            traffic_type: "paid",
+            source_page: "ramadan-mug-v2",
+          }
+        : {}),
     });
     hasTrackedPurchaseRef.current = true;
-  }, [order, orderIdValue]);
+  }, [generatorFromQuery, order, orderIdValue]);
 
   useEffect(() => {
     if (!order || !orderIdValue || hasTrackedMetaPurchaseRef.current) return;
     if (typeof window === "undefined") return;
+    const isRamadanMugV2Flow =
+      generatorFromQuery === "ramadan-mug-v2" ||
+      window.localStorage.getItem("last-generator") === "ramadan-mug-v2";
 
     const key = `meta_purchase_${orderIdValue}`;
     if (window.sessionStorage.getItem(key)) {
@@ -104,13 +119,20 @@ export default function OrderSuccess() {
         content_ids: [order.productKey],
         content_category: "physical_product",
         order_id: orderIdValue,
+        ...(isRamadanMugV2Flow
+          ? {
+              funnel: "ramadan_mug_v2",
+              traffic_type: "paid",
+              source_page: "ramadan-mug-v2",
+            }
+          : {}),
       },
       { eventID: `physical_order_${orderIdValue}` },
     );
 
     window.sessionStorage.setItem(key, "1");
     hasTrackedMetaPurchaseRef.current = true;
-  }, [order, orderIdValue]);
+  }, [generatorFromQuery, order, orderIdValue]);
 
   return (
     <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">

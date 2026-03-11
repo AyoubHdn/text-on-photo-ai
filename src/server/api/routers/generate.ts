@@ -12,6 +12,8 @@ import AWS from "aws-sdk";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { Readable } from "stream";
+import { RAMADAN_MUG_V2_STYLES } from "~/config/ramadanMugV2Styles";
+import { buildRamadanMugV2Prompt } from "~/server/prompts/ramadanMugV2Prompt";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -36,6 +38,49 @@ const DEFAULT_GENERATION_TIMEOUT_MS = 120000;
 const NANO_BANANA_ATTEMPT_TIMEOUT_MS = 45000;
 const NANO_BANANA_MAX_ATTEMPTS = 3;
 const NANO_BANANA_RETRY_DELAYS_MS = [3000, 7000] as const;
+const GUEST_GENERATION_WINDOW_MS = 10 * 60 * 1000;
+const GUEST_GENERATION_MAX_REQUESTS = 5;
+const guestGenerationRateLimitMap = new Map<
+  string,
+  { count: number; resetAt: number }
+>();
+
+function getClientIp(
+  req: { headers?: Record<string, string | string[] | undefined> } | undefined,
+) {
+  const forwarded = req?.headers?.["x-forwarded-for"];
+  const candidate =
+    typeof forwarded === "string"
+      ? forwarded.split(",")[0]
+      : Array.isArray(forwarded)
+      ? forwarded[0]
+      : undefined;
+  return candidate?.trim() || "unknown";
+}
+
+function enforceGuestGenerationRateLimit(key: string) {
+  const now = Date.now();
+  const existing = guestGenerationRateLimitMap.get(key);
+  if (!existing || now >= existing.resetAt) {
+    guestGenerationRateLimitMap.set(key, {
+      count: 1,
+      resetAt: now + GUEST_GENERATION_WINDOW_MS,
+    });
+    return;
+  }
+
+  if (existing.count >= GUEST_GENERATION_MAX_REQUESTS) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Rate limit exceeded. Please try again in a few minutes.",
+    });
+  }
+
+  guestGenerationRateLimitMap.set(key, {
+    count: existing.count + 1,
+    resetAt: existing.resetAt,
+  });
+}
 
 function normalizeGenerationErrorMessage(error: unknown): string {
   const raw =
@@ -291,6 +336,82 @@ const generateIcon = async (
 };
 
 export const generateRouter = createTRPCRouter({
+  generateGuestDesign: publicProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(2).max(40),
+        style: z.string().trim().min(1),
+        recipient: z
+          .enum([
+            "My Husband",
+            "My Wife",
+            "My Father",
+            "My Mother",
+            "Someone Special",
+          ])
+          .default("Someone Special"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const styleConfig = RAMADAN_MUG_V2_STYLES.find((s) => s.id === input.style);
+      if (!styleConfig) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid style selected.",
+        });
+      }
+
+      const rateLimitKey = `ramadan-mug-v2:${getClientIp(ctx.req)}`;
+      enforceGuestGenerationRateLimit(rateLimitKey);
+
+      const prompt = buildRamadanMugV2Prompt({
+        name: input.name,
+        recipient: input.recipient,
+        stylePrompt: styleConfig.basePrompt,
+      });
+
+      const b64Images = await generateIcon(
+        prompt,
+        1,
+        "1:1",
+        "google/nano-banana-pro",
+      );
+
+      const firstImage = b64Images[0];
+      if (!firstImage) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No generated image returned by provider.",
+        });
+      }
+
+      const icon = await ctx.prisma.icon.create({
+        data: {
+          prompt,
+          userId: null,
+          metadata: {
+            sourcePage: "ramadan-mug-v2",
+            paidTrafficUser: true,
+            styleId: styleConfig.id,
+          },
+        },
+      });
+
+      await s3
+        .putObject({
+          Bucket: BUCKET_NAME,
+          Body: Buffer.from(firstImage, "base64"),
+          Key: icon.id,
+          ContentEncoding: "base64",
+          ContentType: "image/png",
+        })
+        .promise();
+
+      const designUrl = `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
+      return {
+        design_url: designUrl,
+      };
+    }),
   generateIcon: publicProcedure
     .input(
       z.object({

@@ -21,6 +21,7 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
 > = {
   "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
   "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
+  "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
 };
 
 const MyApp: AppType<{ session: Session | null }> = ({
@@ -36,6 +37,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
     router.pathname === "/cancel" || router.pathname === "/order/cancel";
   const isRamadanMugRoute =
     router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";
+  const isRamadanMugV2Route = router.pathname === "/ramadan-mug-v2";
+  const [isRamadanMugV2PaidTraffic, setIsRamadanMugV2PaidTraffic] = useState(false);
   const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
@@ -86,10 +89,19 @@ const MyApp: AppType<{ session: Session | null }> = ({
       setIsPaidTrafficUser(
         window.sessionStorage.getItem(PAID_TRAFFIC_SESSION_KEY) === "true",
       );
+      const params = new URLSearchParams(window.location.search);
+      const utmCampaign = (params.get("utm_campaign") ?? "").toLowerCase();
+      const utmMedium = (params.get("utm_medium") ?? "").toLowerCase();
+      setIsRamadanMugV2PaidTraffic(
+        isRamadanMugV2Route &&
+          utmCampaign === "ramadan_mug_women" &&
+          utmMedium === "paid_social",
+      );
     } catch {
       setIsPaidTrafficUser(false);
+      setIsRamadanMugV2PaidTraffic(false);
     }
-  }, [router.asPath]);
+  }, [isRamadanMugV2Route, router.asPath]);
 
   useEffect(() => {
     if (!session?.user?.id || !isPaidTrafficUser) return;
@@ -174,7 +186,16 @@ const MyApp: AppType<{ session: Session | null }> = ({
       </noscript>
 
       {/* Main App */}
-      {isCancelPage ? (
+      {isRamadanMugV2Route ? (
+        isRamadanMugV2PaidTraffic ? (
+          <Component {...pageProps} />
+        ) : (
+          <>
+            <Header minimal />
+            <Component {...pageProps} />
+          </>
+        )
+      ) : isCancelPage ? (
         <div className="min-h-screen flex flex-col">
           <Header minimal={isRamadanAdLayout} />
           <main className="flex-grow">
