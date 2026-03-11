@@ -32,10 +32,12 @@ export function buildRamadanMugV2Prompt(params: {
     base,
     languageRule,
     `Art direction: ${tone}.`,
-    "Output requirement: one centered hero composition, print-ready for mug design.",
-    "No extra words, logos, signatures, frames, or mockup context.",
-    "High readability, clean edges, balanced negative space, premium Ramadan aesthetic.",
-    "arabic calligraphy masterpiece, 8k resolution",
+    "Output requirement: a flat 2D printable artwork only, one centered hero composition, square composition, print-ready for transfer onto a mug.",
+    "Critical constraint: do not show any mug, cup, handle, tumbler, plate, product, product mockup, packaging, label, print preview, tabletop, room, candle, dates, hands, lifestyle scene, camera framing, photography setup, or any physical object.",
+    "Critical constraint: the result must be only the design artwork itself, not the design applied onto an object.",
+    "No extra words, logos, signatures, frames, borders, mockup context, presentation context, or image-inside-image layout.",
+    "Flat graphic design only, not product photography, not a 3D render of an object, not an embossed mug, not a printed cup scene.",
+    "High readability, clean edges, balanced negative space, premium Ramadan aesthetic, isolated artwork, design-only.",
+    "arabic calligraphy masterpiece, flat 2D artwork, 8k resolution",
   ].join(" ");
 }
-

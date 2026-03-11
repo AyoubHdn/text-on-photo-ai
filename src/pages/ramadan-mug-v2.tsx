@@ -854,13 +854,12 @@ const RamadanMugV2Page: NextPage = () => {
                     <div className="relative h-24">
                       <Image
                         src={s.src}
-                        alt={s.name}
+                        alt="Ramadan mug style preview"
                         fill
-                        className="object-cover"
+                        className="h-auto w-full aspect-square object-cover"
                         sizes="50vw"
                       />
                     </div>
-                    <div className="px-2 py-2 text-sm">{s.name}</div>
                   </button>
                 ))}
               </div>
