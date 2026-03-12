@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
@@ -53,51 +52,22 @@ export const userRouter = createTRPCRouter({
         throw new Error("User not found");
       }
 
-      if (user.paidTrafficFreeCreditsGranted) {
-        const patched = user.paidTrafficUser
-          ? user
-          : await tx.user.update({
-              where: { id: ctx.session.user.id },
-              data: { paidTrafficUser: true },
-              select: {
-                credits: true,
-                email: true,
-                name: true,
-                paidTrafficFreeCreditsGranted: true,
-                paidTrafficUser: true,
-              },
-            });
-
-        return {
-          granted: false,
-          credits: Number(patched.credits),
-          paidTrafficUser: Boolean(patched.paidTrafficUser),
-          email: patched.email,
-          name: patched.name,
-        };
-      }
-
-      const nextCredits = new Prisma.Decimal(user.credits).plus(
-        new Prisma.Decimal("4.1"),
-      );
-
-      const patched = await tx.user.update({
-        where: { id: ctx.session.user.id },
-        data: {
-          credits: nextCredits,
-          paidTrafficFreeCreditsGranted: true,
-          paidTrafficUser: true,
-        },
-        select: {
-          credits: true,
-          email: true,
-          name: true,
-          paidTrafficUser: true,
-        },
-      });
+      const patched = user.paidTrafficUser
+        ? user
+        : await tx.user.update({
+            where: { id: ctx.session.user.id },
+            data: { paidTrafficUser: true },
+            select: {
+              credits: true,
+              email: true,
+              name: true,
+              paidTrafficFreeCreditsGranted: true,
+              paidTrafficUser: true,
+            },
+          });
 
       return {
-        granted: true,
+        granted: false,
         credits: Number(patched.credits),
         paidTrafficUser: Boolean(patched.paidTrafficUser),
         email: patched.email,

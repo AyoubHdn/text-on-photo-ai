@@ -77,6 +77,8 @@ export const printfulCheckoutRouter = createTRPCRouter({
             fbc: z.string().optional(),
           })
           .optional(),
+        sourcePage: z.string().optional(),
+        promotedProduct: z.string().optional(),
         address: z
           .object({
             email: z.string().email(),
@@ -202,6 +204,45 @@ export const printfulCheckoutRouter = createTRPCRouter({
         });
       }
 
+      const updatedCheckoutUser = await prisma.user.update({
+        where: { id: resolvedUser.id },
+        data: {
+          hasVisitedCheckout: true,
+          hasGeneratedDesign: true,
+          paidTrafficUser: isPaidTrafficOrder || resolvedUser.paidTrafficUser,
+        },
+        select: {
+          email: true,
+          name: true,
+          credits: true,
+          paidTrafficUser: true,
+        },
+      });
+
+      if (updatedCheckoutUser.email) {
+        try {
+          await updateMauticContact(
+            {
+              email: updatedCheckoutUser.email,
+              name: updatedCheckoutUser.name,
+              brand_specific_credits: updatedCheckoutUser.credits,
+              customFields: {
+                has_visited_checkout: 1,
+                has_generated_design: 1,
+                is_paid_traffic_user:
+                  isPaidTrafficOrder || updatedCheckoutUser.paidTrafficUser ? 1 : 0,
+                paid_traffic_source_page: input.sourcePage,
+                paid_traffic_promoted_pro:
+                  input.promotedProduct ?? order.productKey,
+              },
+            },
+            "namedesignai",
+          );
+        } catch (err) {
+          console.error("Error updating Mautic on checkout email capture:", err);
+        }
+      }
+
       const countryCode = input.address.country.trim().toUpperCase();
       const stateCode = input.address.state?.trim().toUpperCase();
       const rawZip = input.address.zip.trim();
@@ -277,13 +318,6 @@ export const printfulCheckoutRouter = createTRPCRouter({
         });
       }
 
-      if (Math.abs((order.totalPrice ?? 0) - pricing.totalPrice) > 0.01) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Price mismatch. Please refresh and try again.",
-        });
-      }
-
       await prisma.productOrder.update({
         where: { id: order.id },
         data: {
@@ -299,40 +333,6 @@ export const printfulCheckoutRouter = createTRPCRouter({
           totalPrice: pricing.totalPrice,
         },
       });
-
-      const updatedCheckoutUser = await prisma.user.update({
-        where: { id: resolvedUser.id },
-        data: {
-          hasVisitedCheckout: true,
-          paidTrafficUser: isPaidTrafficOrder || resolvedUser.paidTrafficUser,
-        },
-        select: {
-          email: true,
-          name: true,
-          credits: true,
-          paidTrafficUser: true,
-        },
-      });
-
-      if (updatedCheckoutUser.email) {
-        try {
-          await updateMauticContact(
-            {
-              email: updatedCheckoutUser.email,
-              name: updatedCheckoutUser.name,
-              brand_specific_credits: updatedCheckoutUser.credits,
-              customFields: {
-                has_visited_checkout: 1,
-                is_paid_traffic_user:
-                  isPaidTrafficOrder || updatedCheckoutUser.paidTrafficUser ? 1 : 0,
-              },
-            },
-            "namedesignai",
-          );
-        } catch (err) {
-          console.error("Error updating Mautic on guest checkout visit:", err);
-        }
-      }
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",

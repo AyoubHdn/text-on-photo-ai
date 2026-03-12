@@ -18,6 +18,49 @@ import {
   verifyGuestOrderToken,
 } from "~/server/guestOrderToken";
 
+function normalizePosterSize(value?: string | null): string | null {
+  if (!value) return null;
+
+  const normalized = value
+    .replace(/\u2033/g, "")
+    .replace(/"/g, "")
+    .replace(/\u00d7/g, "x")
+    .replace(/\s+/g, "")
+    .trim();
+
+  const match = normalized.match(/(\d+)x(\d+)/i);
+  if (!match) return null;
+  return `${match[1]}x${match[2]}`;
+}
+
+function resolvePricingVariant(order: {
+  productKey: string;
+  size: string | null;
+  variantName: string | null;
+}): string {
+  if (order.productKey === "tshirt") {
+    const size = order.size?.trim().toUpperCase();
+    if (!size) throw new Error("Missing t-shirt size for pricing.");
+    return size;
+  }
+
+  if (order.productKey === "poster") {
+    const posterSize =
+      normalizePosterSize(order.size) ?? normalizePosterSize(order.variantName);
+    if (!posterSize) throw new Error("Missing poster size for pricing.");
+    return posterSize;
+  }
+
+  if (order.productKey === "mug") {
+    const source = `${order.size ?? ""} ${order.variantName ?? ""}`.trim();
+    const match = source.match(/(11|15|20)\s*oz/i);
+    if (!match) throw new Error("Missing mug size for pricing.");
+    return `${match[1]} oz`;
+  }
+
+  throw new Error("Unsupported product for pricing.");
+}
+
 export const productOrderRouter = createTRPCRouter({
   createPendingOrder: publicProcedure
     .input(
@@ -117,33 +160,6 @@ export const productOrderRouter = createTRPCRouter({
             status: "pending",
         },
         });
-
-        if (ctx.session?.user?.id) {
-          const user = await prisma.user.update({
-            where: { id: ctx.session.user.id },
-            data: { hasVisitedCheckout: true },
-            select: { email: true, name: true, credits: true },
-          });
-
-          if (user.email) {
-            try {
-              await updateMauticContact(
-                {
-                  email: user.email,
-                  name: user.name,
-                  brand_specific_credits: user.credits,
-                  customFields: {
-                    has_visited_checkout: 1,
-                  },
-                },
-                "namedesignai",
-              );
-            } catch (err) {
-              console.error("Error updating Mautic on checkout visit:", err);
-            }
-          }
-        }
-
       return {
         orderId: order.id,
         accessToken: isGuest ? createGuestOrderToken(order.id) : null,
@@ -209,5 +225,191 @@ export const productOrderRouter = createTRPCRouter({
 
             return order;
         }),
+    getCheckoutPricing: publicProcedure
+      .input(
+        z.object({
+          orderId: z.string(),
+          accessToken: z.string().optional(),
+          countryCode: z.string(),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const order = await prisma.productOrder.findUnique({
+          where: { id: input.orderId },
+        });
+
+        if (!order) throw new Error("Order not found");
+
+        const hasOwnerSession = ctx.session?.user?.id === order.userId;
+        const hasGuestAccess = verifyGuestOrderToken(
+          input.accessToken,
+          input.orderId,
+        );
+
+        if (!hasOwnerSession && !hasGuestAccess) {
+          throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+
+        const pricingVariant = resolvePricingVariant(order);
+        const pricing = await calculateProductPriceFromCache({
+          productType: order.productKey as "poster" | "tshirt" | "mug",
+          sizeKey: pricingVariant,
+          countryCode: input.countryCode,
+        });
+
+        return {
+          totalPrice: pricing.totalPrice,
+          shippingPrice: pricing.shippingCost,
+          basePrice: pricing.baseCost,
+          currency: pricing.currency,
+          shippingCountry: pricing.shippingCountry,
+        };
+      }),
+    captureCheckoutEmail: publicProcedure
+      .input(
+        z.object({
+          orderId: z.string(),
+          accessToken: z.string().optional(),
+          email: z.string().email(),
+          sourcePage: z.string().optional(),
+          promotedProduct: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const order = await prisma.productOrder.findUnique({
+          where: { id: input.orderId },
+        });
+
+        if (!order) throw new Error("Order not found");
+
+        const hasOwnerSession = ctx.session?.user?.id === order.userId;
+        const hasGuestAccess = verifyGuestOrderToken(
+          input.accessToken,
+          input.orderId,
+        );
+
+        if (!hasOwnerSession && !hasGuestAccess) {
+          throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+
+        const normalizedEmail = input.email.trim().toLowerCase();
+        const isPaidTrafficOrder =
+          order.funnelSource === "paid-traffic-offer" ||
+          order.funnelSource === "ramadan-mug-ad";
+
+        const currentOrderUser = await prisma.user.findUnique({
+          where: { id: order.userId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            credits: true,
+            paidTrafficUser: true,
+          },
+        });
+
+        if (!currentOrderUser) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Order owner not found.",
+          });
+        }
+
+        let resolvedUser = await prisma.user.findUnique({
+          where: { email: normalizedEmail },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            credits: true,
+            paidTrafficUser: true,
+          },
+        });
+
+        if (!resolvedUser) {
+          if (!currentOrderUser.email) {
+            resolvedUser = await prisma.user.update({
+              where: { id: currentOrderUser.id },
+              data: {
+                email: normalizedEmail,
+                paidTrafficUser:
+                  isPaidTrafficOrder || currentOrderUser.paidTrafficUser,
+              },
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                credits: true,
+                paidTrafficUser: true,
+              },
+            });
+          } else if (currentOrderUser.email.toLowerCase() === normalizedEmail) {
+            resolvedUser = currentOrderUser;
+          } else {
+            resolvedUser = await prisma.user.create({
+              data: {
+                email: normalizedEmail,
+                paidTrafficUser: isPaidTrafficOrder,
+              },
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                credits: true,
+                paidTrafficUser: true,
+              },
+            });
+          }
+        }
+
+        const updatedUser = await prisma.user.update({
+          where: { id: resolvedUser.id },
+          data: {
+            hasVisitedCheckout: true,
+            hasGeneratedDesign: true,
+            paidTrafficUser: isPaidTrafficOrder || resolvedUser.paidTrafficUser,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            credits: true,
+            paidTrafficUser: true,
+          },
+        });
+
+        if (order.userId !== updatedUser.id) {
+          await prisma.productOrder.update({
+            where: { id: order.id },
+            data: { userId: updatedUser.id },
+          });
+        }
+
+        if (updatedUser.email) {
+          try {
+            await updateMauticContact(
+              {
+                email: updatedUser.email,
+                name: updatedUser.name,
+                brand_specific_credits: updatedUser.credits,
+                customFields: {
+                  has_visited_checkout: 1,
+                  has_generated_design: 1,
+                  is_paid_traffic_user:
+                    isPaidTrafficOrder || updatedUser.paidTrafficUser ? 1 : 0,
+                  paid_traffic_source_page: input.sourcePage,
+                  paid_traffic_promoted_pro:
+                    input.promotedProduct ?? order.productKey,
+                },
+              },
+              "namedesignai",
+            );
+          } catch (err) {
+            console.error("Error updating Mautic on checkout email capture:", err);
+          }
+        }
+
+        return { success: true };
+      }),
 
 });

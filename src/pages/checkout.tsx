@@ -21,6 +21,24 @@ export function formatPrice(value: number) {
   return value.toFixed(2);
 }
 
+function getCheckoutSourcePage() {
+  if (typeof window === "undefined") return "checkout";
+  const generatorKey = window.localStorage.getItem("last-generator");
+  return generatorKey === "arabic"
+    ? "arabic-name-art-generator"
+    : generatorKey === "couples"
+    ? "couples-art-generator"
+    : generatorKey === "default"
+    ? "name-art-generator"
+    : generatorKey === "ramadan-mug-v2"
+    ? "ramadan-mug-v2"
+    : generatorKey === "ramadan-mug-men"
+    ? "ramadan-mug-men"
+    : generatorKey === "ramadan-mug"
+    ? "ramadan-mug"
+    : "checkout";
+}
+
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const cookies = document.cookie ? document.cookie.split("; ") : [];
@@ -120,6 +138,7 @@ export default function CheckoutPage() {
     const hasAttemptedFinalizeRef = useRef(false);
     const autoFinalizeStartedRef = useRef(false);
     const hasTrackedBeginCheckoutRef = useRef(false);
+    const lastCapturedCheckoutEmailRef = useRef<string | null>(null);
 
     type OrderType = {
         id: string;
@@ -153,7 +172,19 @@ export default function CheckoutPage() {
         { orderId: String(orderId), accessToken: accessTokenValue },
         { enabled: !!orderId }
         ) as { data: OrderType | undefined, isLoading: boolean };
+    const checkoutPricingQuery = api.productOrder.getCheckoutPricing.useQuery(
+        {
+          orderId: String(orderId),
+          accessToken: accessTokenValue,
+          countryCode: address.country,
+        },
+        {
+          enabled: !!orderId && !!address.country,
+          retry: false,
+        },
+    );
 
+    const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
     const createStripeSession = api.printfulCheckout.createCheckout.useMutation();
     const ensureFinalPreview = api.checkout.ensureFinalPreview.useMutation();
 
@@ -241,8 +272,10 @@ export default function CheckoutPage() {
     const localShippingErrors = validateShipping();
 
     // ✅ Normalize numbers ONCE
-    const productPrice = Number(order?.totalPrice ?? 0);
-    const totalPrice = Number(order?.totalPrice ?? 0);
+    const productPrice = Number(
+      checkoutPricingQuery.data?.totalPrice ?? order?.totalPrice ?? 0,
+    );
+    const totalPrice = productPrice;
 
     const PRODUCT_LABELS = {
     poster: "Premium Poster",
@@ -300,77 +333,6 @@ export default function CheckoutPage() {
     const isPreviewReady = !isApparel || (previewStatus === "ready" && !previewMismatch);
 
     useEffect(() => {
-        if (!order || hasTrackedBeginCheckoutRef.current) return;
-        const generatorKey =
-          typeof window !== "undefined" ? window.localStorage.getItem("last-generator") : null;
-        const sourcePage =
-          generatorKey === "arabic"
-            ? "arabic-name-art-generator"
-            : generatorKey === "couples"
-            ? "couples-art-generator"
-            : generatorKey === "default"
-            ? "name-art-generator"
-            : generatorKey === "ramadan-mug-v2"
-            ? "ramadan-mug-v2"
-            : generatorKey === "ramadan-mug-men"
-            ? "ramadan-mug-men"
-            : generatorKey === "ramadan-mug"
-            ? "ramadan-mug"
-            : "checkout";
-        const funnelContext = getFunnelContext({
-            route: router.pathname,
-            sourcePage,
-            orderFunnelSource: order.funnelSource ?? null,
-            productKey: order.productKey,
-            productType: "physical_product",
-            country: address.country,
-            query: router.query as Record<string, unknown>,
-        });
-        const beginCheckoutKey = `tracking_begin_checkout_${order.id}`;
-        if (!markEventTrackedOnce(beginCheckoutKey)) {
-            hasTrackedBeginCheckoutRef.current = true;
-            return;
-        }
-        if (
-            order.funnelSource === "paid-traffic-offer" ||
-            order.funnelSource === "ramadan-mug-ad"
-        ) {
-            trackEvent("paid_traffic_checkout_started", {
-                product: order.productKey,
-                ...funnelContext,
-            });
-            const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-            if (typeof maybeFbq === "function") {
-                maybeFbq("trackCustom", "paid_traffic_checkout_started", {
-                    product: order.productKey,
-                    ...funnelContext,
-                });
-            }
-        } else {
-            trackEvent("begin_checkout", {
-                product: order.productKey,
-                user_credits_before_action: null,
-                required_credits: 0,
-                ...funnelContext,
-            });
-        }
-        fireMetaInitiateCheckout({
-            content_type: "product",
-            content_ids: [order.productKey],
-            content_category: "physical_product",
-            value: Number(order.totalPrice ?? 0),
-            currency: "USD",
-            order_id: order.id,
-            ...funnelContext,
-        });
-        hasTrackedBeginCheckoutRef.current = true;
-    }, [order, address.country, router.pathname, router.query]);
-
-    useEffect(() => {
-        return;
-    }, []);
-
-    useEffect(() => {
       void loadCountries();
     }, []);
 
@@ -424,6 +386,27 @@ export default function CheckoutPage() {
         return { status: "error" as const };
         });
     }
+
+    const captureCheckoutEmailIfNeeded = async (rawEmail: string) => {
+        if (isLoggedIn || !order) return;
+
+        const normalizedEmail = rawEmail.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) return;
+        if (lastCapturedCheckoutEmailRef.current === normalizedEmail) return;
+
+        try {
+            await captureCheckoutEmail.mutateAsync({
+                orderId: order.id,
+                accessToken: accessTokenValue,
+                email: normalizedEmail,
+                sourcePage: getCheckoutSourcePage(),
+                promotedProduct: order.productKey,
+            });
+            lastCapturedCheckoutEmailRef.current = normalizedEmail;
+        } catch (err) {
+            console.error("Failed to capture checkout email:", err);
+        }
+    };
 
 
 
@@ -554,6 +537,11 @@ export default function CheckoutPage() {
             {productNotice ?? shippingNotice ?? "Please fix the highlighted shipping fields before continuing."}
         </div>
         )}
+        {checkoutPricingQuery.error?.message?.includes("Pricing not available for this variant.") && (
+        <div className="mb-3 text-sm text-red-600">
+            Shipping is not available in this country yet.
+        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -567,6 +555,9 @@ export default function CheckoutPage() {
             onChange={(e) =>
             setAddress({ ...address, email: e.target.value })
             }
+            onBlur={() => {
+            void captureCheckoutEmailIfNeeded(address.email);
+            }}
         />
         {fieldErrorMessage("email") && (
         <div className="md:col-span-2 text-xs text-red-600">{fieldErrorMessage("email")}</div>
@@ -692,7 +683,9 @@ export default function CheckoutPage() {
 
         <div className="flex justify-between text-sm">
             <span>Shipping</span>
-            <span>FREE</span>
+            <span>
+              {checkoutPricingQuery.isLoading && address.country ? "Updating..." : "FREE"}
+            </span>
         </div>
 
         <div className="border-t pt-3 flex justify-between text-lg font-bold">
@@ -711,7 +704,7 @@ export default function CheckoutPage() {
 
         <button
             className="w-full py-3 rounded-lg bg-black text-white font-semibold disabled:opacity-50"
-        disabled={previewStatus === "generating"}
+        disabled={previewStatus === "generating" || checkoutPricingQuery.isLoading}
         onClick={async () => { if (!order) return;
 
             const productIssues = getProductConfigErrors();
@@ -734,12 +727,33 @@ export default function CheckoutPage() {
             setShippingNotice(null);
             setBackendFieldErrors({});
 
+            if (checkoutPricingQuery.error) {
+            if (checkoutPricingQuery.error.message.includes("Pricing not available for this variant.")) {
+                setBackendFieldErrors({
+                  country: "Shipping is not available in this country yet.",
+                });
+                setShippingNotice(null);
+                return;
+            }
+            setShippingNotice("We couldn't refresh the latest price. Please try again.");
+            return;
+            }
+
+            if (!checkoutPricingQuery.data) {
+            setShippingNotice("We couldn't refresh the latest price. Please try again.");
+            return;
+            }
+
             try {
+            const sourcePage = getCheckoutSourcePage();
+            await captureCheckoutEmailIfNeeded(address.email);
             const res = await createStripeSession.mutateAsync({
                 orderId: order.id,
                 accessToken: accessTokenValue,
-                submittedTotalPrice: totalPrice,
+                submittedTotalPrice: checkoutPricingQuery.data.totalPrice,
                 tracking: getMetaTrackingParams(),
+                sourcePage,
+                promotedProduct: order.productKey,
                 address: {
                 email: address.email,
                 name: address.name,
@@ -752,21 +766,6 @@ export default function CheckoutPage() {
             });
 
             if (res.url) {
-                const sourcePage = typeof window !== "undefined"
-                  ? (window.localStorage.getItem("last-generator") === "arabic"
-                      ? "arabic-name-art-generator"
-                      : window.localStorage.getItem("last-generator") === "couples"
-                      ? "couples-art-generator"
-                      : window.localStorage.getItem("last-generator") === "default"
-                      ? "name-art-generator"
-                      : window.localStorage.getItem("last-generator") === "ramadan-mug-v2"
-                      ? "ramadan-mug-v2"
-                      : window.localStorage.getItem("last-generator") === "ramadan-mug-men"
-                      ? "ramadan-mug-men"
-                      : window.localStorage.getItem("last-generator") === "ramadan-mug"
-                      ? "ramadan-mug"
-                      : "checkout")
-                  : "checkout";
                 const funnelContext = getFunnelContext({
                   route: router.pathname,
                   sourcePage,
@@ -776,6 +775,42 @@ export default function CheckoutPage() {
                   country: address.country,
                   query: router.query as Record<string, unknown>,
                 });
+                const beginCheckoutKey = `tracking_begin_checkout_${order.id}`;
+                if (!hasTrackedBeginCheckoutRef.current && markEventTrackedOnce(beginCheckoutKey)) {
+                  if (
+                    order.funnelSource === "paid-traffic-offer" ||
+                    order.funnelSource === "ramadan-mug-ad"
+                  ) {
+                    trackEvent("paid_traffic_checkout_started", {
+                      product: order.productKey,
+                      ...funnelContext,
+                    });
+                    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+                    if (typeof maybeFbq === "function") {
+                      maybeFbq("trackCustom", "paid_traffic_checkout_started", {
+                        product: order.productKey,
+                        ...funnelContext,
+                      });
+                    }
+                  } else {
+                    trackEvent("begin_checkout", {
+                      product: order.productKey,
+                      user_credits_before_action: null,
+                      required_credits: 0,
+                      ...funnelContext,
+                    });
+                  }
+                  fireMetaInitiateCheckout({
+                    content_type: "product",
+                    content_ids: [order.productKey],
+                    content_category: "physical_product",
+                    value: Number(order.totalPrice ?? 0),
+                    currency: "USD",
+                    order_id: order.id,
+                    ...funnelContext,
+                  });
+                  hasTrackedBeginCheckoutRef.current = true;
+                }
                 const addShippingInfoKey = `tracking_add_shipping_info_${order.id}`;
                 if (markEventTrackedOnce(addShippingInfoKey)) {
                   trackEvent("add_shipping_info", {

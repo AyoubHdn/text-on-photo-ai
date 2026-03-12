@@ -119,6 +119,8 @@ export function ProductPreviewModal({
   const router = useRouter();
   const sourcePage = useMemo(() => {
     const pathname = router.pathname;
+    if (pathname.includes("ramadan-mug-v2")) return "ramadan-mug-v2";
+    if (pathname.includes("ramadan-mug-men")) return "ramadan-mug-men";
     if (pathname.includes("ramadan-mug")) return "ramadan-mug";
     if (pathname.includes("arabic-name-art-generator")) return "arabic-name-art-generator";
     if (pathname.includes("couples-name-art-generator") || pathname.includes("couples-art-generator")) {

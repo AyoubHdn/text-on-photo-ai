@@ -113,15 +113,8 @@ const RamadanMugMenPage: NextPage = () => {
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const paidTrafficStateQuery = api.user.getPaidTrafficFunnelState.useQuery(undefined, { enabled: isLoggedIn });
-  const grantPaidTrafficFreeCredits = api.user.grantPaidTrafficFreeCredits.useMutation({
-    onSuccess: async (result) => {
-      if (result.granted) {
-        fireRamadanCustomEvent("ramadan_free_credit_granted", {
-          source_page: SOURCE_PAGE,
-          granted_credits: 4.1,
-        });
-      }
-      await utils.user.getCredits.invalidate();
+  const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation({
+    onSuccess: async () => {
       await utils.user.getPaidTrafficFunnelState.invalidate();
     },
   });
@@ -221,19 +214,17 @@ const RamadanMugMenPage: NextPage = () => {
   useEffect(() => {
     if (!isLoggedIn || !isRamadanAdUser) return;
     if (!paidTrafficStateQuery.data) return;
-    if (
-      paidTrafficStateQuery.data.paidTrafficFreeCreditsGranted &&
-      paidTrafficStateQuery.data.isPaidTrafficUser
-    ) {
-      return;
-    }
+    if (paidTrafficStateQuery.data.isPaidTrafficUser) return;
     if (hasRequestedFreeCreditsRef.current) return;
 
     hasRequestedFreeCreditsRef.current = true;
-    grantPaidTrafficFreeCredits.mutate();
+    markPaidTrafficUser.mutate({
+      sourcePage: SOURCE_PAGE,
+      promotedProduct: "mug",
+    });
   }, [
-    grantPaidTrafficFreeCredits,
     isLoggedIn,
+    markPaidTrafficUser,
     isRamadanAdUser,
     paidTrafficStateQuery.data,
   ]);

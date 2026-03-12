@@ -33,6 +33,7 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
 > = {
   "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
   "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
+  "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
 };
 
 function normalize(value: string | null | undefined): string {

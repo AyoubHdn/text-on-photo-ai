@@ -44,6 +44,16 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   useEffect(() => {
     try {
+      if (router.pathname === "/ramadan-mug-v2") {
+        window.localStorage.setItem("last-generator", "ramadan-mug-v2");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [router.pathname]);
+
+  useEffect(() => {
+    try {
       const params = new URLSearchParams(window.location.search);
       const source = (params.get("source") ?? "").toLowerCase();
       const utmSource = (params.get("utm_source") ?? "").toLowerCase();
