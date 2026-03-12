@@ -170,6 +170,7 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           prompt: "consent",
