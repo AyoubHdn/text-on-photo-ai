@@ -5,6 +5,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { printfulRequest } from "~/server/printful/client";
+import { prisma } from "~/server/db";
+import {
+  normalizePricingSizeKey,
+  type PricedProductType,
+} from "~/server/services/productPricingSizeKeys";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,7 +19,7 @@ export default async function handler(
     return res.status(405).end();
   }
 
-  const { productKey } = req.query;
+  const { productKey, countryCode } = req.query;
 
   if (!productKey || typeof productKey !== "string") {
     return res.status(400).json({ error: "Missing productKey" });
@@ -29,6 +34,10 @@ export default async function handler(
   }
 
   try {
+    const normalizedCountry =
+      typeof countryCode === "string" && countryCode.trim().length > 0
+        ? countryCode.trim().toUpperCase()
+        : null;
     const data = await printfulRequest<{
       result: {
         variants: any;
@@ -48,14 +57,47 @@ export default async function handler(
         ? data.result.sync_variants
         : data.result.variants;
 
-    const variants = sourceVariants.map((v: any) => ({
+    let allowedSizeKeys: Set<string> | null = null;
+    if (normalizedCountry) {
+      const cachedPricing = await prisma.productPricingCache.findMany({
+        where: {
+          productType: productKey,
+          countryCode: normalizedCountry,
+        },
+        select: {
+          sizeKey: true,
+        },
+      });
+      allowedSizeKeys = new Set(cachedPricing.map((entry) => entry.sizeKey));
+    }
+
+    const variants = sourceVariants
+      .map((v: any) => ({
         id: Number(v.variant_id ?? v.id),
         name: v.name,
         size: v.size,
         color: v.color,
         color_code: v.color_code,
         price: v.price,
-        }));
+      }))
+      .filter((variant: {
+        id: number;
+        name: string;
+        size?: string;
+        color?: string;
+        color_code?: string;
+        price?: string;
+      }) => {
+        if (!allowedSizeKeys) return true;
+
+        const sizeKey = normalizePricingSizeKey(productKey as PricedProductType, {
+          name: variant.name,
+          size: variant.size,
+          color: variant.color,
+        });
+
+        return sizeKey ? allowedSizeKeys.has(sizeKey) : false;
+      });
 
 
     return res.status(200).json({ variants });

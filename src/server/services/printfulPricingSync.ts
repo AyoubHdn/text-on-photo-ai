@@ -1,8 +1,12 @@
 import { prisma } from "~/server/db";
 import { printfulRequest } from "~/server/printful/client";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
+import {
+  normalizePricingSizeKey,
+  type PricedProductType,
+} from "~/server/services/productPricingSizeKeys";
 
-type SyncProductType = "mug" | "tshirt" | "poster";
+type SyncProductType = PricedProductType;
 
 type RawVariant = {
   id?: number;
@@ -38,41 +42,6 @@ function parsePrice(value?: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function normalizePosterSize(value?: string): string | null {
-  if (!value) return null;
-  const normalized = value
-    .replace(/\u2033/g, "")
-    .replace(/"/g, "")
-    .replace(/\u00d7/g, "x")
-    .replace(/\s+/g, "")
-    .trim();
-  const match = normalized.match(/(\d+)x(\d+)/i);
-  return match ? `${match[1]}x${match[2]}` : null;
-}
-
-function normalizeMugSize(value?: string): string | null {
-  if (!value) return null;
-  const match = value.match(/(11|15|20)\s*oz/i);
-  return match ? `${match[1]} oz` : null;
-}
-
-function normalizeTshirtSize(value?: string): string | null {
-  if (!value) return null;
-  return value.trim().toUpperCase();
-}
-
-function normalizeSizeKey(productType: SyncProductType, variant: RawVariant): string | null {
-  const composite = `${variant.size ?? ""} ${variant.name ?? ""}`.trim();
-
-  if (productType === "mug") {
-    return normalizeMugSize(composite);
-  }
-  if (productType === "tshirt") {
-    return normalizeTshirtSize(variant.size);
-  }
-  return normalizePosterSize(variant.size) ?? normalizePosterSize(variant.name);
-}
-
 async function fetchProductVariants(printfulProductId: number): Promise<RawVariant[]> {
   const data = await printfulRequest<{
     result: {
@@ -91,16 +60,45 @@ async function fetchProductVariants(printfulProductId: number): Promise<RawVaria
   return source;
 }
 
-async function fetchShippingCostByProductType(
-  representativeVariantId: number,
+function getRecipientSeed(countryCode: string) {
+  const recipientSeed = SHIPPING_RECIPIENT_BY_COUNTRY[countryCode];
+  if (!recipientSeed) {
+    throw new Error(`Missing shipping recipient seed for ${countryCode}`);
+  }
+
+  return recipientSeed;
+}
+
+type PrintfulCostEstimateResponse = {
+  result?: {
+    costs?: {
+      subtotal?: string | number;
+      shipping?: string | number;
+    };
+    retail_costs?: {
+      subtotal?: string | number;
+      shipping?: string | number;
+    };
+  };
+};
+
+function parseAmount(value?: string | number): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? Number(value.toFixed(2)) : null;
+  }
+
+  if (typeof value === "string") {
+    return parsePrice(value);
+  }
+
+  return null;
+}
+
+async function fetchShippingCostByVariant(
+  variantId: number,
   countryCode: string
 ): Promise<number> {
-  const usSeed = SHIPPING_RECIPIENT_BY_COUNTRY.US;
-  if (!usSeed) {
-    throw new Error("Missing default US shipping recipient seed");
-  }
-  const recipientSeed =
-    SHIPPING_RECIPIENT_BY_COUNTRY[countryCode] ?? usSeed;
+  const recipientSeed = getRecipientSeed(countryCode);
 
   const shipping = await printfulRequest<{
     result: Array<{ rate: string }>;
@@ -113,7 +111,7 @@ async function fetchShippingCostByProductType(
     },
     items: [
       {
-        variant_id: representativeVariantId,
+        variant_id: variantId,
         quantity: 1,
       },
     ],
@@ -122,25 +120,85 @@ async function fetchShippingCostByProductType(
   const firstRate = shipping.result?.[0]?.rate;
   const parsed = firstRate ? Number.parseFloat(firstRate) : Number.NaN;
   if (!Number.isFinite(parsed)) {
-    throw new Error(`Missing shipping rate for variant ${representativeVariantId} in ${countryCode}`);
+    throw new Error(`Missing shipping rate for variant ${variantId} in ${countryCode}`);
   }
   return Number(parsed.toFixed(2));
+}
+
+async function fetchVariantPricingByCountry(
+  variantId: number,
+  countryCode: string,
+  fallbackBaseCost: number,
+): Promise<{ baseCost: number; shippingCost: number }> {
+  const recipientSeed = getRecipientSeed(countryCode);
+
+  try {
+    const estimate = await printfulRequest<PrintfulCostEstimateResponse>(
+      "/orders/estimate-costs",
+      "POST",
+      {
+        recipient: {
+          country_code: countryCode,
+          city: recipientSeed.city,
+          zip: recipientSeed.zip,
+          state_code: recipientSeed.stateCode,
+        },
+        items: [
+          {
+            variant_id: variantId,
+            quantity: 1,
+          },
+        ],
+      },
+    );
+
+    const estimatedBaseCost =
+      parseAmount(estimate.result?.costs?.subtotal) ??
+      parseAmount(estimate.result?.retail_costs?.subtotal);
+    const estimatedShippingCost =
+      parseAmount(estimate.result?.costs?.shipping) ??
+      parseAmount(estimate.result?.retail_costs?.shipping);
+
+    if (estimatedBaseCost !== null && estimatedShippingCost !== null) {
+      return {
+        baseCost: estimatedBaseCost,
+        shippingCost: estimatedShippingCost,
+      };
+    }
+
+    console.warn(
+      `[PRICING_SYNC] Missing estimate fields for variant ${variantId} in ${countryCode}; falling back to product price + shipping rates`,
+    );
+  } catch (error) {
+    console.warn(
+      `[PRICING_SYNC] Estimate failed for variant ${variantId} in ${countryCode}; falling back to product price + shipping rates`,
+      error,
+    );
+  }
+
+  return {
+    baseCost: fallbackBaseCost,
+    shippingCost: await fetchShippingCostByVariant(variantId, countryCode),
+  };
 }
 
 export async function runPricingSync() {
   for (const { productType, printfulProductId } of PRODUCT_SYNC_CONFIG) {
     const variants = await fetchProductVariants(printfulProductId);
-    const bySize = new Map<string, { baseCost: number; variantId: number }>();
+    const bySize = new Map<string, { fallbackBaseCost: number; variantId: number }>();
 
     for (const variant of variants) {
-      const sizeKey = normalizeSizeKey(productType, variant);
+      const sizeKey = normalizePricingSizeKey(productType, variant);
       if (!sizeKey || bySize.has(sizeKey)) continue;
 
       const baseCost = parsePrice(variant.price);
       const variantId = Number(variant.variant_id ?? variant.id);
       if (!Number.isFinite(variantId) || baseCost === null) continue;
 
-      bySize.set(sizeKey, { baseCost: Number(baseCost.toFixed(2)), variantId });
+      bySize.set(sizeKey, {
+        fallbackBaseCost: Number(baseCost.toFixed(2)),
+        variantId,
+      });
     }
 
     if (bySize.size === 0) {
@@ -148,59 +206,60 @@ export async function runPricingSync() {
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
-      const candidateVariantIds = Array.from(
-        new Set(Array.from(bySize.values()).map((entry) => entry.variantId)),
-      );
-      if (candidateVariantIds.length === 0) {
-        throw new Error(`No representative variant found for ${productType}`);
-      }
+      const syncedSizeKeys = new Set<string>();
 
-      let shippingCost: number | null = null;
-      for (const candidateVariantId of candidateVariantIds) {
+      for (const [sizeKey, record] of bySize.entries()) {
         try {
-          shippingCost = await fetchShippingCostByProductType(
-            candidateVariantId,
+          const pricing = await fetchVariantPricingByCountry(
+            record.variantId,
             countryCode,
+            record.fallbackBaseCost,
           );
-          break;
+          await prisma.productPricingCache.upsert({
+            where: {
+              productType_sizeKey_countryCode: {
+                productType,
+                sizeKey,
+                countryCode,
+              },
+            },
+            create: {
+              productType,
+              sizeKey,
+              countryCode,
+              baseCost: pricing.baseCost,
+              shippingCost: pricing.shippingCost,
+              lastSyncedAt: new Date(),
+            },
+            update: {
+              baseCost: pricing.baseCost,
+              shippingCost: pricing.shippingCost,
+              lastSyncedAt: new Date(),
+            },
+          });
+          syncedSizeKeys.add(sizeKey);
         } catch (error) {
           console.warn(
-            `[PRICING_SYNC] Variant ${candidateVariantId} unavailable for ${productType} in ${countryCode}`,
+            `[PRICING_SYNC] Variant ${record.variantId} unavailable for ${productType}/${sizeKey} in ${countryCode}`,
             error,
           );
         }
       }
 
-      if (shippingCost === null) {
-        console.error(
-          `[PRICING_SYNC] Skipping ${productType} in ${countryCode}: no shippable variant found`,
-        );
-        continue;
-      }
+      await prisma.productPricingCache.deleteMany({
+        where: {
+          productType,
+          countryCode,
+          ...(syncedSizeKeys.size > 0
+            ? { sizeKey: { notIn: Array.from(syncedSizeKeys) } }
+            : {}),
+        },
+      });
 
-      for (const [sizeKey, record] of bySize.entries()) {
-        await prisma.productPricingCache.upsert({
-          where: {
-            productType_sizeKey_countryCode: {
-              productType,
-              sizeKey,
-              countryCode,
-            },
-          },
-          create: {
-            productType,
-            sizeKey,
-            countryCode,
-            baseCost: record.baseCost,
-            shippingCost,
-            lastSyncedAt: new Date(),
-          },
-          update: {
-            baseCost: record.baseCost,
-            shippingCost,
-            lastSyncedAt: new Date(),
-          },
-        });
+      if (syncedSizeKeys.size === 0) {
+        console.error(
+          `[PRICING_SYNC] No shippable variants found for ${productType} in ${countryCode}`,
+        );
       }
     }
   }

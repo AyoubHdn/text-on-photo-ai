@@ -139,6 +139,14 @@ export function ProductPreviewModal({
   });
 
   const [error, setError] = useState<string | null>(null);
+  const [pricingCountryCode, setPricingCountryCode] = useState<string>("US");
+  const [pricingTotal, setPricingTotal] = useState<number | null>(null);
+  const [pricingError, setPricingError] = useState<string | null>(null);
+  const [hasAutoSelectedCountry, setHasAutoSelectedCountry] = useState(false);
+  const [offerEndsAtMs, setOfferEndsAtMs] = useState<number | null>(null);
+  const [offerRemainingSeconds, setOfferRemainingSeconds] = useState(0);
+  const shippingCountries = SHIPPING_COUNTRY_OPTIONS;
+  const isRamadanMugOffer = productKey === "mug" && sourcePage === "ramadan-mug";
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
@@ -505,17 +513,36 @@ export function ProductPreviewModal({
   useEffect(() => {
     if (!isOpen || !productKey) return;
 
-    fetch(`/api/printful/variants?productKey=${productKey}`)
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      productKey,
+      countryCode: pricingCountryCode,
+    });
+
+    fetch(`/api/printful/variants?${params.toString()}`, {
+      signal: controller.signal,
+    })
       .then((res) => res.json())
       .then((data) => {
         const nextVariants = data.variants || [];
         setVariants(nextVariants);
+        if (nextVariants.length === 0) {
+          setVariantId(null);
+          setPreviewVariantId(null);
+          setSelectedColor(null);
+          setSelectedSize(null);
+          setMugVariantId(null);
+          return;
+        }
         ensureDefaultSelection(productKey, nextVariants);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        if ((err as Error).name === "AbortError") return;
         setError("Failed to load product options");
       });
-  }, [isOpen, productKey, aspect]);
+
+    return () => controller.abort();
+  }, [isOpen, productKey, aspect, pricingCountryCode]);
 
   useEffect(() => {
     if (previewCooldown === null) return;
@@ -573,16 +600,6 @@ export function ProductPreviewModal({
       }
     }
   });
-
-  const [pricingCountryCode, setPricingCountryCode] = useState<string>("US");
-  const [pricingTotal, setPricingTotal] = useState<number | null>(null);
-  const [pricingError, setPricingError] = useState<string | null>(null);
-  const [hasAutoSelectedCountry, setHasAutoSelectedCountry] = useState(false);
-  const [offerEndsAtMs, setOfferEndsAtMs] = useState<number | null>(null);
-  const [offerRemainingSeconds, setOfferRemainingSeconds] = useState(0);
-  const shippingCountries = SHIPPING_COUNTRY_OPTIONS;
-  const isRamadanMugOffer = productKey === "mug" && sourcePage === "ramadan-mug";
-
   useEffect(() => {
     if (shippingCountries.some((country) => country.code === pricingCountryCode)) return;
     setPricingCountryCode("US");
