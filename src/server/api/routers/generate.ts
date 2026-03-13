@@ -36,13 +36,16 @@ const FRIENDLY_GENERATION_BUSY_MESSAGE =
   "Generation is temporarily busy at our AI provider due to high demand. Please try again shortly. If generation fails, your credits are refunded automatically.";
 const DEFAULT_GENERATION_TIMEOUT_MS = 120000;
 const NANO_BANANA_ATTEMPT_TIMEOUT_MS = 45000;
-const NANO_BANANA_MAX_ATTEMPTS = 3;
-const NANO_BANANA_RETRY_DELAYS_MS = [3000, 7000] as const;
 const GUEST_GENERATION_WINDOW_MS = 10 * 60 * 1000;
 const GUEST_GENERATION_MAX_REQUESTS = 5;
+const GUEST_GENERATION_DEDUP_TTL_MS = 2 * 60 * 1000;
 const guestGenerationRateLimitMap = new Map<
   string,
   { count: number; resetAt: number }
+>();
+const guestGenerationInFlightMap = new Map<
+  string,
+  { promise: Promise<string>; expiresAt: number }
 >();
 
 function getClientIp(
@@ -104,29 +107,6 @@ function normalizeGenerationErrorMessage(error: unknown): string {
   return raw || "Generation failed. Please try again.";
 }
 
-function isRetryableProviderError(error: unknown): boolean {
-  const raw =
-    error instanceof Error
-      ? error.message
-      : typeof error === "string"
-      ? error
-      : "";
-  const lower = raw.toLowerCase();
-  return (
-    lower.includes("prediction failed") ||
-    lower.includes("service is currently unavailable") ||
-    lower.includes("(e003)") ||
-    lower.includes("timeout") ||
-    lower.includes("timed out") ||
-    lower.includes("rate limit") ||
-    lower.includes("too many requests")
-  );
-}
-
-async function sleep(ms: number): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
@@ -142,6 +122,79 @@ async function withTimeout<T>(
     ]);
   } finally {
     if (timer) clearTimeout(timer);
+  }
+}
+
+function getGuestGenerationRequestKey(params: {
+  ip: string;
+  name: string;
+  style: string;
+  recipient: string;
+}) {
+  return [
+    "ramadan-mug-v2",
+    params.ip.trim().toLowerCase(),
+    params.name.trim().toLowerCase(),
+    params.style.trim().toLowerCase(),
+    params.recipient.trim().toLowerCase(),
+  ].join(":");
+}
+
+function getOrCreateGuestGenerationPromise(
+  key: string,
+  factory: () => Promise<string>,
+): Promise<string> {
+  const now = Date.now();
+  const existing = guestGenerationInFlightMap.get(key);
+  if (existing && existing.expiresAt > now) {
+    return existing.promise;
+  }
+
+  const promise = factory().finally(() => {
+    const current = guestGenerationInFlightMap.get(key);
+    if (current?.promise === promise) {
+      guestGenerationInFlightMap.delete(key);
+    }
+  });
+
+  guestGenerationInFlightMap.set(key, {
+    promise,
+    expiresAt: now + GUEST_GENERATION_DEDUP_TTL_MS,
+  });
+
+  return promise;
+}
+
+async function runNanoBananaPrediction(input: Record<string, any>) {
+  const prediction = await replicate.predictions.create({
+    model: "google/nano-banana-pro",
+    input,
+  });
+
+  try {
+    const completedPrediction = await withTimeout(
+      replicate.wait(prediction, { interval: 1000 }),
+      NANO_BANANA_ATTEMPT_TIMEOUT_MS,
+      "Generation timed out while waiting for Nano Banana",
+    );
+
+    return completedPrediction.output;
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("Generation timed out while waiting for Nano Banana")
+    ) {
+      try {
+        await replicate.predictions.cancel(prediction.id);
+      } catch (cancelError) {
+        console.warn(
+          `[NANO_BANANA_CANCEL_FAILED] ${prediction.id}`,
+          cancelError instanceof Error ? cancelError.message : cancelError,
+        );
+      }
+    }
+
+    throw error;
   }
 }
 
@@ -231,35 +284,7 @@ const generateIcon = async (
   let rawOutput: unknown;
   try {
     if (model === "google/nano-banana-pro") {
-      let lastError: unknown = null;
-      for (let attempt = 1; attempt <= NANO_BANANA_MAX_ATTEMPTS; attempt++) {
-        try {
-          rawOutput = await withTimeout(
-            replicate.run(path, { input }),
-            NANO_BANANA_ATTEMPT_TIMEOUT_MS,
-            "Generation timed out while waiting for Nano Banana",
-          );
-          lastError = null;
-          break;
-        } catch (attemptError) {
-          lastError = attemptError;
-          const canRetry =
-            isRetryableProviderError(attemptError) &&
-            attempt < NANO_BANANA_MAX_ATTEMPTS;
-          if (!canRetry) {
-            throw attemptError;
-          }
-          const delayMs = NANO_BANANA_RETRY_DELAYS_MS[attempt - 1] ?? 5000;
-          console.warn(
-            `[NANO_BANANA_RETRY] attempt ${attempt} failed; retrying in ${delayMs}ms`,
-            attemptError instanceof Error ? attemptError.message : attemptError,
-          );
-          await sleep(delayMs);
-        }
-      }
-      if (lastError) {
-        throw lastError;
-      }
+      rawOutput = await runNanoBananaPrediction(input);
     } else {
       rawOutput = await withTimeout(
         replicate.run(path, { input }),
@@ -361,53 +386,67 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
-      const rateLimitKey = `ramadan-mug-v2:${getClientIp(ctx.req)}`;
+      const clientIp = getClientIp(ctx.req);
+      const rateLimitKey = `ramadan-mug-v2:${clientIp}`;
       enforceGuestGenerationRateLimit(rateLimitKey);
 
-      const prompt = buildRamadanMugV2Prompt({
+      const requestKey = getGuestGenerationRequestKey({
+        ip: clientIp,
         name: input.name,
+        style: input.style,
         recipient: input.recipient,
-        stylePrompt: styleConfig.basePrompt,
       });
 
-      const b64Images = await generateIcon(
-        prompt,
-        1,
-        "1:1",
-        "google/nano-banana-pro",
+      const designUrl = await getOrCreateGuestGenerationPromise(
+        requestKey,
+        async () => {
+          const prompt = buildRamadanMugV2Prompt({
+            name: input.name,
+            recipient: input.recipient,
+            stylePrompt: styleConfig.basePrompt,
+          });
+
+          const b64Images = await generateIcon(
+            prompt,
+            1,
+            "1:1",
+            "google/nano-banana-pro",
+          );
+
+          const firstImage = b64Images[0];
+          if (!firstImage) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "No generated image returned by provider.",
+            });
+          }
+
+          const icon = await ctx.prisma.icon.create({
+            data: {
+              prompt,
+              userId: null,
+              metadata: {
+                sourcePage: "ramadan-mug-v2",
+                paidTrafficUser: true,
+                styleId: styleConfig.id,
+              },
+            },
+          });
+
+          await s3
+            .putObject({
+              Bucket: BUCKET_NAME,
+              Body: Buffer.from(firstImage, "base64"),
+              Key: icon.id,
+              ContentEncoding: "base64",
+              ContentType: "image/png",
+            })
+            .promise();
+
+          return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
+        },
       );
 
-      const firstImage = b64Images[0];
-      if (!firstImage) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No generated image returned by provider.",
-        });
-      }
-
-      const icon = await ctx.prisma.icon.create({
-        data: {
-          prompt,
-          userId: null,
-          metadata: {
-            sourcePage: "ramadan-mug-v2",
-            paidTrafficUser: true,
-            styleId: styleConfig.id,
-          },
-        },
-      });
-
-      await s3
-        .putObject({
-          Bucket: BUCKET_NAME,
-          Body: Buffer.from(firstImage, "base64"),
-          Key: icon.id,
-          ContentEncoding: "base64",
-          ContentType: "image/png",
-        })
-        .promise();
-
-      const designUrl = `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
       return {
         design_url: designUrl,
       };

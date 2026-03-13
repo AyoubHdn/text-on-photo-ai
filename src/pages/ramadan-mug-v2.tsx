@@ -108,6 +108,7 @@ const RamadanMugV2Page: NextPage = () => {
   const genGuest = api.generate.generateGuestDesign.useMutation();
   const genIcon = api.generate.generateIcon.useMutation();
   const createOrder = api.productOrder.createPendingOrder.useMutation();
+  const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
   const claimGuestDesign = api.icons.claimGuestRamadanMugV2Design.useMutation();
 
   const [step, setStep] = useState<Step>(1);
@@ -129,10 +130,13 @@ const RamadanMugV2Page: NextPage = () => {
   const [designLoadingStage, setDesignLoadingStage] = useState(0);
   const [designLoadingProgress, setDesignLoadingProgress] = useState(12);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [styleUnlockPromptOpen, setStyleUnlockPromptOpen] = useState(false);
   const [resumeRegenPending, setResumeRegenPending] = useState(false);
   const [hasHydratedSavedState, setHasHydratedSavedState] = useState(false);
   const retryRef = useRef<null | (() => void)>(null);
   const pendingSignInRegen = useRef(false);
+  const pendingStyleAfterSignInRef = useRef<string | null>(null);
+  const pendingStyleUnlockRegenRef = useRef(false);
   const generationLockRef = useRef(false);
   const viewedRef = useRef(false);
 
@@ -391,8 +395,39 @@ const RamadanMugV2Page: NextPage = () => {
     }. Keep only the provided name.`;
   };
 
+  const canAffordRegen = (credits.data ?? 0) >= REGEN_CREDITS;
+  const styleSelectionRequiresSignIn = hasFree && !!designUrl && !isLoggedIn;
+
+  const selectStyle = (nextStyleId: string) => {
+    if (styleSelectionRequiresSignIn) {
+      pendingStyleAfterSignInRef.current = nextStyleId;
+      pendingStyleUnlockRegenRef.current = false;
+      setStyleUnlockPromptOpen(true);
+      return;
+    }
+    setStyleId(nextStyleId);
+    setErr("");
+  };
+
+  const continueStyleUnlockSignIn = async () => {
+    if (pendingStyleUnlockRegenRef.current && typeof window !== "undefined") {
+      window.sessionStorage.setItem(PENDING_REGEN_KEY, "1");
+    }
+    pendingSignInRegen.current = pendingStyleUnlockRegenRef.current;
+    setStyleUnlockPromptOpen(false);
+    await signIn(undefined, { callbackUrl: router.asPath });
+  };
+
   const runGeneration = async (paid: boolean) => {
     if (generationLockRef.current || busyDesign || !styleId || name.trim().length < 2) {
+      return;
+    }
+    const requiresPaidGeneration = paid || isLoggedIn;
+    if (requiresPaidGeneration && (credits.data ?? 0) < REGEN_CREDITS) {
+      retryRef.current = () => {
+        void runGeneration(true);
+      };
+      setUpgradeOpen(true);
       return;
     }
     generationLockRef.current = true;
@@ -403,9 +438,9 @@ const RamadanMugV2Page: NextPage = () => {
     try {
       fireEvent("generate_design_started", {
         style_id: styleId,
-        mode: paid ? "paid_regenerate" : "free",
+        mode: requiresPaidGeneration ? "paid_regenerate" : "free",
       });
-      const nextDesign = paid
+      const nextDesign = requiresPaidGeneration
         ? (await genIcon.mutateAsync({
             prompt: buildPrompt(),
             numberOfImages: 1,
@@ -442,7 +477,7 @@ const RamadanMugV2Page: NextPage = () => {
         style_id: styleId,
         design_url: nextDesign,
         transparent_design_url: nextTransparent,
-        mode: paid ? "paid_regenerate" : "free",
+        mode: requiresPaidGeneration ? "paid_regenerate" : "free",
       });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Generation failed");
@@ -486,6 +521,17 @@ const RamadanMugV2Page: NextPage = () => {
   }, [isLoggedIn]);
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+    const pendingStyleId = pendingStyleAfterSignInRef.current;
+    if (!pendingStyleId) return;
+
+    setStyleId(pendingStyleId);
+    setErr("");
+    pendingStyleAfterSignInRef.current = null;
+    pendingStyleUnlockRegenRef.current = false;
+  }, [isLoggedIn]);
+
+  useEffect(() => {
     if (!resumeRegenPending || !isLoggedIn || credits.isLoading) return;
 
     retryRef.current = () => {
@@ -501,6 +547,16 @@ const RamadanMugV2Page: NextPage = () => {
     setUpgradeOpen(true);
     setResumeRegenPending(false);
   }, [resumeRegenPending, isLoggedIn, credits.isLoading, credits.data]);
+
+  useEffect(() => {
+    const shouldBlockBack = busyDesign || busyPreview;
+
+    router.beforePopState(() => !shouldBlockBack);
+
+    return () => {
+      router.beforePopState(() => true);
+    };
+  }, [router, busyDesign, busyPreview]);
 
   const makePreview = async () => {
     if (!selectedDesign) throw new Error("No selected design");
@@ -577,6 +633,19 @@ const RamadanMugV2Page: NextPage = () => {
         shippingCountry: "US",
         funnelSource: "paid-traffic-offer",
       });
+      if (!isLoggedIn) {
+        try {
+          await captureCheckoutEmail.mutateAsync({
+            orderId: order.orderId,
+            accessToken: order.accessToken ?? undefined,
+            email: email.trim().toLowerCase(),
+            sourcePage: "ramadan-mug-v2",
+            promotedProduct: "mug",
+          });
+        } catch (captureErr) {
+          console.error("Failed to capture Ramadan mug checkout email:", captureErr);
+        }
+      }
       const payload = { ...trackBase, value: 0, currency: "USD" };
       trackEvent("begin_checkout", payload);
       fireMetaStandardEvent("InitiateCheckout", payload);
@@ -679,7 +748,8 @@ const RamadanMugV2Page: NextPage = () => {
                     : 1,
                 )
               }
-              className="mb-4 rounded-xl border px-3 py-2 text-sm"
+              disabled={busyDesign || busyPreview}
+              className="mb-4 rounded-xl border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
               Back
             </button>
@@ -693,19 +763,25 @@ const RamadanMugV2Page: NextPage = () => {
               {hasSavedDesign ? (
                 <>
                   <p className="mt-3 text-gray-600">
-                    Your saved Ramadan mug design is ready to continue.
+                    Your personalized Ramadan mug design is ready. Review it and continue to create a beautiful gift.
                   </p>
                   <div className="mt-5 w-full max-w-sm overflow-hidden rounded-3xl border border-gray-200 bg-white p-3 text-left shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                      Your personalized design
+                    </p>
                     <img
                       src={transparentUrl ?? designUrl ?? ""}
                       alt="Saved Ramadan mug design"
-                      className="h-56 w-full rounded-2xl object-contain"
+                      className="mt-3 h-56 w-full rounded-2xl object-contain"
                     />
                     <p className="mt-3 text-sm font-semibold text-[#111111]">
                       {name ? `"${name}"` : "Your saved design"}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
                       {style?.name ?? "Saved style"}
+                    </p>
+                    <p className="mt-3 text-xs text-gray-600">
+                      Created just for your name - printed only after you order.
                     </p>
                   </div>
                   <button
@@ -775,6 +851,9 @@ const RamadanMugV2Page: NextPage = () => {
           {step === 2 && (
             <section className="space-y-3">
               <h2 className="text-2xl font-bold">Who is this mug for?</h2>
+              <p className="text-sm text-gray-600">
+                This helps us tailor the design preview.
+              </p>
               {RECIPIENTS.map((r) => (
                 <button
                   key={r}
@@ -808,9 +887,12 @@ const RamadanMugV2Page: NextPage = () => {
                   setName(e.target.value);
                   setErr("");
                 }}
-                placeholder="e.g., Ahmed"
+                placeholder="Example: Ahmed, Fatima, Omar"
                 className="mt-4 w-full rounded-2xl border border-gray-300 px-4 py-4"
               />
+              <p className="mt-3 text-sm text-gray-600">
+                Your name will appear in Arabic calligraphy on the mug.
+              </p>
               <button
                 onClick={() =>
                   name.trim().length < 2
@@ -844,8 +926,7 @@ const RamadanMugV2Page: NextPage = () => {
                   <button
                     key={s.id}
                     onClick={() => {
-                      setStyleId(s.id);
-                      setErr("");
+                      selectStyle(s.id);
                     }}
                     className={`overflow-hidden rounded-2xl border text-left ${
                       styleId === s.id ? "border-[#2563EB]" : "border-gray-200"
@@ -859,6 +940,11 @@ const RamadanMugV2Page: NextPage = () => {
                         className="h-auto w-full aspect-square object-cover"
                         sizes="50vw"
                       />
+                      {hasFree && designUrl && !isLoggedIn && (
+                        <div className="absolute inset-x-2 bottom-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+                          Sign in to unlock
+                        </div>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -924,6 +1010,9 @@ const RamadanMugV2Page: NextPage = () => {
           {step === 6 && (
             <section>
               <h2 className="text-2xl font-bold">Choose your design version</h2>
+              <p className="mt-2 text-sm text-gray-600">
+                Select the version that will appear on your mug.
+              </p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                   onClick={() => setVariant("original")}
@@ -961,7 +1050,7 @@ const RamadanMugV2Page: NextPage = () => {
                     <div className="h-52 rounded-xl bg-gray-100" />
                   )}
                   <div className="pt-2 text-sm font-semibold">
-                    Background removed
+                    Transparent background (best for mug printing)
                   </div>
                 </button>
               </div>
@@ -976,7 +1065,7 @@ const RamadanMugV2Page: NextPage = () => {
 
           {step === 7 && !busyPreview && (
             <section>
-              <h2 className="text-2xl font-bold">Review & Checkout</h2>
+              <h2 className="text-2xl font-bold">Preview Your Personalized Mug</h2>
               <div className="mt-4 rounded-2xl border p-3">
                 {selectedMockup ? (
                   <img
@@ -988,9 +1077,15 @@ const RamadanMugV2Page: NextPage = () => {
                   <div className="h-52 rounded-xl bg-gray-100" />
                 )}
               </div>
+              <p className="mt-3 text-sm text-gray-600">
+                This is how your mug will look when printed.
+              </p>
               <div className="mt-3 rounded-2xl border bg-[#FFFBEB] p-4 text-sm">
                 <p className="font-semibold">Mug details</p>
                 <p>Size: 11 oz white glossy ceramic mug</p>
+                <p>High-quality ceramic mug</p>
+                <p>Dishwasher & microwave safe</p>
+                <p>Printed with premium inks</p>
                 <p>Print mode: Two-side wrap</p>
               </div>
               {!isLoggedIn && (
@@ -1012,8 +1107,14 @@ const RamadanMugV2Page: NextPage = () => {
                 onClick={() => void checkout()}
                 className="mt-6 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white disabled:opacity-50"
               >
-                {busyCheckout ? "Loading checkout..." : "Continue to Secure Checkout"}
+                {busyCheckout ? "Loading checkout..." : "Continue to Secure Checkout →"}
               </button>
+              <p className="mt-3 text-center text-xs text-gray-500">
+                Secure payment powered by Stripe
+              </p>
+              <p className="mt-2 text-center text-sm font-medium text-[#7C5A00]">
+                Perfect gift before Eid.
+              </p>
             </section>
           )}
 
@@ -1074,10 +1175,29 @@ const RamadanMugV2Page: NextPage = () => {
               {hasFree && designUrl && (
                 <button
                   disabled={busyDesign || !styleId || name.trim().length < 2}
-                  onClick={() => void requestRegen()}
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      pendingStyleAfterSignInRef.current = styleId || null;
+                      pendingStyleUnlockRegenRef.current = true;
+                      setStyleUnlockPromptOpen(true);
+                      return;
+                    }
+                    if (!canAffordRegen) {
+                      retryRef.current = () => {
+                        void runGeneration(true);
+                      };
+                      setUpgradeOpen(true);
+                      return;
+                    }
+                    void requestRegen();
+                  }}
                   className="w-full rounded-2xl border border-[#2563EB] px-4 py-4 font-semibold text-[#2563EB] disabled:opacity-50"
                 >
-                  Regenerate with credits ({REGEN_CREDITS} credits)
+                  {!isLoggedIn
+                    ? "Sign in to unlock more styles"
+                    : canAffordRegen
+                    ? `Regenerate with credits (${REGEN_CREDITS} credits)`
+                    : "Buy credits to generate again"}
                 </button>
               )}
               <button
@@ -1090,7 +1210,11 @@ const RamadanMugV2Page: NextPage = () => {
                 }}
                 className="w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white disabled:opacity-50"
               >
-                {hasFree && designUrl ? "Continue with my design" : "Generate My Design"}
+                {hasFree && designUrl
+                  ? "Continue with my design"
+                  : isLoggedIn
+                  ? `Generate My Design (${REGEN_CREDITS} credits)`
+                  : "Generate My Design"}
               </button>
             </div>
           </div>
@@ -1113,6 +1237,37 @@ const RamadanMugV2Page: NextPage = () => {
             });
           }}
         />
+        {styleUnlockPromptOpen && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-6 pt-10 sm:items-center">
+            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+              <h3 className="text-xl font-bold text-[#111111]">Unlock more styles</h3>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                Your free design is already saved. Sign in to choose another style and continue future generations from your account.
+              </p>
+              <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-[#1E3A8A]">
+                After sign-in, you can keep this design, switch styles, and then buy credits if you want more generations.
+              </div>
+              <div className="mt-6 space-y-3">
+                <button
+                  onClick={() => void continueStyleUnlockSignIn()}
+                  className="w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                >
+                  Sign in to continue
+                </button>
+                <button
+                  onClick={() => {
+                    pendingStyleAfterSignInRef.current = null;
+                    pendingStyleUnlockRegenRef.current = false;
+                    setStyleUnlockPromptOpen(false);
+                  }}
+                  className="w-full rounded-2xl border border-gray-200 px-4 py-4 font-semibold text-[#111111]"
+                >
+                  Keep my current design
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <style jsx>{`
           .preview-review-track {
             animation: preview-review-scroll 40s linear infinite;

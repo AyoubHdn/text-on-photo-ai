@@ -35,6 +35,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
   const isCancelPage =
     router.pathname === "/cancel" || router.pathname === "/order/cancel";
+  const isCheckoutRoute = router.pathname === "/checkout";
   const isRamadanMugRoute =
     router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";
   const isRamadanMugV2Route = router.pathname === "/ramadan-mug-v2";
@@ -212,6 +213,14 @@ const MyApp: AppType<{ session: Session | null }> = ({
             <Component {...pageProps} />
           </main>
           <Footer minimal={isRamadanAdLayout} />
+        </div>
+      ) : isCheckoutRoute ? (
+        <div className="min-h-screen bg-white text-slate-900">
+          <Header minimal forceLight />
+          <main>
+            <Component {...pageProps} />
+          </main>
+          <Footer minimal forceLight />
         </div>
       ) : (
         <>

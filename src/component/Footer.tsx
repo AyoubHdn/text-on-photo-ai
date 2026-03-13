@@ -4,13 +4,14 @@ import { FaTwitter, FaPinterest, FaFacebook } from "react-icons/fa";
 
 type FooterProps = {
   minimal?: boolean;
+  forceLight?: boolean;
 };
 
-export function Footer({ minimal = false }: FooterProps) {
+export function Footer({ minimal = false, forceLight = false }: FooterProps) {
   if (minimal) {
     return (
-      <footer className="border-t border-gray-200 bg-gray-50 py-3 dark:border-gray-700 dark:bg-gray-900">
-        <div className="container mx-auto px-6 text-center text-xs text-gray-600 dark:text-gray-300">
+      <footer className={`border-t border-gray-200 py-3 ${forceLight ? "bg-white" : "bg-gray-50 dark:border-gray-700 dark:bg-gray-900"}`}>
+        <div className={`container mx-auto px-6 text-center text-xs ${forceLight ? "text-gray-600" : "text-gray-600 dark:text-gray-300"}`}>
           Secure checkout • Printed in USA • Fast shipping
         </div>
       </footer>
@@ -31,15 +32,15 @@ export function Footer({ minimal = false }: FooterProps) {
   ];
 
   return (
-    <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+    <footer className={`border-t border-gray-200 bg-gray-100 ${forceLight ? "" : "dark:border-gray-700 dark:bg-gray-900"}`}>
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
           {/* Column 1: Brand Info & Socials */}
           <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-lg">NameDesignAi.com</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Personalized name art & Arabic calligraphy, created with AI.</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className={`text-sm ${forceLight ? "text-gray-600" : "text-gray-600 dark:text-gray-400"}`}>Personalized name art & Arabic calligraphy, created with AI.</p>
+            <p className={`text-sm ${forceLight ? "text-gray-600" : "text-gray-600 dark:text-gray-400"}`}>
               © {new Date().getFullYear()} HDN STUDIO LTD
             </p>
             <div>
@@ -51,7 +52,7 @@ export function Footer({ minimal = false }: FooterProps) {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                    className={`text-gray-500 transition-colors hover:text-blue-500 ${forceLight ? "" : "dark:hover:text-blue-400"}`}
                     aria-label={social.name}
                     title={social.name}
                   >

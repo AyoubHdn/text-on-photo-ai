@@ -9,9 +9,10 @@ import { AiOutlineDown } from "react-icons/ai"; // Using an icon for the dropdow
 
 type HeaderProps = {
     minimal?: boolean;
+    forceLight?: boolean;
 };
 
-export function Header({ minimal = false }: HeaderProps) {
+export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     const session = useSession();
     const credits = api.user.getCredits.useQuery();
     const isLoggedIn = !!session.data;
@@ -57,7 +58,13 @@ export function Header({ minimal = false }: HeaderProps) {
 
     if (minimal) {
         return (
-            <header className="container mx-auto flex h-16 items-center justify-center px-4 dark:bg-gray-800">
+            <header
+                className={
+                    forceLight
+                        ? "flex h-16 w-full items-center justify-center bg-[#1B2538] px-4"
+                        : "container mx-auto flex h-16 items-center justify-center px-4 dark:bg-gray-800"
+                }
+            >
                 <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex items-center gap-2">
                     <Image
                         src="/logo.webp"
@@ -67,7 +74,7 @@ export function Header({ minimal = false }: HeaderProps) {
                         className="rounded"
                         unoptimized={true}
                     />
-                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 sm:text-base">
+                    <span className={`text-sm font-semibold sm:text-base ${forceLight ? "text-white" : "text-slate-900 dark:text-slate-100"}`}>
                         Name Design AI
                     </span>
                 </PrimaryLink>
@@ -76,7 +83,7 @@ export function Header({ minimal = false }: HeaderProps) {
     }
 
     return (
-        <header className="container mx-auto flex h-16 items-center justify-between px-4 dark:bg-gray-800">
+        <header className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
             {/* --- LEFT NAVIGATION --- */}
             <ul className="flex gap-8 items-center">
                 <li>
@@ -100,19 +107,19 @@ export function Header({ minimal = false }: HeaderProps) {
                 <li ref={productsDropdownRef} className="relative hidden md:block">
                     <button
                         onClick={() => setIsProductsDropdownOpen(prev => !prev)}
-                        className="flex items-center gap-1 font-medium text-slate-800 dark:text-slate-200 hover:text-blue-500"
+                        className={`flex items-center gap-1 font-medium hover:text-blue-500 ${forceLight ? "text-slate-800" : "text-slate-800 dark:text-slate-200"}`}
                     >
                         Create <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isProductsDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 w-56 z-20 bg-white dark:bg-gray-700 rounded-md shadow-lg border dark:border-gray-600">
+                        <div className={`absolute top-full left-0 mt-2 w-56 z-20 rounded-md border bg-white shadow-lg ${forceLight ? "border-gray-200" : "dark:border-gray-600 dark:bg-gray-700"}`}>
                             <ul className="py-1">
                                 {productLinks.map(link => (
                                     <li key={link.href}>
                                         <Link 
                                             href={link.href}
                                             onClick={() => setIsProductsDropdownOpen(false)}
-                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                            className={`block px-4 py-2 text-sm hover:bg-gray-100 ${forceLight ? "text-gray-700" : "text-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"}`}
                                         >
                                             {link.name}
                                         </Link>
@@ -198,11 +205,11 @@ export function Header({ minimal = false }: HeaderProps) {
             </button>
             {isMobileMenuOpen && (
                 <div ref={mobileMenuRef} className="absolute top-16 left-0 right-0 z-10 p-4 md:hidden">
-                    <ul className="rounded-lg bg-white p-4 text-slate-800 dark:bg-gray-900 dark:text-slate-200 shadow-lg">
+                    <ul className={`rounded-lg bg-white p-4 text-slate-800 shadow-lg ${forceLight ? "" : "dark:bg-gray-900 dark:text-slate-200"}`}>
                         {isLoggedIn ? (
                             <>
                                 <li>
-                                    <Link href="/buy-credits" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <Link href="/buy-credits" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Buy Credits ({credits.data ?? 0} left)
                                     </Link>
                                 </li>
@@ -210,7 +217,7 @@ export function Header({ minimal = false }: HeaderProps) {
                                 <li className="px-4 py-2 font-bold text-gray-500">Products</li>
                                 {productLinks.map(link => (
                                      <li key={link.href} className="pl-4">
-                                         <Link href={link.href} className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                         <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                              {link.name}
                                          </Link>
                                      </li>
@@ -218,22 +225,22 @@ export function Header({ minimal = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700"></div> 
                                 {/* --- END: Mobile Products Section --- */}
                                 <li>
-                                    <Link href="/community" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/blog" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/blog" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Blog
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/collection" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/collection" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         My Designs
                                     </Link>
                                 </li>
                                 <li>
-                                    <button onClick={() => { signOut().catch(console.error); setIsMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700">
+                                    <button onClick={() => { signOut().catch(console.error); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
                                         Sign Out
                                     </button>
                                 </li>
@@ -241,7 +248,7 @@ export function Header({ minimal = false }: HeaderProps) {
                         ) : (
                             <>
                                 <li>
-                                    <button onClick={() => { signIn().catch(console.error); setIsMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 dark:text-white hover:bg-gray-700">
+                                    <button onClick={() => { signIn().catch(console.error); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
                                         Sign In
                                     </button>
                                 </li>
@@ -249,7 +256,7 @@ export function Header({ minimal = false }: HeaderProps) {
                                 <li className="px-4 py-2 font-bold text-gray-500">Products</li>
                                 {productLinks.map(link => (
                                      <li key={link.href} className="pl-4">
-                                         <Link href={link.href} className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                         <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                              {link.name}
                                          </Link>
                                      </li>
@@ -257,12 +264,12 @@ export function Header({ minimal = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700"></div> 
                                 {/* --- END: Mobile Products Section --- */}
                                 <li>
-                                    <Link href="/community" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/blog" className="block px-4 py-2 dark:text-white hover:bg-gray-700" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/blog" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Blog
                                     </Link>
                                 </li>

@@ -14,11 +14,76 @@ import { Select } from "~/component/Select";
 import { TRPCClientError } from "@trpc/client";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext, markEventTrackedOnce } from "~/lib/tracking/funnel";
-import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
 export function formatPrice(value: number) {
   return value.toFixed(2);
+}
+
+function getDeliveryEstimate(productKey: string, countryCode: string): string {
+  if (productKey !== "mug") {
+    return "Estimated delivery shown at payment step";
+  }
+
+  switch (countryCode) {
+    case "GB":
+      return "Estimated delivery: 4-5 business days";
+    case "CA":
+      return "Estimated delivery: 4-7 business days";
+    case "US":
+      return "Estimated delivery: 5-7 business days";
+    case "AU":
+      return "Estimated delivery: 5-9 business days";
+    case "NZ":
+      return "Estimated delivery: 8-11 business days";
+    default:
+      return "Estimated delivery shown at payment step";
+  }
+}
+
+function getCheckoutCopy(productKey: string) {
+  switch (productKey) {
+    case "poster":
+      return {
+        personalizedLabel: "Your personalized poster",
+        subtitle: "Personalized custom poster",
+        fallbackDesignLabel: "Custom design selected for your poster",
+        benefitsTitle: "Why customers choose this poster",
+        benefits: [
+          "Premium poster print",
+          "Custom artwork selected for your order",
+          "Printed with premium inks",
+          "Free shipping included",
+        ],
+      };
+    case "tshirt":
+      return {
+        personalizedLabel: "Your personalized t-shirt",
+        subtitle: "Personalized custom t-shirt",
+        fallbackDesignLabel: "Custom design selected for your t-shirt",
+        benefitsTitle: "Why customers choose this t-shirt",
+        benefits: [
+          "Unisex t-shirt ready for everyday wear",
+          "Custom design selected for your order",
+          "Printed with premium inks",
+          "Free shipping included",
+        ],
+      };
+    case "mug":
+    default:
+      return {
+        personalizedLabel: "Your personalized mug",
+        subtitle: "Personalized Arabic Calligraphy Mug",
+        fallbackDesignLabel: "Custom Arabic name design",
+        benefitsTitle: "Why customers choose this mug",
+        benefits: [
+          "High-quality glossy ceramic",
+          "Dishwasher & microwave safe",
+          "Printed with premium inks",
+          "Free shipping included",
+        ],
+      };
+  }
 }
 
 function getCheckoutSourcePage() {
@@ -67,6 +132,26 @@ function getMetaTrackingParams() {
   };
 }
 
+function getStoredRamadanMugName(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    // The current order payload does not persist the typed Ramadan mug name.
+    // Reuse the existing funnel cache when available and fall back in UI when it is not.
+    const raw = window.localStorage.getItem("ramadan-mug-v2:funnel:v4");
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as { name?: unknown };
+    if (typeof parsed.name === "string" && parsed.name.trim().length > 0) {
+      return parsed.name.trim();
+    }
+  } catch {
+    // ignore invalid cached funnel state
+  }
+
+  return null;
+}
+
 function detectCountryFromBrowser(availableCodes: string[]): string | null {
   if (typeof navigator === "undefined") return null;
 
@@ -103,6 +188,14 @@ function fireMetaInitiateCheckout(params?: Record<string, unknown>) {
   }
 }
 
+function fireMetaAddPaymentInfo(params?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+  if (typeof maybeFbq === "function") {
+    maybeFbq("track", "AddPaymentInfo", params ?? {});
+  }
+}
+
 type ShippingCountry = {
   code: string;
   name: string;
@@ -135,6 +228,7 @@ export default function CheckoutPage() {
     const [previewError, setPreviewError] = useState<"RATE_LIMIT" | null>(null);
     const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
     const [variantIdUsedForPreview, setVariantIdUsedForPreview] = useState<number | null>(null);
+    const [personalizedName, setPersonalizedName] = useState<string | null>(null);
     const hasAttemptedFinalizeRef = useRef(false);
     const autoFinalizeStartedRef = useRef(false);
     const hasTrackedBeginCheckoutRef = useRef(false);
@@ -228,6 +322,19 @@ export default function CheckoutPage() {
       setAddress((prev) => ({ ...prev, email: sessionEmail }));
     }, [isLoggedIn, session?.user?.email]);
 
+    useEffect(() => {
+      if (isLoggedIn || !order) return;
+      const normalizedEmail = address.email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) return;
+      if (lastCapturedCheckoutEmailRef.current === normalizedEmail) return;
+
+      const timer = window.setTimeout(() => {
+        void captureCheckoutEmailIfNeeded(normalizedEmail);
+      }, 700);
+
+      return () => window.clearTimeout(timer);
+    }, [address.email, isLoggedIn, order]);
+
 
 
     const selectedCountry = countries.find((country) => country.code === address.country);
@@ -276,6 +383,14 @@ export default function CheckoutPage() {
       checkoutPricingQuery.data?.totalPrice ?? order?.totalPrice ?? 0,
     );
     const totalPrice = productPrice;
+    const checkoutCopy = getCheckoutCopy(order?.productKey ?? "mug");
+    const deliveryEstimate = getDeliveryEstimate(
+      order?.productKey ?? "mug",
+      address.country,
+    );
+    const displayedNameLabel = personalizedName
+      ? `Name on mug: ${personalizedName}`
+      : checkoutCopy.fallbackDesignLabel;
 
     const PRODUCT_LABELS = {
     poster: "Premium Poster",
@@ -286,6 +401,8 @@ export default function CheckoutPage() {
     const isFieldInvalid = (field: string) =>
         (showShippingValidation && Boolean(localShippingErrors[field])) ||
         Boolean(backendFieldErrors[field]);
+    const lightFieldClassName =
+        "!border-gray-300 !bg-white !text-gray-900 placeholder:!text-gray-500";
     const fieldErrorMessage = (field: string) => {
         if (showShippingValidation && localShippingErrors[field]) return localShippingErrors[field];
         if (backendFieldErrors[field]) return backendFieldErrors[field];
@@ -353,6 +470,45 @@ export default function CheckoutPage() {
       setAddress((prev) => ({ ...prev, country: detectedCountry }));
     }, [countries, address.country]);
 
+    useEffect(() => {
+      if (!order || order.productKey !== "mug") return;
+      setPersonalizedName(getStoredRamadanMugName());
+    }, [order]);
+
+    useEffect(() => {
+      if (!order) return;
+
+      const sourcePage = getCheckoutSourcePage();
+      const funnelContext = getFunnelContext({
+        route: router.pathname,
+        sourcePage,
+        orderFunnelSource: order.funnelSource ?? null,
+        productKey: order.productKey,
+        productType: "physical_product",
+        country: address.country,
+        query: router.query as Record<string, unknown>,
+      });
+      const initiateCheckoutKey = `tracking_meta_initiate_checkout_${order.id}`;
+
+      if (!markEventTrackedOnce(initiateCheckoutKey)) return;
+
+      fireMetaInitiateCheckout({
+        content_type: "product",
+        content_ids: [order.productKey],
+        content_category: "physical_product",
+        value: Number(checkoutPricingQuery.data?.totalPrice ?? order.totalPrice ?? 0),
+        currency: "USD",
+        order_id: order.id,
+        ...funnelContext,
+      });
+    }, [
+      address.country,
+      checkoutPricingQuery.data?.totalPrice,
+      order,
+      router.pathname,
+      router.query,
+    ]);
+
     function finalizePreviewById(orderIdValue: string) {
         if (previewStatus === "generating") return Promise.resolve({ status: "generating" as const });
 
@@ -414,19 +570,23 @@ export default function CheckoutPage() {
     if (!order) return <div>Order not found</div>;
 
     return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div
+      className="bg-white px-3 py-4 text-slate-900 md:px-6 md:py-8"
+      style={{ colorScheme: "light" }}
+    >
+    <div className="mx-auto max-w-6xl grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
 
     {/* LEFT — PRODUCT SUMMARY */}
     <div className="md:col-span-2 space-y-6">
 
         {/* Product card */}
-        <div className="rounded-xl border bg-white dark:bg-gray-900 p-4 md:p-6">
+        <div className="rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm md:p-6">
         <div className="flex flex-col md:flex-row gap-4">
 
-            <div className="relative w-full md:w-48">
+            <div className="relative w-full md:w-48 rounded-2xl bg-white p-3">
             <img
                 src={currentMockupUrl ?? order.mockupUrl}
-                className="w-full h-auto rounded-lg object-contain bg-gray-50 dark:bg-gray-800"
+                className="w-full h-auto rounded-lg object-contain bg-white"
             />
             {isApparel && previewStatus === "generating" && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/70 text-xs text-gray-700">
@@ -436,11 +596,17 @@ export default function CheckoutPage() {
             </div>
 
             <div className="flex-1">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-semibold text-slate-900">
                 {PRODUCT_LABELS[order.productKey as keyof typeof PRODUCT_LABELS]}
             </h2>
+            <p className="mt-1 text-sm font-medium text-gray-700">
+                {checkoutCopy.subtitle}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+                {displayedNameLabel}
+            </p>
 
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <div className="mt-2 text-sm text-gray-600 space-y-1">
                 {order.productKey === "poster" && order.variantName && (
                 <div>
                     <strong>Variant:</strong> {order.variantName}
@@ -521,14 +687,21 @@ export default function CheckoutPage() {
             )}
             </div>
 
-            <div className="text-lg font-semibold">
-                <span>${formatPrice(productPrice)}</span>
+            <div className="text-right">
+                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                    {checkoutCopy.personalizedLabel}
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-slate-900">
+                    <span>${formatPrice(productPrice)}</span>
+                </div>
+                <div className="mt-1 text-xs text-gray-500">Free shipping included</div>
+                <div className="mt-1 text-xs text-gray-500">Printed only after you order</div>
             </div>
         </div>
         </div>
 
         {/* Shipping address */}
-        <div className="rounded-xl border bg-white dark:bg-gray-900 p-4 md:p-6">
+        <div className="rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm md:p-6">
         <h3 className="text-lg font-semibold mb-4">
             Shipping address
         </h3>
@@ -548,7 +721,7 @@ export default function CheckoutPage() {
         {!isLoggedIn && (
         <>
         <Input
-            className={`input-lg md:col-span-2 ${isFieldInvalid("email") ? "border-red-500" : ""}`}
+            className={`input-lg md:col-span-2 ${lightFieldClassName} ${isFieldInvalid("email") ? "!border-red-500" : ""}`}
             placeholder="Email"
             type="email"
             value={address.email}
@@ -566,7 +739,7 @@ export default function CheckoutPage() {
         )}
 
         <Input
-            className={`input-lg ${isFieldInvalid("name") ? "border-red-500" : ""}`}
+            className={`input-lg ${lightFieldClassName} ${isFieldInvalid("name") ? "!border-red-500" : ""}`}
             placeholder="Full name"
             value={address.name}
             onChange={(e) =>
@@ -578,7 +751,7 @@ export default function CheckoutPage() {
         )}
 
         <Input
-            className={`input-lg ${isFieldInvalid("city") ? "border-red-500" : ""}`}
+            className={`input-lg ${lightFieldClassName} ${isFieldInvalid("city") ? "!border-red-500" : ""}`}
             placeholder="City"
             value={address.city}
             onChange={(e) =>
@@ -590,7 +763,7 @@ export default function CheckoutPage() {
         )}
 
         <Input
-            className={`md:col-span-2 input-lg ${isFieldInvalid("address1") ? "border-red-500" : ""}`}
+            className={`md:col-span-2 input-lg ${lightFieldClassName} ${isFieldInvalid("address1") ? "!border-red-500" : ""}`}
             placeholder="Address"
             value={address.address1}
             onChange={(e) =>
@@ -602,7 +775,7 @@ export default function CheckoutPage() {
         )}
 
         <Input
-            className={`input-lg ${isFieldInvalid("zip") ? "border-red-500" : ""}`}
+            className={`input-lg ${lightFieldClassName} ${isFieldInvalid("zip") ? "!border-red-500" : ""}`}
             placeholder="ZIP / Postal code"
             value={address.zip}
             onChange={(e) => {
@@ -623,7 +796,7 @@ export default function CheckoutPage() {
         {requiresState && (
         <Input
             placeholder="State (e.g. CA, NY)"
-            className={isFieldInvalid("state") ? "border-red-500" : ""}
+            className={`${lightFieldClassName} ${isFieldInvalid("state") ? "!border-red-500" : ""}`}
             value={address.state}
             onChange={(e) => {
             setAddress({ ...address, state: e.target.value.toUpperCase() });
@@ -649,7 +822,7 @@ export default function CheckoutPage() {
             }
             onFocus={() => void loadCountries()}
             onClick={() => void loadCountries()}
-            className={`pr-10 ${isFieldInvalid("country") ? "border-red-500" : ""}`}
+            className={`pr-10 ${lightFieldClassName} ${isFieldInvalid("country") ? "!border-red-500" : ""}`}
         >
             <option value="">Select country</option>
             {countries.map((country) => (
@@ -672,7 +845,7 @@ export default function CheckoutPage() {
 
   {/* RIGHT — ORDER TOTAL */}
   <div className="md:col-span-1">
-    <div className="sticky top-6 rounded-xl border bg-white dark:bg-gray-900 p-4 md:p-6 space-y-4">
+    <div className="sticky top-6 rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm md:p-6 space-y-4">
 
         <h3 className="text-lg font-semibold">Order summary</h3>
 
@@ -693,14 +866,22 @@ export default function CheckoutPage() {
           <span>${formatPrice(totalPrice)}</span>
         </div>
 
-        {(order.productKey === "mug" || order.productKey === "tshirt" || order.productKey === "poster") && (
-          <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/30">
-            <ProductNudgeBlock productType={order.productKey} />
+        <div className="rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700">
+          <div className="font-semibold text-gray-900">{checkoutCopy.benefitsTitle}</div>
+          <div className="mt-2 space-y-1">
+            {checkoutCopy.benefits.map((benefit) => (
+              <div key={benefit}>• {benefit}</div>
+            ))}
           </div>
-        )}
+        </div>
 
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+          Your design is printed only after your order - no mass production.
+        </div>
 
-
+        <p className="text-center text-sm font-medium text-[#7C5A00]">
+          Perfect gift before Eid 🎁
+        </p>
 
         <button
             className="w-full py-3 rounded-lg bg-black text-white font-semibold disabled:opacity-50"
@@ -800,21 +981,24 @@ export default function CheckoutPage() {
                       ...funnelContext,
                     });
                   }
-                  fireMetaInitiateCheckout({
-                    content_type: "product",
-                    content_ids: [order.productKey],
-                    content_category: "physical_product",
-                    value: Number(order.totalPrice ?? 0),
-                    currency: "USD",
-                    order_id: order.id,
-                    ...funnelContext,
-                  });
                   hasTrackedBeginCheckoutRef.current = true;
                 }
                 const addShippingInfoKey = `tracking_add_shipping_info_${order.id}`;
                 if (markEventTrackedOnce(addShippingInfoKey)) {
                   trackEvent("add_shipping_info", {
                     product: order.productKey,
+                    ...funnelContext,
+                  });
+                }
+                const addPaymentInfoKey = `tracking_meta_add_payment_info_${order.id}`;
+                if (markEventTrackedOnce(addPaymentInfoKey)) {
+                  fireMetaAddPaymentInfo({
+                    content_type: "product",
+                    content_ids: [order.productKey],
+                    content_category: "physical_product",
+                    value: Number(checkoutPricingQuery.data.totalPrice ?? order.totalPrice ?? 0),
+                    currency: "USD",
+                    order_id: order.id,
                     ...funnelContext,
                   });
                 }
@@ -877,21 +1061,21 @@ export default function CheckoutPage() {
 
         }}
         >
-        Continue to payment
+        Continue to Secure Payment
         </button>
 
-        <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-3 text-xs text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
-          <div>🔒 Secure payment powered by Stripe</div>
-          <div>✔ Shipping available in selected countries</div>
-          <div>✔ Easy replacement if damaged</div>
-          <div>✔ Printed and shipped with care</div>
-        </div>
-
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-          Your design is printed only after you order - no mass production.
+        <p className="text-center text-xs text-gray-500">
+          {deliveryEstimate}
         </p>
+
+        <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-3 text-sm text-blue-900">
+          <div>🔒 Secure payment with Stripe</div>
+          <div>🖨️ Printed after you order</div>
+          <div>🛡️ Free replacement if damaged</div>
+        </div>
         </div>
     </div>
+</div>
 </div>
 
     );
