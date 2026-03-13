@@ -21,13 +21,41 @@ const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
 
 const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
   string,
-  { city: string; zip: string; stateCode?: string }
+  { name: string; address1: string; city: string; zip: string; stateCode?: string }
 > = {
-  US: { city: "Los Angeles", zip: "90001", stateCode: "CA" },
-  GB: { city: "London", zip: "SW1A1AA" },
-  CA: { city: "Toronto", zip: "M5V2T6", stateCode: "ON" },
-  AU: { city: "Sydney", zip: "2000", stateCode: "NSW" },
-  NZ: { city: "Auckland", zip: "1010" },
+  US: {
+    name: "Pricing Sync",
+    address1: "100 Main St",
+    city: "Los Angeles",
+    zip: "90001",
+    stateCode: "CA",
+  },
+  GB: {
+    name: "Pricing Sync",
+    address1: "221B Baker Street",
+    city: "London",
+    zip: "SW1A1AA",
+  },
+  CA: {
+    name: "Pricing Sync",
+    address1: "100 King Street W",
+    city: "Toronto",
+    zip: "M5V2T6",
+    stateCode: "ON",
+  },
+  AU: {
+    name: "Pricing Sync",
+    address1: "200 George Street",
+    city: "Sydney",
+    zip: "2000",
+    stateCode: "NSW",
+  },
+  NZ: {
+    name: "Pricing Sync",
+    address1: "1 Queen Street",
+    city: "Auckland",
+    zip: "1010",
+  },
 };
 
 const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProductId: number }> = [
@@ -138,6 +166,8 @@ async function fetchVariantPricingByCountry(
       "POST",
       {
         recipient: {
+          name: recipientSeed.name,
+          address1: recipientSeed.address1,
           country_code: countryCode,
           city: recipientSeed.city,
           zip: recipientSeed.zip,
