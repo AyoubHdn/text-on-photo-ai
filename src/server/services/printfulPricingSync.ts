@@ -1,6 +1,7 @@
 import { prisma } from "~/server/db";
 import { printfulRequest } from "~/server/printful/client";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
+import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import {
   normalizePricingSizeKey,
   type PricedProductType,
@@ -93,6 +94,19 @@ async function fetchProductVariants(printfulProductId: number): Promise<RawVaria
       : [];
 
   return source;
+}
+
+function getConfiguredVariantIds(productType: SyncProductType): Set<number> | null {
+  if (productType !== "tshirt") {
+    return null;
+  }
+
+  const product = PRINTFUL_PRODUCTS.find((entry) => entry.key === productType);
+  if (!product || product.key !== "tshirt") {
+    return null;
+  }
+
+  return new Set(product.variants.map((variant) => variant.variantId));
 }
 
 function getRecipientSeed(countryCode: string) {
@@ -221,7 +235,12 @@ async function fetchVariantPricingByCountry(
 
 export async function runPricingSync() {
   for (const { productType, printfulProductId } of PRODUCT_SYNC_CONFIG) {
-    const variants = await fetchProductVariants(printfulProductId);
+    const configuredVariantIds = getConfiguredVariantIds(productType);
+    const variants = (await fetchProductVariants(printfulProductId)).filter((variant) => {
+      if (!configuredVariantIds) return true;
+      const variantId = Number(variant.variant_id ?? variant.id);
+      return Number.isFinite(variantId) && configuredVariantIds.has(variantId);
+    });
     const normalizedVariants: NormalizedSyncVariant[] = [];
 
     for (const variant of variants) {

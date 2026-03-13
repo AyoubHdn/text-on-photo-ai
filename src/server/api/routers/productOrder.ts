@@ -125,20 +125,22 @@ export const productOrderRouter = createTRPCRouter({
                 select: { id: true },
               })
             ).id;
-        try {
-          await assertVariantAvailableInCountry({
-            productType: input.productKey,
-            variantId: input.variantId,
-            countryCode: input.shippingCountry,
-          });
-        } catch (error) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message:
-              error instanceof Error
-                ? error.message
-                : "This product variant is not available in this country.",
-          });
+        if (input.productKey !== "tshirt") {
+          try {
+            await assertVariantAvailableInCountry({
+              productType: input.productKey,
+              variantId: input.variantId,
+              countryCode: input.shippingCountry,
+            });
+          } catch (error) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "This product variant is not available in this country.",
+            });
+          }
         }
         const pricing = await calculateProductPriceFromCache({
           productType: input.productKey,
@@ -277,20 +279,22 @@ export const productOrderRouter = createTRPCRouter({
         }
 
         const pricingVariant = resolvePricingVariant(order);
-        try {
-          await assertVariantAvailableInCountry({
-            productType: order.productKey as "poster" | "tshirt" | "mug",
-            variantId: order.variantId,
-            countryCode: input.countryCode,
-          });
-        } catch (error) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message:
-              error instanceof Error
-                ? error.message
-                : "This product variant is not available in this country.",
-          });
+        if (order.productKey !== "tshirt") {
+          try {
+            await assertVariantAvailableInCountry({
+              productType: order.productKey as "poster" | "tshirt" | "mug",
+              variantId: order.variantId,
+              countryCode: input.countryCode,
+            });
+          } catch (error) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "This product variant is not available in this country.",
+            });
+          }
         }
         const pricing = await calculateProductPriceFromCache({
           productType: order.productKey as "poster" | "tshirt" | "mug",

@@ -307,11 +307,13 @@ export const printfulCheckoutRouter = createTRPCRouter({
 
       let pricing;
       try {
-        await assertVariantAvailableInCountry({
-          productType,
-          variantId: order.variantId,
-          countryCode,
-        });
+        if (productType !== "tshirt") {
+          await assertVariantAvailableInCountry({
+            productType,
+            variantId: order.variantId,
+            countryCode,
+          });
+        }
         pricing = await calculateProductPriceFromCache({
           productType,
           sizeKey: pricingVariant,
