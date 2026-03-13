@@ -107,6 +107,7 @@ const RamadanMugV2Page: NextPage = () => {
   const credits = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const genGuest = api.generate.generateGuestDesign.useMutation();
   const genIcon = api.generate.generateIcon.useMutation();
+  const capturePaidTrafficLead = api.user.capturePaidTrafficLead.useMutation();
   const createOrder = api.productOrder.createPendingOrder.useMutation();
   const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
   const claimGuestDesign = api.icons.claimGuestRamadanMugV2Design.useMutation();
@@ -138,6 +139,10 @@ const RamadanMugV2Page: NextPage = () => {
   const pendingStyleAfterSignInRef = useRef<string | null>(null);
   const pendingStyleUnlockRegenRef = useRef(false);
   const generationLockRef = useRef(false);
+  const previewLockRef = useRef(false);
+  const inFlightGenerationRef = useRef<Promise<void> | null>(null);
+  const lastCapturedLeadEmailRef = useRef<string | null>(null);
+  const lastCapturedCheckoutLeadEmailRef = useRef<string | null>(null);
   const viewedRef = useRef(false);
 
   const style = useMemo(
@@ -398,7 +403,55 @@ const RamadanMugV2Page: NextPage = () => {
   const canAffordRegen = (credits.data ?? 0) >= REGEN_CREDITS;
   const styleSelectionRequiresSignIn = hasFree && !!designUrl && !isLoggedIn;
 
+  const capturePaidTrafficLeadIfNeeded = async (
+    rawEmail: string,
+    stage: "lead" | "checkout",
+    checkoutResumeUrl?: string,
+  ) => {
+    if (isLoggedIn) return;
+
+    const normalizedEmail = rawEmail.trim().toLowerCase();
+    if (!emailOk(normalizedEmail)) return;
+
+    const dedupeRef =
+      stage === "checkout" ? lastCapturedCheckoutLeadEmailRef : lastCapturedLeadEmailRef;
+    if (dedupeRef.current === normalizedEmail && !checkoutResumeUrl) return;
+
+    try {
+      await capturePaidTrafficLead.mutateAsync({
+        email: normalizedEmail,
+        sourcePage: "ramadan-mug-v2",
+        promotedProduct: "mug",
+        checkoutResumeUrl,
+        hasGeneratedDesign: true,
+        hasVisitedCheckout: stage === "checkout",
+      });
+      dedupeRef.current = normalizedEmail;
+      if (stage === "checkout") {
+        lastCapturedLeadEmailRef.current = normalizedEmail;
+      }
+    } catch (err) {
+      console.error("Failed to capture paid traffic lead email:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== 7 || isLoggedIn) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!emailOk(normalizedEmail)) return;
+    if (lastCapturedLeadEmailRef.current === normalizedEmail) return;
+
+    const timer = window.setTimeout(() => {
+      void capturePaidTrafficLeadIfNeeded(normalizedEmail, "lead");
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [email, isLoggedIn, step]);
+
   const selectStyle = (nextStyleId: string) => {
+    if (generationLockRef.current || busyDesign) {
+      return;
+    }
     if (styleSelectionRequiresSignIn) {
       pendingStyleAfterSignInRef.current = nextStyleId;
       pendingStyleUnlockRegenRef.current = false;
@@ -419,6 +472,10 @@ const RamadanMugV2Page: NextPage = () => {
   };
 
   const runGeneration = async (paid: boolean) => {
+    if (inFlightGenerationRef.current) {
+      await inFlightGenerationRef.current;
+      return;
+    }
     if (generationLockRef.current || busyDesign || !styleId || name.trim().length < 2) {
       return;
     }
@@ -435,56 +492,65 @@ const RamadanMugV2Page: NextPage = () => {
     setBusyDesign(true);
     setErr("");
     setStep(5);
-    try {
-      fireEvent("generate_design_started", {
-        style_id: styleId,
-        mode: requiresPaidGeneration ? "paid_regenerate" : "free",
-      });
-      const nextDesign = requiresPaidGeneration
-        ? (await genIcon.mutateAsync({
-            prompt: buildPrompt(),
-            numberOfImages: 1,
-            aspectRatio: "1:1",
-            model: "google/nano-banana-pro",
-            metadata: {
-              category: "ramadan-mug-v2",
-              subcategory: style?.name,
-            },
-            sourcePage: "ramadan-mug-v2",
-          }))[0]?.imageUrl ?? ""
-        : (
-            await genGuest.mutateAsync({
-              name: name.trim(),
-              style: styleId,
-              recipient: (recipient || "Someone Special") as Recipient,
-            })
-          ).design_url;
-      if (!nextDesign) throw new Error("No generated image returned");
-      let nextTransparent: string | null = null;
+    const generationTask = (async () => {
       try {
-        nextTransparent = await removeBg(nextDesign);
-      } catch (removeBgError) {
-        console.error("[RAMADAN_MUG_V2_REMOVE_BG]", removeBgError);
+        fireEvent("generate_design_started", {
+          style_id: styleId,
+          mode: requiresPaidGeneration ? "paid_regenerate" : "free",
+        });
+        const nextDesign = requiresPaidGeneration
+          ? (await genIcon.mutateAsync({
+              prompt: buildPrompt(),
+              numberOfImages: 1,
+              aspectRatio: "1:1",
+              model: "google/nano-banana-pro",
+              metadata: {
+                category: "ramadan-mug-v2",
+                subcategory: style?.name,
+              },
+              sourcePage: "ramadan-mug-v2",
+            }))[0]?.imageUrl ?? ""
+          : (
+              await genGuest.mutateAsync({
+                name: name.trim(),
+                style: styleId,
+                recipient: (recipient || "Someone Special") as Recipient,
+              })
+            ).design_url;
+        if (!nextDesign) throw new Error("No generated image returned");
+        let nextTransparent: string | null = null;
+        try {
+          nextTransparent = await removeBg(nextDesign);
+        } catch (removeBgError) {
+          console.error("[RAMADAN_MUG_V2_REMOVE_BG]", removeBgError);
+        }
+        setDesignUrl(nextDesign);
+        setTransparentUrl(nextTransparent);
+        setVariant(nextTransparent ? "transparent" : "original");
+        setHasFree(true);
+        setMockupOriginal(null);
+        setMockupTransparent(null);
+        setStep(6);
+        fireEvent("generate_design_completed", {
+          style_id: styleId,
+          design_url: nextDesign,
+          transparent_design_url: nextTransparent,
+          mode: requiresPaidGeneration ? "paid_regenerate" : "free",
+        });
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "Generation failed");
+        setStep(4);
+      } finally {
+        setBusyDesign(false);
+        generationLockRef.current = false;
       }
-      setDesignUrl(nextDesign);
-      setTransparentUrl(nextTransparent);
-      setVariant(nextTransparent ? "transparent" : "original");
-      setHasFree(true);
-      setMockupOriginal(null);
-      setMockupTransparent(null);
-      setStep(6);
-      fireEvent("generate_design_completed", {
-        style_id: styleId,
-        design_url: nextDesign,
-        transparent_design_url: nextTransparent,
-        mode: requiresPaidGeneration ? "paid_regenerate" : "free",
-      });
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Generation failed");
-      setStep(4);
+    })();
+
+    inFlightGenerationRef.current = generationTask;
+    try {
+      await generationTask;
     } finally {
-      setBusyDesign(false);
-      generationLockRef.current = false;
+      inFlightGenerationRef.current = null;
     }
   };
 
@@ -579,6 +645,9 @@ const RamadanMugV2Page: NextPage = () => {
   };
 
   const goStep7 = async () => {
+    if (previewLockRef.current || busyPreview) {
+      return;
+    }
     if (!selectedDesign) {
       setErr("Choose a design version first.");
       return;
@@ -589,6 +658,7 @@ const RamadanMugV2Page: NextPage = () => {
     const cached = variant === "transparent" ? mockupTransparent : mockupOriginal;
     if (cached) return;
     try {
+      previewLockRef.current = true;
       setBusyPreview(true);
       const m = await makePreview();
       setProgress(100);
@@ -599,7 +669,27 @@ const RamadanMugV2Page: NextPage = () => {
       setStep(6);
     } finally {
       setBusyPreview(false);
+      previewLockRef.current = false;
     }
+  };
+
+  const goBack = () => {
+    if (generationLockRef.current || previewLockRef.current || busyDesign || busyPreview) {
+      return;
+    }
+    setStep((currentStep) =>
+      currentStep === 7
+        ? 6
+        : currentStep === 6
+        ? 4
+        : currentStep === 5
+        ? 4
+        : currentStep === 4
+        ? 3
+        : currentStep === 3
+        ? 2
+        : 1,
+    );
   };
 
   const checkout = async () => {
@@ -633,6 +723,14 @@ const RamadanMugV2Page: NextPage = () => {
         shippingCountry: "US",
         funnelSource: "paid-traffic-offer",
       });
+      const checkoutResumeUrl = `${window.location.origin}/checkout?orderId=${encodeURIComponent(
+        order.orderId,
+      )}${
+        order.accessToken
+          ? `&accessToken=${encodeURIComponent(order.accessToken)}`
+          : ""
+      }`;
+      await capturePaidTrafficLeadIfNeeded(email, "checkout", checkoutResumeUrl);
       if (!isLoggedIn) {
         try {
           await captureCheckoutEmail.mutateAsync({
@@ -733,21 +831,7 @@ const RamadanMugV2Page: NextPage = () => {
           {step > 1 && (
             <button
               type="button"
-              onClick={() =>
-                setStep(
-                  step === 7
-                    ? 6
-                    : step === 6
-                    ? 4
-                    : step === 5
-                    ? 4
-                    : step === 4
-                    ? 3
-                    : step === 3
-                    ? 2
-                    : 1,
-                )
-              }
+              onClick={goBack}
               disabled={busyDesign || busyPreview}
               className="mb-4 rounded-xl border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -1096,6 +1180,9 @@ const RamadanMugV2Page: NextPage = () => {
                     onChange={(e) => {
                       setEmail(e.target.value);
                       setErr("");
+                    }}
+                    onBlur={() => {
+                      void capturePaidTrafficLeadIfNeeded(email, "lead");
                     }}
                     placeholder="you@example.com"
                     className="mt-1 w-full rounded-2xl border border-gray-300 px-4 py-4"

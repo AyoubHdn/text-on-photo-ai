@@ -64,6 +64,15 @@ function resolvePricingVariant(order: {
   throw new Error("Unsupported product for pricing.");
 }
 
+function buildCheckoutResumeUrl(orderId: string, accessToken?: string): string {
+  const checkoutUrl = new URL(`${env.HOST_NAME}/checkout`);
+  checkoutUrl.searchParams.set("orderId", orderId);
+  if (accessToken) {
+    checkoutUrl.searchParams.set("accessToken", accessToken);
+  }
+  return checkoutUrl.toString();
+}
+
 export const printfulCheckoutRouter = createTRPCRouter({
   createCheckout: publicProcedure
     .input(
@@ -122,6 +131,10 @@ export const printfulCheckoutRouter = createTRPCRouter({
       const isPaidTrafficOrder =
         order.funnelSource === "paid-traffic-offer" ||
         order.funnelSource === "ramadan-mug-ad";
+      const checkoutResumeUrl =
+        isPaidTrafficOrder
+          ? buildCheckoutResumeUrl(order.id, input.accessToken)
+          : undefined;
       const currentOrderUser = await prisma.user.findUnique({
         where: { id: order.userId },
         select: {
@@ -234,6 +247,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
                 paid_traffic_source_page: input.sourcePage,
                 paid_traffic_promoted_pro:
                   input.promotedProduct ?? order.productKey,
+                checkout_resume_url: checkoutResumeUrl,
               },
             },
             "namedesignai",
@@ -334,6 +348,12 @@ export const printfulCheckoutRouter = createTRPCRouter({
         },
       });
 
+      const successUrl = new URL(`${env.HOST_NAME}/order/success`);
+      successUrl.searchParams.set("orderId", order.id);
+      if (input.accessToken) {
+        successUrl.searchParams.set("accessToken", input.accessToken);
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
@@ -356,7 +376,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
             quantity: 1,
           },
         ],
-        success_url: `${env.HOST_NAME}/order/success?orderId=${order.id}`,
+        success_url: successUrl.toString(),
         cancel_url: `${env.HOST_NAME}/order/cancel?orderId=${order.id}`,
       });
 

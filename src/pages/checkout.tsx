@@ -152,6 +152,27 @@ function getStoredRamadanMugName(): string | null {
   return null;
 }
 
+function getStoredRamadanMugCheckoutEmail(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem("ramadan-mug-v2:funnel:v4");
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as { email?: unknown };
+    if (typeof parsed.email === "string") {
+      const normalizedEmail = parsed.email.trim().toLowerCase();
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        return normalizedEmail;
+      }
+    }
+  } catch {
+    // ignore invalid cached funnel state
+  }
+
+  return null;
+}
+
 function detectCountryFromBrowser(availableCodes: string[]): string | null {
   if (typeof navigator === "undefined") return null;
 
@@ -474,6 +495,16 @@ export default function CheckoutPage() {
       if (!order || order.productKey !== "mug") return;
       setPersonalizedName(getStoredRamadanMugName());
     }, [order]);
+
+    useEffect(() => {
+      if (isLoggedIn || address.email.trim()) return;
+      if (!order || order.productKey !== "mug") return;
+
+      const storedEmail = getStoredRamadanMugCheckoutEmail();
+      if (!storedEmail) return;
+
+      setAddress((prev) => ({ ...prev, email: storedEmail }));
+    }, [address.email, isLoggedIn, order]);
 
     useEffect(() => {
       if (!order) return;

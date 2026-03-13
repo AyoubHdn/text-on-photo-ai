@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
 export const userRouter = createTRPCRouter({
@@ -32,6 +32,94 @@ export const userRouter = createTRPCRouter({
       hasVisitedCheckout: Boolean(user?.hasVisitedCheckout),
     };
   }),
+  capturePaidTrafficLead: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        name: z.string().optional(),
+        sourcePage: z.string().optional(),
+        promotedProduct: z.string().optional(),
+        checkoutResumeUrl: z.string().url().optional(),
+        hasGeneratedDesign: z.boolean().optional(),
+        hasVisitedCheckout: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const normalizedEmail = input.email.trim().toLowerCase();
+      const existingUser = await ctx.prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          credits: true,
+          paidTrafficUser: true,
+          hasGeneratedDesign: true,
+          hasVisitedCheckout: true,
+        },
+      });
+
+      const resolvedUser = existingUser
+        ? await ctx.prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+              name: existingUser.name ?? input.name,
+              paidTrafficUser: true,
+              hasGeneratedDesign:
+                Boolean(input.hasGeneratedDesign) || existingUser.hasGeneratedDesign,
+              hasVisitedCheckout:
+                Boolean(input.hasVisitedCheckout) || existingUser.hasVisitedCheckout,
+            },
+            select: {
+              email: true,
+              name: true,
+              credits: true,
+              paidTrafficUser: true,
+              hasGeneratedDesign: true,
+              hasVisitedCheckout: true,
+            },
+          })
+        : await ctx.prisma.user.create({
+            data: {
+              email: normalizedEmail,
+              name: input.name,
+              paidTrafficUser: true,
+              hasGeneratedDesign: Boolean(input.hasGeneratedDesign),
+              hasVisitedCheckout: Boolean(input.hasVisitedCheckout),
+            },
+            select: {
+              email: true,
+              name: true,
+              credits: true,
+              paidTrafficUser: true,
+              hasGeneratedDesign: true,
+              hasVisitedCheckout: true,
+            },
+          });
+
+      try {
+        await updateMauticContact(
+          {
+            email: resolvedUser.email ?? normalizedEmail,
+            name: resolvedUser.name,
+            brand_specific_credits: resolvedUser.credits,
+            customFields: {
+              is_paid_traffic_user: 1,
+              has_generated_design: resolvedUser.hasGeneratedDesign ? 1 : 0,
+              has_visited_checkout: resolvedUser.hasVisitedCheckout ? 1 : 0,
+              paid_traffic_source_page: input.sourcePage,
+              paid_traffic_promoted_pro: input.promotedProduct,
+              checkout_resume_url: input.checkoutResumeUrl,
+            },
+          },
+          "namedesignai",
+        );
+      } catch (err) {
+        console.error("Error updating Mautic on capturePaidTrafficLead:", err);
+      }
+
+      return { success: true };
+    }),
   grantPaidTrafficFreeCredits: protectedProcedure.mutation(async ({ ctx }) => {
     console.log("PAID_TRAFFIC_DEBUG grantPaidTrafficFreeCredits called", {
       userId: ctx.session.user.id,

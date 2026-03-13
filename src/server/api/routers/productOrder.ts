@@ -17,6 +17,7 @@ import {
   createGuestOrderToken,
   verifyGuestOrderToken,
 } from "~/server/guestOrderToken";
+import { env } from "~/env.mjs";
 
 function normalizePosterSize(value?: string | null): string | null {
   if (!value) return null;
@@ -59,6 +60,15 @@ function resolvePricingVariant(order: {
   }
 
   throw new Error("Unsupported product for pricing.");
+}
+
+function buildCheckoutResumeUrl(orderId: string, accessToken?: string): string {
+  const checkoutUrl = new URL(`${env.HOST_NAME}/checkout`);
+  checkoutUrl.searchParams.set("orderId", orderId);
+  if (accessToken) {
+    checkoutUrl.searchParams.set("accessToken", accessToken);
+  }
+  return checkoutUrl.toString();
 }
 
 export const productOrderRouter = createTRPCRouter({
@@ -296,6 +306,10 @@ export const productOrderRouter = createTRPCRouter({
         const isPaidTrafficOrder =
           order.funnelSource === "paid-traffic-offer" ||
           order.funnelSource === "ramadan-mug-ad";
+        const checkoutResumeUrl =
+          isPaidTrafficOrder
+            ? buildCheckoutResumeUrl(order.id, input.accessToken)
+            : undefined;
 
         const currentOrderUser = await prisma.user.findUnique({
           where: { id: order.userId },
@@ -400,6 +414,7 @@ export const productOrderRouter = createTRPCRouter({
                   paid_traffic_source_page: input.sourcePage,
                   paid_traffic_promoted_pro:
                     input.promotedProduct ?? order.productKey,
+                  checkout_resume_url: checkoutResumeUrl,
                 },
               },
               "namedesignai",

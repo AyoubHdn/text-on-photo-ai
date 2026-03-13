@@ -1,19 +1,19 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "~/lib/ga";
 
 export default function OrderSuccess() {
   const router = useRouter();
-  const { orderId, generator } = router.query;
-  const { data: session } = useSession();
+  const { orderId, generator, accessToken } = router.query;
   const orderIdValue = typeof orderId === "string" ? orderId : "";
+  const accessTokenValue =
+    typeof accessToken === "string" ? accessToken : undefined;
   const generatorFromQuery = typeof generator === "string" ? generator : null;
   const orderQuery = api.productOrder.getOrder.useQuery(
-    { orderId: orderIdValue },
-    { enabled: !!orderIdValue && !!session }
+    { orderId: orderIdValue, accessToken: accessTokenValue },
+    { enabled: !!orderIdValue }
   );
   const [previewLoadFailed, setPreviewLoadFailed] = useState(false);
   const [nextGeneratorHref, setNextGeneratorHref] = useState("/name-art-generator");
