@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "ProductVariantAvailabilityCache_productType_variantId_countryCo" RENAME TO "ProductVariantAvailabilityCache_productType_variantId_count_key";

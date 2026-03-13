@@ -17,6 +17,13 @@ type RawVariant = {
   price?: string;
 };
 
+type NormalizedSyncVariant = {
+  variantId: number;
+  sizeKey: string;
+  color?: string;
+  fallbackBaseCost: number;
+};
+
 const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
 
 const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
@@ -215,66 +222,116 @@ async function fetchVariantPricingByCountry(
 export async function runPricingSync() {
   for (const { productType, printfulProductId } of PRODUCT_SYNC_CONFIG) {
     const variants = await fetchProductVariants(printfulProductId);
-    const bySize = new Map<string, { fallbackBaseCost: number; variantId: number }>();
+    const normalizedVariants: NormalizedSyncVariant[] = [];
 
     for (const variant of variants) {
       const sizeKey = normalizePricingSizeKey(productType, variant);
-      if (!sizeKey || bySize.has(sizeKey)) continue;
+      if (!sizeKey) continue;
 
       const baseCost = parsePrice(variant.price);
       const variantId = Number(variant.variant_id ?? variant.id);
       if (!Number.isFinite(variantId) || baseCost === null) continue;
 
-      bySize.set(sizeKey, {
-        fallbackBaseCost: Number(baseCost.toFixed(2)),
+      normalizedVariants.push({
         variantId,
+        sizeKey,
+        color: variant.color?.trim() || undefined,
+        fallbackBaseCost: Number(baseCost.toFixed(2)),
       });
     }
 
-    if (bySize.size === 0) {
+    if (normalizedVariants.length === 0) {
       throw new Error(`No normalized variants found for ${productType}`);
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
       const syncedSizeKeys = new Set<string>();
+      const syncedVariantIds = new Set<number>();
+      const bestPricingBySize = new Map<string, { baseCost: number; shippingCost: number }>();
 
-      for (const [sizeKey, record] of bySize.entries()) {
+      for (const record of normalizedVariants) {
         try {
           const pricing = await fetchVariantPricingByCountry(
             record.variantId,
             countryCode,
             record.fallbackBaseCost,
           );
-          await prisma.productPricingCache.upsert({
+          await prisma.productVariantAvailabilityCache.upsert({
             where: {
-              productType_sizeKey_countryCode: {
+              productType_variantId_countryCode: {
                 productType,
-                sizeKey,
+                variantId: record.variantId,
                 countryCode,
               },
             },
             create: {
               productType,
-              sizeKey,
+              variantId: record.variantId,
+              sizeKey: record.sizeKey,
+              color: record.color,
               countryCode,
-              baseCost: pricing.baseCost,
-              shippingCost: pricing.shippingCost,
               lastSyncedAt: new Date(),
             },
             update: {
-              baseCost: pricing.baseCost,
-              shippingCost: pricing.shippingCost,
+              sizeKey: record.sizeKey,
+              color: record.color,
               lastSyncedAt: new Date(),
             },
           });
-          syncedSizeKeys.add(sizeKey);
+          syncedVariantIds.add(record.variantId);
+
+          const nextSupplierSubtotal = pricing.baseCost + pricing.shippingCost;
+          const currentBest = bestPricingBySize.get(record.sizeKey);
+          const currentSupplierSubtotal = currentBest
+            ? currentBest.baseCost + currentBest.shippingCost
+            : Number.NEGATIVE_INFINITY;
+
+          if (!currentBest || nextSupplierSubtotal > currentSupplierSubtotal) {
+            bestPricingBySize.set(record.sizeKey, pricing);
+          }
         } catch (error) {
           console.warn(
-            `[PRICING_SYNC] Variant ${record.variantId} unavailable for ${productType}/${sizeKey} in ${countryCode}`,
+            `[PRICING_SYNC] Variant ${record.variantId} unavailable for ${productType}/${record.sizeKey} in ${countryCode}`,
             error,
           );
         }
       }
+
+      for (const [sizeKey, pricing] of bestPricingBySize.entries()) {
+        await prisma.productPricingCache.upsert({
+          where: {
+            productType_sizeKey_countryCode: {
+              productType,
+              sizeKey,
+              countryCode,
+            },
+          },
+          create: {
+            productType,
+            sizeKey,
+            countryCode,
+            baseCost: pricing.baseCost,
+            shippingCost: pricing.shippingCost,
+            lastSyncedAt: new Date(),
+          },
+          update: {
+            baseCost: pricing.baseCost,
+            shippingCost: pricing.shippingCost,
+            lastSyncedAt: new Date(),
+          },
+        });
+        syncedSizeKeys.add(sizeKey);
+      }
+
+      await prisma.productVariantAvailabilityCache.deleteMany({
+        where: {
+          productType,
+          countryCode,
+          ...(syncedVariantIds.size > 0
+            ? { variantId: { notIn: Array.from(syncedVariantIds) } }
+            : {}),
+        },
+      });
 
       await prisma.productPricingCache.deleteMany({
         where: {

@@ -142,6 +142,7 @@ export function ProductPreviewModal({
   const [pricingCountryCode, setPricingCountryCode] = useState<string>("US");
   const [pricingTotal, setPricingTotal] = useState<number | null>(null);
   const [pricingError, setPricingError] = useState<string | null>(null);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [hasAutoSelectedCountry, setHasAutoSelectedCountry] = useState(false);
   const [offerEndsAtMs, setOfferEndsAtMs] = useState<number | null>(null);
   const [offerRemainingSeconds, setOfferRemainingSeconds] = useState(0);
@@ -518,6 +519,7 @@ export function ProductPreviewModal({
       productKey,
       countryCode: pricingCountryCode,
     });
+    setAvailabilityError(null);
 
     fetch(`/api/printful/variants?${params.toString()}`, {
       signal: controller.signal,
@@ -532,6 +534,7 @@ export function ProductPreviewModal({
           setSelectedColor(null);
           setSelectedSize(null);
           setMugVariantId(null);
+          setAvailabilityError("This product is not available in the selected country.");
           return;
         }
         ensureDefaultSelection(productKey, nextVariants);
@@ -539,6 +542,7 @@ export function ProductPreviewModal({
       .catch((err: unknown) => {
         if ((err as Error).name === "AbortError") return;
         setError("Failed to load product options");
+        setAvailabilityError("Failed to load availability for the selected country.");
       });
 
     return () => controller.abort();
@@ -1371,9 +1375,9 @@ export function ProductPreviewModal({
               </select>
             </div>
 
-            {pricingError && (
+            {(availabilityError || pricingError) && (
               <div className="mb-4 rounded-lg bg-red-100 text-red-700 p-3 text-sm">
-                {pricingError}
+                {availabilityError ?? pricingError}
               </div>
             )}
 

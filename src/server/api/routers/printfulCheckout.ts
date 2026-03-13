@@ -15,6 +15,7 @@ import {
   calculateProductPriceFromCache,
   type ProductType,
 } from "~/server/services/priceCalculator";
+import { assertVariantAvailableInCountry } from "~/server/services/productVariantAvailability";
 import { verifyGuestOrderToken } from "~/server/guestOrderToken";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 
@@ -306,6 +307,11 @@ export const printfulCheckoutRouter = createTRPCRouter({
 
       let pricing;
       try {
+        await assertVariantAvailableInCountry({
+          productType,
+          variantId: order.variantId,
+          countryCode,
+        });
         pricing = await calculateProductPriceFromCache({
           productType,
           sizeKey: pricingVariant,
@@ -313,7 +319,10 @@ export const printfulCheckoutRouter = createTRPCRouter({
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Pricing unavailable";
-        if (message === "Pricing not available for this variant.") {
+        if (
+          message === "Pricing not available for this variant." ||
+          message === "This product variant is not available in this country."
+        ) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Physical shipping is not available in this country yet.",

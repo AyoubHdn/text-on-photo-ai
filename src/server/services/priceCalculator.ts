@@ -1,7 +1,7 @@
 import { prisma } from "~/server/db";
 import { PRODUCT_MARGINS } from "~/server/credits/constants";
 
-const SAFETY_BUFFER = 1;
+const SAFETY_BUFFER_RATE = 0.2;
 
 export type ProductType = keyof typeof PRODUCT_MARGINS;
 
@@ -32,11 +32,9 @@ export async function calculateProductPriceFromCache({
   }
 
   const margin = PRODUCT_MARGINS[productType];
-  const total =
-    Number(cached.baseCost) +
-    Number(cached.shippingCost) +
-    margin +
-    SAFETY_BUFFER;
+  const supplierSubtotal = Number(cached.baseCost) + Number(cached.shippingCost);
+  const safetyBuffer = supplierSubtotal * SAFETY_BUFFER_RATE;
+  const total = supplierSubtotal + safetyBuffer + margin;
 
   return {
     baseCost: Number(cached.baseCost),

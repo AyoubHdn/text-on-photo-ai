@@ -213,6 +213,19 @@ model ProductPricingCache {
     @@unique([productType, sizeKey, countryCode])
 }
 
+model ProductVariantAvailabilityCache {
+    id            String   @id @default(cuid())
+    productType   String
+    variantId     Int
+    sizeKey       String
+    color         String?
+    countryCode   String
+    lastSyncedAt  DateTime @default(now())
+
+    @@unique([productType, variantId, countryCode])
+    @@index([productType, countryCode])
+}
+
 model DeliveryEmailSchedule {
     id             String   @id @default(cuid())
     productOrderId String   @unique

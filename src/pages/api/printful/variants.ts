@@ -6,10 +6,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { printfulRequest } from "~/server/printful/client";
 import { prisma } from "~/server/db";
-import {
-  normalizePricingSizeKey,
-  type PricedProductType,
-} from "~/server/services/productPricingSizeKeys";
 
 export default async function handler(
   req: NextApiRequest,
@@ -57,18 +53,18 @@ export default async function handler(
         ? data.result.sync_variants
         : data.result.variants;
 
-    let allowedSizeKeys: Set<string> | null = null;
+    let allowedVariantIds: Set<number> | null = null;
     if (normalizedCountry) {
-      const cachedPricing = await prisma.productPricingCache.findMany({
+      const cachedAvailability = await prisma.productVariantAvailabilityCache.findMany({
         where: {
           productType: productKey,
           countryCode: normalizedCountry,
         },
         select: {
-          sizeKey: true,
+          variantId: true,
         },
       });
-      allowedSizeKeys = new Set(cachedPricing.map((entry) => entry.sizeKey));
+      allowedVariantIds = new Set(cachedAvailability.map((entry) => entry.variantId));
     }
 
     const variants = sourceVariants
@@ -88,15 +84,8 @@ export default async function handler(
         color_code?: string;
         price?: string;
       }) => {
-        if (!allowedSizeKeys) return true;
-
-        const sizeKey = normalizePricingSizeKey(productKey as PricedProductType, {
-          name: variant.name,
-          size: variant.size,
-          color: variant.color,
-        });
-
-        return sizeKey ? allowedSizeKeys.has(sizeKey) : false;
+        if (!allowedVariantIds) return true;
+        return allowedVariantIds.has(variant.id);
       });
 
 
