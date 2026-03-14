@@ -201,6 +201,15 @@ function detectCountryFromBrowser(availableCodes: string[]): string | null {
   return null;
 }
 
+function isCountryAvailabilityError(message?: string | null) {
+  if (!message) return false;
+  return (
+    message.includes("Pricing not available for this variant.") ||
+    message.includes("This product variant is not available in this country.") ||
+    message.includes("Physical shipping is not available in this country yet.")
+  );
+}
+
 function fireMetaInitiateCheckout(params?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
@@ -741,7 +750,7 @@ export default function CheckoutPage() {
             {productNotice ?? shippingNotice ?? "Please fix the highlighted shipping fields before continuing."}
         </div>
         )}
-        {checkoutPricingQuery.error?.message?.includes("Pricing not available for this variant.") && (
+        {isCountryAvailabilityError(checkoutPricingQuery.error?.message) && (
         <div className="mb-3 text-sm text-red-600">
             Shipping is not available in this country yet.
         </div>
@@ -940,7 +949,7 @@ export default function CheckoutPage() {
             setBackendFieldErrors({});
 
             if (checkoutPricingQuery.error) {
-            if (checkoutPricingQuery.error.message.includes("Pricing not available for this variant.")) {
+            if (isCountryAvailabilityError(checkoutPricingQuery.error.message)) {
                 setBackendFieldErrors({
                   country: "Shipping is not available in this country yet.",
                 });
