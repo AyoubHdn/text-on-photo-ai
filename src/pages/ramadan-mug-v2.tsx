@@ -748,7 +748,6 @@ const RamadanMugV2Page: NextPage = () => {
       }
       const payload = { ...trackBase, value: 0, currency: "USD" };
       trackEvent("begin_checkout", payload);
-      fireMetaStandardEvent("InitiateCheckout", payload);
       await router.push(
         `/checkout?orderId=${encodeURIComponent(order.orderId)}&sourcePage=${encodeURIComponent(
           "ramadan-mug-v2",
