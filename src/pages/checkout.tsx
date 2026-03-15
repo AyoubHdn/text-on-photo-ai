@@ -16,6 +16,16 @@ import { trackEvent } from "~/lib/ga";
 import { getFunnelContext, markEventTrackedOnce } from "~/lib/tracking/funnel";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
+const KNOWN_SOURCE_PAGES = new Set([
+  "arabic-name-art-generator",
+  "couples-art-generator",
+  "name-art-generator",
+  "ramadan-mug-v2",
+  "ramadan-mug-men",
+  "ramadan-mug",
+  "checkout",
+]);
+
 export function formatPrice(value: number) {
   return value.toFixed(2);
 }
@@ -86,10 +96,31 @@ function getCheckoutCopy(productKey: string) {
   }
 }
 
-function getCheckoutSourcePage() {
-  if (typeof window === "undefined") return "checkout";
+function normalizeSourcePage(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const normalized = value.trim();
+  return KNOWN_SOURCE_PAGES.has(normalized) ? normalized : null;
+}
+
+function getCheckoutSourcePage(options?: {
+  query?: Record<string, unknown>;
+  fallbackSourcePage?: string | null;
+}) {
+  const querySourcePage = normalizeSourcePage(
+    typeof options?.query?.sourcePage === "string"
+      ? options.query.sourcePage
+      : typeof options?.query?.generator === "string"
+      ? options.query.generator
+      : null,
+  );
+  if (querySourcePage) return querySourcePage;
+
+  if (typeof window === "undefined") {
+    return normalizeSourcePage(options?.fallbackSourcePage) ?? "checkout";
+  }
   const generatorKey = window.localStorage.getItem("last-generator");
-  return generatorKey === "arabic"
+  const sourcePage =
+    generatorKey === "arabic"
     ? "arabic-name-art-generator"
     : generatorKey === "couples"
     ? "couples-art-generator"
@@ -101,7 +132,9 @@ function getCheckoutSourcePage() {
     ? "ramadan-mug-men"
     : generatorKey === "ramadan-mug"
     ? "ramadan-mug"
-    : "checkout";
+    : normalizeSourcePage(options?.fallbackSourcePage) ?? "checkout";
+
+  return normalizeSourcePage(sourcePage) ?? "checkout";
 }
 
 function readCookie(name: string): string | null {
@@ -292,10 +325,13 @@ export default function CheckoutPage() {
         updatedAt: Date;
     };
 
-    const { data: order, isLoading } = api.productOrder.getOrder.useQuery(
+    const orderQuery = api.productOrder.getOrder.useQuery(
         { orderId: String(orderId), accessToken: accessTokenValue },
         { enabled: !!orderId }
-        ) as { data: OrderType | undefined, isLoading: boolean };
+        );
+    const order = orderQuery.data as OrderType | undefined;
+    const isLoading = orderQuery.isLoading;
+    const orderError = orderQuery.error;
     const checkoutPricingQuery = api.productOrder.getCheckoutPricing.useQuery(
         {
           orderId: String(orderId),
@@ -311,6 +347,17 @@ export default function CheckoutPage() {
     const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
     const createStripeSession = api.printfulCheckout.createCheckout.useMutation();
     const ensureFinalPreview = api.checkout.ensureFinalPreview.useMutation();
+    const fallbackSourcePage =
+      order?.funnelSource === "ramadan-mug-ad"
+        ? "ramadan-mug"
+        : order?.funnelSource === "paid-traffic-offer" && order?.productKey === "mug"
+        ? "ramadan-mug-v2"
+        : null;
+    const checkoutSourcePage = getCheckoutSourcePage({
+      query: router.query as Record<string, unknown>,
+      fallbackSourcePage,
+    });
+    const isSubmittingCheckout = createStripeSession.isLoading;
 
 
     const previewCooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -392,8 +439,8 @@ export default function CheckoutPage() {
         if (!zip) {
         errors.zip = "ZIP / Postal code is required.";
         } else if (country === "US") {
-        if (!/^\d{5}$/.test(zip)) {
-            errors.zip = "ZIP code must be 5 digits.";
+        if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+            errors.zip = "ZIP code must be 5 digits or ZIP+4.";
         }
         }
 
@@ -518,10 +565,9 @@ export default function CheckoutPage() {
     useEffect(() => {
       if (!order) return;
 
-      const sourcePage = getCheckoutSourcePage();
       const funnelContext = getFunnelContext({
         route: router.pathname,
-        sourcePage,
+        sourcePage: checkoutSourcePage,
         orderFunnelSource: order.funnelSource ?? null,
         productKey: order.productKey,
         productType: "physical_product",
@@ -543,6 +589,7 @@ export default function CheckoutPage() {
       });
     }, [
       address.country,
+      checkoutSourcePage,
       checkoutPricingQuery.data?.totalPrice,
       order,
       router.pathname,
@@ -595,7 +642,7 @@ export default function CheckoutPage() {
                 orderId: order.id,
                 accessToken: accessTokenValue,
                 email: normalizedEmail,
-                sourcePage: getCheckoutSourcePage(),
+                sourcePage: checkoutSourcePage,
                 promotedProduct: order.productKey,
             });
             lastCapturedCheckoutEmailRef.current = normalizedEmail;
@@ -607,6 +654,18 @@ export default function CheckoutPage() {
 
 
     if (isLoading) return <div>Loading...</div>;
+    const orderErrorCode =
+      orderError instanceof TRPCClientError ? orderError.data?.code : undefined;
+    if (orderErrorCode === "UNAUTHORIZED") {
+      return (
+        <div className="mx-auto max-w-xl px-4 py-16 text-center text-slate-900">
+          <h1 className="text-2xl font-semibold">This checkout link is no longer valid</h1>
+          <p className="mt-3 text-sm text-gray-600">
+            Return to your design and reopen checkout to continue your order.
+          </p>
+        </div>
+      );
+    }
     if (!order) return <div>Order not found</div>;
 
     return (
@@ -925,7 +984,11 @@ export default function CheckoutPage() {
 
         <button
             className="w-full py-3 rounded-lg bg-black text-white font-semibold disabled:opacity-50"
-        disabled={previewStatus === "generating" || checkoutPricingQuery.isLoading}
+        disabled={
+          previewStatus === "generating" ||
+          checkoutPricingQuery.isLoading ||
+          isSubmittingCheckout
+        }
         onClick={async () => { if (!order) return;
 
             const productIssues = getProductConfigErrors();
@@ -966,14 +1029,13 @@ export default function CheckoutPage() {
             }
 
             try {
-            const sourcePage = getCheckoutSourcePage();
             await captureCheckoutEmailIfNeeded(address.email);
             const res = await createStripeSession.mutateAsync({
                 orderId: order.id,
                 accessToken: accessTokenValue,
                 submittedTotalPrice: checkoutPricingQuery.data.totalPrice,
                 tracking: getMetaTrackingParams(),
-                sourcePage,
+                sourcePage: checkoutSourcePage,
                 promotedProduct: order.productKey,
                 address: {
                 email: address.email,
@@ -989,7 +1051,7 @@ export default function CheckoutPage() {
             if (res.url) {
                 const funnelContext = getFunnelContext({
                   route: router.pathname,
-                  sourcePage,
+                  sourcePage: checkoutSourcePage,
                   orderFunnelSource: order.funnelSource ?? null,
                   productKey: order.productKey,
                   productType: "physical_product",
@@ -1101,7 +1163,7 @@ export default function CheckoutPage() {
 
         }}
         >
-        Continue to Secure Payment
+        {isSubmittingCheckout ? "Redirecting..." : "Continue to Secure Payment"}
         </button>
 
         <p className="text-center text-xs text-gray-500">

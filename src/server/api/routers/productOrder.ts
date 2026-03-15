@@ -63,11 +63,19 @@ function resolvePricingVariant(order: {
   throw new Error("Unsupported product for pricing.");
 }
 
-function buildCheckoutResumeUrl(orderId: string, accessToken?: string): string {
+function buildCheckoutResumeUrl(
+  orderId: string,
+  accessToken?: string,
+  sourcePage?: string,
+): string {
   const checkoutUrl = new URL(`${env.HOST_NAME}/checkout`);
   checkoutUrl.searchParams.set("orderId", orderId);
   if (accessToken) {
     checkoutUrl.searchParams.set("accessToken", accessToken);
+  }
+  if (sourcePage) {
+    checkoutUrl.searchParams.set("sourcePage", sourcePage);
+    checkoutUrl.searchParams.set("generator", sourcePage);
   }
   return checkoutUrl.toString();
 }
@@ -279,11 +287,40 @@ export const productOrderRouter = createTRPCRouter({
         }
 
         const pricingVariant = resolvePricingVariant(order);
-        const pricing = await calculateProductPriceFromCache({
-          productType: order.productKey as "poster" | "tshirt" | "mug",
-          sizeKey: pricingVariant,
-          countryCode: input.countryCode,
-        });
+        const productType = order.productKey as "poster" | "tshirt" | "mug";
+        let pricing;
+        try {
+          if (productType !== "tshirt") {
+            await assertVariantAvailableInCountry({
+              productType,
+              variantId: order.variantId,
+              countryCode: input.countryCode,
+            });
+          }
+
+          pricing = await calculateProductPriceFromCache({
+            productType,
+            sizeKey: pricingVariant,
+            countryCode: input.countryCode,
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "Pricing unavailable";
+          if (
+            message === "Pricing not available for this variant." ||
+            message === "This product variant is not available in this country."
+          ) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Physical shipping is not available in this country yet.",
+            });
+          }
+
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message,
+          });
+        }
 
         return {
           totalPrice: pricing.totalPrice,
@@ -326,7 +363,7 @@ export const productOrderRouter = createTRPCRouter({
           order.funnelSource === "ramadan-mug-ad";
         const checkoutResumeUrl =
           isPaidTrafficOrder
-            ? buildCheckoutResumeUrl(order.id, input.accessToken)
+            ? buildCheckoutResumeUrl(order.id, input.accessToken, input.sourcePage)
             : undefined;
 
         const currentOrderUser = await prisma.user.findUnique({

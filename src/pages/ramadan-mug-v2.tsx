@@ -725,6 +725,8 @@ const RamadanMugV2Page: NextPage = () => {
       });
       const checkoutResumeUrl = `${window.location.origin}/checkout?orderId=${encodeURIComponent(
         order.orderId,
+      )}&sourcePage=${encodeURIComponent("ramadan-mug-v2")}&generator=${encodeURIComponent(
+        "ramadan-mug-v2",
       )}${
         order.accessToken
           ? `&accessToken=${encodeURIComponent(order.accessToken)}`
@@ -748,7 +750,9 @@ const RamadanMugV2Page: NextPage = () => {
       trackEvent("begin_checkout", payload);
       fireMetaStandardEvent("InitiateCheckout", payload);
       await router.push(
-        `/checkout?orderId=${encodeURIComponent(order.orderId)}${
+        `/checkout?orderId=${encodeURIComponent(order.orderId)}&sourcePage=${encodeURIComponent(
+          "ramadan-mug-v2",
+        )}&generator=${encodeURIComponent("ramadan-mug-v2")}${
           order.accessToken
             ? `&accessToken=${encodeURIComponent(order.accessToken)}`
             : ""

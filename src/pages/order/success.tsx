@@ -6,11 +6,12 @@ import { trackEvent } from "~/lib/ga";
 
 export default function OrderSuccess() {
   const router = useRouter();
-  const { orderId, generator, accessToken } = router.query;
+  const { orderId, generator, accessToken, sourcePage } = router.query;
   const orderIdValue = typeof orderId === "string" ? orderId : "";
   const accessTokenValue =
     typeof accessToken === "string" ? accessToken : undefined;
   const generatorFromQuery = typeof generator === "string" ? generator : null;
+  const sourcePageFromQuery = typeof sourcePage === "string" ? sourcePage : null;
   const orderQuery = api.productOrder.getOrder.useQuery(
     { orderId: orderIdValue, accessToken: accessTokenValue },
     { enabled: !!orderIdValue }
@@ -44,15 +45,19 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     const mapToHref = (value: string | null) => {
+      if (value === "ramadan-mug-men") return "/ramadan-mug-men";
       if (value === "ramadan-mug-v2") return "/ramadan-mug-v2";
       if (value === "ramadan-mug") return "/ramadan-mug";
+      if (value === "arabic-name-art-generator") return "/arabic-name-art-generator";
       if (value === "arabic") return "/arabic-name-art-generator";
+      if (value === "couples-art-generator") return "/couples-name-art-generator";
       if (value === "couples") return "/couples-name-art-generator";
       return "/name-art-generator";
     };
 
-    if (generatorFromQuery) {
-      setNextGeneratorHref(mapToHref(generatorFromQuery));
+    const preferredSource = generatorFromQuery ?? sourcePageFromQuery;
+    if (preferredSource) {
+      setNextGeneratorHref(mapToHref(preferredSource));
       return;
     }
 
@@ -62,12 +67,13 @@ export default function OrderSuccess() {
     } catch {
       setNextGeneratorHref("/name-art-generator");
     }
-  }, [generatorFromQuery]);
+  }, [generatorFromQuery, sourcePageFromQuery]);
 
   useEffect(() => {
     if (!order || hasTrackedPurchaseRef.current) return;
     const isRamadanMugV2Flow =
       generatorFromQuery === "ramadan-mug-v2" ||
+      sourcePageFromQuery === "ramadan-mug-v2" ||
       (typeof window !== "undefined" &&
         window.localStorage.getItem("last-generator") === "ramadan-mug-v2");
     if (typeof window !== "undefined" && orderIdValue) {
@@ -91,13 +97,14 @@ export default function OrderSuccess() {
         : {}),
     });
     hasTrackedPurchaseRef.current = true;
-  }, [generatorFromQuery, order, orderIdValue]);
+  }, [generatorFromQuery, order, orderIdValue, sourcePageFromQuery]);
 
   useEffect(() => {
     if (!order || !orderIdValue || hasTrackedMetaPurchaseRef.current) return;
     if (typeof window === "undefined") return;
     const isRamadanMugV2Flow =
       generatorFromQuery === "ramadan-mug-v2" ||
+      sourcePageFromQuery === "ramadan-mug-v2" ||
       window.localStorage.getItem("last-generator") === "ramadan-mug-v2";
 
     const key = `meta_purchase_${orderIdValue}`;
@@ -132,7 +139,7 @@ export default function OrderSuccess() {
 
     window.sessionStorage.setItem(key, "1");
     hasTrackedMetaPurchaseRef.current = true;
-  }, [generatorFromQuery, order, orderIdValue]);
+  }, [generatorFromQuery, order, orderIdValue, sourcePageFromQuery]);
 
   return (
     <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">

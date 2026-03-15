@@ -1459,7 +1459,10 @@ export function ProductPreviewModal({
               const checkoutQuery = res.accessToken
                 ? `orderId=${res.orderId}&accessToken=${encodeURIComponent(res.accessToken)}`
                 : `orderId=${res.orderId}`;
-              void router.push(`/checkout?${checkoutQuery}`);
+              const sourceQuery = sourcePage
+                ? `&sourcePage=${encodeURIComponent(sourcePage)}&generator=${encodeURIComponent(sourcePage)}`
+                : "";
+              void router.push(`/checkout?${checkoutQuery}${sourceQuery}`);
             }}
             >
               Continue to checkout

@@ -65,11 +65,19 @@ function resolvePricingVariant(order: {
   throw new Error("Unsupported product for pricing.");
 }
 
-function buildCheckoutResumeUrl(orderId: string, accessToken?: string): string {
+function buildCheckoutResumeUrl(
+  orderId: string,
+  accessToken?: string,
+  sourcePage?: string,
+): string {
   const checkoutUrl = new URL(`${env.HOST_NAME}/checkout`);
   checkoutUrl.searchParams.set("orderId", orderId);
   if (accessToken) {
     checkoutUrl.searchParams.set("accessToken", accessToken);
+  }
+  if (sourcePage) {
+    checkoutUrl.searchParams.set("sourcePage", sourcePage);
+    checkoutUrl.searchParams.set("generator", sourcePage);
   }
   return checkoutUrl.toString();
 }
@@ -134,7 +142,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
         order.funnelSource === "ramadan-mug-ad";
       const checkoutResumeUrl =
         isPaidTrafficOrder
-          ? buildCheckoutResumeUrl(order.id, input.accessToken)
+          ? buildCheckoutResumeUrl(order.id, input.accessToken, input.sourcePage)
           : undefined;
       const currentOrderUser = await prisma.user.findUnique({
         where: { id: order.userId },
@@ -364,6 +372,20 @@ export const printfulCheckoutRouter = createTRPCRouter({
       if (input.accessToken) {
         successUrl.searchParams.set("accessToken", input.accessToken);
       }
+      if (input.sourcePage) {
+        successUrl.searchParams.set("sourcePage", input.sourcePage);
+        successUrl.searchParams.set("generator", input.sourcePage);
+      }
+
+      const cancelUrl = new URL(`${env.HOST_NAME}/order/cancel`);
+      cancelUrl.searchParams.set("orderId", order.id);
+      if (input.accessToken) {
+        cancelUrl.searchParams.set("accessToken", input.accessToken);
+      }
+      if (input.sourcePage) {
+        cancelUrl.searchParams.set("sourcePage", input.sourcePage);
+        cancelUrl.searchParams.set("generator", input.sourcePage);
+      }
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -388,7 +410,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
           },
         ],
         success_url: successUrl.toString(),
-        cancel_url: `${env.HOST_NAME}/order/cancel?orderId=${order.id}`,
+        cancel_url: cancelUrl.toString(),
       });
 
       await prisma.productOrder.update({

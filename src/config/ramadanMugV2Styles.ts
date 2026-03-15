@@ -53,42 +53,42 @@ export const RAMADAN_MUG_V2_STYLES: RamadanMugV2Style[] = [
     name: "",
     src: "/styles/arabic/rose-gold.webp",
     basePrompt:
-      "Elegant Arabic text 'Text' in a brushed rose gold foil illustration style, centered composition, soft blush-toned background, subtle luxury lighting, clear readable letterforms, clean edges, no extra words or logos, refined print-safe artwork, flat design only, no mug, no product application, no product photography.",
+      "Elegant Arabic text 'Text' in a brushed rose gold foil illustration style, centered composition, rich blush-to-burgundy full-bleed background with subtle luxury lighting, clear readable letterforms, clean edges, no extra words or logos, refined print-safe artwork, flat design only, no mug, no product application, no product photography.",
   },
   {
     id: "thuluth-gold",
     name: "",
     src: "/styles/arabic/thuluth-gold.webp",
     basePrompt:
-      "Arabic Thuluth calligraphy of the name 'Text', centered single composition, thick gold ink illustration on vintage textured parchment, subtle Islamic geometric illuminated border, clean negative space, crisp edges, high legibility, no extra words or symbols, premium print-ready artwork, flat printable art only, no mug, no product mockup, no photographed object.",
+      "Arabic Thuluth calligraphy of the name 'Text', centered single composition, thick gold ink illustration on a deep antique gold-and-umber illuminated manuscript background, subtle Islamic geometric illuminated border, clean negative space, crisp edges, high legibility, no extra words or symbols, premium print-ready artwork, flat printable art only, no mug, no product mockup, no photographed object.",
   },
   {
     id: "diwani-flow",
     name: "",
     src: "/styles/arabic/diwani-ink.webp",
     basePrompt:
-      "Elegant Diwani Arabic calligraphy of 'Text' with flowing interlocking curves and refined flourishes, black ink on warm cream paper, centered composition, ornamental yet readable, crisp linework, no extra words, premium printable art.",
+      "Elegant Diwani Arabic calligraphy of 'Text' with flowing interlocking curves and refined flourishes, black ink over a warm amber-to-espresso illuminated background, centered composition, ornamental yet readable, crisp linework, no extra words, premium printable art.",
   },
   {
     id: "square-kufic",
     name: "",
     src: "/styles/arabic/kufic-geo.webp",
     basePrompt:
-      "Geometric Square Kufic Arabic calligraphy of 'Text', architectural maze-like structure, black lines on clean white background, centered balanced grid, precise edges, minimalist Islamic design, no extra symbols or words, print-ready vector-like clarity.",
+      "Geometric Square Kufic Arabic calligraphy of 'Text', architectural maze-like structure, black lines with antique gold accents on a deep charcoal full-bleed background, centered balanced grid, precise edges, minimalist Islamic design, no extra symbols or words, print-ready vector-like clarity.",
   },
   {
     id: "floral-bloom",
     name: "",
     src: "/styles/arabic/floral.webp",
     basePrompt:
-      "Arabic name 'Text' shaped from fresh flowers and green leaves, centered top-down composition on clean light background, balanced color palette, crisp botanical detail, clear letter readability, no extra text, premium printable floral art.",
+      "Arabic name 'Text' shaped from fresh flowers and green leaves, centered top-down composition on a rich emerald botanical background, balanced color palette, crisp botanical detail, clear letter readability, no extra text, premium printable floral art.",
   },
   {
     id: "watercolor-splash",
     name: "",
     src: "/styles/arabic/watercolor.webp",
     basePrompt:
-      "Watercolor Arabic lettering of 'Text' on textured paper, centered composition, soft pastel washes with controlled ink splashes, clean readable strokes, balanced negative space, no extra text, premium printable fine-art style.",
+      "Watercolor Arabic lettering of 'Text' on a textured indigo watercolor background, centered composition, soft pastel washes with controlled ink splashes, clean readable strokes, balanced negative space, no extra text, premium printable fine-art style.",
   },
   {
     id: "cosmic-galaxy",
@@ -200,7 +200,7 @@ export const RAMADAN_MUG_V2_STYLES: RamadanMugV2Style[] = [
     name: "",
     src: "/styles/arabic/thuluth-black.webp",
     basePrompt:
-      "Arabic Thuluth calligraphy of 'Text' in rich black ink on a refined light background, centered composition, classic manuscript elegance, clean negative space, crisp edges, premium printable artwork, flat design only, no mug, no product mockup.",
+      "Arabic Thuluth calligraphy of 'Text' in rich black ink on a refined sand-to-umber illuminated background, centered composition, classic manuscript elegance, clean negative space, crisp edges, premium printable artwork, flat design only, no mug, no product mockup.",
   },
   {
     id: "water-flow",
