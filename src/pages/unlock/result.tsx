@@ -150,10 +150,10 @@ export default function FreeCreditResult() {
               </p>
 
               <Link
-                href="/dashboard"
+                href="/collection"
                 className="inline-block mt-6 px-6 py-3 rounded-xl bg-gray-700 text-white"
               >
-                Back to Dashboard
+                Back to My Designs
               </Link>
             </>
           )}

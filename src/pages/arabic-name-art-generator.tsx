@@ -3,7 +3,6 @@
 // src/pages/arabic-name-art-generator.tsx
 
 import { type NextPage } from "next";
-import Head from "next/head";
 import Image from "next/image";
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Button } from "~/component/Button";
@@ -24,7 +23,9 @@ import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { FiGlobe } from "react-icons/fi";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
+import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
+import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -35,6 +36,7 @@ interface StyleItem {
   src: string;
   name: string;
   basePrompt: string;
+  altText: string;
 }
 
 interface SubCategory {
@@ -438,10 +440,12 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Arabic Name Art Generator | AI Calligraphy</title>
-        <meta name="description" content="Generate stunning Arabic calligraphy and Islamic name art using AI." />
-      </Head>
+      <SeoHead
+        title="Arabic Name Art Generator | AI Calligraphy"
+        description="Generate Arabic calligraphy-inspired name art using the interactive creator."
+        path="/arabic-name-art-generator"
+        noindex
+      />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
         
         {/* Language Switcher - Made more visible */}
@@ -502,7 +506,13 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
               {(typedArabicStylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
                   <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src)}>
-                    <Image src={item.src} alt={item.basePrompt} width={200} height={200} className="w-full h-auto aspect-square object-cover"/>
+                    <Image
+                      src={item.src}
+                      alt={item.altText}
+                      width={200}
+                      height={200}
+                      className="w-full h-auto aspect-square object-cover"
+                    />
                     <button type="button" onClick={(e) => { e.stopPropagation(); openPopup(item.src); }} className="absolute top-1 right-1 bg-black bg-opacity-40 text-white rounded-full p-1 text-xs hover:bg-opacity-60">🔍</button>
                     <div className="p-2 text-center text-xs font-medium truncate">{item.name}</div>
                   </div>
@@ -608,7 +618,14 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       </div>
                       <Image
                         src={displayUrl}
-                        alt="Arabic Art"
+                        alt={
+                          form.basePrompt
+                            ? buildPromptImageAlt(form.basePrompt, {
+                                kind: "arabic",
+                                title: activeSubTab || activeTab,
+                              })
+                            : "Generated Arabic art"
+                        }
                         width={512}
                         height={512}
                         className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}

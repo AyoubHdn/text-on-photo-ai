@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { SeoHead } from "~/component/SeoHead";
 import { api } from "~/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "~/lib/ga";
@@ -142,7 +143,14 @@ export default function OrderSuccess() {
   }, [generatorFromQuery, order, orderIdValue, sourcePageFromQuery]);
 
   return (
-    <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">
+    <>
+      <SeoHead
+        title="Order Success | Name Design AI"
+        description="Product order success page."
+        path="/order/success"
+        noindex
+      />
+      <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">
       <h1 className="text-3xl font-bold mb-2">Your order is confirmed!</h1>
       <p className="text-muted-foreground mb-6">
         We are preparing your product and will notify you when it ships.
@@ -197,6 +205,7 @@ export default function OrderSuccess() {
           Create Another Design
         </Link>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

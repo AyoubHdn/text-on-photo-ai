@@ -31,6 +31,11 @@ const config = {
   async redirects() {
     return [
       {
+        source: "/couples-art-generator",
+        destination: "/couples-name-art-generator",
+        permanent: true,
+      },
+      {
         source: "/ramadan-mug",
         destination: "/ramadan-mug-v2",
         permanent: false,

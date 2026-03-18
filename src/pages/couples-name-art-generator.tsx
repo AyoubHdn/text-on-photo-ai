@@ -1,5 +1,4 @@
 import { type NextPage } from "next";
-import Head from "next/head";
 import Image from "next/image";
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Button } from "~/component/Button";
@@ -20,7 +19,9 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { ShareModal } from '~/component/ShareModal';
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
+import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
+import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -459,10 +460,12 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Couples Name Art Generator | Name Design AI</title>
-        <meta name="description" content="Create beautiful, romantic art with two names. Perfect for anniversaries, weddings, and gifts for your partner. Design your unique couples art in seconds." />
-      </Head>
+      <SeoHead
+        title="Couples Name Art Generator | Name Design AI"
+        description="Create romantic artwork with two names inside the interactive couples generator."
+        path="/couples-name-art-generator"
+        noindex
+      />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
         <h1 className="text-3xl font-bold sm:text-4xl">Couples Name Art Generator</h1>
         <p className="mt-4 text-base text-gray-700 dark:text-gray-300 sm:text-lg">
@@ -509,7 +512,11 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                 const styleImagePath = item.src.replace(/\.webp$/, "e.webp");
                 return (
                   <div key={idx} className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${selectedImage === item.src ? "ring-4 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, allowColors)}>
-                    <img src={styleImagePath} alt={item.basePrompt} className="rounded w-full h-auto object-cover mx-auto" />
+                    <img
+                      src={styleImagePath}
+                      alt={item.altText}
+                      className="rounded w-full h-auto object-cover mx-auto"
+                    />
                     <button type="button" onClick={(ev) => { ev.stopPropagation(); openPopup(styleImagePath); }} className="absolute top-0 right-0 bg-gray-800 bg-opacity-50 text-white hover:bg-opacity-70 focus:outline-none p-1 text-xs" title="View Fullscreen">🔍</button>
                   </div>
                 );
@@ -701,7 +708,14 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                       </div>
                       <Image
                         src={displayUrl}
-                        alt="Generated couples art"
+                        alt={
+                          form.basePrompt
+                            ? buildPromptImageAlt(form.basePrompt, {
+                                kind: "couple",
+                                title: activeSubTab || activeTab,
+                              })
+                            : "Generated couples art"
+                        }
                         width={512}
                         height={512}
                         className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}

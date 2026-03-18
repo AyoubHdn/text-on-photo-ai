@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "~/component/Input";
+import { SeoHead } from "~/component/SeoHead";
 import { Select } from "~/component/Select";
 import { TRPCClientError } from "@trpc/client";
 import { trackEvent } from "~/lib/ga";
@@ -658,17 +659,44 @@ export default function CheckoutPage() {
       orderError instanceof TRPCClientError ? orderError.data?.code : undefined;
     if (orderErrorCode === "UNAUTHORIZED") {
       return (
-        <div className="mx-auto max-w-xl px-4 py-16 text-center text-slate-900">
-          <h1 className="text-2xl font-semibold">This checkout link is no longer valid</h1>
-          <p className="mt-3 text-sm text-gray-600">
-            Return to your design and reopen checkout to continue your order.
-          </p>
-        </div>
+        <>
+          <SeoHead
+            title="Checkout | Name Design AI"
+            description="Product checkout page."
+            path="/checkout"
+            noindex
+          />
+          <div className="mx-auto max-w-xl px-4 py-16 text-center text-slate-900">
+            <h1 className="text-2xl font-semibold">This checkout link is no longer valid</h1>
+            <p className="mt-3 text-sm text-gray-600">
+              Return to your design and reopen checkout to continue your order.
+            </p>
+          </div>
+        </>
       );
     }
-    if (!order) return <div>Order not found</div>;
+    if (!order) {
+      return (
+        <>
+          <SeoHead
+            title="Checkout | Name Design AI"
+            description="Product checkout page."
+            path="/checkout"
+            noindex
+          />
+          <div>Order not found</div>
+        </>
+      );
+    }
 
     return (
+    <>
+    <SeoHead
+      title="Checkout | Name Design AI"
+      description="Product checkout page."
+      path="/checkout"
+      noindex
+    />
     <div
       className="bg-white px-3 py-4 text-slate-900 md:px-6 md:py-8"
       style={{ colorScheme: "light" }}
@@ -795,8 +823,8 @@ export default function CheckoutPage() {
                 </div>
                 <div className="mt-1 text-xs text-gray-500">Free shipping included</div>
                 <div className="mt-1 text-xs text-gray-500">Printed only after you order</div>
-            </div>
-        </div>
+    </div>
+    </div>
         </div>
 
         {/* Shipping address */}
@@ -1179,6 +1207,7 @@ export default function CheckoutPage() {
     </div>
 </div>
 </div>
+    </>
 
     );
 }

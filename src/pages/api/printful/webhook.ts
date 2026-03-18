@@ -1,12 +1,14 @@
 // src/pages/api/printful/webhook.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import type { Prisma } from "@prisma/client";
 import crypto from "crypto";
 import { buffer } from "micro";
 import { prisma } from "~/server/db";
 import { env } from "~/env.mjs";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
-import { sendOrderShippedEmail } from "~/server/mautic/transactional";
+import { sendOrderDeliveredEmail, sendOrderShippedEmail } from "~/server/mautic/transactional";
 import { scheduleOrderDeliveredEmail } from "~/server/mautic/deliveryScheduler";
+import { printfulRequest } from "~/server/printful/client";
 
 export const config = {
   api: {
@@ -14,12 +16,23 @@ export const config = {
   },
 };
 
+const productOrderInclude = {
+  user: true,
+  printfulOrder: true,
+} satisfies Prisma.ProductOrderInclude;
+
+type ProductOrderWithRelations = Prisma.ProductOrderGetPayload<{
+  include: typeof productOrderInclude;
+}>;
+
 type ShipmentData = {
   tracking_number?: string;
   tracking_url?: string;
   carrier?: string;
   status?: string;
   shipped_at?: string | number;
+  ship_date?: string | number;
+  delivered_at?: string | number;
   estimated_delivery_days_max?: number | string;
   estimated_delivery_days?: number | string | { max?: number | string };
   delivery_days?: number | string;
@@ -30,14 +43,24 @@ type ShipmentData = {
 type WebhookPayload = {
   type?: string;
   data?: {
-    order?: { id?: number | string; external_id?: string };
+    order?: { id?: number | string; external_id?: string; status?: string };
     shipment?: ShipmentData;
     shipments?: ShipmentData[];
   };
-  order?: { id?: number | string; external_id?: string };
+  order?: { id?: number | string; external_id?: string; status?: string };
   shipment?: ShipmentData;
   shipments?: ShipmentData[];
   order_id?: number | string;
+};
+
+type PrintfulOrderResponse = {
+  result?: {
+    id?: number | string;
+    external_id?: string;
+    status?: string;
+    shipment?: ShipmentData;
+    shipments?: ShipmentData[];
+  };
 };
 
 function toStringId(value: unknown): string | null {
@@ -56,6 +79,33 @@ function coalesceShipment(payload: WebhookPayload): ShipmentData | null {
   );
 }
 
+function pickBestShipment(shipments: ShipmentData[]) {
+  if (shipments.length === 0) return null;
+
+  return (
+    shipments.find(
+      (shipment) =>
+        Boolean(shipment.tracking_number?.trim()) ||
+        Boolean(shipment.tracking_url?.trim()) ||
+        Boolean(shipment.carrier?.trim()) ||
+        Boolean(shipment.status?.trim()),
+    ) ?? shipments[0] ?? null
+  );
+}
+
+function hasShipmentSignal(shipment: ShipmentData | null) {
+  if (!shipment) return false;
+  return Boolean(
+    shipment.tracking_number?.trim() ||
+      shipment.tracking_url?.trim() ||
+      shipment.carrier?.trim() ||
+      shipment.status?.trim() ||
+      shipment.shipped_at ||
+      shipment.ship_date ||
+      shipment.delivered_at,
+  );
+}
+
 function parseShippedAt(value: unknown): Date | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     const date = new Date(value * 1000);
@@ -66,6 +116,20 @@ function parseShippedAt(value: unknown): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
   }
   return null;
+}
+
+function parseAnyDate(values: unknown[]): Date | null {
+  for (const value of values) {
+    const parsed = parseShippedAt(value);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function getWholeDayDiff(from: Date | null, to: Date) {
+  if (!from) return 1;
+  const diffMs = to.getTime() - from.getTime();
+  return Math.max(1, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
 }
 
 function parsePositiveInt(value: unknown): number | null {
@@ -109,14 +173,42 @@ function parseMaxDeliveryDays(shipment: ShipmentData | null, shippedAt: Date | n
   return 7;
 }
 
+function normalizeSignature(signature: string | undefined) {
+  if (!signature) return null;
+  const trimmed = signature.trim();
+  if (!trimmed) return null;
+  const parts = trimmed.split("=");
+  return (parts[parts.length - 1] ?? trimmed).trim().toLowerCase();
+}
+
+function getWebhookSecretBuffer(secret: string) {
+  const normalized = secret.trim();
+  const isHex = normalized.length % 2 === 0 && /^[0-9a-f]+$/i.test(normalized);
+  return isHex ? Buffer.from(normalized, "hex") : Buffer.from(normalized, "utf8");
+}
+
 function verifySignature(rawBody: Buffer, signature: string | undefined) {
   if (!env.PRINTFUL_WEBHOOK_SECRET) return true;
-  if (!signature) return false;
+  const normalizedSignature = normalizeSignature(signature);
+  if (!normalizedSignature) return false;
   const expected = crypto
-    .createHmac("sha256", env.PRINTFUL_WEBHOOK_SECRET)
+    .createHmac("sha256", getWebhookSecretBuffer(env.PRINTFUL_WEBHOOK_SECRET))
     .update(rawBody)
     .digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  if (expected.length !== normalizedSignature.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(normalizedSignature, "utf8"));
+}
+
+async function fetchPrintfulOrder(printfulOrderId: string) {
+  try {
+    return await printfulRequest<PrintfulOrderResponse>(`/orders/${encodeURIComponent(printfulOrderId)}`);
+  } catch (error) {
+    console.error("Failed to fetch Printful order during webhook handling", {
+      printfulOrderId,
+      error,
+    });
+    return null;
+  }
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -127,6 +219,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const rawBody = await buffer(req);
   const signature =
+    (req.headers["x-pf-webhook-signature"] as string | undefined) ??
     (req.headers["x-printful-signature"] as string | undefined) ??
     (req.headers["x-printful-signature-hmac-sha256"] as string | undefined);
 
@@ -148,43 +241,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     toStringId(payload.data?.order?.id) ??
     toStringId(payload.order?.id) ??
     toStringId(payload.order_id);
+  const payloadShipment = coalesceShipment(payload);
 
-  const shipment = coalesceShipment(payload);
-  const trackingNumber =
-    shipment?.tracking_number?.trim() ||
-    undefined;
-  const trackingUrl =
-    shipment?.tracking_url?.trim() ||
-    undefined;
-  const trackingCarrier =
-    shipment?.carrier?.trim() ||
-    undefined;
-  const trackingStatus =
-    shipment?.status?.trim() ||
-    payload.type?.trim() ||
-    undefined;
-  const normalizedTrackingStatus = (trackingStatus ?? "").toLowerCase();
-  const physicalOrderStatus =
-    normalizedTrackingStatus.includes("deliver")
-      ? "delivered"
-      : normalizedTrackingStatus.includes("ship")
-      ? "shipped"
-      : trackingNumber || trackingUrl || trackingCarrier
-      ? "shipped"
-      : undefined;
-  const shippedAt = parseShippedAt(shipment?.shipped_at);
-
-  let orderRecord = null as
-    | (Awaited<ReturnType<typeof prisma.productOrder.findUnique>> & {
-        user?: { email: string | null; name: string | null };
-        printfulOrder?: { id: string };
-      })
-    | null;
+  let orderRecord: ProductOrderWithRelations | null = null;
 
   if (externalId) {
     orderRecord = await prisma.productOrder.findUnique({
       where: { id: externalId },
-      include: { user: true, printfulOrder: true },
+      include: productOrderInclude,
     });
   }
 
@@ -198,13 +262,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!orderRecord && printfulOrder?.productOrderId) {
     orderRecord = await prisma.productOrder.findUnique({
       where: { id: printfulOrder.productOrderId },
-      include: { user: true, printfulOrder: true },
+      include: productOrderInclude,
     });
+  }
+
+  const fetchedOrder =
+    printfulOrderId && !hasShipmentSignal(payloadShipment)
+      ? await fetchPrintfulOrder(printfulOrderId)
+      : null;
+
+  const resolvedExternalId =
+    externalId ??
+    toStringId(fetchedOrder?.result?.external_id);
+
+  if (!orderRecord && resolvedExternalId) {
+    orderRecord = await prisma.productOrder.findUnique({
+      where: { id: resolvedExternalId },
+      include: productOrderInclude,
+    });
+  }
+
+  if (!printfulOrder && orderRecord?.printfulOrder) {
+    printfulOrder = orderRecord.printfulOrder;
   }
 
   if (!printfulOrder) {
     return res.status(200).json({ received: true, ignored: "order_not_found" });
   }
+
+  const shipment =
+    pickBestShipment(
+      [
+        payloadShipment,
+        pickBestShipment(fetchedOrder?.result?.shipments ?? []),
+        fetchedOrder?.result?.shipment ?? null,
+      ].filter((value): value is ShipmentData => Boolean(value)),
+    ) ?? null;
+
+  const trackingNumber = shipment?.tracking_number?.trim() || undefined;
+  const trackingUrl = shipment?.tracking_url?.trim() || undefined;
+  const trackingCarrier = shipment?.carrier?.trim() || undefined;
+  const trackingStatus = shipment?.status?.trim() || payload.type?.trim() || undefined;
+  const normalizedTrackingStatus = (trackingStatus ?? "").toLowerCase();
+  const deliveredAt = parseAnyDate([shipment?.delivered_at]);
+  const physicalOrderStatus =
+    deliveredAt || normalizedTrackingStatus.includes("deliver")
+      ? "delivered"
+      : normalizedTrackingStatus.includes("ship")
+      ? "shipped"
+      : trackingNumber || trackingUrl || trackingCarrier
+      ? "shipped"
+      : undefined;
+  const shippedAt = parseAnyDate([shipment?.shipped_at, shipment?.ship_date]);
+  const printfulOrderStatus =
+    payload.data?.order?.status?.trim() ||
+    payload.order?.status?.trim() ||
+    fetchedOrder?.result?.status?.trim() ||
+    undefined;
 
   await prisma.printfulOrder.update({
     where: { id: printfulOrder.id },
@@ -215,7 +329,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       trackingStatus: trackingStatus ?? undefined,
       shippedAt: shippedAt ?? undefined,
       trackingUpdatedAt: new Date(),
-      ...(trackingStatus ? { status: trackingStatus } : {}),
+      ...(printfulOrderStatus ? { status: printfulOrderStatus } : {}),
     },
   });
 
@@ -269,7 +383,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const shouldSendShippingEmail =
       physicalOrderStatus === "shipped" &&
-      Boolean(trackingNumber) &&
+      Boolean(trackingNumber || trackingUrl) &&
       !orderRecord.shippingEmailSentAt;
 
     if (shouldSendShippingEmail) {
@@ -278,6 +392,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customerEmail: orderRecord.user.email,
         shippingDate: shippedAt ?? undefined,
         trackingUrl: trackingUrl ?? undefined,
+        trackingNumber: trackingNumber ?? undefined,
         productImages: [orderRecord.mockupUrl, orderRecord.imageUrl].filter(Boolean),
         physical_product_name: physicalProductName,
         physical_variant: physicalVariant || undefined,
@@ -294,6 +409,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           orderId: orderRecord.id,
           error: shippingSendResult.error,
         });
+      }
+    }
+
+    if (physicalOrderStatus === "delivered") {
+      const existingDeliverySchedule = await prisma.deliveryEmailSchedule.findUnique({
+        where: { productOrderId: orderRecord.id },
+      });
+
+      if (!existingDeliverySchedule?.sentAt) {
+        const deliveredSendResult = await sendOrderDeliveredEmail(null, {
+          orderNumber: orderRecord.id,
+          customerEmail: orderRecord.user.email,
+          shippingDate: shippedAt ?? undefined,
+          trackingUrl: trackingUrl ?? undefined,
+          trackingNumber: trackingNumber ?? undefined,
+          productImages: [orderRecord.mockupUrl, orderRecord.imageUrl].filter(Boolean),
+          physical_product_name: physicalProductName,
+          physical_variant: physicalVariant || undefined,
+          physical_order_id: orderRecord.id,
+        });
+
+        if (deliveredSendResult.ok) {
+          const effectiveDeliveryDate = deliveredAt ?? new Date();
+          await prisma.deliveryEmailSchedule.upsert({
+            where: { productOrderId: orderRecord.id },
+            create: {
+              productOrderId: orderRecord.id,
+              deliveryDate: effectiveDeliveryDate,
+              maxDeliveryDays: getWholeDayDiff(shippedAt, effectiveDeliveryDate),
+              sentAt: new Date(),
+              processingAt: null,
+              lastError: null,
+            },
+            update: {
+              deliveryDate: effectiveDeliveryDate,
+              maxDeliveryDays: getWholeDayDiff(shippedAt, effectiveDeliveryDate),
+              sentAt: new Date(),
+              processingAt: null,
+              lastError: null,
+            },
+          });
+        } else {
+          console.error("Delivered email send failed from webhook", {
+            orderId: orderRecord.id,
+            error: deliveredSendResult.error,
+          });
+        }
       }
     }
 

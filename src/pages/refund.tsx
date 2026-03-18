@@ -1,16 +1,13 @@
-import Head from "next/head";
+import { SeoHead } from "~/component/SeoHead";
 
 const RefundPolicy: React.FC = () => {
   return (
     <>
-      <Head>
-        <title>Refund Policy - Name Design AI</title>
-        <meta
-          name="description"
-          content="Understand our refund policy at Name Design AI."
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <SeoHead
+        title="Refund Policy | Name Design AI"
+        description="Understand our refund policy for credits and physical products at Name Design AI."
+        path="/refund"
+      />
       <main className="flex min-h-screen flex-col items-center justify-center py-10">
         <div className="w-full max-w-4xl px-6">
           <h1 className="text-4xl font-bold text-center mb-8">Refund Policy</h1>

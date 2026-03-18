@@ -1,8 +1,8 @@
-import Head from "next/head";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { useSession, signIn } from "next-auth/react";
+import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { useBuyCredits } from "~/hook/useBuyCredits";
@@ -107,14 +107,12 @@ const BuyCredits: React.FC = () => {
 
   return (
     <>
-      <Head>
-        <title>Buy Credits | Name Design AI</title>
-        <meta
-          name="description"
-          content="Explore affordable pricing plans and buy credits to unlock premium features on Name Design AI. Start creating stunning name designs today."
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <SeoHead
+        title="Buy Credits | Name Design AI"
+        description="Explore affordable pricing plans and buy credits to unlock premium features on Name Design AI. Start creating stunning name designs today."
+        path="/buy-credits"
+        noindex
+      />
 
       <main className="container mx-auto mt-20 min-h-screen px-4 pb-16 sm:px-8">
         <div className="mx-auto w-full max-w-6xl">

@@ -1,10 +1,10 @@
 import { type NextPage } from "next";
-import Head from "next/head";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 import { Button } from "~/component/Button";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
+import { SeoHead } from "~/component/SeoHead";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { api } from "~/utils/api";
@@ -88,13 +88,12 @@ const ProductsPage: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Products | Name Design AI</title>
-        <meta
-          name="description"
-          content="Print your saved name art on premium physical products with product-to-design compatibility."
-        />
-      </Head>
+      <SeoHead
+        title="Products | Name Design AI"
+        description="Print your saved name art on premium physical products with product-to-design compatibility."
+        path="/products"
+        noindex
+      />
 
       <main className="container mx-auto min-h-screen px-4 py-8 mt-16 md:px-8">
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white px-5 py-6 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:px-8 md:py-7">

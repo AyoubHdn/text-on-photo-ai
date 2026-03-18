@@ -1,5 +1,6 @@
 import { type AppType } from "next/app";
 import { type Session } from "next-auth";
+import Head from "next/head";
 import { SessionProvider } from "next-auth/react";
 import Script from "next/script";
 import { useRouter } from "next/router";
@@ -24,6 +25,23 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
   "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
 };
 
+const GLOBAL_NOINDEX_PATHS = new Set([
+  "/name-art-generator",
+  "/arabic-name-art-generator",
+  "/couples-name-art-generator",
+  "/ar/arabic-name-art-generator",
+  "/products",
+  "/collection",
+  "/buy-credits",
+  "/checkout",
+  "/success",
+  "/cancel",
+  "/order/success",
+  "/order/cancel",
+  "/unlock/free-credit",
+  "/unlock/result",
+]);
+
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
   pageProps: { session, ...pageProps },
@@ -42,6 +60,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const [isRamadanMugV2PaidTraffic, setIsRamadanMugV2PaidTraffic] = useState(false);
   const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const shouldNoindexRoute = GLOBAL_NOINDEX_PATHS.has(router.pathname);
 
   useEffect(() => {
     try {
@@ -150,6 +169,12 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   return (
     <SessionProvider session={session}>
+      {shouldNoindexRoute && (
+        <Head>
+          <meta name="robots" content="noindex, nofollow" key="global-robots" />
+        </Head>
+      )}
+
       {/* Google Tag Manager Script */}
       <Script
         id="gtm-script"

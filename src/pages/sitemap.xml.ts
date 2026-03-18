@@ -1,64 +1,80 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-// pages/sitemap.xml.ts
 
-import { type GetServerSideProps } from 'next';
-import { popularNames } from '~/lib/names';
+import fs from "fs";
+import path from "path";
+import { type GetServerSideProps } from "next";
 
-const BASE_URL = 'https://www.namedesignai.com';
+import { SITEMAP_NAME_PAGES, getNameArtPath } from "~/lib/nameArtSeo";
+import { SITE_URL } from "~/lib/seo";
+import {
+  ARABIC_STYLE_ITEMS,
+  COUPLES_STYLE_ITEMS,
+  NAME_ART_STYLE_ITEMS,
+} from "~/lib/styleTaxonomy";
 
-/**
- * Normalize paths:
- * - remove trailing slash (except '/')
- * - ensure leading slash
- */
-const normalizePath = (path: string) => {
-  if (!path.startsWith('/')) path = `/${path}`;
-  if (path !== '/' && path.endsWith('/')) {
-    return path.slice(0, -1);
+const normalizePath = (pagePath: string) => {
+  if (!pagePath.startsWith("/")) return `/${pagePath}`;
+  if (pagePath !== "/" && pagePath.endsWith("/")) {
+    return pagePath.slice(0, -1);
   }
-  return path;
+
+  return pagePath;
 };
 
-const getPriority = (rawPage: string): string => {
+const getPriority = (rawPage: string) => {
   const page = normalizePath(rawPage);
 
-  // 1.0 — Homepage
-  if (page === '/') return '1.0';
+  if (page === "/") return "1.0";
 
-  // 0.9 — Main product landing pages ONLY (exact match)
-  const mainLandingPages = new Set([
-    '/name-art',
-    '/pro-logo',
-    '/couples-art',
-    '/arabic-name-art',
-    '/ar/arabic-name-art',
+  const primaryLandingPages = new Set([
+    "/name-art",
+    "/arabic-name-art",
+    "/ar/arabic-name-art",
+    "/couples-art",
+    "/personalized-gifts",
+    "/personalized-name-mugs",
+    "/custom-name-shirts",
+    "/personalized-name-wall-art",
+    "/arabic-name-gifts",
+    "/couple-gifts",
   ]);
 
-  if (mainLandingPages.has(page)) return '0.9';
-
-  // 0.7 — Programmatic SEO pages ONLY: /name-art/{slug}
-  if (/^\/name-art\/[^/]+$/.test(page)) return '0.7';
-
-  // 0.6 — Generators & hubs
+  if (primaryLandingPages.has(page)) return "0.9";
   if (
-    page.endsWith('-generator') ||
-    page === '/community' ||
-    page === '/blog'
+    page === "/community" ||
+    page === "/name-art/styles" ||
+    page === "/couples-art/styles" ||
+    page === "/arabic-name-art/styles"
   ) {
-    return '0.6';
+    return "0.8";
   }
+  if (/^\/name-art\/[^/]+$/.test(page)) return "0.7";
+  if (
+    /^\/name-art\/styles\/[^/]+$/.test(page) ||
+    /^\/couples-art\/styles\/[^/]+$/.test(page) ||
+    /^\/arabic-name-art\/styles\/[^/]+$/.test(page)
+  ) {
+    return "0.7";
+  }
+  if (page === "/blog") return "0.6";
+  if (/^\/blog\/[^/]+$/.test(page)) return "0.5";
 
-  // 0.5 — Blog posts
-  if (/^\/blog\/[^/]+$/.test(page)) return '0.5';
+  return "0.3";
+};
 
-  // 0.3 — Legal & misc
-  return '0.3';
+const getBlogPostPaths = () => {
+  const postsDirectory = path.join(process.cwd(), "_posts");
+
+  return fs
+    .readdirSync(postsDirectory)
+    .filter((filename) => filename.endsWith(".mdx") || filename.endsWith(".md"))
+    .map((filename) => `/blog/${filename.replace(/\.mdx?$/, "")}`);
 };
 
 const generateSiteMap = (allPages: string[]) => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -67,58 +83,59 @@ ${allPages
     const page = normalizePath(rawPage);
     return `
   <url>
-    <loc>${BASE_URL}${page}</loc>
+    <loc>${SITE_URL}${page}</loc>
     <lastmod>${today}</lastmod>
     <priority>${getPriority(page)}</priority>
   </url>`;
   })
-  .join('')}
+  .join("")}
 </urlset>`;
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  // --- 1. STATIC PAGES ---
   const staticPages = [
-    '/',
-    '/community',
-    '/collection',
-    '/products',
-    '/buy-credits',
-    '/blog',
-
-    '/name-art',
-    '/name-art-generator',
-    '/couples-art',
-    '/couples-name-art-generator',
-
-    '/arabic-name-art',
-    '/arabic-name-art-generator',
-    '/ar/arabic-name-art',
-    '/ar/arabic-name-art-generator',
-
-    '/blog/how-to-give-a-thoughtful-gift',
-    '/blog/why-couple-name-art-is-the-perfect-keepsake',
-
-    '/privacy-policy',
-    '/terms-of-service',
-    '/refund',
+    "/",
+    "/blog",
+    "/community",
+    "/name-art",
+    "/name-art/styles",
+    "/arabic-name-art",
+    "/arabic-name-art/styles",
+    "/ar/arabic-name-art",
+    "/couples-art",
+    "/couples-art/styles",
+    "/personalized-gifts",
+    "/personalized-name-mugs",
+    "/custom-name-shirts",
+    "/personalized-name-wall-art",
+    "/arabic-name-gifts",
+    "/couple-gifts",
+    "/privacy-policy",
+    "/terms-of-service",
+    "/refund",
   ];
 
-  // --- 2. DYNAMIC PROGRAMMATIC PAGES ---
-  const nameArtPages = popularNames.map(
-    (item) => `/name-art/${item.name.toLowerCase()}`
-  );
+  const blogPages = getBlogPostPaths();
+  const nameArtPages = SITEMAP_NAME_PAGES.map((item) => getNameArtPath(item.name));
+  const nameArtStylePages = NAME_ART_STYLE_ITEMS.map((item) => `/name-art/styles/${item.slug}`);
+  const couplesStylePages = COUPLES_STYLE_ITEMS.map((item) => `/couples-art/styles/${item.slug}`);
+  const arabicStylePages = ARABIC_STYLE_ITEMS.map((item) => `/arabic-name-art/styles/${item.slug}`);
+  const allPages = Array.from(new Set([
+    ...staticPages,
+    ...blogPages,
+    ...nameArtPages,
+    ...nameArtStylePages,
+    ...couplesStylePages,
+    ...arabicStylePages,
+  ]));
 
-  const allPages = [...staticPages, ...nameArtPages];
-
-  const sitemap = generateSiteMap(allPages);
-
-  res.setHeader('Content-Type', 'text/xml');
-  res.write(sitemap);
+  res.setHeader("Content-Type", "text/xml");
+  res.write(generateSiteMap(allPages));
   res.end();
 
   return { props: {} };
 };
 
 const Sitemap = () => null;
+
 export default Sitemap;

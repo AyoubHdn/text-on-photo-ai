@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+import { SeoHead } from "~/component/SeoHead";
+
 const GENERATOR_HREFS: Record<string, string> = {
   "ramadan-mug-v2": "/ramadan-mug-v2",
   "ramadan-mug-men": "/ramadan-mug-men",
@@ -28,8 +30,8 @@ export default function OrderCancel() {
     typeof router.query.sourcePage === "string"
       ? router.query.sourcePage
       : typeof router.query.generator === "string"
-      ? router.query.generator
-      : null;
+        ? router.query.generator
+        : null;
 
   const checkoutHref = orderId
     ? `/checkout?orderId=${encodeURIComponent(orderId)}${
@@ -40,35 +42,43 @@ export default function OrderCancel() {
     : null;
 
   return (
-    <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">
-      <h1 className="text-3xl font-bold mb-2">Payment was canceled</h1>
-      <p className="text-muted-foreground mb-6">
-        Your order draft is still saved. You can continue checkout anytime.
-      </p>
+    <>
+      <SeoHead
+        title="Order Payment Canceled | Name Design AI"
+        description="Product order payment canceled page."
+        path="/order/cancel"
+        noindex
+      />
+      <div className="max-w-xl mx-auto p-8 text-center bg-background text-foreground">
+        <h1 className="text-3xl font-bold mb-2">Payment was canceled</h1>
+        <p className="text-muted-foreground mb-6">
+          Your order draft is still saved. You can continue checkout anytime.
+        </p>
 
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {checkoutHref ? (
-          <Link
-            href={checkoutHref}
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {checkoutHref ? (
+            <Link
+              href={checkoutHref}
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
+            >
+              Return to checkout
+            </Link>
+          ) : (
+            <Link
+              href={getGeneratorHref(sourcePage)}
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
+            >
+              Return to your design
+            </Link>
+          )}
+          <a
+            href="mailto:support@namedesignai.com"
+            className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 font-semibold text-foreground hover:border-gray-400 transition"
           >
-            Return to checkout
-          </Link>
-        ) : (
-          <Link
-            href={getGeneratorHref(sourcePage)}
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
-          >
-            Return to your design
-          </Link>
-        )}
-        <a
-          href="mailto:support@namedesignai.com"
-          className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 font-semibold text-foreground hover:border-gray-400 transition"
-        >
-          Contact support
-        </a>
+            Contact support
+          </a>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

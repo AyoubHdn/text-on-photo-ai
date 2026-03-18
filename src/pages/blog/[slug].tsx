@@ -1,5 +1,4 @@
 import { type GetStaticPaths, type GetStaticProps, type NextPage } from "next";
-import Head from "next/head";
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -7,6 +6,11 @@ import { MDXRemote, type MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
 import Link from "next/link";
 import { Button } from "~/component/Button";
+import { SeoHead } from "~/component/SeoHead";
+import {
+  buildArticleSchema,
+  buildBreadcrumbSchema,
+} from "~/lib/seo";
 
 // Define a clear type for the frontmatter
 interface PostFrontmatter {
@@ -18,6 +22,7 @@ interface PostFrontmatter {
 }
 
 interface PostPageProps {
+  slug: string;
   frontmatter: PostFrontmatter;
   source: MDXRemoteSerializeResult; // Changed prop name to 'source'
 }
@@ -43,15 +48,48 @@ const components = {
   CTA,
 };
 
-const PostPage: NextPage<PostPageProps> = ({ frontmatter, source }) => {
+const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
+  const articlePath = `/blog/${slug}`;
   return (
     <>
-      <Head>
-        <title>{frontmatter.title} | Name Design AI Blog</title>
-        <meta name="description" content={frontmatter.description} />
-      </Head>
+      <SeoHead
+        title={`${frontmatter.title} | Name Design AI Blog`}
+        description={frontmatter.description}
+        path={articlePath}
+        image={frontmatter.featuredImage}
+        imageAlt={frontmatter.title}
+        type="article"
+        jsonLd={[
+          buildBreadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Blog", path: "/blog" },
+            { name: frontmatter.title, path: articlePath },
+          ]),
+          buildArticleSchema({
+            headline: frontmatter.title,
+            description: frontmatter.description,
+            path: articlePath,
+            imagePath: frontmatter.featuredImage,
+            datePublished: frontmatter.date,
+            authorName:
+              typeof frontmatter.author === "string"
+                ? frontmatter.author
+                : "Name Design AI Team",
+          }),
+        ]}
+      />
       <main className="bg-white dark:bg-gray-900 py-16">
         <article className="container mx-auto px-6 max-w-3xl">
+          <nav className="mb-8 text-sm text-gray-500 dark:text-gray-400">
+            <Link href="/" className="hover:text-blue-500">
+              Home
+            </Link>{" "}
+            /{" "}
+            <Link href="/blog" className="hover:text-blue-500">
+              Blog
+            </Link>{" "}
+            / <span>{frontmatter.title}</span>
+          </nav>
           <header className="mb-12 text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{frontmatter.title}</h1>
             <p className="text-gray-500 dark:text-gray-400">
@@ -60,11 +98,37 @@ const PostPage: NextPage<PostPageProps> = ({ frontmatter, source }) => {
           </header>
           
           <img src={frontmatter.featuredImage} alt={frontmatter.title} className="w-full h-auto rounded-lg shadow-lg mb-12"/>
-          
+
           <div className="prose prose-lg dark:prose-invert max-w-none">
              {/* Use the 'source' prop here */}
             <MDXRemote {...source} components={components} />
           </div>
+
+          <section className="mt-16 rounded-2xl border border-slate-200 bg-slate-50 p-8 dark:border-slate-700 dark:bg-slate-800">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Continue exploring
+            </h2>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-white dark:hover:bg-slate-900">
+                <h3 className="text-lg font-semibold">Name Art</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  Start with the core name art page and generator.
+                </p>
+              </Link>
+              <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-white dark:hover:bg-slate-900">
+                <h3 className="text-lg font-semibold">Personalized Gifts</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  Move from inspiration into category pages built around gift intent.
+                </p>
+              </Link>
+              <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-white dark:hover:bg-slate-900">
+                <h3 className="text-lg font-semibold">Couple Gifts</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  Explore romantic and occasion-based product ideas linked to couple art.
+                </p>
+              </Link>
+            </div>
+          </section>
         </article>
       </main>
     </>
@@ -110,6 +174,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
 
   return {
     props: {
+      slug,
       frontmatter,
       source: mdxSource, // Pass the serialized content to the 'source' prop
     },

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { type NextPage } from "next";
-import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { AiOutlineDownload, AiOutlineEye, AiOutlineShareAlt } from "react-icons/ai";
+import { SeoHead } from "~/component/SeoHead";
 import { ShareModal } from "~/component/ShareModal";
 import { api } from "~/utils/api";
 import { env } from "~/env.mjs";
@@ -113,14 +113,12 @@ const CollectionPage: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Your Generated Images | Name Design AI</title>
-        <meta
-          name="description"
-          content="View, download, and manage your generated images on Name Design AI. Access your personalized designs anytime, anywhere."
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <SeoHead
+        title="Your Generated Images | Name Design AI"
+        description="View, download, and manage your generated images on Name Design AI. Access your personalized designs anytime, anywhere."
+        path="/collection"
+        noindex
+      />
 
       <main className="container mx-auto mt-24 flex min-h-screen flex-col gap-4 px-4 md:px-8">
         <h1 className="text-3xl md:text-4xl">Your Generated Images</h1>

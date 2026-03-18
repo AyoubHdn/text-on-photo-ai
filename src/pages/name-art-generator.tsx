@@ -1,6 +1,5 @@
 // pages/name-art-generator.tsx
 import { type NextPage } from "next";
-import Head from "next/head";
 import Image from "next/image";
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Button } from "~/component/Button";
@@ -20,7 +19,9 @@ import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
+import { SeoHead } from "~/component/SeoHead";
 import { trackGA, trackEvent } from "~/lib/ga";
+import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -523,9 +524,12 @@ const NameArtGeneratorPage: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Name Art Generator | Name Design AI</title>
-      </Head>
+      <SeoHead
+        title="Name Art Generator | Name Design AI"
+        description="Create personalized name art inside the interactive generator."
+        path="/name-art-generator"
+        noindex
+      />
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
         <h1 className="text-4xl font-bold">Name Art Generator: Create Personalized Designs</h1>
         <p className="text-lg mt-4">Unleash your creativity with our Name Art Generator! ...</p>
@@ -566,7 +570,13 @@ const NameArtGeneratorPage: NextPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
               {(stylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
                   <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.allowCustomColors)}>
-                    <Image src={item.src.replace(/\.webp$/, "e.webp")} alt={item.basePrompt} width={200} height={200} className="w-full h-auto aspect-square object-cover"/>
+                    <Image
+                      src={item.src.replace(/\.webp$/, "e.webp")}
+                      alt={item.altText}
+                      width={200}
+                      height={200}
+                      className="w-full h-auto aspect-square object-cover"
+                    />
                   </div>
               ))}
             </div>
@@ -784,7 +794,14 @@ const NameArtGeneratorPage: NextPage = () => {
                   </div>
                   <Image
                     src={displayUrl}
-                    alt="Generated output"
+                    alt={
+                      form.basePrompt
+                        ? buildPromptImageAlt(form.basePrompt, {
+                            kind: "name",
+                            title: activeSubTab || activeTab,
+                          })
+                        : "Generated name art"
+                    }
                     width={512}
                     height={512}
                     className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}

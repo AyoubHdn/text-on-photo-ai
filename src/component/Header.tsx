@@ -28,9 +28,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
         { href: "/name-art", name: "Name Art" },
         { href: "/arabic-name-art", name: "Arabic Name Art" },
         { href: "/couples-art", name: "Couples Art" },
-        // TODO: Add more landing pages here as you create them
-        // { href: "/anniversary-art", name: "Anniversary Art" },
-        // { href: "/gaming-logos", name: "Gaming Logos" },
     ];
 
     // Close mobile dropdown when clicking outside
@@ -136,8 +133,18 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                     </PrimaryLink>
                 </li>
                 <li>
+                    <PrimaryLink href="/personalized-gifts" className="hidden md:block">
+                        Gift Ideas
+                    </PrimaryLink>
+                </li>
+                <li>
                     <PrimaryLink href="/products" className="hidden md:block">
-                        Print Products
+                        Products
+                    </PrimaryLink>
+                </li>
+                <li>
+                    <PrimaryLink href="/blog" className="hidden md:block">
+                        Blog
                     </PrimaryLink>
                 </li>
                 {isLoggedIn && (
@@ -225,6 +232,16 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700"></div> 
                                 {/* --- END: Mobile Products Section --- */}
                                 <li>
+                                    <Link href="/products" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                        Products
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/personalized-gifts" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                        Gift Ideas
+                                    </Link>
+                                </li>
+                                <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
                                     </Link>
@@ -263,6 +280,16 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 ))}
                                 <div className="my-2 border-t border-gray-700"></div> 
                                 {/* --- END: Mobile Products Section --- */}
+                                <li>
+                                    <Link href="/products" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                        Products
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/personalized-gifts" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                        Gift Ideas
+                                    </Link>
+                                </li>
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Community

@@ -115,6 +115,7 @@ export async function processDueDeliveredEmailSchedules() {
       customerEmail: order.user.email,
       shippingDate: order.printfulOrder?.shippedAt ?? undefined,
       trackingUrl: order.printfulOrder?.trackingUrl ?? undefined,
+      trackingNumber: order.printfulOrder?.trackingNumber ?? undefined,
       productImages: [order.mockupUrl, order.imageUrl].filter(Boolean),
       physical_product_name: physicalProductName,
       physical_variant: physicalVariant || undefined,

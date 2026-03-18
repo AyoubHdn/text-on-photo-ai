@@ -10017,4 +10017,14 @@ export const popularNames = [
       },
       otherStyles: ["Buddhist", "Hobbies", "Classic", "Cute"]
     },
+    {
+      name: "Mohammed",
+      niches: ["Islamic", "Typography", "Classic"],
+      images: {
+        Islamic: ["s293e.webp", "s289e.webp", "s286e.webp"],
+        Typography: ["s258e.webp", "s13e.webp", "s103e.webp"],
+        Classic: ["s161e.webp", "s168e.webp", "s167e.webp"]
+      },
+      otherStyles: ["Abstract", "Vintage", "Floral", "Seasonal"]
+    },
 ];

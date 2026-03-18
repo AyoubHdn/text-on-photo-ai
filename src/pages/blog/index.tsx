@@ -1,9 +1,11 @@
 import { type GetStaticProps, type NextPage } from "next";
-import Head from "next/head";
 import Link from "next/link";
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+
+import { SeoHead } from "~/component/SeoHead";
+import { buildCollectionPageSchema, buildItemListSchema } from "~/lib/seo";
 
 // Define the type for the frontmatter object
 interface PostFrontmatter {
@@ -26,15 +28,28 @@ interface BlogIndexProps {
 }
 
 const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
+  const postPaths = posts.map((post) => `/blog/${post.slug}`);
+
   return (
     <>
-      <Head>
-        <title>Our Blog | Creative Ideas & Inspiration | Name Design AI</title>
-        <meta
-          name="description"
-          content="Explore articles on personalized gifting, home decor, family heritage, and creative inspiration from the team at Name Design AI."
-        />
-      </Head>
+      <SeoHead
+        title="Name Design AI Blog | Personalized Gift and Name Art Ideas"
+        description="Explore articles on personalized gifts, couple keepsakes, name art ideas, Arabic calligraphy inspiration, and product-ready design concepts from Name Design AI."
+        path="/blog"
+        jsonLd={[
+          buildCollectionPageSchema({
+            name: "Name Design AI Blog",
+            description:
+              "Editorial content about personalized name art, gifting ideas, and decor use cases.",
+            path: "/blog",
+            itemPaths: postPaths,
+          }),
+          buildItemListSchema({
+            name: "Blog articles",
+            itemPaths: postPaths,
+          }),
+        ]}
+      />
       <main className="bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-6 py-16">
           <div className="text-center mb-16">
@@ -42,6 +57,27 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Ideas and inspiration for gifts, decor, and celebrating the people you love.
             </p>
+          </div>
+
+          <div className="mb-12 grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:grid-cols-3">
+            <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700">
+              <h2 className="text-lg font-semibold">Personalized Gifts</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Move from editorial inspiration into category pages built for gift intent.
+              </p>
+            </Link>
+            <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700">
+              <h2 className="text-lg font-semibold">Name Art Generator</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Start the core creation flow if you already know the style direction you want.
+              </p>
+            </Link>
+            <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700">
+              <h2 className="text-lg font-semibold">Couple Gifts</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Browse pages that connect couple art themes with stronger gifting intent.
+              </p>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

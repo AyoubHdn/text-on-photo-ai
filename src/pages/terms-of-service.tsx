@@ -1,17 +1,14 @@
-import Head from "next/head";
 import Link from "next/link";
+import { SeoHead } from "~/component/SeoHead";
 
 const TermsOfService: React.FC = () => {
   return (
     <>
-      <Head>
-        <title>Terms of Service | Name Design AI</title>
-        <meta
-          name="description"
-          content="Read our Terms of Service to understand the conditions of using Name Design AI."
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <SeoHead
+        title="Terms of Service | Name Design AI"
+        description="Read our Terms of Service to understand the conditions of using Name Design AI."
+        path="/terms-of-service"
+      />
       <main className="flex min-h-screen flex-col items-center justify-center py-10">
         <div className="w-full max-w-4xl px-6">
           <h1 className="text-4xl font-bold text-center mb-8">Terms of Service</h1>

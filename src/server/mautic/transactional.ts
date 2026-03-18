@@ -1,10 +1,12 @@
 import { env } from "~/env.mjs";
+import { resolveTransactionalTrackingUrl } from "./tracking";
 
 type MauticOrderData = {
   orderNumber: string;
   customerEmail?: string | null;
   shippingDate?: string | Date | null;
   trackingUrl?: string | null;
+  trackingNumber?: string | null;
   productImages?: string[] | null;
   physical_product_name?: string | null;
   physical_variant?: string | null;
@@ -37,7 +39,7 @@ function buildTokens(orderData: MauticOrderData) {
   return {
     "{order_number}": orderData.orderNumber,
     "{shipping_date}": formatShippingDate(orderData.shippingDate),
-    "{tracking_url}": orderData.trackingUrl ?? "",
+    "{tracking_url}": resolveTransactionalTrackingUrl(orderData),
     "{product_images}": (orderData.productImages ?? []).filter(Boolean).join(", "),
     "{physical_product_name}": orderData.physical_product_name ?? "",
     "{physical_variant}": orderData.physical_variant ?? "",

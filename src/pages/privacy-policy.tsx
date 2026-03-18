@@ -1,16 +1,13 @@
-import Head from "next/head";
+import { SeoHead } from "~/component/SeoHead";
 
 const PrivacyPolicy: React.FC = () => {
   return (
     <>
-      <Head>
-        <title>Privacy Policy | Name Design AI</title>
-        <meta
-          name="description"
-          content="Read our Privacy Policy at Name Design AI to understand how we handle your data."
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <SeoHead
+        title="Privacy Policy | Name Design AI"
+        description="Read our Privacy Policy at Name Design AI to understand how we handle your data."
+        path="/privacy-policy"
+      />
       <main className="flex min-h-screen flex-col items-center justify-center py-10">
         <div className="w-full max-w-4xl px-6">
           <h1 className="text-4xl font-bold text-center mb-8">Privacy Policy</h1>

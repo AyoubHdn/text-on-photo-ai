@@ -17,12 +17,14 @@ import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { FiGlobe } from "react-icons/fi";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
+import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 
 // --- TYPESCRIPT FIX START ---
 interface StyleItem {
   src: string;
   name: string;
   basePrompt: string;
+  altText: string;
 }
 
 interface SubCategory {
@@ -273,7 +275,13 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4" dir="rtl">
               {(typedArabicStylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
                   <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src)}>
-                    <Image src={item.src} alt={item.basePrompt} width={200} height={200} className="w-full h-auto aspect-square object-cover"/>
+                    <Image
+                      src={item.src}
+                      alt={item.altText}
+                      width={200}
+                      height={200}
+                      className="w-full h-auto aspect-square object-cover"
+                    />
                     <button type="button" onClick={(e) => { e.stopPropagation(); openPopup(item.src); }} className="absolute top-1 left-1 bg-black bg-opacity-40 text-white rounded-full p-1 text-xs hover:bg-opacity-60">🔍</button>
                     <div className="p-2 text-center text-xs font-medium truncate">{item.name}</div>
                   </div>
@@ -331,7 +339,20 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
                     <button type="button" onClick={() => void handleDownload(imageUrl)} className="p-2 text-white hover:text-green-300" title="تحميل">⬇️</button>
                     <button type="button" onClick={() => openShareModal(imageUrl)} className="p-2 text-white hover:text-pink-300" title="مشاركة">📤</button>
                   </div>
-                  <Image src={imageUrl} alt="Arabic Art" width={512} height={512} className="w-full h-auto" />
+                  <Image
+                    src={imageUrl}
+                    alt={
+                      form.basePrompt
+                        ? buildPromptImageAlt(form.basePrompt, {
+                            kind: "arabic",
+                            title: activeSubTab || activeTab,
+                          })
+                        : "Generated Arabic art"
+                    }
+                    width={512}
+                    height={512}
+                    className="w-full h-auto"
+                  />
                 </div>
               ))}
             </section>

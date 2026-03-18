@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 // pages/community.tsx
 import { type NextPage } from "next";
-import Head from "next/head";
 import Image from "next/image";
 import { api } from "~/utils/api";
 import { useState } from "react"; // <-- Import useState
+import { SeoHead } from "~/component/SeoHead";
 import { env } from "~/env.mjs";
+import { buildCommunityImageAlt } from "~/lib/styleImageAlt";
 
 const CommunityPage: NextPage = () => {
     const { data: icons, isLoading } = api.icons.getCommunityIcons.useQuery();
@@ -16,15 +17,15 @@ const CommunityPage: NextPage = () => {
 
     return (
     <>
-    <Head>
-        <title>Community Gallery | User-Generated Designs on Name Design AI</title>
-        <meta name="description" content="Browse beautiful designs created by the Name Design AI community. Get inspiration for your own name art, logos, and wedding invitations." />
-        <link rel="icon" href="/favicon.ico" />
-    </Head>
+    <SeoHead
+        title="Community Gallery | User-Generated Designs on Name Design AI"
+        description="Browse user-created designs from the Name Design AI community for inspiration across personalized name art, Arabic calligraphy, and couple artwork."
+        path="/community"
+    />
     <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-8 px-8 mb-24">
         <div className="text-center">
             <h1 className="text-4xl font-bold">Community Gallery</h1>
-            <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">Get inspired by the amazing designs our community has created.</p>
+            <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">Get inspired by personalized name art, Arabic calligraphy, and couple designs created by the community.</p>
         </div>
 
         {isLoading && <p className="text-center">Loading designs...</p>}
@@ -42,7 +43,7 @@ const CommunityPage: NextPage = () => {
                     <div className="aspect-square w-full bg-gray-200 dark:bg-gray-800">
                         <Image 
                             src={`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`}
-                            alt={icon.prompt ?? "A community-generated design"}
+                            alt={buildCommunityImageAlt(icon.prompt)}
                             fill // The 'fill' prop is essential
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -71,7 +72,7 @@ const CommunityPage: NextPage = () => {
               {/* Using a standard img tag here for simplicity in a modal */}
               <img
                 src={popupImage}
-                alt="Fullscreen view of a community design"
+                alt="Fullscreen view of a community-generated design"
                 className="max-w-screen-lg max-h-[90vh] rounded-lg object-contain"
               />
             </div>
