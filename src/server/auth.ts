@@ -11,6 +11,10 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import {
+  recordDigitalArtInterest,
+  type DigitalArtInterest,
+} from "~/server/mautic/digitalArtInterest";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -27,6 +31,11 @@ type PaidTrafficDetection = {
   signals: string[];
 };
 
+type DigitalArtInterestDetection = {
+  interest: DigitalArtInterest | null;
+  sourcePath?: string;
+};
+
 const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
   string,
   { sourcePage: string; promotedProduct: string }
@@ -34,6 +43,17 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
   "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
   "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
   "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
+};
+
+const DIGITAL_ART_INTEREST_PATH_MAP: Record<string, DigitalArtInterest> = {
+  "/name-art": "name_art",
+  "/name-art-generator": "name_art",
+  "/arabic-name-art": "arabic_name_art",
+  "/arabic-name-art-generator": "arabic_name_art",
+  "/ar/arabic-name-art": "arabic_name_art",
+  "/ar/arabic-name-art-generator": "arabic_name_art",
+  "/couples-art": "couples_art",
+  "/couples-name-art-generator": "couples_art",
 };
 
 function normalize(value: string | null | undefined): string {
@@ -80,6 +100,14 @@ function parsePathCandidate(candidate: string | null | undefined): string | null
       return null;
     }
   }
+}
+
+function readHeaderValue(
+  value: string | string[] | undefined,
+): string | null {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value[0] ?? null;
+  return null;
 }
 
 function detectPaidTrafficFromRequest(req?: NextApiRequest): PaidTrafficDetection {
@@ -136,6 +164,38 @@ function detectPaidTrafficFromRequest(req?: NextApiRequest): PaidTrafficDetectio
     sourcePage: offerMeta?.sourcePage,
     promotedProduct: offerMeta?.promotedProduct,
     signals,
+  };
+}
+
+function detectDigitalArtInterestFromRequest(
+  req?: NextApiRequest,
+): DigitalArtInterestDetection {
+  const callbackUrlFromQuery =
+    typeof req?.query?.callbackUrl === "string" ? req.query.callbackUrl : undefined;
+  const callbackUrlFromCookie =
+    req?.cookies?.["__Secure-next-auth.callback-url"] ??
+    req?.cookies?.["next-auth.callback-url"];
+  const referer = readHeaderValue(req?.headers?.referer);
+
+  const pathSources = [
+    parsePathCandidate(callbackUrlFromQuery),
+    parsePathCandidate(callbackUrlFromCookie),
+    parsePathCandidate(referer),
+  ];
+
+  for (const path of pathSources) {
+    if (!path) continue;
+    const interest = DIGITAL_ART_INTEREST_PATH_MAP[path];
+    if (interest) {
+      return {
+        interest,
+        sourcePath: path,
+      };
+    }
+  }
+
+  return {
+    interest: null,
   };
 }
 
@@ -203,6 +263,8 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
       if (user.email) {
         try {
           const paidDetection = detectPaidTrafficFromRequest(req);
+          const digitalArtInterestDetection =
+            detectDigitalArtInterestFromRequest(req);
           if (paidDetection.isPaid) {
             console.log("AUTH_DEBUG signIn paid detected", {
               userId: user.id,
@@ -242,6 +304,14 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
           },
           'namedesignai');
           console.log("Mautic updated on signIn:", result);
+
+          if (digitalArtInterestDetection.interest) {
+            await recordDigitalArtInterest({
+              prisma,
+              userId: user.id,
+              interest: digitalArtInterestDetection.interest,
+            });
+          }
         } catch (err) {
           console.error("Error updating Mautic on signIn:", err);
         }
@@ -254,6 +324,8 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
       if (user.email) {
         try {
           const paidDetection = detectPaidTrafficFromRequest(req);
+          const digitalArtInterestDetection =
+            detectDigitalArtInterestFromRequest(req);
           if (paidDetection.isPaid) {
             console.log("AUTH_DEBUG createUser paid detected", {
               userId: user.id,
@@ -283,6 +355,14 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
           },
           'namedesignai');
           console.log("Mautic updated on createUser:", result);
+
+          if (digitalArtInterestDetection.interest) {
+            await recordDigitalArtInterest({
+              prisma,
+              userId: user.id,
+              interest: digitalArtInterestDetection.interest,
+            });
+          }
         } catch (err) {
           console.error("Error updating Mautic on createUser:", err);
         }
