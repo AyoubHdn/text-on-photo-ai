@@ -38,6 +38,7 @@ type SavedDesign = {
 };
 
 const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
+const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
 const MAX_GENERATION_IMAGES = 4;
 const MODEL_CREDITS: Record<AIModel, number> = {
   "flux-schnell": 1,
@@ -83,6 +84,16 @@ const NameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
+  const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
+    onSuccess: () => {
+      try {
+        window.localStorage.removeItem(DIGITAL_ART_INTENT_STORAGE_KEY);
+      } catch {
+        // ignore storage errors
+      }
+    },
+  });
+  const intentSyncStartedRef = useRef(false);
   const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
   const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
   const isIdeogramModel = selectedModel === "ideogram-ai/ideogram-v2-turbo";
@@ -131,6 +142,29 @@ const NameArtGeneratorPage: NextPage = () => {
       // ignore storage errors
     }
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || intentSyncStartedRef.current) return;
+
+    try {
+      const pendingSourcePage = window.localStorage.getItem(
+        DIGITAL_ART_INTENT_STORAGE_KEY,
+      );
+      if (pendingSourcePage !== SOURCE_PAGE) return;
+
+      intentSyncStartedRef.current = true;
+      digitalArtInterestIntent.mutate(
+        { sourcePage: SOURCE_PAGE },
+        {
+          onSettled: () => {
+            intentSyncStartedRef.current = false;
+          },
+        },
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, [SOURCE_PAGE, digitalArtInterestIntent, isLoggedIn]);
 
   useEffect(() => {
     if (!router.isReady) return; // Wait until the router is fully initialized
@@ -237,6 +271,15 @@ const NameArtGeneratorPage: NextPage = () => {
     handleScroll(subcategoryScrollRef, setShowLeftSubCategoryArrow, setShowRightSubCategoryArrow);
   }, [activeTab, activeSubTab]);
 
+  const startGeneratorSignIn = () => {
+    try {
+      window.localStorage.setItem(DIGITAL_ART_INTENT_STORAGE_KEY, SOURCE_PAGE);
+    } catch {
+      // ignore storage errors
+    }
+    void signIn(undefined, { callbackUrl: router.asPath });
+  };
+
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess: (data) => {
       setImagesUrl(data);
@@ -305,7 +348,7 @@ const NameArtGeneratorPage: NextPage = () => {
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isLoggedIn) { void signIn(); return; }
+    if (!isLoggedIn) { startGeneratorSignIn(); return; }
     if (!form.name || !form.basePrompt) {
       setError("Please select a style and enter a name."); return;
     }
@@ -740,7 +783,7 @@ const NameArtGeneratorPage: NextPage = () => {
           
           <Button
             type={isLoggedIn ? "submit" : "button"}
-            onClick={!isLoggedIn ? () => { void signIn(); } : undefined}
+            onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
             isLoading={generateIcon.isLoading}
             disabled={generateIcon.isLoading || isCreditLocked}
           >

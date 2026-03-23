@@ -46,6 +46,7 @@ type SavedDesign = {
 const typedArabicStylesData =
   arabicStylesData as unknown as TypedArabicStylesData;
 const LAST_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
+const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
 const MODEL_CREDITS: Record<ArabicGeneratorModel, number> = {
   "google/nano-banana-2": 3,
   "google/nano-banana-pro": 6,
@@ -86,6 +87,16 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
   const creditsQuery = api.user.getCredits.useQuery(undefined, {
     enabled: isLoggedIn,
   });
+  const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
+    onSuccess: () => {
+      try {
+        window.localStorage.removeItem(DIGITAL_ART_INTENT_STORAGE_KEY);
+      } catch {
+        // ignore storage errors
+      }
+    },
+  });
+  const intentSyncStartedRef = useRef(false);
 
   const selectedTier =
     ARABIC_GENERATOR_TIERS.find((tier) => tier.model === selectedModel) ??
@@ -118,6 +129,29 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
     const firstSubCategory = Object.keys(typedArabicStylesData[firstCategory]!)[0];
     if (firstSubCategory) setActiveSubTab(firstSubCategory);
   }, [router.isReady, router.query]);
+
+  useEffect(() => {
+    if (!isLoggedIn || intentSyncStartedRef.current) return;
+
+    try {
+      const pendingSourcePage = window.localStorage.getItem(
+        DIGITAL_ART_INTENT_STORAGE_KEY,
+      );
+      if (pendingSourcePage !== SOURCE_PAGE) return;
+
+      intentSyncStartedRef.current = true;
+      digitalArtInterestIntent.mutate(
+        { sourcePage: SOURCE_PAGE },
+        {
+          onSettled: () => {
+            intentSyncStartedRef.current = false;
+          },
+        },
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, [SOURCE_PAGE, digitalArtInterestIntent, isLoggedIn]);
 
   const handleScroll = (
     ref: React.RefObject<HTMLDivElement>,
@@ -153,6 +187,15 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
     pendingCreditActionRef.current = retryAction;
     setCreditUpgradeRequired(requiredCredits);
     setCreditUpgradeOpen(true);
+  };
+
+  const startGeneratorSignIn = () => {
+    try {
+      window.localStorage.setItem(DIGITAL_ART_INTENT_STORAGE_KEY, SOURCE_PAGE);
+    } catch {
+      // ignore storage errors
+    }
+    void signIn(undefined, { callbackUrl: router.asPath });
   };
 
   const generateIcon = api.generate.generateIcon.useMutation({
@@ -209,7 +252,7 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      void signIn();
+      startGeneratorSignIn();
       return;
     }
     if (!form.name || !form.basePrompt) {
@@ -433,7 +476,12 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
             </div>
           )}
 
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading}>
+          <Button
+            type={isLoggedIn ? "submit" : "button"}
+            onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
+            isLoading={generateIcon.isLoading}
+            disabled={generateIcon.isLoading}
+          >
             {isLoggedIn
               ? `توليد (${selectedTier.credits} نقاط)`
               : "سجل الدخول للتوليد"}

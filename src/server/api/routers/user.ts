@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import {
+  getDigitalArtInterestFromSourcePage,
+  recordDigitalArtInterest,
+} from "~/server/mautic/digitalArtInterest";
 
 export const userRouter = createTRPCRouter({
   getCredits: protectedProcedure
@@ -32,6 +36,31 @@ export const userRouter = createTRPCRouter({
       hasVisitedCheckout: Boolean(user?.hasVisitedCheckout),
     };
   }),
+  recordDigitalArtInterestIntent: protectedProcedure
+    .input(
+      z.object({
+        sourcePage: z.enum([
+          "name-art-generator",
+          "arabic-name-art-generator",
+          "couples-art-generator",
+        ]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const interest = getDigitalArtInterestFromSourcePage(input.sourcePage);
+
+      if (!interest) {
+        return { success: false };
+      }
+
+      await recordDigitalArtInterest({
+        prisma: ctx.prisma,
+        userId: ctx.session.user.id,
+        interest,
+      });
+
+      return { success: true };
+    }),
   capturePaidTrafficLead: publicProcedure
     .input(
       z.object({

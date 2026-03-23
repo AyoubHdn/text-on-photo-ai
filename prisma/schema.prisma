@@ -65,6 +65,8 @@ model User {
     paidTrafficFreePreviewUsed Boolean @default(false)
     hasGeneratedDesign Boolean @default(false)
     hasVisitedCheckout Boolean @default(false)
+    firstDigitalArtInterest String?
+    latestDigitalArtInterest String?
     plan          Plan      @default(None) // New field to track plan
     accounts      Account[]
     sessions      Session[]
