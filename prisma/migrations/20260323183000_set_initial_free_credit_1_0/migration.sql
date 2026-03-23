@@ -1,0 +1,1 @@
+ALTER TABLE "User" ALTER COLUMN "credits" SET DEFAULT 1.0;

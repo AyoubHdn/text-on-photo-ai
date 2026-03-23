@@ -28,8 +28,8 @@ interface MauticContactPayload {
 
 function formatCreditsForMautic(value: number | string | Prisma.Decimal): string {
   const creditDecimal = new Prisma.Decimal(value);
-  // The Mautic field is short text, so we keep a label for empty balance.
-  if (creditDecimal.lte(0)) return "No credits";
+  // In Mautic, treat legacy preview-only balances as empty for campaign filters.
+  if (creditDecimal.lte(0.1)) return "No credits";
   return creditDecimal.toString();
 }
 

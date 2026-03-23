@@ -343,7 +343,7 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
           const result = await updateMauticContact({
             email: user.email,
             name: user.name,
-            brand_specific_credits: 1.1, // New users start with 1.1 credits
+            brand_specific_credits: 1.0, // New users start with 1.0 credits
             brand_specific_plan: "None",
             customFields: {
               is_paid_traffic_user: paidDetection.isPaid ? 1 : 0,
