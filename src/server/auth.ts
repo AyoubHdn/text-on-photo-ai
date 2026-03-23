@@ -183,18 +183,21 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
   ],
   secret: env.NEXTAUTH_SECRET,
   debug: true,  // Enable debug mode to log more details
-  useSecureCookies: true,
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
-      },
-    },
-  },
+  useSecureCookies: env.NODE_ENV === "production",
+  cookies:
+    env.NODE_ENV === "production"
+      ? {
+          sessionToken: {
+            name: `__Secure-next-auth.session-token`,
+            options: {
+              httpOnly: true,
+              sameSite: "lax",
+              path: "/",
+              secure: true,
+            },
+          },
+        }
+      : undefined,
   events: {
     signIn: async ({ user }) => {
       if (user.email) {

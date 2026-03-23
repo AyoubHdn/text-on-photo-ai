@@ -290,6 +290,7 @@ const NameArtGeneratorPage: NextPage = () => {
             numberOfImages,
             aspectRatio: selectedAspectRatio,
             model: selectedModel,
+            sourcePage: SOURCE_PAGE,
             metadata: {
               category: activeTab || undefined,
               subcategory: activeSubTab || undefined,
@@ -325,6 +326,7 @@ const NameArtGeneratorPage: NextPage = () => {
       numberOfImages,
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      sourcePage: SOURCE_PAGE,
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,

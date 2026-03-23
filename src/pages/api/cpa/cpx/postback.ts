@@ -1,65 +1,58 @@
 // src/pages/api/cpa/cpx/postback.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
-import { prisma } from "~/server/db";
-import { env } from "~/env.mjs";
 import { Prisma } from "@prisma/client";
+import { env } from "~/env.mjs";
+import { prisma } from "~/server/db";
 
 const CPX_SECRET = env.CPX_SECURITY_HASH;
 
 const getParam = (p: string | string[] | undefined) =>
   Array.isArray(p) ? p[0] : p;
 
+function getUtcDayRange(date: Date) {
+  const start = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  );
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 function mapCpxType(type: string | undefined, payout: number) {
-  // Completed survey
-  if (type === "complete") {
-    return "complete";
-  }
-
-  // Screenout cases (CPX sends type=out)
-  if (type === "out") {
-    if (payout > 0) {
-      return "screenout_bonus";
-    }
-    return "screenout_no_bonus";
-  }
-
-  // Fallback safety
+  if (type === "complete") return "complete";
+  if (type === "out") return payout > 0 ? "screenout_bonus" : "screenout_no_bonus";
   return "screenout_no_bonus";
 }
 
-
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   try {
     const status = getParam(req.query.status);
-    const trans_id = getParam(req.query.trans_id);
-    const user_id = getParam(req.query.user_id);
-    const amount_usd = getParam(req.query.amount_usd);
-    const ip_click = getParam(req.query.ip_click);
+    const transId = getParam(req.query.trans_id);
+    const userId = getParam(req.query.user_id);
+    const amountUsd = getParam(req.query.amount_usd);
+    const ipClick = getParam(req.query.ip_click);
     const type = getParam(req.query.type);
     const hash = getParam(req.query.hash);
 
-    if (!trans_id || !user_id || !hash) {
+    if (!transId || !userId || !hash) {
       return res.status(400).json({ error: "Missing params" });
     }
 
     const expectedHash = crypto
       .createHash("md5")
-      .update(`${trans_id}-${CPX_SECRET}`)
+      .update(`${transId}-${CPX_SECRET}`)
       .digest("hex");
 
     if (hash !== expectedHash) {
       return res.status(403).json({ error: "Invalid hash" });
     }
 
-    console.log("CPX hash:", hash);
-    console.log("Expected:", expectedHash);
-
     const unlock = await prisma.cpaUnlock.findFirst({
-      where: { userId: user_id, network: "cpx", status: "pending" },
+      where: { userId, network: "cpx", status: "pending" },
       orderBy: { createdAt: "desc" },
     });
 
@@ -67,44 +60,70 @@ export default async function handler(
       return res.status(200).json({ message: "No pending unlock" });
     }
 
-    const payout = Number(amount_usd ?? 0);
+    const payout = Number(amountUsd ?? 0);
     const result = mapCpxType(type, payout);
+    const requestedApproved = status === "2" ? false : true;
+    const now = new Date();
+    const { start, end } = getUtcDayRange(now);
 
-    const finalStatus = status === "2" ? "rejected" : "approved";
+    let finalStatus: "approved" | "rejected" = requestedApproved
+      ? "approved"
+      : "rejected";
+    let finalResult = result;
+
+    if (requestedApproved && result !== "screenout_no_bonus") {
+      const approvedToday = await prisma.cpaUnlock.findFirst({
+        where: {
+          userId,
+          network: "cpx",
+          status: "approved",
+          approvedAt: {
+            gte: start,
+            lt: end,
+          },
+          id: { not: unlock.id },
+        },
+        select: { id: true },
+      });
+
+      if (approvedToday) {
+        finalStatus = "rejected";
+        finalResult = "reversed";
+      }
+    }
 
     await prisma.cpaUnlock.update({
       where: { id: unlock.id },
       data: {
         status: finalStatus,
-        transactionId: trans_id,
+        transactionId: transId,
         payout,
         currency: "USD",
-        leadIp: ip_click,
-        approvedAt: finalStatus === "approved" ? new Date() : null,
-        result,
+        leadIp: ipClick,
+        approvedAt: finalStatus === "approved" ? now : null,
+        result: finalResult,
       },
     });
 
-    if (finalStatus === "approved" && result !== "screenout_no_bonus") {
+    if (finalStatus === "approved" && finalResult !== "screenout_no_bonus") {
       const user = await prisma.user.findUnique({
-        where: { id: user_id },
+        where: { id: userId },
         select: { credits: true },
       });
 
       if (user) {
-        const updatedCredits = new Prisma.Decimal(user.credits).plus(
-          new Prisma.Decimal(3)
-        );
         await prisma.user.update({
-          where: { id: user_id },
-          data: { credits: updatedCredits },
+          where: { id: userId },
+          data: {
+            credits: new Prisma.Decimal(user.credits).plus(new Prisma.Decimal(3)),
+          },
         });
       }
     }
 
     return res.status(200).json({ success: true });
-  } catch (e) {
-    console.error("CPX postback error", e);
+  } catch (error) {
+    console.error("CPX postback error", error);
     return res.status(500).json({ error: "Server error" });
   }
 }

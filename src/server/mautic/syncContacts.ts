@@ -1,6 +1,7 @@
 import { User } from "@prisma/client";
 import { prisma } from "~/server/db";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import { getDigitalArtInterestSummary } from "~/server/mautic/digitalArtInterest";
 
 export type SyncContactsResult = {
   message: string;
@@ -53,10 +54,17 @@ export async function syncAllContactsToMautic(
     }
 
     try {
+      const contactInterests = await getDigitalArtInterestSummary({
+        prisma,
+        userId: contact.id,
+      });
+
       console.log("Sending to Mautic:", {
         email: contact.email,
         credits: contact.credits,
         plan: contact.plan,
+        firstDigitalArtInterest: contactInterests.firstInterest,
+        latestDigitalArtInterest: contactInterests.latestInterest,
       });
 
       const mauticData = await updateMauticContact(
@@ -65,6 +73,12 @@ export async function syncAllContactsToMautic(
           name: contact.name,
           brand_specific_credits: contact.credits,
           brand_specific_plan: contact.plan,
+          customFields: {
+            first_digital_art_interest:
+              contactInterests.firstInterest ?? undefined,
+            latest_digital_art_interest:
+              contactInterests.latestInterest ?? undefined,
+          },
         },
         "namedesignai",
       );

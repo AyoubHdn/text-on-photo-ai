@@ -12,11 +12,13 @@ export default function FreeCreditUnlock() {
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [dailyLimitMessage, setDailyLimitMessage] = useState<string | null>(null);
 
   const unlock = async () => {
     setUnlocking(true);
     setError(null);
     setRetryAfter(null);
+    setDailyLimitMessage(null);
 
     try {
       const res = await fetch("/api/cpa/cpx/unlock", {
@@ -34,6 +36,14 @@ export default function FreeCreditUnlock() {
 
       if (res.status === 403 && data?.error) {
         setError(data.error);
+        return;
+      }
+
+      if (!res.ok && data?.code === "DAILY_LIMIT") {
+        setDailyLimitMessage(
+          data?.error ??
+            "You already claimed free credits today. Try again tomorrow or buy credits.",
+        );
         return;
       }
 
@@ -167,10 +177,17 @@ export default function FreeCreditUnlock() {
                 </p>
               )}
 
+              {dailyLimitMessage && (
+                <p className="text-sm text-gray-700 dark:text-slate-200">
+                  {dailyLimitMessage}
+                </p>
+              )}
+
               {/* Other errors */}
               {error &&
                 error !== "login_required" &&
-                error !== "cooldown" && (
+                error !== "cooldown" &&
+                !dailyLimitMessage && (
                   <p className="text-sm text-red-600">{error}</p>
                 )}
 

@@ -13,6 +13,14 @@ import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { Readable } from "stream";
 import { RAMADAN_MUG_V2_STYLES } from "~/config/ramadanMugV2Styles";
+import {
+  getArabicTierByModel,
+  isArabicGeneratorSourcePage,
+} from "~/config/arabicGenerator";
+import {
+  getDigitalArtInterestFromSourcePage,
+  recordDigitalArtInterest,
+} from "~/server/mautic/digitalArtInterest";
 import { buildRamadanMugV2Prompt } from "~/server/prompts/ramadanMugV2Prompt";
 
 const s3 = new AWS.S3({
@@ -165,9 +173,28 @@ function getOrCreateGuestGenerationPromise(
   return promise;
 }
 
-async function runNanoBananaPrediction(input: Record<string, any>) {
+function isPngOutputModel(model: string) {
+  return (
+    model === "ideogram-ai/ideogram-v2-turbo" ||
+    model === "google/nano-banana-pro" ||
+    model === "google/nano-banana-2"
+  );
+}
+
+function isSingleOutputModel(model: string) {
+  return (
+    model === "ideogram-ai/ideogram-v2-turbo" ||
+    model === "google/nano-banana-pro" ||
+    model === "google/nano-banana-2"
+  );
+}
+
+async function runNanoBananaPrediction(
+  model: "google/nano-banana-pro" | "google/nano-banana-2",
+  input: Record<string, any>,
+) {
   const prediction = await replicate.predictions.create({
-    model: "google/nano-banana-pro",
+    model,
     input,
   });
 
@@ -217,15 +244,20 @@ const generateIcon = async (
   prompt: string,
   numberOfImages = 1,
   aspectRatio: AspectRatioValue = "1:1",
-  model: "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo" | "google/nano-banana-pro"
+  model:
+    | "flux-schnell"
+    | "flux-dev"
+    | "ideogram-ai/ideogram-v2-turbo"
+    | "google/nano-banana-pro"
+    | "google/nano-banana-2",
 ): Promise<string[]> => {
   let path: `${string}/${string}`;
   let input: Record<string, any>;
   let outputs: string[] = [];
 
   // --- 1. CONFIGURATION ---
-  if (model === "google/nano-banana-pro") {
-    path = "google/nano-banana-pro";
+  if (model === "google/nano-banana-pro" || model === "google/nano-banana-2") {
+    path = model;
     input = {
       prompt,
       aspect_ratio: aspectRatio,
@@ -283,8 +315,8 @@ const generateIcon = async (
   console.log(`Calling Replicate model: ${model}`);
   let rawOutput: unknown;
   try {
-    if (model === "google/nano-banana-pro") {
-      rawOutput = await runNanoBananaPrediction(input);
+    if (model === "google/nano-banana-pro" || model === "google/nano-banana-2") {
+      rawOutput = await runNanoBananaPrediction(model, input);
     } else {
       rawOutput = await withTimeout(
         replicate.run(path, { input }),
@@ -462,6 +494,7 @@ export const generateRouter = createTRPCRouter({
           "flux-dev",
           "ideogram-ai/ideogram-v2-turbo",
           "google/nano-banana-pro",
+          "google/nano-banana-2",
         ]),
         metadata: z
           .object({
@@ -476,6 +509,8 @@ export const generateRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session?.user?.id;
       const sourcePage = (input.sourcePage ?? "").trim().toLowerCase();
+      const isArabicGeneratorRequest = isArabicGeneratorSourcePage(sourcePage);
+      const arabicTier = getArabicTierByModel(input.model);
       const isRamadanGuestSource =
         sourcePage === "ramadan-mug" || sourcePage === "ramadan-mug-men";
       const isEligibleGuestGeneration = !userId && input.paidTrafficUser && isRamadanGuestSource;
@@ -487,13 +522,32 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
-      // Define credit costs
-      const modelConfig = {
+      if (isArabicGeneratorRequest && !arabicTier) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid Arabic model selected.",
+        });
+      }
+
+      if (!isArabicGeneratorRequest && input.model === "google/nano-banana-2") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This model is only available for Arabic generation.",
+        });
+      }
+
+      const defaultModelConfig = {
         "flux-schnell": { credits: 1 },
         "flux-dev": { credits: 3 },
         "ideogram-ai/ideogram-v2-turbo": { credits: 5 },
         "google/nano-banana-pro": { credits: 4 },
-      }[input.model];
+        "google/nano-banana-2": { credits: 3 },
+      } as const;
+
+      const modelConfig =
+        isArabicGeneratorRequest && arabicTier
+          ? { credits: arabicTier.credits }
+          : defaultModelConfig[input.model];
 
       if (!modelConfig) {
         throw new TRPCError({
@@ -534,17 +588,13 @@ export const generateRouter = createTRPCRouter({
                 },
               });
 
-              const isPng =
-                input.model === "ideogram-ai/ideogram-v2-turbo" ||
-                input.model === "google/nano-banana-pro";
-
               await s3
                 .putObject({
                   Bucket: BUCKET_NAME,
                   Body: Buffer.from(image, "base64"),
                   Key: icon.id,
                   ContentEncoding: "base64",
-                  ContentType: isPng ? "image/png" : "image/webp",
+                  ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
                 })
                 .promise();
 
@@ -576,10 +626,7 @@ export const generateRouter = createTRPCRouter({
       // Calculate total credits needed (Decimal-safe)
       const creditsPerImage = new Prisma.Decimal(modelConfig.credits);
       const imageCount = new Prisma.Decimal(
-        input.model === "ideogram-ai/ideogram-v2-turbo" ||
-          input.model === "google/nano-banana-pro"
-          ? 1
-          : input.numberOfImages
+        isSingleOutputModel(input.model) ? 1 : input.numberOfImages
       );
       const totalCredits = creditsPerImage.times(imageCount);
 
@@ -638,9 +685,7 @@ export const generateRouter = createTRPCRouter({
         // Generate images
         const b64Images: string[] = await generateIcon(
           input.prompt,
-          input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro"
-            ? 1
-            : input.numberOfImages,
+          isSingleOutputModel(input.model) ? 1 : input.numberOfImages,
           input.aspectRatio,
           input.model
         );
@@ -657,21 +702,19 @@ export const generateRouter = createTRPCRouter({
                   model: input.model,
                   category: input.metadata?.category ?? null,
                   subcategory: input.metadata?.subcategory ?? null,
+                  sourcePage: input.sourcePage ?? null,
                 },
               },
             });
 
             try {
-              // Determine Content Type
-              const isPng = input.model === "ideogram-ai/ideogram-v2-turbo" || input.model === "google/nano-banana-pro";
-
               await s3
                 .putObject({
                   Bucket: BUCKET_NAME,
                   Body: Buffer.from(image, "base64"),
                   Key: icon.id,
                   ContentEncoding: "base64",
-                  ContentType: isPng ? "image/png" : "image/webp",
+                  ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
                 })
                 .promise();
             } catch (s3Error) {
@@ -685,6 +728,21 @@ export const generateRouter = createTRPCRouter({
             return icon;
           })
         );
+
+        const digitalArtInterest = getDigitalArtInterestFromSourcePage(
+          input.sourcePage,
+        );
+        if (digitalArtInterest) {
+          try {
+            await recordDigitalArtInterest({
+              prisma: ctx.prisma,
+              userId: authedUserId,
+              interest: digitalArtInterest,
+            });
+          } catch (interestError) {
+            console.error("Digital art interest update failed:", interestError);
+          }
+        }
 
         // Return the URLs
         return createdIcons.map((icon) => ({

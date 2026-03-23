@@ -286,6 +286,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
             numberOfImages: parseInt(form.numberofImages, 10),
             aspectRatio: selectedAspectRatio,
             model: selectedModel,
+            sourcePage: SOURCE_PAGE,
             metadata: {
               category: activeTab || undefined,
               subcategory: activeSubTab || undefined,
@@ -330,6 +331,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       numberOfImages: parseInt(form.numberofImages, 10),
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      sourcePage: SOURCE_PAGE,
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,

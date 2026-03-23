@@ -30,6 +30,10 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
+import {
+  ARABIC_GENERATOR_TIERS,
+  type ArabicGeneratorModel,
+} from "~/config/arabicGenerator";
 
 // --- TYPESCRIPT FIX START ---
 interface StyleItem {
@@ -51,11 +55,12 @@ interface typedArabicStylesData {
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 const typedArabicStylesData: typedArabicStylesData = arabicStylesData as typedArabicStylesData;
 
-type AIModel = "google/nano-banana-pro";
+type AIModel = ArabicGeneratorModel;
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
 
 const MODEL_CREDITS: Record<AIModel, number> = {
-  "google/nano-banana-pro": 4,
+  "google/nano-banana-2": 3,
+  "google/nano-banana-pro": 6,
 };
 
 type SavedDesign = {
@@ -90,7 +95,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const [showLeftSubCategoryArrow, setShowLeftSubCategoryArrow] = useState<boolean>(false);
   const [showRightSubCategoryArrow, setShowRightSubCategoryArrow] = useState<boolean>(false);
   
-  const [selectedModel] = useState<AIModel>("google/nano-banana-pro"); 
+  const [selectedModel, setSelectedModel] = useState<AIModel>("google/nano-banana-2");
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
   const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
@@ -112,6 +117,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     imagesUrl.length === 1
       ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
       : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12";
+  const selectedTier =
+    ARABIC_GENERATOR_TIERS.find((tier) => tier.model === selectedModel) ??
+    ARABIC_GENERATOR_TIERS[0];
+  const getRequiredGenerateCredits = () => MODEL_CREDITS[selectedModel];
   const openCreditUpgrade = (
     context: "generate" | "preview" | "remove_background",
     requiredCredits: number,
@@ -250,7 +259,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
         setError("");
-        openCreditUpgrade("generate", MODEL_CREDITS[selectedModel], () => {
+        openCreditUpgrade("generate", getRequiredGenerateCredits(), () => {
           let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
           if (!finalPrompt.toLowerCase().includes("arabic")) {
             finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
@@ -260,6 +269,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             numberOfImages: 1,
             aspectRatio: selectedAspectRatio,
             model: selectedModel,
+            sourcePage: SOURCE_PAGE,
             metadata: {
               category: activeTab || undefined,
               subcategory: activeSubTab || undefined,
@@ -289,6 +299,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       numberOfImages: 1,
       aspectRatio: selectedAspectRatio,
       model: selectedModel,
+      sourcePage: SOURCE_PAGE,
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
@@ -520,8 +531,41 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             </div>
           </div>
 
+          <div>
+            <h2 className="text-xl font-semibold mb-4">3. Choose Arabic Quality</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {ARABIC_GENERATOR_TIERS.map((tier) => (
+                <button
+                  key={tier.model}
+                  type="button"
+                  onClick={() => setSelectedModel(tier.model)}
+                  className={`rounded-xl border p-4 text-left transition ${
+                    selectedModel === tier.model
+                      ? "border-blue-500 ring-2 ring-blue-500"
+                      : "border-gray-300 hover:border-gray-500"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-base font-semibold">{tier.label}</div>
+                      <div className="mt-1 text-sm text-gray-500">{tier.description}</div>
+                    </div>
+                    {tier.premium && (
+                      <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">
+                        Better quality
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 text-sm font-medium text-blue-600">
+                    {tier.credits} credits
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 3. Select Image Size (New Visual Style) */}
-          <h2 className="text-xl mt-6 mb-2">3. Select Image Size</h2>
+          <h2 className="text-xl mt-6 mb-2">4. Select Image Size</h2>
           <FormGroup className="mb-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {aspectRatios.map((ratio) => {
@@ -567,7 +611,9 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             isLoading={generateIcon.isLoading}
             disabled={generateIcon.isLoading || isCreditLocked}
           >
-            {isLoggedIn ? "Generate My Design (4 Credits)" : "Sign in to Generate"}
+            {isLoggedIn
+              ? `Generate My Design (${selectedTier.credits} Credits)`
+              : "Sign in to Generate"}
           </Button>
           <GeneratorNudge generatorType="arabic" section="trust" />
         </form>
@@ -658,6 +704,12 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                 );
               })}
             </section>
+
+            {selectedModel === "google/nano-banana-2" && (
+              <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Want a more detailed result? Generate a <strong>Premium Arabic</strong> version for 6 credits.
+              </div>
+            )}
 
             <section className="mt-10">
               <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">

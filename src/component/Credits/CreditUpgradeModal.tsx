@@ -66,6 +66,16 @@ function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>
   }
 }
 
+function isArabicSurveyEligible(params: {
+  context: UpgradeContext;
+  sourcePage?: string;
+}) {
+  return (
+    params.context === "generate" &&
+    (params.sourcePage ?? "").trim().toLowerCase() === "arabic-name-art-generator"
+  );
+}
+
 export function CreditUpgradeModal({
   isOpen,
   requiredCredits,
@@ -86,6 +96,8 @@ export function CreditUpgradeModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [isSurveyUnlocking, setIsSurveyUnlocking] = useState(false);
+  const [surveyMessage, setSurveyMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const hasFiredViewedRef = useRef(false);
   const hasFiredCompletedRef = useRef(false);
@@ -107,6 +119,10 @@ export function CreditUpgradeModal({
       }),
     [router.pathname, router.query, sourcePage, country],
   );
+  const showArabicSurveyUnlock = useMemo(
+    () => isArabicSurveyEligible({ context, sourcePage }),
+    [context, sourcePage],
+  );
 
   useEffect(() => {
     if (!isOpen) {
@@ -116,6 +132,8 @@ export function CreditUpgradeModal({
       setIsProcessing(false);
       setIsPolling(false);
       setIsCheckingPayment(false);
+      setIsSurveyUnlocking(false);
+      setSurveyMessage(null);
       setStatusMessage(null);
       return;
     }
@@ -266,6 +284,47 @@ export function CreditUpgradeModal({
     }
   };
 
+  const handleArabicSurveyUnlock = async () => {
+    try {
+      setIsSurveyUnlocking(true);
+      setSurveyMessage(null);
+
+      const res = await fetch("/api/cpa/cpx/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = (await res.json()) as {
+        code?: string;
+        error?: string;
+        redirectUrl?: string;
+      };
+
+      if (!res.ok) {
+        setSurveyMessage(
+          data.error ??
+            "Could not open the survey right now. Please try again or buy credits.",
+        );
+        return;
+      }
+
+      if (!data.redirectUrl) {
+        setSurveyMessage("Could not open the survey right now. Please try again.");
+        return;
+      }
+
+      const opened = window.open(data.redirectUrl, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        window.location.href = data.redirectUrl;
+      }
+    } catch (error) {
+      console.error("[ARABIC_SURVEY_UNLOCK]", error);
+      setSurveyMessage("Could not open the survey right now. Please try again.");
+    } finally {
+      setIsSurveyUnlocking(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-2xl rounded-xl border border-blue-900 bg-gray-950 text-white shadow-2xl">
@@ -317,6 +376,30 @@ export function CreditUpgradeModal({
           {statusMessage && (
             <div className="mt-4 rounded-lg border border-blue-900 bg-blue-950/40 px-3 py-2 text-xs text-blue-200">
               {statusMessage}
+            </div>
+          )}
+
+          {showArabicSurveyUnlock && (
+            <div className="mt-4 rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-3">
+              <div className="text-sm font-semibold text-emerald-200">
+                Need a cheaper way to continue?
+              </div>
+              <div className="mt-1 text-xs text-emerald-100/90">
+                Unlock 3 free credits with a survey. Available once per day.
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleArabicSurveyUnlock()}
+                disabled={isSurveyUnlocking}
+                className="mt-3 rounded-md bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-60"
+              >
+                {isSurveyUnlocking ? "Opening survey..." : "Unlock 3 Free Credits"}
+              </button>
+              {surveyMessage && (
+                <div className="mt-2 text-xs text-emerald-100">
+                  {surveyMessage}
+                </div>
+              )}
             </div>
           )}
 
