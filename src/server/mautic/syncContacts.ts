@@ -1,7 +1,11 @@
 import { User } from "@prisma/client";
 import { prisma } from "~/server/db";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
-import { getDigitalArtInterestSummary } from "~/server/mautic/digitalArtInterest";
+import {
+  getDigitalArtInterestSummary,
+  MAUTIC_FIRST_DIGITAL_ART_INTEREST_ALIAS,
+  MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS,
+} from "~/server/mautic/digitalArtInterest";
 
 export type SyncContactsResult = {
   message: string;
@@ -74,9 +78,9 @@ export async function syncAllContactsToMautic(
           brand_specific_credits: contact.credits,
           brand_specific_plan: contact.plan,
           customFields: {
-            first_digital_art_interest:
+            [MAUTIC_FIRST_DIGITAL_ART_INTEREST_ALIAS]:
               contactInterests.firstInterest ?? undefined,
-            latest_digital_art_interest:
+            [MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS]:
               contactInterests.latestInterest ?? undefined,
           },
         },

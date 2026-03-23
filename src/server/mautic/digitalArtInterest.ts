@@ -9,6 +9,11 @@ export const DIGITAL_ART_INTERESTS = [
 
 export type DigitalArtInterest = (typeof DIGITAL_ART_INTERESTS)[number];
 
+export const MAUTIC_FIRST_DIGITAL_ART_INTEREST_ALIAS =
+  "first_digital_art_interes";
+export const MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS =
+  "latest_digital_art_intere";
+
 const DIGITAL_ART_INTEREST_BY_SOURCE_PAGE: Record<string, DigitalArtInterest> = {
   "name-art-generator": "name_art",
   "arabic-name-art-generator": "arabic_name_art",
@@ -145,8 +150,8 @@ export async function recordDigitalArtInterest(params: {
         name: user.name,
         brand_specific_credits: user.credits,
         customFields: {
-          first_digital_art_interest: firstInterest,
-          latest_digital_art_interest: latestInterest,
+          [MAUTIC_FIRST_DIGITAL_ART_INTEREST_ALIAS]: firstInterest,
+          [MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS]: latestInterest,
         },
       },
       "namedesignai",
