@@ -76,12 +76,12 @@ const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProduct
   { productType: "poster", printfulProductId: 1 },
 ];
 
-const SELLING_REGION_BY_COUNTRY: Partial<Record<string, string>> = {
-  US: "north_america",
-  CA: "canada",
-  GB: "uk",
-  AU: "australia",
-  NZ: "new_zealand",
+const SELLING_REGIONS_BY_COUNTRY: Partial<Record<string, string[]>> = {
+  US: ["north_america", "worldwide"],
+  CA: ["canada", "north_america", "worldwide"],
+  GB: ["uk", "europe", "worldwide"],
+  AU: ["australia", "worldwide"],
+  NZ: ["new_zealand", "worldwide"],
 };
 
 function parsePrice(value?: string): number | null {
@@ -149,14 +149,15 @@ async function fetchAvailableVariantIdsForCountry(
   printfulProductId: number,
   countryCode: string,
 ): Promise<Set<number> | null> {
-  const sellingRegion = SELLING_REGION_BY_COUNTRY[countryCode];
-  if (!sellingRegion) return null;
+  const allowedRegions = SELLING_REGIONS_BY_COUNTRY[countryCode];
+  if (!allowedRegions || allowedRegions.length === 0) return null;
+  const allowedRegionSet = new Set(
+    allowedRegions.map((region) => region.trim().toLowerCase()),
+  );
 
   try {
     const availableVariantIds = new Set<number>();
-    let nextPath = `/catalog-products/${printfulProductId}/availability?selling_region_name=${encodeURIComponent(
-      sellingRegion,
-    )}&limit=100`;
+    let nextPath = `/catalog-products/${printfulProductId}/availability?selling_region_name=all&limit=100`;
 
     while (nextPath) {
       const response = await printfulRequestV2<ProductAvailabilityResponse>(nextPath);
@@ -168,7 +169,7 @@ async function fetchAvailableVariantIdsForCountry(
         const hasSellableTechnique = (item.techniques ?? []).some((technique) =>
           (technique.selling_regions ?? []).some(
             (region) =>
-              region.name?.trim().toLowerCase() === sellingRegion &&
+              allowedRegionSet.has(region.name?.trim().toLowerCase() ?? "") &&
               isSellableAvailability(region.availability),
           ),
         );
