@@ -1,19 +1,24 @@
 import { prisma } from "~/server/db";
-import { printfulRequest, printfulRequestV2 } from "~/server/printful/client";
+import { printfulRequest } from "~/server/printful/client";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 import {
   normalizePricingSizeKey,
   type PricedProductType,
 } from "~/server/services/productPricingSizeKeys";
+import {
+  fetchCatalogVariants,
+  SELLING_REGION_BY_COUNTRY,
+} from "~/server/printful/catalogVariants";
 
 type SyncProductType = PricedProductType;
 
 type RawVariant = {
   id?: number;
-  variant_id?: number;
   name?: string;
   size?: string;
   color?: string;
+  color_code?: string;
+  retail_price?: string;
   price?: string;
 };
 
@@ -76,14 +81,6 @@ const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProduct
   { productType: "poster", printfulProductId: 1 },
 ];
 
-const SELLING_REGIONS_BY_COUNTRY: Partial<Record<string, string[]>> = {
-  US: ["north_america", "worldwide"],
-  CA: ["canada", "north_america", "worldwide"],
-  GB: ["uk", "europe", "worldwide"],
-  AU: ["australia", "worldwide"],
-  NZ: ["new_zealand", "worldwide"],
-};
-
 function parsePrice(value?: string): number | null {
   if (!value) return null;
   const parsed = Number.parseFloat(value);
@@ -94,113 +91,16 @@ async function fetchProductVariants(
   productType: SyncProductType,
   printfulProductId: number,
 ): Promise<RawVariant[]> {
-  const data = await printfulRequest<{
-    result: {
-      variants?: RawVariant[];
-      sync_variants?: RawVariant[];
-    };
-  }>(`/products/${printfulProductId}`);
-
-  const source =
-    productType === "tshirt"
-      ? Array.isArray(data.result.variants) && data.result.variants.length > 0
-        ? data.result.variants
-        : Array.isArray(data.result.sync_variants)
-          ? data.result.sync_variants
-          : []
-      : Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
-        ? data.result.sync_variants
-        : Array.isArray(data.result.variants)
-          ? data.result.variants
-          : [];
-
-  return source;
-}
-
-type ProductAvailabilityResponse = {
-  data?: Array<{
-    catalog_variant_id?: number;
-    techniques?: Array<{
-      selling_regions?: Array<{
-        name?: string;
-        availability?: string;
-      }>;
-    }>;
-  }>;
-  paging?: {
-    next?: string | null;
-  };
-};
-
-function isSellableAvailability(value?: string | null) {
-  const normalized = value?.trim().toLowerCase();
-  if (!normalized) return false;
-  return !["out of stock", "out_of_stock", "not available", "unavailable"].includes(
-    normalized,
-  );
-}
-
-function isPrintfulRateLimitError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error ?? "");
-  return message.includes('"code":429') || message.includes("TooManyRequests");
-}
-
-async function fetchAvailableVariantIdsForCountry(
-  printfulProductId: number,
-  countryCode: string,
-): Promise<Set<number> | null> {
-  const allowedRegions = SELLING_REGIONS_BY_COUNTRY[countryCode];
-  if (!allowedRegions || allowedRegions.length === 0) return null;
-  const allowedRegionSet = new Set(
-    allowedRegions.map((region) => region.trim().toLowerCase()),
-  );
-
-  try {
-    const availableVariantIds = new Set<number>();
-    let nextPath = `/catalog-products/${printfulProductId}/availability?selling_region_name=all&limit=100`;
-
-    while (nextPath) {
-      const response = await printfulRequestV2<ProductAvailabilityResponse>(nextPath);
-
-      for (const item of response.data ?? []) {
-        const variantId = Number(item.catalog_variant_id);
-        if (!Number.isFinite(variantId)) continue;
-
-        const hasSellableTechnique = (item.techniques ?? []).some((technique) =>
-          (technique.selling_regions ?? []).some(
-            (region) =>
-              allowedRegionSet.has(region.name?.trim().toLowerCase() ?? "") &&
-              isSellableAvailability(region.availability),
-          ),
-        );
-
-        if (hasSellableTechnique) {
-          availableVariantIds.add(variantId);
-        }
-      }
-
-      const nextHref = response.paging?.next?.trim();
-      if (!nextHref) {
-        nextPath = "";
-        continue;
-      }
-
-      try {
-        const nextUrl = new URL(nextHref);
-        nextPath = `${nextUrl.pathname}${nextUrl.search}`.replace(/^\/v2/, "");
-      } catch {
-        nextPath = nextHref.replace(/^https:\/\/api\.printful\.com\/v2/, "");
-      }
-    }
-
-    return availableVariantIds;
-  } catch (error) {
-    console.warn(
-      `[PRICING_SYNC] Failed to fetch v2 availability for product ${printfulProductId} in ${countryCode}; falling back to pricing-only sync`,
-      error,
-    );
-    return null;
-  }
+  const source = await fetchCatalogVariants(printfulProductId, "all");
+  return source.map((variant) => ({
+    id: variant.id,
+    name: variant.name,
+    size: variant.size ?? undefined,
+    color: variant.color ?? undefined,
+    color_code: variant.color_code ?? undefined,
+    retail_price: variant.retail_price ?? undefined,
+    price: variant.price ?? undefined,
+  }));
 }
 
 function getConfiguredVariantIds(productType: SyncProductType): Set<number> | null {
@@ -352,8 +252,8 @@ export async function runPricingSync() {
       const sizeKey = normalizePricingSizeKey(productType, variant);
       if (!sizeKey) continue;
 
-      const baseCost = parsePrice(variant.price);
-      const variantId = Number(variant.variant_id ?? variant.id);
+      const baseCost = parsePrice(variant.retail_price ?? variant.price);
+      const variantId = Number(variant.id);
       if (!Number.isFinite(variantId) || baseCost === null) continue;
 
       normalizedVariants.push({
@@ -369,9 +269,15 @@ export async function runPricingSync() {
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
-      const availableVariantIds = await fetchAvailableVariantIdsForCountry(
+      const sellableRegion = SELLING_REGION_BY_COUNTRY[countryCode];
+      const countryVariants = await fetchCatalogVariants(
         printfulProductId,
-        countryCode,
+        sellableRegion ?? null,
+      );
+      const availableVariantIds = new Set(
+        countryVariants
+          .map((variant) => Number(variant.id))
+          .filter((variantId) => Number.isFinite(variantId)),
       );
       const existingPricingRows = await prisma.productPricingCache.findMany({
         where: {
@@ -400,7 +306,7 @@ export async function runPricingSync() {
       let hadRateLimitError = false;
 
       for (const record of normalizedVariants) {
-        if (availableVariantIds && !availableVariantIds.has(record.variantId)) {
+        if (!availableVariantIds.has(record.variantId)) {
           continue;
         }
 

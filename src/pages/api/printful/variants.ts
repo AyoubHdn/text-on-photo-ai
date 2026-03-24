@@ -4,9 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { NextApiRequest, NextApiResponse } from "next";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
-import { printfulRequest } from "~/server/printful/client";
 import { prisma } from "~/server/db";
 import { normalizePricingSizeKey } from "~/server/services/productPricingSizeKeys";
+import {
+  fetchCatalogVariants,
+  SELLING_REGION_BY_COUNTRY,
+} from "~/server/printful/catalogVariants";
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,28 +38,10 @@ export default async function handler(
       typeof countryCode === "string" && countryCode.trim().length > 0
         ? countryCode.trim().toUpperCase()
         : null;
-    const data = await printfulRequest<{
-      result: {
-        variants: any;
-        sync_variants: Array<{
-          variant_id: number;
-          name: string;
-          color?: string;
-          size?: string;
-          color_code?: string;
-          price?: string;
-        }>;
-      };
-    }>(`/products/${product.printfulProductId}`);
-
-    const sourceVariants =
-      productKey === "tshirt"
-        ? Array.isArray(data.result.variants) && data.result.variants.length
-          ? data.result.variants
-          : data.result.sync_variants
-        : Array.isArray(data.result.sync_variants) && data.result.sync_variants.length
-          ? data.result.sync_variants
-          : data.result.variants;
+    const sourceVariants = await fetchCatalogVariants(
+      product.printfulProductId,
+      normalizedCountry ? SELLING_REGION_BY_COUNTRY[normalizedCountry] : null,
+    );
 
     let allowedVariantIds: Set<number> | null = null;
     let allowedSizeKeys: Set<string> | null = null;
@@ -88,12 +73,12 @@ export default async function handler(
 
     const variants = sourceVariants
       .map((v: any) => ({
-        id: Number(v.variant_id ?? v.id),
+        id: Number(v.id),
         name: v.name,
         size: v.size,
         color: v.color,
         color_code: v.color_code,
-        price: v.price,
+        price: v.retail_price ?? v.price,
       }))
       .filter((variant: {
         id: number;
