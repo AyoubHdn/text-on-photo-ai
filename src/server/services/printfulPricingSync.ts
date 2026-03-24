@@ -5,10 +5,7 @@ import {
   normalizePricingSizeKey,
   type PricedProductType,
 } from "~/server/services/productPricingSizeKeys";
-import {
-  fetchCatalogVariants,
-  SELLING_REGION_BY_COUNTRY,
-} from "~/server/printful/catalogVariants";
+import { SELLING_REGION_BY_COUNTRY } from "~/server/printful/catalogVariants";
 
 type SyncProductType = PricedProductType;
 
@@ -21,6 +18,10 @@ type RawVariant = {
   color_code?: string;
   retail_price?: string;
   price?: string;
+  availability_status?: Array<{
+    region?: string;
+    status?: string;
+  }>;
 };
 
 type NormalizedSyncVariant = {
@@ -40,6 +41,7 @@ type ProductAvailabilityResponse = {
     catalog_variant_id?: number;
     techniques?: Array<{
       selling_regions?: Array<{
+        name?: string;
         availability?: string;
       }>;
     }>;
@@ -53,6 +55,14 @@ const PRODUCT_TECHNIQUE_BY_TYPE: Record<SyncProductType, string> = {
   tshirt: "dtg",
   mug: "sublimation",
   poster: "digital",
+};
+
+const LEGACY_AVAILABILITY_REGION_BY_COUNTRY: Record<string, string> = {
+  US: "US",
+  CA: "CA",
+  GB: "UK",
+  AU: "AU",
+  NZ: "AU",
 };
 
 const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
@@ -167,6 +177,44 @@ async function fetchAvailableVariantIdsForCountry(
   return availableVariantIds;
 }
 
+function getAvailableVariantIdsFromLegacyAvailability(
+  variants: RawVariant[],
+  countryCode: string,
+): Set<number> | null {
+  const availabilityRegion = LEGACY_AVAILABILITY_REGION_BY_COUNTRY[countryCode];
+  if (!availabilityRegion) {
+    return null;
+  }
+
+  const hasLegacyAvailability = variants.some(
+    (variant) =>
+      Array.isArray(variant.availability_status) &&
+      variant.availability_status.length > 0,
+  );
+  if (!hasLegacyAvailability) {
+    return null;
+  }
+
+  const availableVariantIds = new Set<number>();
+
+  for (const variant of variants) {
+    const variantId = Number(variant.variant_id ?? variant.id);
+    if (!Number.isFinite(variantId)) continue;
+
+    const isAvailableForCountry = (variant.availability_status ?? []).some(
+      (entry) =>
+        entry.region?.trim().toUpperCase() === availabilityRegion &&
+        isSellableAvailability(entry.status),
+    );
+
+    if (isAvailableForCountry) {
+      availableVariantIds.add(variantId);
+    }
+  }
+
+  return availableVariantIds;
+}
+
 async function fetchLegacyProductVariants(printfulProductId: number): Promise<RawVariant[]> {
   const data = await printfulRequest<{
     result: {
@@ -195,6 +243,7 @@ async function fetchProductVariants(
     color_code: variant.color_code ?? undefined,
     retail_price: variant.retail_price ?? undefined,
     price: variant.price ?? undefined,
+    availability_status: variant.availability_status,
   }));
 }
 
@@ -364,14 +413,20 @@ export async function runPricingSync() {
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
+      const legacyAvailableVariantIds = getAvailableVariantIdsFromLegacyAvailability(
+        variants,
+        countryCode,
+      );
       const sellableRegion = SELLING_REGION_BY_COUNTRY[countryCode];
-      const availableVariantIds = sellableRegion
-        ? await fetchAvailableVariantIdsForCountry(
-            productType,
-            printfulProductId,
-            sellableRegion,
-          )
-        : new Set<number>();
+      const availableVariantIds =
+        legacyAvailableVariantIds ??
+        (sellableRegion
+          ? await fetchAvailableVariantIdsForCountry(
+              productType,
+              printfulProductId,
+              sellableRegion,
+            )
+          : new Set<number>());
       const existingPricingRows = await prisma.productPricingCache.findMany({
         where: {
           productType,
