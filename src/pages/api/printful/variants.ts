@@ -10,6 +10,38 @@ import {
   fetchCatalogVariants,
   SELLING_REGION_BY_COUNTRY,
 } from "~/server/printful/catalogVariants";
+import { printfulRequest } from "~/server/printful/client";
+
+async function fetchLegacyProductVariants(printfulProductId: number) {
+  const data = await printfulRequest<{
+    result: {
+      variants?: Array<{
+        id?: number;
+        variant_id?: number;
+        name: string;
+        color?: string;
+        size?: string;
+        color_code?: string;
+        price?: string;
+      }>;
+      sync_variants?: Array<{
+        id?: number;
+        variant_id?: number;
+        name: string;
+        color?: string;
+        size?: string;
+        color_code?: string;
+        price?: string;
+      }>;
+    };
+  }>(`/products/${printfulProductId}`);
+
+  return Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
+    ? data.result.sync_variants
+    : Array.isArray(data.result.variants)
+      ? data.result.variants
+      : [];
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -38,10 +70,13 @@ export default async function handler(
       typeof countryCode === "string" && countryCode.trim().length > 0
         ? countryCode.trim().toUpperCase()
         : null;
-    const sourceVariants = await fetchCatalogVariants(
-      product.printfulProductId,
-      normalizedCountry ? SELLING_REGION_BY_COUNTRY[normalizedCountry] : null,
-    );
+    const sourceVariants =
+      productKey === "tshirt"
+        ? await fetchCatalogVariants(
+            product.printfulProductId,
+            normalizedCountry ? SELLING_REGION_BY_COUNTRY[normalizedCountry] : null,
+          )
+        : await fetchLegacyProductVariants(product.printfulProductId);
 
     let allowedVariantIds: Set<number> | null = null;
     let allowedSizeKeys: Set<string> | null = null;
@@ -73,7 +108,7 @@ export default async function handler(
 
     const variants = sourceVariants
       .map((v: any) => ({
-        id: Number(v.id),
+        id: Number(v.variant_id ?? v.id),
         name: v.name,
         size: v.size,
         color: v.color,

@@ -87,10 +87,29 @@ function parsePrice(value?: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+async function fetchLegacyProductVariants(printfulProductId: number): Promise<RawVariant[]> {
+  const data = await printfulRequest<{
+    result: {
+      variants?: RawVariant[];
+      sync_variants?: RawVariant[];
+    };
+  }>(`/products/${printfulProductId}`);
+
+  return Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
+    ? data.result.sync_variants
+    : Array.isArray(data.result.variants)
+      ? data.result.variants
+      : [];
+}
+
 async function fetchProductVariants(
   productType: SyncProductType,
   printfulProductId: number,
 ): Promise<RawVariant[]> {
+  if (productType !== "tshirt") {
+    return fetchLegacyProductVariants(printfulProductId);
+  }
+
   const source = await fetchCatalogVariants(printfulProductId, "all");
   return source.map((variant) => ({
     id: variant.id,
@@ -243,7 +262,7 @@ export async function runPricingSync() {
     const configuredVariantIds = getConfiguredVariantIds(productType);
     const variants = (await fetchProductVariants(productType, printfulProductId)).filter((variant) => {
       if (!configuredVariantIds) return true;
-      const variantId = Number(variant.variant_id ?? variant.id);
+      const variantId = Number(variant.id);
       return Number.isFinite(variantId) && configuredVariantIds.has(variantId);
     });
     const normalizedVariants: NormalizedSyncVariant[] = [];
@@ -270,10 +289,9 @@ export async function runPricingSync() {
 
     for (const countryCode of SYNC_COUNTRIES) {
       const sellableRegion = SELLING_REGION_BY_COUNTRY[countryCode];
-      const countryVariants = await fetchCatalogVariants(
-        printfulProductId,
-        sellableRegion ?? null,
-      );
+      const countryVariants = sellableRegion
+        ? await fetchCatalogVariants(printfulProductId, sellableRegion)
+        : [];
       const availableVariantIds = new Set(
         countryVariants
           .map((variant) => Number(variant.id))
