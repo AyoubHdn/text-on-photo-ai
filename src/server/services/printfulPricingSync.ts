@@ -49,6 +49,12 @@ type ProductAvailabilityResponse = {
   };
 };
 
+const PRODUCT_TECHNIQUE_BY_TYPE: Record<SyncProductType, string> = {
+  tshirt: "dtg",
+  mug: "sublimation",
+  poster: "digital",
+};
+
 const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
 
 const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
@@ -111,13 +117,17 @@ function isSellableAvailability(value?: string | null) {
 }
 
 async function fetchAvailableVariantIdsForCountry(
+  productType: SyncProductType,
   printfulProductId: number,
   sellingRegionName: string,
 ): Promise<Set<number>> {
   const availableVariantIds = new Set<number>();
-  let nextPath = `/catalog-products/${printfulProductId}/availability?selling_region_name=${encodeURIComponent(
-    sellingRegionName,
-  )}&limit=100`;
+  const params = new URLSearchParams({
+    selling_region_name: sellingRegionName,
+    limit: "100",
+    techniques: PRODUCT_TECHNIQUE_BY_TYPE[productType],
+  });
+  let nextPath = `/catalog-products/${printfulProductId}/availability?${params.toString()}`;
 
   while (nextPath) {
     const response = await printfulRequestV2<ProductAvailabilityResponse>(nextPath);
@@ -353,7 +363,11 @@ export async function runPricingSync() {
     for (const countryCode of SYNC_COUNTRIES) {
       const sellableRegion = SELLING_REGION_BY_COUNTRY[countryCode];
       const availableVariantIds = sellableRegion
-        ? await fetchAvailableVariantIdsForCountry(printfulProductId, sellableRegion)
+        ? await fetchAvailableVariantIdsForCountry(
+            productType,
+            printfulProductId,
+            sellableRegion,
+          )
         : new Set<number>();
       const existingPricingRows = await prisma.productPricingCache.findMany({
         where: {
