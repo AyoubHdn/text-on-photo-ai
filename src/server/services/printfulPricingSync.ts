@@ -24,6 +24,11 @@ type NormalizedSyncVariant = {
   fallbackBaseCost: number;
 };
 
+type CachedPricingRow = {
+  baseCost: number;
+  shippingCost: number;
+};
+
 const SYNC_COUNTRIES = SHIPPING_COUNTRY_OPTIONS.map((country) => country.code);
 
 const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
@@ -133,6 +138,11 @@ function isSellableAvailability(value?: string | null) {
   return !["out of stock", "out_of_stock", "not available", "unavailable"].includes(
     normalized,
   );
+}
+
+function isPrintfulRateLimitError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.includes('"code":429') || message.includes("TooManyRequests");
 }
 
 async function fetchAvailableVariantIdsForCountry(
@@ -362,12 +372,69 @@ export async function runPricingSync() {
         printfulProductId,
         countryCode,
       );
+      const existingPricingRows = await prisma.productPricingCache.findMany({
+        where: {
+          productType,
+          countryCode,
+        },
+        select: {
+          sizeKey: true,
+          baseCost: true,
+          shippingCost: true,
+        },
+      });
+      const existingPricingBySize = new Map<string, CachedPricingRow>(
+        existingPricingRows.map((row) => [
+          row.sizeKey,
+          {
+            baseCost: Number(row.baseCost),
+            shippingCost: Number(row.shippingCost),
+          },
+        ]),
+      );
       const syncedSizeKeys = new Set<string>();
       const syncedVariantIds = new Set<number>();
       const bestPricingBySize = new Map<string, { baseCost: number; shippingCost: number }>();
+      const tshirtPricingCandidates = new Map<string, NormalizedSyncVariant>();
+      let hadRateLimitError = false;
 
       for (const record of normalizedVariants) {
         if (availableVariantIds && !availableVariantIds.has(record.variantId)) {
+          continue;
+        }
+
+        if (productType === "tshirt") {
+          await prisma.productVariantAvailabilityCache.upsert({
+            where: {
+              productType_variantId_countryCode: {
+                productType,
+                variantId: record.variantId,
+                countryCode,
+              },
+            },
+            create: {
+              productType,
+              variantId: record.variantId,
+              sizeKey: record.sizeKey,
+              color: record.color,
+              countryCode,
+              lastSyncedAt: new Date(),
+            },
+            update: {
+              sizeKey: record.sizeKey,
+              color: record.color,
+              lastSyncedAt: new Date(),
+            },
+          });
+          syncedVariantIds.add(record.variantId);
+
+          const currentCandidate = tshirtPricingCandidates.get(record.sizeKey);
+          if (
+            !currentCandidate ||
+            record.fallbackBaseCost > currentCandidate.fallbackBaseCost
+          ) {
+            tshirtPricingCandidates.set(record.sizeKey, record);
+          }
           continue;
         }
 
@@ -418,6 +485,39 @@ export async function runPricingSync() {
         }
       }
 
+      if (productType === "tshirt") {
+        for (const [sizeKey, record] of tshirtPricingCandidates.entries()) {
+          try {
+            const pricing = await fetchVariantPricingByCountry(
+              record.variantId,
+              countryCode,
+              record.fallbackBaseCost,
+            );
+            bestPricingBySize.set(sizeKey, pricing);
+            syncedSizeKeys.add(sizeKey);
+          } catch (error) {
+            if (isPrintfulRateLimitError(error)) {
+              hadRateLimitError = true;
+              const existingPricing = existingPricingBySize.get(sizeKey);
+              if (existingPricing) {
+                bestPricingBySize.set(sizeKey, existingPricing);
+                syncedSizeKeys.add(sizeKey);
+              }
+              console.warn(
+                `[PRICING_SYNC] Rate limited while refreshing ${productType}/${sizeKey} in ${countryCode}; preserving cached pricing`,
+                error,
+              );
+              continue;
+            }
+
+            console.warn(
+              `[PRICING_SYNC] Failed pricing representative variant ${record.variantId} for ${productType}/${sizeKey} in ${countryCode}`,
+              error,
+            );
+          }
+        }
+      }
+
       for (const [sizeKey, pricing] of bestPricingBySize.entries()) {
         await prisma.productPricingCache.upsert({
           where: {
@@ -454,15 +554,23 @@ export async function runPricingSync() {
         },
       });
 
-      await prisma.productPricingCache.deleteMany({
-        where: {
-          productType,
-          countryCode,
-          ...(syncedSizeKeys.size > 0
-            ? { sizeKey: { notIn: Array.from(syncedSizeKeys) } }
-            : {}),
-        },
-      });
+      if (!hadRateLimitError) {
+        await prisma.productPricingCache.deleteMany({
+          where: {
+            productType,
+            countryCode,
+            ...(syncedSizeKeys.size > 0
+              ? { sizeKey: { notIn: Array.from(syncedSizeKeys) } }
+              : {}),
+          },
+        });
+      }
+
+      if (hadRateLimitError) {
+        console.warn(
+          `[PRICING_SYNC] Printful rate limit hit for ${productType} in ${countryCode}; preserved existing pricing rows where possible`,
+        );
+      }
 
       if (syncedSizeKeys.size === 0) {
         console.error(
