@@ -6,10 +6,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { prisma } from "~/server/db";
 import { normalizePricingSizeKey } from "~/server/services/productPricingSizeKeys";
-import {
-  fetchCatalogVariants,
-  SELLING_REGION_BY_COUNTRY,
-} from "~/server/printful/catalogVariants";
 import { printfulRequest } from "~/server/printful/client";
 
 async function fetchLegacyProductVariants(printfulProductId: number) {
@@ -36,10 +32,10 @@ async function fetchLegacyProductVariants(printfulProductId: number) {
     };
   }>(`/products/${printfulProductId}`);
 
-  return Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
-    ? data.result.sync_variants
-    : Array.isArray(data.result.variants)
-      ? data.result.variants
+  return Array.isArray(data.result.variants) && data.result.variants.length > 0
+    ? data.result.variants
+    : Array.isArray(data.result.sync_variants)
+      ? data.result.sync_variants
       : [];
 }
 
@@ -70,13 +66,7 @@ export default async function handler(
       typeof countryCode === "string" && countryCode.trim().length > 0
         ? countryCode.trim().toUpperCase()
         : null;
-    const sourceVariants =
-      productKey === "tshirt"
-        ? await fetchCatalogVariants(
-            product.printfulProductId,
-            normalizedCountry ? SELLING_REGION_BY_COUNTRY[normalizedCountry] : null,
-          )
-        : await fetchLegacyProductVariants(product.printfulProductId);
+    const sourceVariants = await fetchLegacyProductVariants(product.printfulProductId);
 
     let allowedVariantIds: Set<number> | null = null;
     let allowedSizeKeys: Set<string> | null = null;

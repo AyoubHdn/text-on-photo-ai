@@ -14,6 +14,7 @@ type SyncProductType = PricedProductType;
 
 type RawVariant = {
   id?: number;
+  variant_id?: number;
   name?: string;
   size?: string;
   color?: string;
@@ -95,10 +96,10 @@ async function fetchLegacyProductVariants(printfulProductId: number): Promise<Ra
     };
   }>(`/products/${printfulProductId}`);
 
-  return Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
-    ? data.result.sync_variants
-    : Array.isArray(data.result.variants)
-      ? data.result.variants
+  return Array.isArray(data.result.variants) && data.result.variants.length > 0
+    ? data.result.variants
+    : Array.isArray(data.result.sync_variants)
+      ? data.result.sync_variants
       : [];
 }
 
@@ -106,13 +107,9 @@ async function fetchProductVariants(
   productType: SyncProductType,
   printfulProductId: number,
 ): Promise<RawVariant[]> {
-  if (productType !== "tshirt") {
-    return fetchLegacyProductVariants(printfulProductId);
-  }
-
-  const source = await fetchCatalogVariants(printfulProductId, "all");
+  const source = await fetchLegacyProductVariants(printfulProductId);
   return source.map((variant) => ({
-    id: variant.id,
+    id: variant.variant_id ?? variant.id,
     name: variant.name,
     size: variant.size ?? undefined,
     color: variant.color ?? undefined,
