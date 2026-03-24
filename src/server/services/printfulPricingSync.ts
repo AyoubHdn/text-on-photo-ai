@@ -122,6 +122,7 @@ async function fetchAvailableVariantIdsForCountry(
   sellingRegionName: string,
 ): Promise<Set<number>> {
   const availableVariantIds = new Set<number>();
+  const normalizedRequestedRegion = sellingRegionName.trim().toLowerCase();
   const params = new URLSearchParams({
     selling_region_name: sellingRegionName,
     limit: "100",
@@ -137,8 +138,10 @@ async function fetchAvailableVariantIdsForCountry(
       if (!Number.isFinite(variantId)) continue;
 
       const hasSellableTechnique = (item.techniques ?? []).some((technique) =>
-        (technique.selling_regions ?? []).some((region) =>
-          isSellableAvailability(region.availability),
+        (technique.selling_regions ?? []).some(
+          (region) =>
+            region.name?.trim().toLowerCase() === normalizedRequestedRegion &&
+            isSellableAvailability(region.availability),
         ),
       );
 
