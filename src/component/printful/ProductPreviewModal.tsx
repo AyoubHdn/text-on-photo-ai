@@ -379,11 +379,13 @@ export function ProductPreviewModal({
     if (!key || !nextVariants.length) return;
 
     if (key === "poster") {
-      if (variantId) return;
+      if (variantId && nextVariants.find((v) => v.id === variantId)) return;
       const allowed = POSTER_VARIANTS_BY_ASPECT[aspect];
       const defaultVariant = nextVariants.find((v) => allowed?.includes(v.id));
       if (defaultVariant) {
         setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
       }
       return;
     }
@@ -409,7 +411,17 @@ export function ProductPreviewModal({
     }
 
     if (key === "tshirt") {
-      if (selectedSize || selectedColor) return;
+      const currentMatch =
+        selectedSize && selectedColor
+          ? nextVariants.find(
+              (v) => v.size === selectedSize && v.color === selectedColor,
+            )
+          : null;
+      if (currentMatch) {
+        setVariantId(currentMatch.id);
+        return;
+      }
+
       const defaultVariant =
         nextVariants.find((v) => v.id === DEFAULT_TSHIRT_VARIANT_ID) ??
         nextVariants.find((v) => v.size === "M") ??
@@ -433,7 +445,11 @@ export function ProductPreviewModal({
       const match = nextVariants.find(
         (v) => v.size === defaultSize && v.color === defaultColor
       );
-      if (match) setVariantId(match.id);
+      if (match) {
+        setVariantId(match.id);
+      } else {
+        setVariantId(null);
+      }
     }
   };
 

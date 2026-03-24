@@ -50,15 +50,19 @@ export default async function handler(
     }>(`/products/${product.printfulProductId}`);
 
     const sourceVariants =
-      Array.isArray(data.result.sync_variants) && data.result.sync_variants.length
-        ? data.result.sync_variants
-        : data.result.variants;
+      productKey === "tshirt"
+        ? Array.isArray(data.result.variants) && data.result.variants.length
+          ? data.result.variants
+          : data.result.sync_variants
+        : Array.isArray(data.result.sync_variants) && data.result.sync_variants.length
+          ? data.result.sync_variants
+          : data.result.variants;
 
     let allowedVariantIds: Set<number> | null = null;
     let allowedSizeKeys: Set<string> | null = null;
     if (normalizedCountry) {
-      if (productKey === "tshirt") {
-        const cachedPricing = await prisma.productPricingCache.findMany({
+      const [cachedPricing, cachedAvailability] = await Promise.all([
+        prisma.productPricingCache.findMany({
           where: {
             productType: productKey,
             countryCode: normalizedCountry,
@@ -66,10 +70,8 @@ export default async function handler(
           select: {
             sizeKey: true,
           },
-        });
-        allowedSizeKeys = new Set(cachedPricing.map((entry) => entry.sizeKey));
-      } else {
-        const cachedAvailability = await prisma.productVariantAvailabilityCache.findMany({
+        }),
+        prisma.productVariantAvailabilityCache.findMany({
           where: {
             productType: productKey,
             countryCode: normalizedCountry,
@@ -77,9 +79,11 @@ export default async function handler(
           select: {
             variantId: true,
           },
-        });
-        allowedVariantIds = new Set(cachedAvailability.map((entry) => entry.variantId));
-      }
+        }),
+      ]);
+
+      allowedSizeKeys = new Set(cachedPricing.map((entry) => entry.sizeKey));
+      allowedVariantIds = new Set(cachedAvailability.map((entry) => entry.variantId));
     }
 
     const variants = sourceVariants
@@ -99,16 +103,29 @@ export default async function handler(
         color_code?: string;
         price?: string;
       }) => {
+        if (allowedVariantIds && !allowedVariantIds.has(variant.id)) {
+          return false;
+        }
+
         if (allowedSizeKeys) {
           const sizeKey = normalizePricingSizeKey("tshirt", {
             name: variant.name,
             size: variant.size,
             color: variant.color,
           });
-          return sizeKey ? allowedSizeKeys.has(sizeKey) : false;
+          if (productKey === "tshirt") {
+            return sizeKey ? allowedSizeKeys.has(sizeKey) : false;
+          }
+
+          const normalizedSizeKey = normalizePricingSizeKey(productKey, {
+            name: variant.name,
+            size: variant.size,
+            color: variant.color,
+          });
+          return normalizedSizeKey ? allowedSizeKeys.has(normalizedSizeKey) : false;
         }
-        if (!allowedVariantIds) return true;
-        return allowedVariantIds.has(variant.id);
+
+        return true;
       });
 
 

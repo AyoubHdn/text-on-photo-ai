@@ -23,3 +23,25 @@ export async function printfulRequest<T>(
 
   return res.json() as Promise<T>;
 }
+
+export async function printfulRequestV2<T>(
+  endpoint: string,
+  method: "GET" | "POST" = "GET",
+  body?: unknown
+) {
+  const res = await fetch(`${PRINTFUL_API_URL}/v2${endpoint}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Printful API v2 error: ${text}`);
+  }
+
+  return res.json() as Promise<T>;
+}

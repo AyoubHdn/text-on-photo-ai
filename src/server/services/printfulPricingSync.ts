@@ -1,7 +1,6 @@
 import { prisma } from "~/server/db";
-import { printfulRequest } from "~/server/printful/client";
+import { printfulRequest, printfulRequestV2 } from "~/server/printful/client";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
-import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import {
   normalizePricingSizeKey,
   type PricedProductType,
@@ -72,13 +71,24 @@ const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProduct
   { productType: "poster", printfulProductId: 1 },
 ];
 
+const SELLING_REGION_BY_COUNTRY: Partial<Record<string, string>> = {
+  US: "north_america",
+  CA: "canada",
+  GB: "uk",
+  AU: "australia",
+  NZ: "new_zealand",
+};
+
 function parsePrice(value?: string): number | null {
   if (!value) return null;
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-async function fetchProductVariants(printfulProductId: number): Promise<RawVariant[]> {
+async function fetchProductVariants(
+  productType: SyncProductType,
+  printfulProductId: number,
+): Promise<RawVariant[]> {
   const data = await printfulRequest<{
     result: {
       variants?: RawVariant[];
@@ -87,13 +97,99 @@ async function fetchProductVariants(printfulProductId: number): Promise<RawVaria
   }>(`/products/${printfulProductId}`);
 
   const source =
-    Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
-      ? data.result.sync_variants
-      : Array.isArray(data.result.variants)
-      ? data.result.variants
-      : [];
+    productType === "tshirt"
+      ? Array.isArray(data.result.variants) && data.result.variants.length > 0
+        ? data.result.variants
+        : Array.isArray(data.result.sync_variants)
+          ? data.result.sync_variants
+          : []
+      : Array.isArray(data.result.sync_variants) && data.result.sync_variants.length > 0
+        ? data.result.sync_variants
+        : Array.isArray(data.result.variants)
+          ? data.result.variants
+          : [];
 
   return source;
+}
+
+type ProductAvailabilityResponse = {
+  data?: Array<{
+    catalog_variant_id?: number;
+    techniques?: Array<{
+      selling_regions?: Array<{
+        name?: string;
+        availability?: string;
+      }>;
+    }>;
+  }>;
+  paging?: {
+    next?: string | null;
+  };
+};
+
+function isSellableAvailability(value?: string | null) {
+  const normalized = value?.trim().toLowerCase();
+  if (!normalized) return false;
+  return !["out of stock", "out_of_stock", "not available", "unavailable"].includes(
+    normalized,
+  );
+}
+
+async function fetchAvailableVariantIdsForCountry(
+  printfulProductId: number,
+  countryCode: string,
+): Promise<Set<number> | null> {
+  const sellingRegion = SELLING_REGION_BY_COUNTRY[countryCode];
+  if (!sellingRegion) return null;
+
+  try {
+    const availableVariantIds = new Set<number>();
+    let nextPath = `/catalog-products/${printfulProductId}/availability?selling_region_name=${encodeURIComponent(
+      sellingRegion,
+    )}&limit=100`;
+
+    while (nextPath) {
+      const response = await printfulRequestV2<ProductAvailabilityResponse>(nextPath);
+
+      for (const item of response.data ?? []) {
+        const variantId = Number(item.catalog_variant_id);
+        if (!Number.isFinite(variantId)) continue;
+
+        const hasSellableTechnique = (item.techniques ?? []).some((technique) =>
+          (technique.selling_regions ?? []).some(
+            (region) =>
+              region.name?.trim().toLowerCase() === sellingRegion &&
+              isSellableAvailability(region.availability),
+          ),
+        );
+
+        if (hasSellableTechnique) {
+          availableVariantIds.add(variantId);
+        }
+      }
+
+      const nextHref = response.paging?.next?.trim();
+      if (!nextHref) {
+        nextPath = "";
+        continue;
+      }
+
+      try {
+        const nextUrl = new URL(nextHref);
+        nextPath = `${nextUrl.pathname}${nextUrl.search}`.replace(/^\/v2/, "");
+      } catch {
+        nextPath = nextHref.replace(/^https:\/\/api\.printful\.com\/v2/, "");
+      }
+    }
+
+    return availableVariantIds;
+  } catch (error) {
+    console.warn(
+      `[PRICING_SYNC] Failed to fetch v2 availability for product ${printfulProductId} in ${countryCode}; falling back to pricing-only sync`,
+      error,
+    );
+    return null;
+  }
 }
 
 function getConfiguredVariantIds(productType: SyncProductType): Set<number> | null {
@@ -101,12 +197,10 @@ function getConfiguredVariantIds(productType: SyncProductType): Set<number> | nu
     return null;
   }
 
-  const product = PRINTFUL_PRODUCTS.find((entry) => entry.key === productType);
-  if (!product || product.key !== "tshirt") {
-    return null;
-  }
-
-  return new Set(product.variants.map((variant) => variant.variantId));
+  // T-shirt colors/sizes have country-specific availability. Restricting the
+  // sync to a tiny static subset causes valid color variants to disappear when
+  // the UI relies on cached availability.
+  return null;
 }
 
 function getRecipientSeed(countryCode: string) {
@@ -236,7 +330,7 @@ async function fetchVariantPricingByCountry(
 export async function runPricingSync() {
   for (const { productType, printfulProductId } of PRODUCT_SYNC_CONFIG) {
     const configuredVariantIds = getConfiguredVariantIds(productType);
-    const variants = (await fetchProductVariants(printfulProductId)).filter((variant) => {
+    const variants = (await fetchProductVariants(productType, printfulProductId)).filter((variant) => {
       if (!configuredVariantIds) return true;
       const variantId = Number(variant.variant_id ?? variant.id);
       return Number.isFinite(variantId) && configuredVariantIds.has(variantId);
@@ -264,11 +358,19 @@ export async function runPricingSync() {
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
+      const availableVariantIds = await fetchAvailableVariantIdsForCountry(
+        printfulProductId,
+        countryCode,
+      );
       const syncedSizeKeys = new Set<string>();
       const syncedVariantIds = new Set<number>();
       const bestPricingBySize = new Map<string, { baseCost: number; shippingCost: number }>();
 
       for (const record of normalizedVariants) {
+        if (availableVariantIds && !availableVariantIds.has(record.variantId)) {
+          continue;
+        }
+
         try {
           const pricing = await fetchVariantPricingByCountry(
             record.variantId,
