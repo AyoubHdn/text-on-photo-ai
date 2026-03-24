@@ -25,6 +25,8 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
 });
 
+const COUNTRIES_REQUIRING_STATE = new Set(["US", "CA", "AU"]);
+
 export const config = {
   api: {
     bodyParser: false,
@@ -236,12 +238,14 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           : rawZip;
 
       const recipient = {
-        name: order.name,
-        address1: order.address1,
-        city: order.city,
+        name: order.name?.trim(),
+        address1: order.address1?.trim(),
+        city: order.city?.trim(),
         zip,
         country_code: countryCode,
-        state_code: countryCode === "US" ? stateCode : undefined,
+        state_code: COUNTRIES_REQUIRING_STATE.has(countryCode)
+          ? stateCode
+          : undefined,
       };
 
       if (
@@ -250,7 +254,8 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         !recipient.city ||
         !recipient.zip ||
         !recipient.country_code ||
-        (recipient.country_code === "US" && recipient.state_code?.length !== 2)
+        (COUNTRIES_REQUIRING_STATE.has(recipient.country_code) &&
+          recipient.state_code?.length !== 2)
       ) {
         const missing = {
           name: !!recipient.name,
@@ -258,7 +263,9 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           city: !!recipient.city,
           zip: !!recipient.zip,
           country_code: !!recipient.country_code,
-          state_code: recipient.state_code?.length === 2,
+          state_code: COUNTRIES_REQUIRING_STATE.has(recipient.country_code)
+            ? recipient.state_code?.length === 2
+            : true,
         };
         console.error("Missing Printful recipient fields:", missing);
         throw new Error("Missing recipient fields for Printful order");

@@ -27,6 +27,8 @@ const KNOWN_SOURCE_PAGES = new Set([
   "checkout",
 ]);
 
+const COUNTRIES_REQUIRING_STATE = new Set(["US", "CA", "AU"]);
+
 export function formatPrice(value: number) {
   return value.toFixed(2);
 }
@@ -416,7 +418,7 @@ export default function CheckoutPage() {
 
 
     const selectedCountry = countries.find((country) => country.code === address.country);
-    const requiresState = address.country === "US";
+    const requiresState = COUNTRIES_REQUIRING_STATE.has(address.country);
 
     const validateShipping = (nextAddress = address, nextRequiresState = requiresState) => {
         const errors: Record<string, string> = {};
@@ -446,8 +448,11 @@ export default function CheckoutPage() {
         }
 
         if (nextRequiresState && !state) {
-        errors.state = country === "US"
+        errors.state =
+            country === "US"
             ? "State is required for US shipping."
+            : country === "CA"
+            ? "Province is required for Canada shipping."
             : "State/region is required.";
         }
 
@@ -922,7 +927,7 @@ export default function CheckoutPage() {
 
         {requiresState && (
         <Input
-            placeholder="State (e.g. CA, NY)"
+            placeholder={address.country === "CA" ? "Province (e.g. QC, ON)" : "State (e.g. CA, NY)"}
             className={`${lightFieldClassName} ${isFieldInvalid("state") ? "!border-red-500" : ""}`}
             value={address.state}
             onChange={(e) => {
@@ -1180,6 +1185,8 @@ export default function CheckoutPage() {
                 nextFieldErrors.state =
                     selectedCountry?.code === "US"
                     ? "State is required for US shipping."
+                    : selectedCountry?.code === "CA"
+                    ? "Province is required for Canada shipping."
                     : "State/region is required.";
                 }
 

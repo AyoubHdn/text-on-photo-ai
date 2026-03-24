@@ -23,6 +23,8 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
 });
 
+const COUNTRIES_REQUIRING_STATE = new Set(["US", "CA", "AU"]);
+
 function normalizePosterSize(value?: string | null): string | null {
   if (!value) return null;
 
@@ -109,10 +111,10 @@ export const printfulCheckoutRouter = createTRPCRouter({
           })
           .refine(
             (address) =>
-              address.country !== "US" ||
+              !COUNTRIES_REQUIRING_STATE.has(address.country.trim().toUpperCase()) ||
               (typeof address.state === "string" && address.state.length > 0),
             {
-              message: "State is required for US addresses",
+              message: "State or province is required for this country",
               path: ["state"],
             }
           ),
@@ -274,12 +276,15 @@ export const printfulCheckoutRouter = createTRPCRouter({
           ? rawZip.replace(/\s+/g, "").split("-")[0] ?? ""
           : rawZip;
 
+      if (COUNTRIES_REQUIRING_STATE.has(countryCode)) {
+        if (!stateCode || !/^[A-Z]{2}$/.test(stateCode)) {
+          throw new Error("State must be a 2-letter code");
+        }
+      }
+
       if (countryCode === "US") {
         if (!/^\d{5}$/.test(zip)) {
           throw new Error("US ZIP must be 5 digits");
-        }
-        if (!stateCode || !/^[A-Z]{2}$/.test(stateCode)) {
-          throw new Error("State must be a 2-letter code");
         }
 
         try {
