@@ -69,14 +69,13 @@ function toStringId(value: unknown): string | null {
   return null;
 }
 
-function coalesceShipment(payload: WebhookPayload): ShipmentData | null {
-  return (
-    payload.data?.shipment ??
-    payload.shipment ??
-    payload.data?.shipments?.[0] ??
-    payload.shipments?.[0] ??
-    null
-  );
+function collectShipments(payload: WebhookPayload): ShipmentData[] {
+  return [
+    payload.data?.shipment,
+    payload.shipment,
+    ...(payload.data?.shipments ?? []),
+    ...(payload.shipments ?? []),
+  ].filter((value): value is ShipmentData => Boolean(value));
 }
 
 function pickBestShipment(shipments: ShipmentData[]) {
@@ -104,6 +103,11 @@ function hasShipmentSignal(shipment: ShipmentData | null) {
       shipment.ship_date ||
       shipment.delivered_at,
   );
+}
+
+function hasTrackingDetails(shipment: ShipmentData | null) {
+  if (!shipment) return false;
+  return Boolean(shipment.tracking_number?.trim() || shipment.tracking_url?.trim());
 }
 
 function parseShippedAt(value: unknown): Date | null {
@@ -241,7 +245,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     toStringId(payload.data?.order?.id) ??
     toStringId(payload.order?.id) ??
     toStringId(payload.order_id);
-  const payloadShipment = coalesceShipment(payload);
+  const payloadShipments = collectShipments(payload);
+  const payloadShipment = pickBestShipment(payloadShipments);
 
   let orderRecord: ProductOrderWithRelations | null = null;
 
@@ -266,8 +271,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  const shouldFetchPrintfulOrder =
+    Boolean(printfulOrderId) &&
+    (!orderRecord || !hasShipmentSignal(payloadShipment) || !hasTrackingDetails(payloadShipment));
   const fetchedOrder =
-    printfulOrderId && !hasShipmentSignal(payloadShipment)
+    printfulOrderId && shouldFetchPrintfulOrder
       ? await fetchPrintfulOrder(printfulOrderId)
       : null;
 
@@ -287,15 +295,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (!printfulOrder) {
+    console.warn("Ignoring Printful webhook because no matching Printful order was found", {
+      type: payload.type,
+      externalId,
+      resolvedExternalId,
+      printfulOrderId,
+    });
     return res.status(200).json({ received: true, ignored: "order_not_found" });
   }
 
   const shipment =
     pickBestShipment(
       [
-        payloadShipment,
-        pickBestShipment(fetchedOrder?.result?.shipments ?? []),
-        fetchedOrder?.result?.shipment ?? null,
+        ...payloadShipments,
+        ...(fetchedOrder?.result?.shipments ?? []),
+        ...(fetchedOrder?.result?.shipment ? [fetchedOrder.result.shipment] : []),
       ].filter((value): value is ShipmentData => Boolean(value)),
     ) ?? null;
 
