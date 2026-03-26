@@ -1,7 +1,7 @@
 // ~/server/api/routers/generate.ts
 
 import { TRPCError } from "@trpc/server";
-import { Prisma } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
@@ -12,16 +12,19 @@ import AWS from "aws-sdk";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { Readable } from "stream";
+import { ARABIC_NAME_MUG_V1_STYLES } from "~/config/arabicNameMugV1Styles";
 import { RAMADAN_MUG_V2_STYLES } from "~/config/ramadanMugV2Styles";
 import {
   getArabicTierByModel,
   isArabicGeneratorSourcePage,
 } from "~/config/arabicGenerator";
+import { buildArabicNameMugPrompt } from "~/lib/arabicNameMugPrompt";
 import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
 import { buildRamadanMugV2Prompt } from "~/server/prompts/ramadanMugV2Prompt";
+import { createHash } from "crypto";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -44,9 +47,12 @@ const FRIENDLY_GENERATION_BUSY_MESSAGE =
   "Generation is temporarily busy at our AI provider due to high demand. Please try again shortly. If generation fails, your credits are refunded automatically.";
 const DEFAULT_GENERATION_TIMEOUT_MS = 120000;
 const NANO_BANANA_ATTEMPT_TIMEOUT_MS = 45000;
+const GENERATION_REQUEST_WAIT_TIMEOUT_MS = DEFAULT_GENERATION_TIMEOUT_MS + 10000;
+const GENERATION_REQUEST_POLL_INTERVAL_MS = 500;
 const GUEST_GENERATION_WINDOW_MS = 10 * 60 * 1000;
 const GUEST_GENERATION_MAX_REQUESTS = 5;
 const GUEST_GENERATION_DEDUP_TTL_MS = 2 * 60 * 1000;
+const GENERATION_REQUEST_IN_FLIGHT_TTL_MS = 3 * 60 * 1000;
 const guestGenerationRateLimitMap = new Map<
   string,
   { count: number; resetAt: number }
@@ -55,6 +61,105 @@ const guestGenerationInFlightMap = new Map<
   string,
   { promise: Promise<string>; expiresAt: number }
 >();
+const generationRequestInFlightMap = new Map<
+  string,
+  { promise: Promise<string[]>; expiresAt: number }
+>();
+
+type GenerationLogContext = {
+  generationRequestId: string;
+  userId: string | null;
+  sourcePage: string | null;
+  requestType: string;
+  model: string;
+  promptHash: string;
+  inputHash: string;
+};
+
+type ExecuteGenerationRequestParams = GenerationLogContext & {
+  prisma: PrismaClient;
+  creditsCharged?: Prisma.Decimal | null;
+};
+
+type ExecuteGenerationResult = {
+  imageUrls: string[];
+  predictionId?: string | null;
+};
+
+type GenerateImagesResult = {
+  imagesBase64: string[];
+  predictionId: string | null;
+};
+
+function hashValue(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function logGenerationEvent(
+  event: string,
+  params: GenerationLogContext & {
+    sourceFunction: string;
+    predictionId?: string | null;
+    deduped?: boolean;
+    dedupeSource?: string | null;
+    error?: string | null;
+  },
+) {
+  console.log(
+    "[GENERATION]",
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      sourcePath: "src/server/api/routers/generate.ts",
+      event,
+      predictionId: null,
+      deduped: false,
+      dedupeSource: null,
+      error: null,
+      ...params,
+    }),
+  );
+}
+
+function parseStoredImageUrls(value: Prisma.JsonValue | null): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function getStoredGenerationError(
+  request: { errorMessage: string | null },
+  fallback = "Generation failed. Please try again.",
+) {
+  return request.errorMessage?.trim() || fallback;
+}
+
+async function sleep(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getOrCreateGenerationRequestPromise(
+  key: string,
+  factory: () => Promise<string[]>,
+): Promise<string[]> {
+  const now = Date.now();
+  const existing = generationRequestInFlightMap.get(key);
+  if (existing && existing.expiresAt > now) {
+    return existing.promise;
+  }
+
+  const promise = factory().finally(() => {
+    const current = generationRequestInFlightMap.get(key);
+    if (current?.promise === promise) {
+      generationRequestInFlightMap.delete(key);
+    }
+  });
+
+  generationRequestInFlightMap.set(key, {
+    promise,
+    expiresAt: now + GENERATION_REQUEST_IN_FLIGHT_TTL_MS,
+  });
+
+  return promise;
+}
 
 function getClientIp(
   req: { headers?: Record<string, string | string[] | undefined> } | undefined,
@@ -133,14 +238,258 @@ async function withTimeout<T>(
   }
 }
 
+async function waitForGenerationRequestResult(
+  prisma: PrismaClient,
+  logContext: GenerationLogContext,
+) {
+  const deadline = Date.now() + GENERATION_REQUEST_WAIT_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const existing = await prisma.generationRequest.findUnique({
+      where: { generationRequestId: logContext.generationRequestId },
+      select: {
+        status: true,
+        resultImageUrls: true,
+        errorMessage: true,
+        predictionId: true,
+      },
+    });
+
+    if (!existing) {
+      break;
+    }
+
+    if (existing.status === "completed") {
+      const imageUrls = parseStoredImageUrls(existing.resultImageUrls);
+      logGenerationEvent("generation_request_deduped", {
+        ...logContext,
+        sourceFunction: "waitForGenerationRequestResult",
+        predictionId: existing.predictionId,
+        deduped: true,
+        dedupeSource: "database_completed",
+      });
+      return imageUrls;
+    }
+
+    if (existing.status === "failed") {
+      const message = getStoredGenerationError(existing);
+      logGenerationEvent("generation_request_deduped", {
+        ...logContext,
+        sourceFunction: "waitForGenerationRequestResult",
+        predictionId: existing.predictionId,
+        deduped: true,
+        dedupeSource: "database_failed",
+        error: message,
+      });
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message,
+      });
+    }
+
+    await sleep(GENERATION_REQUEST_POLL_INTERVAL_MS);
+  }
+
+  logGenerationEvent("generation_request_wait_timed_out", {
+    ...logContext,
+    sourceFunction: "waitForGenerationRequestResult",
+    deduped: true,
+    dedupeSource: "database_inflight_timeout",
+    error: "Timed out while waiting for an existing generation request to finish.",
+  });
+
+  throw new TRPCError({
+    code: "CONFLICT",
+    message: "Generation is already in progress. Please wait a moment and try again.",
+  });
+}
+
+async function reuseExistingGenerationRequestIfAvailable(
+  prisma: PrismaClient,
+  logContext: GenerationLogContext,
+) {
+  const existing = await prisma.generationRequest.findUnique({
+    where: { generationRequestId: logContext.generationRequestId },
+    select: {
+      status: true,
+      resultImageUrls: true,
+      errorMessage: true,
+      predictionId: true,
+    },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.status === "completed") {
+    const imageUrls = parseStoredImageUrls(existing.resultImageUrls);
+    logGenerationEvent("generation_request_deduped", {
+      ...logContext,
+      sourceFunction: "reuseExistingGenerationRequestIfAvailable",
+      predictionId: existing.predictionId,
+      deduped: true,
+      dedupeSource: "database_completed",
+    });
+    return imageUrls;
+  }
+
+  if (existing.status === "failed") {
+    const message = getStoredGenerationError(existing);
+    logGenerationEvent("generation_request_deduped", {
+      ...logContext,
+      sourceFunction: "reuseExistingGenerationRequestIfAvailable",
+      predictionId: existing.predictionId,
+      deduped: true,
+      dedupeSource: "database_failed",
+      error: message,
+    });
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message,
+    });
+  }
+
+  logGenerationEvent("generation_request_deduped", {
+    ...logContext,
+    sourceFunction: "reuseExistingGenerationRequestIfAvailable",
+    predictionId: existing.predictionId,
+    deduped: true,
+    dedupeSource: "database_inflight",
+  });
+  return waitForGenerationRequestResult(prisma, logContext);
+}
+
+async function executeIdempotentGenerationRequest(
+  params: ExecuteGenerationRequestParams,
+  factory: (helpers: {
+    updatePredictionId: (predictionId: string) => Promise<void>;
+  }) => Promise<ExecuteGenerationResult>,
+) {
+  const logContext: GenerationLogContext = {
+    generationRequestId: params.generationRequestId,
+    userId: params.userId,
+    sourcePage: params.sourcePage,
+    requestType: params.requestType,
+    model: params.model,
+    promptHash: params.promptHash,
+    inputHash: params.inputHash,
+  };
+
+  return getOrCreateGenerationRequestPromise(
+    params.generationRequestId,
+    async () => {
+      const existingResult = await reuseExistingGenerationRequestIfAvailable(
+        params.prisma,
+        logContext,
+      );
+      if (existingResult) {
+        return existingResult;
+      }
+
+      try {
+        await params.prisma.generationRequest.create({
+          data: {
+            generationRequestId: params.generationRequestId,
+            userId: params.userId,
+            sourcePage: params.sourcePage,
+            requestType: params.requestType,
+            model: params.model,
+            promptHash: params.promptHash,
+            inputHash: params.inputHash,
+            creditsCharged: params.creditsCharged ?? undefined,
+          },
+        });
+        logGenerationEvent("generation_request_created", {
+          ...logContext,
+          sourceFunction: "executeIdempotentGenerationRequest",
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          logGenerationEvent("generation_request_deduped", {
+            ...logContext,
+            sourceFunction: "executeIdempotentGenerationRequest",
+            deduped: true,
+            dedupeSource: "database_race",
+          });
+          return waitForGenerationRequestResult(params.prisma, logContext);
+        }
+        throw error;
+      }
+
+      const updatePredictionId = async (predictionId: string) => {
+        await params.prisma.generationRequest.update({
+          where: { generationRequestId: params.generationRequestId },
+          data: { predictionId },
+        });
+      };
+
+      try {
+        const result = await factory({ updatePredictionId });
+        const predictionId = result.predictionId ?? null;
+
+        await params.prisma.generationRequest.update({
+          where: { generationRequestId: params.generationRequestId },
+          data: {
+            status: "completed",
+            predictionId: predictionId ?? undefined,
+            resultImageUrls: result.imageUrls,
+            errorMessage: null,
+            completedAt: new Date(),
+            failedAt: null,
+          },
+        });
+
+        logGenerationEvent("generation_request_completed", {
+          ...logContext,
+          sourceFunction: "executeIdempotentGenerationRequest",
+          predictionId,
+        });
+
+        return result.imageUrls;
+      } catch (error) {
+        const message =
+          error instanceof TRPCError
+            ? error.message
+            : normalizeGenerationErrorMessage(error);
+
+        try {
+          await params.prisma.generationRequest.update({
+            where: { generationRequestId: params.generationRequestId },
+            data: {
+              status: "failed",
+              errorMessage: message,
+              failedAt: new Date(),
+            },
+          });
+        } catch (updateError) {
+          console.error("Failed to mark generation request as failed:", updateError);
+        }
+
+        logGenerationEvent("generation_request_failed", {
+          ...logContext,
+          sourceFunction: "executeIdempotentGenerationRequest",
+          error: message,
+        });
+
+        throw error;
+      }
+    },
+  );
+}
+
 function getGuestGenerationRequestKey(params: {
+  sourcePage?: string;
   ip: string;
   name: string;
   style: string;
   recipient: string;
 }) {
   return [
-    "ramadan-mug-v2",
+    (params.sourcePage ?? "ramadan-mug-v2").trim().toLowerCase(),
     params.ip.trim().toLowerCase(),
     params.name.trim().toLowerCase(),
     params.style.trim().toLowerCase(),
@@ -192,11 +541,25 @@ function isSingleOutputModel(model: string) {
 async function runNanoBananaPrediction(
   model: "google/nano-banana-pro" | "google/nano-banana-2",
   input: Record<string, any>,
+  context?: {
+    logContext?: GenerationLogContext;
+    onPredictionCreated?: (predictionId: string) => Promise<void> | void;
+  },
 ) {
   const prediction = await replicate.predictions.create({
     model,
     input,
   });
+
+  if (context?.logContext) {
+    logGenerationEvent("replicate_prediction_created", {
+      ...context.logContext,
+      sourceFunction: "runNanoBananaPrediction",
+      predictionId: prediction.id,
+    });
+  }
+
+  await context?.onPredictionCreated?.(prediction.id);
 
   try {
     const completedPrediction = await withTimeout(
@@ -205,12 +568,23 @@ async function runNanoBananaPrediction(
       "Generation timed out while waiting for Nano Banana",
     );
 
-    return completedPrediction.output;
+    return {
+      output: completedPrediction.output,
+      predictionId: prediction.id,
+    };
   } catch (error) {
     if (
       error instanceof Error &&
       error.message.includes("Generation timed out while waiting for Nano Banana")
     ) {
+      if (context?.logContext) {
+        logGenerationEvent("replicate_prediction_cancel_requested", {
+          ...context.logContext,
+          sourceFunction: "runNanoBananaPrediction",
+          predictionId: prediction.id,
+          error: error.message,
+        });
+      }
       try {
         await replicate.predictions.cancel(prediction.id);
       } catch (cancelError) {
@@ -240,7 +614,7 @@ async function fetchAndEncodeImage(url: string): Promise<string> {
 }
 
 // Generate the image and encode it as Base64
-const generateIcon = async (
+const generateImages = async (
   prompt: string,
   numberOfImages = 1,
   aspectRatio: AspectRatioValue = "1:1",
@@ -250,10 +624,15 @@ const generateIcon = async (
     | "ideogram-ai/ideogram-v2-turbo"
     | "google/nano-banana-pro"
     | "google/nano-banana-2",
-): Promise<string[]> => {
+  context?: {
+    logContext?: GenerationLogContext;
+    onPredictionCreated?: (predictionId: string) => Promise<void> | void;
+  },
+): Promise<GenerateImagesResult> => {
   let path: `${string}/${string}`;
   let input: Record<string, any>;
   let outputs: string[] = [];
+  let predictionId: string | null = null;
 
   // --- 1. CONFIGURATION ---
   if (model === "google/nano-banana-pro" || model === "google/nano-banana-2") {
@@ -308,7 +687,10 @@ const generateIcon = async (
 
   // Mock mode for testing
   if (env.MOCK_REPLICATE === "true") {
-    return Array(numberOfImages).fill(b64Image) as string[];
+    return {
+      imagesBase64: Array(numberOfImages).fill(b64Image) as string[],
+      predictionId: null,
+    };
   }
 
   // --- 2. EXECUTION ---
@@ -316,7 +698,9 @@ const generateIcon = async (
   let rawOutput: unknown;
   try {
     if (model === "google/nano-banana-pro" || model === "google/nano-banana-2") {
-      rawOutput = await runNanoBananaPrediction(model, input);
+      const nanoBananaResult = await runNanoBananaPrediction(model, input, context);
+      rawOutput = nanoBananaResult.output;
+      predictionId = nanoBananaResult.predictionId;
     } else {
       rawOutput = await withTimeout(
         replicate.run(path, { input }),
@@ -389,13 +773,17 @@ const generateIcon = async (
     });
   }
 
-  return outputs;
+  return {
+    imagesBase64: outputs,
+    predictionId,
+  };
 };
 
 export const generateRouter = createTRPCRouter({
   generateGuestDesign: publicProcedure
     .input(
       z.object({
+        generationRequestId: z.string().trim().min(1).max(120),
         name: z.string().trim().min(2).max(40),
         style: z.string().trim().min(1),
         recipient: z
@@ -437,45 +825,225 @@ export const generateRouter = createTRPCRouter({
             recipient: input.recipient,
             stylePrompt: styleConfig.basePrompt,
           });
+          const promptHash = hashValue(prompt);
+          const inputHash = hashValue(
+            JSON.stringify({
+              aspectRatio: "1:1",
+              model: "google/nano-banana-pro",
+              name: input.name,
+              recipient: input.recipient,
+              sourcePage: "ramadan-mug-v2",
+              style: input.style,
+            }),
+          );
+          const logContext: GenerationLogContext = {
+            generationRequestId: input.generationRequestId,
+            userId: null,
+            sourcePage: "ramadan-mug-v2",
+            requestType: "generateGuestDesign",
+            model: "google/nano-banana-pro",
+            promptHash,
+            inputHash,
+          };
 
-          const b64Images = await generateIcon(
-            prompt,
-            1,
-            "1:1",
-            "google/nano-banana-pro",
+          const imageUrls = await executeIdempotentGenerationRequest(
+            {
+              prisma: ctx.prisma,
+              ...logContext,
+            },
+            async ({ updatePredictionId }) => {
+              const generated = await generateImages(
+                prompt,
+                1,
+                "1:1",
+                "google/nano-banana-pro",
+                {
+                  logContext,
+                  onPredictionCreated: updatePredictionId,
+                },
+              );
+              const firstImage = generated.imagesBase64[0];
+              if (!firstImage) {
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: "No generated image returned by provider.",
+                });
+              }
+
+              const icon = await ctx.prisma.icon.create({
+                data: {
+                  prompt,
+                  userId: null,
+                  metadata: {
+                    sourcePage: "ramadan-mug-v2",
+                    paidTrafficUser: true,
+                    styleId: styleConfig.id,
+                  },
+                },
+              });
+
+              await s3
+                .putObject({
+                  Bucket: BUCKET_NAME,
+                  Body: Buffer.from(firstImage, "base64"),
+                  Key: icon.id,
+                  ContentEncoding: "base64",
+                  ContentType: "image/png",
+                })
+                .promise();
+
+              return {
+                imageUrls: [
+                  `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
+                ],
+                predictionId: generated.predictionId,
+              };
+            },
           );
 
-          const firstImage = b64Images[0];
-          if (!firstImage) {
+          const firstImageUrl = imageUrls[0];
+          if (!firstImageUrl) {
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "No generated image returned by provider.",
+              message: "No generated image URL was stored.",
             });
           }
 
-          const icon = await ctx.prisma.icon.create({
-            data: {
-              prompt,
-              userId: null,
-              metadata: {
-                sourcePage: "ramadan-mug-v2",
-                paidTrafficUser: true,
-                styleId: styleConfig.id,
-              },
-            },
+          return firstImageUrl;
+        },
+      );
+
+      return {
+        design_url: designUrl,
+      };
+    }),
+  generatePaidMugGuestDesign: publicProcedure
+    .input(
+      z.object({
+        generationRequestId: z.string().trim().min(1).max(120),
+        name: z.string().trim().min(2).max(40),
+        style: z.string().trim().min(1),
+        giftIntent: z
+          .enum(["Me", "My Husband", "My Wife", "My Mom", "Someone Special"])
+          .default("Someone Special"),
+        sourcePage: z.literal("arabic-name-mug-v1").default("arabic-name-mug-v1"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const styleConfig = ARABIC_NAME_MUG_V1_STYLES.find((s) => s.id === input.style);
+      if (!styleConfig) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid style selected.",
+        });
+      }
+
+      const clientIp = getClientIp(ctx.req);
+      const rateLimitKey = `${input.sourcePage}:${clientIp}`;
+      enforceGuestGenerationRateLimit(rateLimitKey);
+
+      const requestKey = getGuestGenerationRequestKey({
+        sourcePage: input.sourcePage,
+        ip: clientIp,
+        name: input.name,
+        style: input.style,
+        recipient: input.giftIntent,
+      });
+
+      const designUrl = await getOrCreateGuestGenerationPromise(
+        requestKey,
+        async () => {
+          const prompt = buildArabicNameMugPrompt({
+            name: input.name,
+            giftIntent: input.giftIntent,
+            stylePrompt: styleConfig.basePrompt,
           });
+          const promptHash = hashValue(prompt);
+          const inputHash = hashValue(
+            JSON.stringify({
+              aspectRatio: "1:1",
+              giftIntent: input.giftIntent,
+              model: "google/nano-banana-pro",
+              name: input.name,
+              sourcePage: input.sourcePage,
+              style: input.style,
+            }),
+          );
+          const logContext: GenerationLogContext = {
+            generationRequestId: input.generationRequestId,
+            userId: null,
+            sourcePage: input.sourcePage,
+            requestType: "generatePaidMugGuestDesign",
+            model: "google/nano-banana-pro",
+            promptHash,
+            inputHash,
+          };
 
-          await s3
-            .putObject({
-              Bucket: BUCKET_NAME,
-              Body: Buffer.from(firstImage, "base64"),
-              Key: icon.id,
-              ContentEncoding: "base64",
-              ContentType: "image/png",
-            })
-            .promise();
+          const imageUrls = await executeIdempotentGenerationRequest(
+            {
+              prisma: ctx.prisma,
+              ...logContext,
+            },
+            async ({ updatePredictionId }) => {
+              const generated = await generateImages(
+                prompt,
+                1,
+                "1:1",
+                "google/nano-banana-pro",
+                {
+                  logContext,
+                  onPredictionCreated: updatePredictionId,
+                },
+              );
+              const firstImage = generated.imagesBase64[0];
+              if (!firstImage) {
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: "No generated image returned by provider.",
+                });
+              }
 
-          return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
+              const icon = await ctx.prisma.icon.create({
+                data: {
+                  prompt,
+                  userId: null,
+                  metadata: {
+                    sourcePage: input.sourcePage,
+                    paidTrafficUser: true,
+                    styleId: styleConfig.id,
+                    giftIntent: input.giftIntent,
+                  },
+                },
+              });
+
+              await s3
+                .putObject({
+                  Bucket: BUCKET_NAME,
+                  Body: Buffer.from(firstImage, "base64"),
+                  Key: icon.id,
+                  ContentEncoding: "base64",
+                  ContentType: "image/png",
+                })
+                .promise();
+
+              return {
+                imageUrls: [
+                  `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
+                ],
+                predictionId: generated.predictionId,
+              };
+            },
+          );
+
+          const firstImageUrl = imageUrls[0];
+          if (!firstImageUrl) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "No generated image URL was stored.",
+            });
+          }
+
+          return firstImageUrl;
         },
       );
 
@@ -486,6 +1054,7 @@ export const generateRouter = createTRPCRouter({
   generateIcon: publicProcedure
     .input(
       z.object({
+        generationRequestId: z.string().trim().min(1).max(120),
         prompt: z.string(),
         numberOfImages: z.number().min(1).max(10),
         aspectRatio: z.enum(ASPECT_RATIO_VALUES).default("1:1"),
@@ -556,6 +1125,35 @@ export const generateRouter = createTRPCRouter({
         });
       }
 
+      const effectiveNumberOfImages = isSingleOutputModel(input.model)
+        ? 1
+        : input.numberOfImages;
+      const promptHash = hashValue(input.prompt);
+      const inputHash = hashValue(
+        JSON.stringify({
+          aspectRatio: input.aspectRatio,
+          metadata: {
+            category: input.metadata?.category ?? null,
+            subcategory: input.metadata?.subcategory ?? null,
+          },
+          model: input.model,
+          numberOfImages: effectiveNumberOfImages,
+          paidTrafficUser: Boolean(input.paidTrafficUser),
+          prompt: input.prompt,
+          sourcePage: input.sourcePage ?? null,
+          userId: userId ?? null,
+        }),
+      );
+      const logContext: GenerationLogContext = {
+        generationRequestId: input.generationRequestId,
+        userId: userId ?? null,
+        sourcePage: input.sourcePage ?? null,
+        requestType: "generateIcon",
+        model: input.model,
+        promptHash,
+        inputHash,
+      };
+
       if (isEligibleGuestGeneration) {
         if (input.model !== "google/nano-banana-pro" || input.numberOfImages !== 1) {
           throw new TRPCError({
@@ -563,237 +1161,268 @@ export const generateRouter = createTRPCRouter({
             message: "This offer supports one Nano Banana generation per request.",
           });
         }
-        try {
-          const b64Images: string[] = await generateIcon(
-            input.prompt,
-            1,
-            input.aspectRatio,
-            input.model,
-          );
-
-          const createdIcons = await Promise.all(
-            b64Images.map(async (image: string) => {
-              const icon = await ctx.prisma.icon.create({
-                data: {
-                  prompt: input.prompt,
-                  userId: null,
-                  metadata: {
-                    aspectRatio: input.aspectRatio ?? null,
-                    model: input.model,
-                    category: input.metadata?.category ?? null,
-                    subcategory: input.metadata?.subcategory ?? null,
-                    sourcePage: input.sourcePage ?? null,
-                    paidTrafficUser: true,
-                  },
+        const imageUrls = await executeIdempotentGenerationRequest(
+          {
+            prisma: ctx.prisma,
+            ...logContext,
+          },
+          async ({ updatePredictionId }) => {
+            try {
+              const generated = await generateImages(
+                input.prompt,
+                1,
+                input.aspectRatio,
+                input.model,
+                {
+                  logContext,
+                  onPredictionCreated: updatePredictionId,
                 },
+              );
+
+              const createdIcons = await Promise.all(
+                generated.imagesBase64.map(async (image: string) => {
+                  const icon = await ctx.prisma.icon.create({
+                    data: {
+                      prompt: input.prompt,
+                      userId: null,
+                      metadata: {
+                        aspectRatio: input.aspectRatio ?? null,
+                        model: input.model,
+                        category: input.metadata?.category ?? null,
+                        subcategory: input.metadata?.subcategory ?? null,
+                        sourcePage: input.sourcePage ?? null,
+                        paidTrafficUser: true,
+                      },
+                    },
+                  });
+
+                  await s3
+                    .putObject({
+                      Bucket: BUCKET_NAME,
+                      Body: Buffer.from(image, "base64"),
+                      Key: icon.id,
+                      ContentEncoding: "base64",
+                      ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
+                    })
+                    .promise();
+
+                  return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
+                }),
+              );
+
+              return {
+                imageUrls: createdIcons,
+                predictionId: generated.predictionId,
+              };
+            } catch (guestGenerationError) {
+              if (guestGenerationError instanceof TRPCError) {
+                throw guestGenerationError;
+              }
+              if (guestGenerationError instanceof Error) {
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: normalizeGenerationErrorMessage(guestGenerationError),
+                });
+              }
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Generation failed. Please try again.",
               });
+            }
+          },
+        );
 
-              await s3
-                .putObject({
-                  Bucket: BUCKET_NAME,
-                  Body: Buffer.from(image, "base64"),
-                  Key: icon.id,
-                  ContentEncoding: "base64",
-                  ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
-                })
-                .promise();
-
-              return icon;
-            }),
-          );
-
-          return createdIcons.map((icon) => ({
-            imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
-          }));
-        } catch (guestGenerationError) {
-          if (guestGenerationError instanceof TRPCError) {
-            throw guestGenerationError;
-          }
-          if (guestGenerationError instanceof Error) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: normalizeGenerationErrorMessage(guestGenerationError),
-            });
-          }
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Generation failed. Please try again.",
-          });
-        }
+        return imageUrls.map((imageUrl) => ({
+          imageUrl,
+        }));
       }
       const authedUserId = userId as string;
 
       // Calculate total credits needed (Decimal-safe)
       const creditsPerImage = new Prisma.Decimal(modelConfig.credits);
-      const imageCount = new Prisma.Decimal(
-        isSingleOutputModel(input.model) ? 1 : input.numberOfImages
-      );
+      const imageCount = new Prisma.Decimal(effectiveNumberOfImages);
       const totalCredits = creditsPerImage.times(imageCount);
-
-      // Deduct credits before generation; refund on downstream failure.
-      const updatedUser = await ctx.prisma.$transaction(async (tx) => {
-        const existingUser = await tx.user.findUnique({
-          where: { id: authedUserId },
-          select: { credits: true, email: true, name: true },
-        });
-
-        if (!existingUser) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "User not found after credit update",
-          });
-        }
-
-        const creditsDecimal = new Prisma.Decimal(existingUser.credits);
-        if (creditsDecimal.lessThan(totalCredits)) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "You do not have enough credits",
-          });
-        }
-
-        const updatedCredits = creditsDecimal.minus(totalCredits);
-        return tx.user.update({
-          where: { id: authedUserId },
-          data: {
-            credits: updatedCredits,
-            hasGeneratedDesign: true,
-          },
-          select: { credits: true, email: true, name: true },
-        });
-      });
-
-      // Update Mautic contact
-      if (updatedUser.email) {
-        try {
-          await updateMauticContact({
-            email: updatedUser.email,
-            name: updatedUser.name,
-            brand_specific_credits: updatedUser.credits,
-            customFields: {
-              has_generated_design: 1,
-            },
-          },
-            'namedesignai');
-          console.log("Mautic contact updated after credit deduction.");
-        } catch (err) {
-          console.error("Error updating Mautic after credit deduction:", err);
-        }
-      }
-
-      try {
-        // Generate images
-        const b64Images: string[] = await generateIcon(
-          input.prompt,
-          isSingleOutputModel(input.model) ? 1 : input.numberOfImages,
-          input.aspectRatio,
-          input.model
-        );
-
-        // Store images in DB & upload to S3
-        const createdIcons = await Promise.all(
-          b64Images.map(async (image: string) => {
-            const icon = await ctx.prisma.icon.create({
-              data: {
-                prompt: input.prompt,
-                userId: authedUserId,
-                metadata: {
-                  aspectRatio: input.aspectRatio ?? null,
-                  model: input.model,
-                  category: input.metadata?.category ?? null,
-                  subcategory: input.metadata?.subcategory ?? null,
-                  sourcePage: input.sourcePage ?? null,
-                },
-              },
-            });
-
-            try {
-              await s3
-                .putObject({
-                  Bucket: BUCKET_NAME,
-                  Body: Buffer.from(image, "base64"),
-                  Key: icon.id,
-                  ContentEncoding: "base64",
-                  ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
-                })
-                .promise();
-            } catch (s3Error) {
-              console.error("S3 Upload Error:", s3Error);
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to upload image to S3",
-              });
-            }
-
-            return icon;
-          })
-        );
-
-        const digitalArtInterest = getDigitalArtInterestFromSourcePage(
-          input.sourcePage,
-        );
-        if (digitalArtInterest) {
-          try {
-            await recordDigitalArtInterest({
-              prisma: ctx.prisma,
-              userId: authedUserId,
-              interest: digitalArtInterest,
-            });
-          } catch (interestError) {
-            console.error("Digital art interest update failed:", interestError);
-          }
-        }
-
-        // Return the URLs
-        return createdIcons.map((icon) => ({
-          imageUrl: `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`,
-        }));
-      } catch (generationOrStorageError) {
-        // If generation/storage fails after deduction, refund in full.
-        try {
-          const refundedUser = await ctx.prisma.$transaction(async (tx) => {
+      const imageUrls = await executeIdempotentGenerationRequest(
+        {
+          prisma: ctx.prisma,
+          ...logContext,
+          creditsCharged: totalCredits,
+        },
+        async ({ updatePredictionId }) => {
+          // Deduct credits before generation; refund on downstream failure.
+          const updatedUser = await ctx.prisma.$transaction(async (tx) => {
             const existingUser = await tx.user.findUnique({
               where: { id: authedUserId },
               select: { credits: true, email: true, name: true },
             });
-            if (!existingUser) return null;
 
-            const restoredCredits = new Prisma.Decimal(existingUser.credits).plus(totalCredits);
+            if (!existingUser) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "User not found after credit update",
+              });
+            }
+
+            const creditsDecimal = new Prisma.Decimal(existingUser.credits);
+            if (creditsDecimal.lessThan(totalCredits)) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "You do not have enough credits",
+              });
+            }
+
+            const updatedCredits = creditsDecimal.minus(totalCredits);
             return tx.user.update({
               where: { id: authedUserId },
-              data: { credits: restoredCredits },
+              data: {
+                credits: updatedCredits,
+                hasGeneratedDesign: true,
+              },
               select: { credits: true, email: true, name: true },
             });
           });
 
-          if (refundedUser?.email) {
+          // Update Mautic contact
+          if (updatedUser.email) {
             try {
               await updateMauticContact({
-                email: refundedUser.email,
-                name: refundedUser.name,
-                brand_specific_credits: refundedUser.credits,
-              }, "namedesignai");
-            } catch (mauticErr) {
-              console.error("Error updating Mautic after refund:", mauticErr);
+                email: updatedUser.email,
+                name: updatedUser.name,
+                brand_specific_credits: updatedUser.credits,
+                customFields: {
+                  has_generated_design: 1,
+                },
+              },
+                'namedesignai');
+              console.log("Mautic contact updated after credit deduction.");
+            } catch (err) {
+              console.error("Error updating Mautic after credit deduction:", err);
             }
           }
-        } catch (refundError) {
-          console.error("Credit refund failed after generation/storage error:", refundError);
-        }
 
-        if (generationOrStorageError instanceof TRPCError) {
-          throw generationOrStorageError;
-        }
-        if (generationOrStorageError instanceof Error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: normalizeGenerationErrorMessage(generationOrStorageError),
-          });
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Generation failed. Credits were refunded.",
-        });
-      }
+          try {
+            // Generate images
+            const generated = await generateImages(
+              input.prompt,
+              effectiveNumberOfImages,
+              input.aspectRatio,
+              input.model,
+              {
+                logContext,
+                onPredictionCreated: updatePredictionId,
+              },
+            );
+
+            // Store images in DB & upload to S3
+            const createdIcons = await Promise.all(
+              generated.imagesBase64.map(async (image: string) => {
+                const icon = await ctx.prisma.icon.create({
+                  data: {
+                    prompt: input.prompt,
+                    userId: authedUserId,
+                    metadata: {
+                      aspectRatio: input.aspectRatio ?? null,
+                      model: input.model,
+                      category: input.metadata?.category ?? null,
+                      subcategory: input.metadata?.subcategory ?? null,
+                      sourcePage: input.sourcePage ?? null,
+                    },
+                  },
+                });
+
+                try {
+                  await s3
+                    .putObject({
+                      Bucket: BUCKET_NAME,
+                      Body: Buffer.from(image, "base64"),
+                      Key: icon.id,
+                      ContentEncoding: "base64",
+                      ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
+                    })
+                    .promise();
+                } catch (s3Error) {
+                  console.error("S3 Upload Error:", s3Error);
+                  throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "Failed to upload image to S3",
+                  });
+                }
+
+                return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
+              }),
+            );
+
+            const digitalArtInterest = getDigitalArtInterestFromSourcePage(
+              input.sourcePage,
+            );
+            if (digitalArtInterest) {
+              try {
+                await recordDigitalArtInterest({
+                  prisma: ctx.prisma,
+                  userId: authedUserId,
+                  interest: digitalArtInterest,
+                });
+              } catch (interestError) {
+                console.error("Digital art interest update failed:", interestError);
+              }
+            }
+
+            return {
+              imageUrls: createdIcons,
+              predictionId: generated.predictionId,
+            };
+          } catch (generationOrStorageError) {
+            // If generation/storage fails after deduction, refund in full.
+            try {
+              const refundedUser = await ctx.prisma.$transaction(async (tx) => {
+                const existingUser = await tx.user.findUnique({
+                  where: { id: authedUserId },
+                  select: { credits: true, email: true, name: true },
+                });
+                if (!existingUser) return null;
+
+                const restoredCredits = new Prisma.Decimal(existingUser.credits).plus(totalCredits);
+                return tx.user.update({
+                  where: { id: authedUserId },
+                  data: { credits: restoredCredits },
+                  select: { credits: true, email: true, name: true },
+                });
+              });
+
+              if (refundedUser?.email) {
+                try {
+                  await updateMauticContact({
+                    email: refundedUser.email,
+                    name: refundedUser.name,
+                    brand_specific_credits: refundedUser.credits,
+                  }, "namedesignai");
+                } catch (mauticErr) {
+                  console.error("Error updating Mautic after refund:", mauticErr);
+                }
+              }
+            } catch (refundError) {
+              console.error("Credit refund failed after generation/storage error:", refundError);
+            }
+
+            if (generationOrStorageError instanceof TRPCError) {
+              throw generationOrStorageError;
+            }
+            if (generationOrStorageError instanceof Error) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: normalizeGenerationErrorMessage(generationOrStorageError),
+              });
+            }
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Generation failed. Credits were refunded.",
+            });
+          }
+        },
+      );
+
+      return imageUrls.map((imageUrl) => ({
+        imageUrl,
+      }));
     }),
 });

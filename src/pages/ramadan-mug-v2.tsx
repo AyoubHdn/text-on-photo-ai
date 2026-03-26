@@ -492,6 +492,10 @@ const RamadanMugV2Page: NextPage = () => {
     setBusyDesign(true);
     setErr("");
     setStep(5);
+    const generationRequestId =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `gen_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const generationTask = (async () => {
       try {
         fireEvent("generate_design_started", {
@@ -500,6 +504,7 @@ const RamadanMugV2Page: NextPage = () => {
         });
         const nextDesign = requiresPaidGeneration
           ? (await genIcon.mutateAsync({
+              generationRequestId,
               prompt: buildPrompt(),
               numberOfImages: 1,
               aspectRatio: "1:1",
@@ -512,6 +517,7 @@ const RamadanMugV2Page: NextPage = () => {
             }))[0]?.imageUrl ?? ""
           : (
               await genGuest.mutateAsync({
+                generationRequestId,
                 name: name.trim(),
                 style: styleId,
                 recipient: (recipient || "Someone Special") as Recipient,

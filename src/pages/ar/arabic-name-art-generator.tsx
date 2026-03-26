@@ -20,6 +20,7 @@ import {
 } from "~/config/arabicGenerator";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
 import { arabicStylesData } from "~/data/arabicStylesData";
+import { createGenerationRequestId } from "~/lib/generationRequest";
 import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 import { api } from "~/utils/api";
 
@@ -76,6 +77,8 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
     imageUrl: string | null;
   }>({ isOpen: false, imageUrl: null });
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
+  const generationSubmitLockRef = useRef(false);
+  const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const subcategoryScrollRef = useRef<HTMLDivElement>(null);
   const [showLeftCategoryArrow, setShowLeftCategoryArrow] = useState(false);
@@ -218,6 +221,10 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
         }
       }
     },
+    onSettled: () => {
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+    },
     onError: (mutationError) => {
       if (mutationError.message.toLowerCase().includes("enough credits")) {
         setError("");
@@ -231,12 +238,17 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
   });
 
   const submitGeneration = async () => {
+    if (generationSubmitLockRef.current || generateIcon.isLoading) return;
     let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
     if (!finalPrompt.toLowerCase().includes("arabic")) {
       finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
     }
 
+    generationSubmitLockRef.current = true;
+    setIsSubmittingGeneration(true);
+    setError("");
     generateIcon.mutate({
+      generationRequestId: createGenerationRequestId(),
       prompt: finalPrompt,
       numberOfImages: 1,
       aspectRatio: selectedAspectRatio,
@@ -480,7 +492,7 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
             type={isLoggedIn ? "submit" : "button"}
             onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
             isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading}
+            disabled={generateIcon.isLoading || isSubmittingGeneration}
           >
             {isLoggedIn
               ? `توليد (${selectedTier.credits} نقاط)`

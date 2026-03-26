@@ -7,6 +7,10 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
+    "prisma:local:generate": "node scripts/prisma-with-env.mjs generate",
+    "prisma:local:db:push": "node scripts/prisma-with-env.mjs db push",
+    "prisma:local:studio": "node scripts/prisma-with-env.mjs studio",
+    "prisma:local:validate": "node scripts/prisma-with-env.mjs validate",
     "start": "next start",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe"
   },

@@ -89,6 +89,29 @@ model Icon {
     backgroundRemovedAt DateTime?
 }
 
+model GenerationRequest {
+    id                  String   @id @default(cuid())
+    generationRequestId String   @unique
+    userId              String?
+    sourcePage          String?
+    requestType         String
+    model               String
+    promptHash          String
+    inputHash           String
+    status              String   @default("started")
+    predictionId        String?
+    creditsCharged      Decimal? @db.Decimal(10, 2)
+    resultImageUrls     Json?
+    errorMessage        String?
+    completedAt         DateTime?
+    failedAt            DateTime?
+    createdAt           DateTime @default(now())
+    updatedAt           DateTime @updatedAt
+
+    @@index([userId, createdAt])
+    @@index([status, updatedAt])
+}
+
 model VerificationToken {
     identifier String
     token      String   @unique

@@ -23,6 +23,7 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
   "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
   "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
   "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
+  "/arabic-name-mug-v1": { sourcePage: "arabic-name-mug-v1", promotedProduct: "mug" },
 };
 
 const GLOBAL_NOINDEX_PATHS = new Set([
@@ -40,6 +41,7 @@ const GLOBAL_NOINDEX_PATHS = new Set([
   "/order/cancel",
   "/unlock/free-credit",
   "/unlock/result",
+  "/arabic-name-mug-v1",
 ]);
 
 const MyApp: AppType<{ session: Session | null }> = ({
@@ -57,6 +59,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const isRamadanMugRoute =
     router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";
   const isRamadanMugV2Route = router.pathname === "/ramadan-mug-v2";
+  const isArabicNameMugV1Route = router.pathname === "/arabic-name-mug-v1";
   const [isRamadanMugV2PaidTraffic, setIsRamadanMugV2PaidTraffic] = useState(false);
   const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -66,6 +69,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
     try {
       if (router.pathname === "/ramadan-mug-v2") {
         window.localStorage.setItem("last-generator", "ramadan-mug-v2");
+      } else if (router.pathname === "/arabic-name-mug-v1") {
+        window.localStorage.setItem("last-generator", "arabic-name-mug-v1");
       }
     } catch {
       // ignore storage errors
@@ -83,6 +88,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
       const hasFbclid = params.has("fbclid");
       const hasGclid = params.has("gclid");
       const campaignTag = `${campaign} ${utmCampaign}`;
+      const isForcedPaidFunnel = router.pathname === "/arabic-name-mug-v1";
       const isAdUser =
         source === "facebook" ||
         source === "instagram" ||
@@ -95,7 +101,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
         hasFbclid ||
         hasGclid;
 
-      if (isAdUser) {
+      if (isAdUser || isForcedPaidFunnel) {
         window.sessionStorage.setItem(PAID_TRAFFIC_SESSION_KEY, "true");
         document.cookie = `paid_traffic_landing=${encodeURIComponent(
           `${window.location.pathname}${window.location.search}`,
@@ -231,6 +237,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
             <Component {...pageProps} />
           </>
         )
+      ) : isArabicNameMugV1Route ? (
+        <Component {...pageProps} />
       ) : isCancelPage ? (
         <div className="min-h-screen flex flex-col">
           <Header minimal={isRamadanAdLayout} />

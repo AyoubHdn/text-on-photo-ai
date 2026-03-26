@@ -5,6 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "~/server/auth";
+import { env } from "~/env.mjs";
 
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 
@@ -18,9 +19,19 @@ import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintI
 
 const MOCKUP_FETCH_ATTEMPTS = 3;
 const MOCKUP_FETCH_RETRY_MS = 1200;
+const TRUSTED_S3_HOST = `${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com`;
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTrustedAssetUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && parsed.hostname === TRUSTED_S3_HOST;
+  } catch {
+    return false;
+  }
 }
 
 function getErrorCode(error: unknown): string | undefined {
@@ -101,6 +112,9 @@ export default async function handler(
 
   if (!productKey || !imageUrl) {
     return res.status(400).json({ error: "Missing parameters" });
+  }
+  if (!isTrustedAssetUrl(imageUrl)) {
+    return res.status(400).json({ error: "Invalid image URL" });
   }
   if (paidTrafficUser && productKey !== "mug") {
     return res.status(403).json({ error: "RAMADAN_MUG_ONLY" });

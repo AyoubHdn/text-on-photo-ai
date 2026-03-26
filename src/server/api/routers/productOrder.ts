@@ -19,6 +19,18 @@ import {
   verifyGuestOrderToken,
 } from "~/server/guestOrderToken";
 import { env } from "~/env.mjs";
+import { resolveCheckoutUser } from "~/server/checkout/resolveCheckoutUser";
+
+const TRUSTED_S3_HOST = `${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com`;
+
+function isTrustedAssetUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && parsed.hostname === TRUSTED_S3_HOST;
+  } catch {
+    return false;
+  }
+}
 
 function normalizePosterSize(value?: string | null): string | null {
   if (!value) return null;
@@ -109,6 +121,12 @@ export const productOrderRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+        if (!isTrustedAssetUrl(input.imageUrl) || !isTrustedAssetUrl(input.mockupUrl)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Only generated Name Design AI assets can be used for checkout.",
+          });
+        }
         const isGuest = !ctx.session?.user?.id;
         if (isGuest) {
           const isPaidOffer =
@@ -366,70 +384,12 @@ export const productOrderRouter = createTRPCRouter({
             ? buildCheckoutResumeUrl(order.id, input.accessToken, input.sourcePage)
             : undefined;
 
-        const currentOrderUser = await prisma.user.findUnique({
-          where: { id: order.userId },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            credits: true,
-            paidTrafficUser: true,
-          },
+        const resolvedUser = await resolveCheckoutUser({
+          prisma,
+          orderUserId: order.userId,
+          normalizedEmail,
+          isPaidTrafficOrder,
         });
-
-        if (!currentOrderUser) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Order owner not found.",
-          });
-        }
-
-        let resolvedUser = await prisma.user.findUnique({
-          where: { email: normalizedEmail },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            credits: true,
-            paidTrafficUser: true,
-          },
-        });
-
-        if (!resolvedUser) {
-          if (!currentOrderUser.email) {
-            resolvedUser = await prisma.user.update({
-              where: { id: currentOrderUser.id },
-              data: {
-                email: normalizedEmail,
-                paidTrafficUser:
-                  isPaidTrafficOrder || currentOrderUser.paidTrafficUser,
-              },
-              select: {
-                id: true,
-                email: true,
-                name: true,
-                credits: true,
-                paidTrafficUser: true,
-              },
-            });
-          } else if (currentOrderUser.email.toLowerCase() === normalizedEmail) {
-            resolvedUser = currentOrderUser;
-          } else {
-            resolvedUser = await prisma.user.create({
-              data: {
-                email: normalizedEmail,
-                paidTrafficUser: isPaidTrafficOrder,
-              },
-              select: {
-                id: true,
-                email: true,
-                name: true,
-                credits: true,
-                paidTrafficUser: true,
-              },
-            });
-          }
-        }
 
         const updatedUser = await prisma.user.update({
           where: { id: resolvedUser.id },

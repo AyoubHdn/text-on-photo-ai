@@ -19,6 +19,7 @@ import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 
 const KNOWN_SOURCE_PAGES = new Set([
   "arabic-name-art-generator",
+  "arabic-name-mug-v1",
   "couples-art-generator",
   "name-art-generator",
   "ramadan-mug-v2",
@@ -125,6 +126,8 @@ function getCheckoutSourcePage(options?: {
   const sourcePage =
     generatorKey === "arabic"
     ? "arabic-name-art-generator"
+    : generatorKey === "arabic-name-mug-v1"
+    ? "arabic-name-mug-v1"
     : generatorKey === "couples"
     ? "couples-art-generator"
     : generatorKey === "default"
@@ -168,13 +171,28 @@ function getMetaTrackingParams() {
   };
 }
 
-function getStoredRamadanMugName(): string | null {
+function isSecurePaymentConfigError(message: string): boolean {
+  return (
+    message.includes("Expired API Key provided") ||
+    message.includes("Invalid API Key provided") ||
+    message.includes("Stripe checkout is not configured correctly.") ||
+    message.includes("Secure payment is temporarily unavailable.")
+  );
+}
+
+function getPaidMugStorageKey(sourcePage?: string | null): string | null {
+  if (sourcePage === "arabic-name-mug-v1") return "arabic-name-mug-v1:funnel:v1";
+  if (sourcePage === "ramadan-mug-v2") return "ramadan-mug-v2:funnel:v4";
+  return null;
+}
+
+function getStoredPaidMugName(sourcePage?: string | null): string | null {
   if (typeof window === "undefined") return null;
 
   try {
-    // The current order payload does not persist the typed Ramadan mug name.
-    // Reuse the existing funnel cache when available and fall back in UI when it is not.
-    const raw = window.localStorage.getItem("ramadan-mug-v2:funnel:v4");
+    const storageKey = getPaidMugStorageKey(sourcePage);
+    if (!storageKey) return null;
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as { name?: unknown };
@@ -188,11 +206,13 @@ function getStoredRamadanMugName(): string | null {
   return null;
 }
 
-function getStoredRamadanMugCheckoutEmail(): string | null {
+function getStoredPaidMugCheckoutEmail(sourcePage?: string | null): string | null {
   if (typeof window === "undefined") return null;
 
   try {
-    const raw = window.localStorage.getItem("ramadan-mug-v2:funnel:v4");
+    const storageKey = getPaidMugStorageKey(sourcePage);
+    if (!storageKey) return null;
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as { email?: unknown };
@@ -299,6 +319,8 @@ export default function CheckoutPage() {
     const autoFinalizeStartedRef = useRef(false);
     const hasTrackedBeginCheckoutRef = useRef(false);
     const lastCapturedCheckoutEmailRef = useRef<string | null>(null);
+    const checkoutEmailCaptureInFlightRef = useRef<string | null>(null);
+    const checkoutEmailCapturePromiseRef = useRef<Promise<void> | null>(null);
 
     type OrderType = {
         id: string;
@@ -555,18 +577,18 @@ export default function CheckoutPage() {
 
     useEffect(() => {
       if (!order || order.productKey !== "mug") return;
-      setPersonalizedName(getStoredRamadanMugName());
-    }, [order]);
+      setPersonalizedName(getStoredPaidMugName(checkoutSourcePage));
+    }, [checkoutSourcePage, order]);
 
     useEffect(() => {
       if (isLoggedIn || address.email.trim()) return;
       if (!order || order.productKey !== "mug") return;
 
-      const storedEmail = getStoredRamadanMugCheckoutEmail();
+      const storedEmail = getStoredPaidMugCheckoutEmail(checkoutSourcePage);
       if (!storedEmail) return;
 
       setAddress((prev) => ({ ...prev, email: storedEmail }));
-    }, [address.email, isLoggedIn, order]);
+    }, [address.email, checkoutSourcePage, isLoggedIn, order]);
 
     useEffect(() => {
       if (!order) return;
@@ -642,8 +664,17 @@ export default function CheckoutPage() {
         const normalizedEmail = rawEmail.trim().toLowerCase();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) return;
         if (lastCapturedCheckoutEmailRef.current === normalizedEmail) return;
+        if (
+          checkoutEmailCaptureInFlightRef.current === normalizedEmail &&
+          checkoutEmailCapturePromiseRef.current
+        ) {
+          await checkoutEmailCapturePromiseRef.current;
+          return;
+        }
 
-        try {
+        let capturePromise: Promise<void>;
+        capturePromise = (async () => {
+          try {
             await captureCheckoutEmail.mutateAsync({
                 orderId: order.id,
                 accessToken: accessTokenValue,
@@ -652,9 +683,19 @@ export default function CheckoutPage() {
                 promotedProduct: order.productKey,
             });
             lastCapturedCheckoutEmailRef.current = normalizedEmail;
-        } catch (err) {
+          } catch (err) {
             console.error("Failed to capture checkout email:", err);
-        }
+          }
+        })().finally(() => {
+          if (checkoutEmailCapturePromiseRef.current === capturePromise) {
+            checkoutEmailCapturePromiseRef.current = null;
+            checkoutEmailCaptureInFlightRef.current = null;
+          }
+        });
+
+        checkoutEmailCaptureInFlightRef.current = normalizedEmail;
+        checkoutEmailCapturePromiseRef.current = capturePromise;
+        await capturePromise;
     };
 
 
@@ -1140,11 +1181,9 @@ export default function CheckoutPage() {
                 window.location.href = res.url;
             }
             } catch (err: unknown) {
-            setShowShippingValidation(true);
-            setShippingNotice("Please fix the highlighted shipping fields before continuing.");
-
             if (err instanceof TRPCClientError) {
                 if (err.message.includes("Invalid US ZIP code")) {
+                setShowShippingValidation(true);
                 setBackendFieldErrors({
                     zip: "ZIP code is not valid for a US address.",
                 });
@@ -1152,6 +1191,7 @@ export default function CheckoutPage() {
                 return;
                 }
                 if (err.message.includes("Shipping address state and ZIP code don't match.")) {
+                setShowShippingValidation(true);
                 setBackendFieldErrors({
                     zip: "ZIP code doesn't match the selected state.",
                     state: "State doesn't match the provided ZIP code.",
@@ -1160,6 +1200,7 @@ export default function CheckoutPage() {
                 return;
                 }
                 if (err.message.includes("Physical shipping is not available in this country yet.")) {
+                setShowShippingValidation(true);
                 setBackendFieldErrors({
                     country: "Shipping is not available in this country yet.",
                 });
@@ -1167,7 +1208,14 @@ export default function CheckoutPage() {
                 return;
                 }
                 if (err.message.includes("Price mismatch.")) {
+                setShowShippingValidation(false);
                 setShippingNotice("Price changed. Please return to preview and try again.");
+                setBackendFieldErrors({});
+                return;
+                }
+                if (isSecurePaymentConfigError(err.message)) {
+                setShowShippingValidation(false);
+                setShippingNotice(err.message);
                 setBackendFieldErrors({});
                 return;
                 }
@@ -1190,8 +1238,19 @@ export default function CheckoutPage() {
                     : "State/region is required.";
                 }
 
+                if (Object.keys(nextFieldErrors).length > 0) {
+                setShowShippingValidation(true);
+                setShippingNotice("Please fix the highlighted shipping fields before continuing.");
                 setBackendFieldErrors(nextFieldErrors);
+                return;
+                }
+
+                setShowShippingValidation(false);
+                setShippingNotice("We couldn't start secure payment. Please try again.");
+                setBackendFieldErrors({});
             } else {
+                setShowShippingValidation(false);
+                setShippingNotice("We couldn't start secure payment. Please try again.");
                 setBackendFieldErrors({});
             }
             }

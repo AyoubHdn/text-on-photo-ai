@@ -25,6 +25,7 @@ import { FiGlobe } from "react-icons/fi";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
+import { createGenerationRequestId } from "~/lib/generationRequest";
 import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
@@ -111,6 +112,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("generate");
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
+  const generationSubmitLockRef = useRef(false);
+  const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
@@ -299,25 +302,15 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         }
       }
     },
+    onSettled: () => {
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+    },
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
         setError("");
         openCreditUpgrade("generate", getRequiredGenerateCredits(), () => {
-          let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
-          if (!finalPrompt.toLowerCase().includes("arabic")) {
-            finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
-          }
-          generateIcon.mutate({
-            prompt: finalPrompt,
-            numberOfImages: 1,
-            aspectRatio: selectedAspectRatio,
-            model: selectedModel,
-            sourcePage: SOURCE_PAGE,
-            metadata: {
-              category: activeTab || undefined,
-              subcategory: activeSubTab || undefined,
-            },
-          });
+          triggerGeneration();
         });
         return;
       }
@@ -325,19 +318,14 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     },
   });
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!isLoggedIn) { startGeneratorSignIn(); return; }
-    if (!form.name || !form.basePrompt) {
-      setError("Please select a style and enter a name."); return;
-    }
-    
+  const buildGenerationInput = () => {
     let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
-    if(!finalPrompt.toLowerCase().includes("arabic")) {
-        finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
+    if (!finalPrompt.toLowerCase().includes("arabic")) {
+      finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
     }
 
-    generateIcon.mutate({
+    return {
+      generationRequestId: createGenerationRequestId(),
       prompt: finalPrompt,
       numberOfImages: 1,
       aspectRatio: selectedAspectRatio,
@@ -347,7 +335,25 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
       },
-    });
+    };
+  };
+
+  const triggerGeneration = () => {
+    if (generationSubmitLockRef.current || generateIcon.isLoading) return;
+    generationSubmitLockRef.current = true;
+    setIsSubmittingGeneration(true);
+    setError("");
+    generateIcon.mutate(buildGenerationInput());
+  };
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isLoggedIn) { startGeneratorSignIn(); return; }
+    if (!form.name || !form.basePrompt) {
+      setError("Please select a style and enter a name."); return;
+    }
+
+    triggerGeneration();
   };
 
   const handleImageSelect = (basePrompt: string, src: string) => {
@@ -641,10 +647,14 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           )}
           
           {isCreditLocked && (
-            <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-              This design is saved. Add credits to continue.{" "}
-              <Link href="/buy-credits" className="underline font-semibold">
-                Buy credits
+            <div className="rounded border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+              <div className="font-semibold">Your design is saved and ready.</div>
+              <div className="mt-1">
+                You can still download, share, and preview it now. Add credits to create
+                more versions or remove the background for a cleaner result.
+              </div>
+              <Link href="/buy-credits" className="mt-3 inline-flex font-semibold underline">
+                Get more credits
               </Link>
             </div>
           )}
@@ -652,7 +662,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             type={isLoggedIn ? "submit" : "button"}
             onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
             isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading || isCreditLocked}
+            disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
           >
             {isLoggedIn
               ? `Generate My Design (${selectedTier.credits} Credits)`
@@ -670,7 +680,6 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                 const imageId = extractImageId(imageUrl);
                 const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
                 const isTransparent = imageId ? useTransparentMap[imageId] : false;
-                const showRemoveBgAlert = imageId ? removeBgCreditAlertMap[imageId] : false;
                 const displayUrl = getDisplayImageUrl(imageUrl) ?? imageUrl;
 
                 return (
@@ -717,25 +726,15 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                         }
                         width={512}
                         height={512}
-                        className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}
+                        className="w-full rounded"
                       />
-                      {isCreditLocked && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded bg-black/30 text-xs font-semibold text-white">
-                          Saved design locked
-                        </div>
-                      )}
-                      {showRemoveBgAlert && (
-                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
-                          Removing the background costs 1 credit.
-                        </div>
-                      )}
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3 rounded bg-gray-900/80 px-2 py-1.5 text-xs text-white dark:bg-gray-800/90">
                       <span className="opacity-80">Costs 1 credit</span>
                       <button
                         type="button"
                         onClick={() => void handleToggleBackground(imageUrl)}
-                        disabled={!!isRemoving || isCreditLocked}
+                        disabled={!!isRemoving}
                         className="rounded bg-white/10 px-2 py-1 font-semibold hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
                         title="Remove background"
                         aria-label="Remove background"
@@ -792,7 +791,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
                       <button
                         className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                        disabled={previewCooldown !== null || isCreditLocked}
+                        disabled={previewCooldown !== null}
                         onClick={() => {
                           if (
                             selectedAspectRatio === "16:9" &&

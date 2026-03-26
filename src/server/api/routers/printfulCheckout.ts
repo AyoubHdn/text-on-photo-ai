@@ -18,6 +18,7 @@ import {
 import { assertVariantAvailableInCountry } from "~/server/services/productVariantAvailability";
 import { verifyGuestOrderToken } from "~/server/guestOrderToken";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import { resolveCheckoutUser } from "~/server/checkout/resolveCheckoutUser";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -84,6 +85,21 @@ function buildCheckoutResumeUrl(
   return checkoutUrl.toString();
 }
 
+function getStripeCheckoutErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : "Stripe checkout failed.";
+
+  if (
+    message.includes("Expired API Key provided") ||
+    message.includes("Invalid API Key provided")
+  ) {
+    return env.NODE_ENV === "production"
+      ? "Secure payment is temporarily unavailable. Please try again later."
+      : "Stripe checkout is not configured correctly. Update STRIPE_SECRET_KEY.";
+  }
+
+  return "Unable to start secure payment. Please try again.";
+}
+
 export const printfulCheckoutRouter = createTRPCRouter({
   createCheckout: publicProcedure
     .input(
@@ -146,87 +162,13 @@ export const printfulCheckoutRouter = createTRPCRouter({
         isPaidTrafficOrder
           ? buildCheckoutResumeUrl(order.id, input.accessToken, input.sourcePage)
           : undefined;
-      const currentOrderUser = await prisma.user.findUnique({
-        where: { id: order.userId },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          credits: true,
-          paidTrafficUser: true,
-        },
+      const resolvedUser = await resolveCheckoutUser({
+        prisma,
+        orderUserId: order.userId,
+        normalizedEmail,
+        fallbackName: input.address.name,
+        isPaidTrafficOrder,
       });
-      if (!currentOrderUser) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Order owner not found.",
-        });
-      }
-
-      let resolvedUser = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          credits: true,
-          paidTrafficUser: true,
-          hasVisitedCheckout: true,
-        },
-      });
-
-      if (!resolvedUser) {
-        if (!currentOrderUser.email) {
-          resolvedUser = await prisma.user.update({
-            where: { id: currentOrderUser.id },
-            data: {
-              email: normalizedEmail,
-              name: currentOrderUser.name ?? input.address.name,
-              paidTrafficUser: isPaidTrafficOrder || currentOrderUser.paidTrafficUser,
-            },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              credits: true,
-              paidTrafficUser: true,
-              hasVisitedCheckout: true,
-            },
-          });
-        } else if (currentOrderUser.email.toLowerCase() === normalizedEmail) {
-          resolvedUser = {
-            id: currentOrderUser.id,
-            email: currentOrderUser.email,
-            name: currentOrderUser.name,
-            credits: currentOrderUser.credits,
-            paidTrafficUser: currentOrderUser.paidTrafficUser,
-            hasVisitedCheckout: false,
-          };
-        } else {
-          resolvedUser = await prisma.user.create({
-            data: {
-              email: normalizedEmail,
-              name: input.address.name,
-              paidTrafficUser: isPaidTrafficOrder,
-            },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              credits: true,
-              paidTrafficUser: true,
-              hasVisitedCheckout: true,
-            },
-          });
-        }
-      }
-
-      if (!resolvedUser) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Unable to resolve checkout user.",
-        });
-      }
 
       const updatedCheckoutUser = await prisma.user.update({
         where: { id: resolvedUser.id },
@@ -392,31 +334,45 @@ export const printfulCheckoutRouter = createTRPCRouter({
         cancelUrl.searchParams.set("generator", input.sourcePage);
       }
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        payment_method_types: ["card"],
-        metadata: {
-          type: "printful_order",
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          payment_method_types: ["card"],
+          metadata: {
+            type: "printful_order",
+            orderId: order.id,
+            userId: resolvedUser.id,
+            fbp: input.tracking?.fbp ?? "",
+            fbc: input.tracking?.fbc ?? "",
+          },
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                unit_amount: Math.round(pricing.totalPrice * 100),
+                product_data: {
+                  name: "Custom Printed Product",
+                },
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: successUrl.toString(),
+          cancel_url: cancelUrl.toString(),
+        });
+      } catch (error) {
+        console.error("[PRINTFUL_CHECKOUT_STRIPE_CREATE_ERROR]", {
           orderId: order.id,
           userId: resolvedUser.id,
-          fbp: input.tracking?.fbp ?? "",
-          fbc: input.tracking?.fbc ?? "",
-        },
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              unit_amount: Math.round(pricing.totalPrice * 100),
-              product_data: {
-                name: "Custom Printed Product",
-              },
-            },
-            quantity: 1,
-          },
-        ],
-        success_url: successUrl.toString(),
-        cancel_url: cancelUrl.toString(),
-      });
+          productKey: order.productKey,
+          message: error instanceof Error ? error.message : String(error),
+        });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: getStripeCheckoutErrorMessage(error),
+        });
+      }
 
       await prisma.productOrder.update({
         where: { id: order.id },

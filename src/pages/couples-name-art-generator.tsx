@@ -20,6 +20,7 @@ import Link from "next/link";
 import { ShareModal } from '~/component/ShareModal';
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
+import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
 import { buildPromptImageAlt } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
@@ -89,6 +90,8 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("generate");
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
+  const generationSubmitLockRef = useRef(false);
+  const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
@@ -316,25 +319,15 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
         }
       }
     },
+    onSettled: () => {
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+    },
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
         setError("");
         openCreditUpgrade("generate", getRequiredGenerateCredits(), () => {
-          let finalPrompt = form.basePrompt
-            .replace(/\[NAME1\]/gi, form.name1)
-            .replace(/\[NAME2\]/gi, form.name2);
-          finalPrompt += ", beautiful romantic art, high resolution";
-          generateIcon.mutate({
-            prompt: finalPrompt,
-            numberOfImages: parseInt(form.numberofImages, 10),
-            aspectRatio: selectedAspectRatio,
-            model: selectedModel,
-            sourcePage: SOURCE_PAGE,
-            metadata: {
-              category: activeTab || undefined,
-              subcategory: activeSubTab || undefined,
-            },
-          });
+          triggerGeneration();
         });
         return;
       }
@@ -342,6 +335,34 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       setError(error.message);
     },
   });
+
+  const buildGenerationInput = () => {
+    let finalPrompt = form.basePrompt
+      .replace(/\[NAME1\]/gi, form.name1)
+      .replace(/\[NAME2\]/gi, form.name2);
+    finalPrompt += ", beautiful romantic art, high resolution";
+
+    return {
+      generationRequestId: createGenerationRequestId(),
+      prompt: finalPrompt,
+      numberOfImages: Number.parseInt(form.numberofImages, 10),
+      aspectRatio: selectedAspectRatio,
+      model: selectedModel,
+      sourcePage: SOURCE_PAGE,
+      metadata: {
+        category: activeTab || undefined,
+        subcategory: activeSubTab || undefined,
+      },
+    };
+  };
+
+  const triggerGeneration = () => {
+    if (generationSubmitLockRef.current || generateIcon.isLoading) return;
+    generationSubmitLockRef.current = true;
+    setIsSubmittingGeneration(true);
+    setError("");
+    generateIcon.mutate(buildGenerationInput());
+  };
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -363,23 +384,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       styleImage: selectedImage || "none",
     });
 
-    // --- STRATEGIC CHANGE: Replace both name placeholders ---
-    let finalPrompt = form.basePrompt
-        .replace(/\[NAME1\]/gi, form.name1)
-        .replace(/\[NAME2\]/gi, form.name2);
-    finalPrompt += ", beautiful romantic art, high resolution";
-
-    generateIcon.mutate({
-      prompt: finalPrompt,
-      numberOfImages: parseInt(form.numberofImages, 10),
-      aspectRatio: selectedAspectRatio,
-      model: selectedModel,
-      sourcePage: SOURCE_PAGE,
-      metadata: {
-        category: activeTab || undefined,
-        subcategory: activeSubTab || undefined,
-      },
-    });
+    triggerGeneration();
   };
 
   const handleImageSelect = (basePrompt: string, src: string, allowColors = true) => {
@@ -582,7 +587,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                               selectedStyleImage && selectedStyleImage.includes(".")
                                 ? selectedStyleImage
                                 : "/images/placeholder.png",
-                            recommended: false,
                             label: undefined, // No extra label
                           },
                           {
@@ -593,7 +597,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                               selectedStyleImage && selectedStyleImage.includes(".")
                                 ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
                                 : "/images/placeholder.png",
-                            recommended: true,  // Shows the "Recommended" tag
                             label: undefined,
                           },
                           
@@ -614,11 +617,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                                 alt={model.name}
                                 className="w-full h-full object-cover"
                               />
-                              {model.recommended && (
-                                <span className="absolute top-1 right-1 bg-yellow-400 text-black px-2 text-xs rounded">
-                                  Recommended
-                                </span>
-                              )}
                               {/* Render label if present (e.g. "Top Tier") */}
                               {model.label && (
                                 <span className="absolute top-1 right-1 bg-red-300 text-black px-2 text-xs rounded">
@@ -690,10 +688,14 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
           {error && (<div className="bg-red-500 text-white rounded p-4 text-xl">{error}{" "}{error.includes("credits") && (<Link href="/buy-credits" className="underline font-bold ml-2">Buy Credits</Link>)}</div>)}
 
           {isCreditLocked && (
-            <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-              This design is saved. Add credits to continue.{" "}
-              <Link href="/buy-credits" className="underline font-semibold">
-                Buy credits
+            <div className="rounded border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+              <div className="font-semibold">Your design is saved and ready.</div>
+              <div className="mt-1">
+                You can still download, share, and preview it now. Add credits to create
+                more versions or remove the background for a cleaner result.
+              </div>
+              <Link href="/buy-credits" className="mt-3 inline-flex font-semibold underline">
+                Get more credits
               </Link>
             </div>
           )}
@@ -701,7 +703,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
             type={isLoggedIn ? "submit" : "button"}
             onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
             isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading || isCreditLocked}
+            disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
           >
             {isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}
           </Button>
@@ -716,7 +718,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                 const imageId = extractImageId(imageUrl);
                 const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
                 const isTransparent = imageId ? useTransparentMap[imageId] : false;
-                const showRemoveBgAlert = imageId ? removeBgCreditAlertMap[imageId] : false;
                 const displayUrl = getDisplayImageUrl(imageUrl) ?? imageUrl;
 
                 return (
@@ -763,26 +764,16 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                         }
                         width={512}
                         height={512}
-                        className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}
+                        className="w-full rounded"
                         unoptimized={true}
                       />
-                      {isCreditLocked && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded bg-black/30 text-xs font-semibold text-white">
-                          Saved design locked
-                        </div>
-                      )}
-                      {showRemoveBgAlert && (
-                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
-                          Removing the background costs 1 credit.
-                        </div>
-                      )}
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3 rounded bg-gray-900/80 px-2 py-1.5 text-xs text-white dark:bg-gray-800/90">
                       <span className="opacity-80">Costs 1 credit</span>
                       <button
                         type="button"
                         onClick={() => void handleToggleBackground(imageUrl)}
-                        disabled={!!isRemoving || isCreditLocked}
+                        disabled={!!isRemoving}
                         className="rounded bg-white/10 px-2 py-1 font-semibold hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
                         title="Remove background"
                         aria-label="Remove background"
@@ -833,7 +824,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
 
                       <button
                         className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                        disabled={previewCooldown !== null || isCreditLocked}
+                        disabled={previewCooldown !== null}
                         onClick={() => {
                           if (
                             selectedAspectRatio === "16:9" &&

@@ -24,6 +24,7 @@ import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
+import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -111,6 +112,8 @@ const RamadanMugMenPage: NextPage = () => {
   const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("generate");
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
+  const generationSubmitLockRef = useRef(false);
+  const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const paidTrafficStateQuery = api.user.getPaidTrafficFunnelState.useQuery(undefined, { enabled: isLoggedIn });
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation({
@@ -364,26 +367,15 @@ const RamadanMugMenPage: NextPage = () => {
         previewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 250);
     },
+    onSettled: () => {
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+    },
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
         setError("");
         openCreditUpgrade("generate", MODEL_CREDITS[selectedModel], () => {
-          let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
-          if (!finalPrompt.toLowerCase().includes("arabic")) {
-            finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
-          }
-          generateIcon.mutate({
-            prompt: finalPrompt,
-            numberOfImages: 1,
-            aspectRatio: selectedAspectRatio,
-            model: selectedModel,
-            paidTrafficUser: isRamadanAdUser,
-            sourcePage: SOURCE_PAGE,
-            metadata: {
-              category: activeTab || undefined,
-              subcategory: activeSubTab || undefined,
-            },
-          });
+          triggerGeneration();
         });
         return;
       }
@@ -391,22 +383,14 @@ const RamadanMugMenPage: NextPage = () => {
     },
   });
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!isLoggedIn && !isRamadanAdUser) {
-      void signIn();
-      return;
-    }
-    if (!form.name || !form.basePrompt) {
-      setError("Please select a style and enter a name."); return;
-    }
-    
+  const buildGenerationInput = () => {
     let finalPrompt = form.basePrompt.replace(/'Text'/gi, `'${form.name}'`);
-    if(!finalPrompt.toLowerCase().includes("arabic")) {
-        finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
+    if (!finalPrompt.toLowerCase().includes("arabic")) {
+      finalPrompt += ", arabic calligraphy masterpiece, 8k resolution";
     }
 
-    generateIcon.mutate({
+    return {
+      generationRequestId: createGenerationRequestId(),
       prompt: finalPrompt,
       numberOfImages: 1,
       aspectRatio: selectedAspectRatio,
@@ -417,7 +401,28 @@ const RamadanMugMenPage: NextPage = () => {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
       },
-    });
+    };
+  };
+
+  const triggerGeneration = () => {
+    if (generationSubmitLockRef.current || generateIcon.isLoading) return;
+    generationSubmitLockRef.current = true;
+    setIsSubmittingGeneration(true);
+    setError("");
+    generateIcon.mutate(buildGenerationInput());
+  };
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isLoggedIn && !isRamadanAdUser) {
+      void signIn();
+      return;
+    }
+    if (!form.name || !form.basePrompt) {
+      setError("Please select a style and enter a name."); return;
+    }
+
+    triggerGeneration();
   };
 
   const scrollToGenerator = () => {
@@ -798,20 +803,24 @@ const RamadanMugMenPage: NextPage = () => {
           )}
           
           {isCreditLocked && (
-            <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+            <div className="rounded border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
               {isRamadanAdUser ? (
                 "This design is saved. Sign in to continue this Ramadan mug checkout flow."
               ) : (
                 <>
-                  This design is saved. Add credits to continue.{" "}
-                  <Link href="/buy-credits" className="font-semibold underline">
-                    Buy credits
+                  <div className="font-semibold">Your design is saved and ready.</div>
+                  <div className="mt-1">
+                    You can still download, share, and preview it now. Add credits to create
+                    more versions or remove the background for a cleaner result.
+                  </div>
+                  <Link href="/buy-credits" className="mt-3 inline-flex font-semibold underline">
+                    Get more credits
                   </Link>
                 </>
               )}
             </div>
           )}
-          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isCreditLocked}>
+          <Button isLoading={generateIcon.isLoading} disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}>
             {!isLoggedIn && !isRamadanAdUser
               ? "Sign in to Generate"
               : "Generate My Design"}
@@ -835,7 +844,6 @@ const RamadanMugMenPage: NextPage = () => {
                 const imageId = extractImageId(imageUrl);
                 const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
                 const isTransparent = imageId ? useTransparentMap[imageId] : false;
-                const showRemoveBgAlert = imageId ? removeBgCreditAlertMap[imageId] : false;
                 const displayUrl = getDisplayImageUrl(imageUrl) ?? imageUrl;
 
                 return (
@@ -879,25 +887,15 @@ const RamadanMugMenPage: NextPage = () => {
                         alt="Arabic Art"
                         width={512}
                         height={512}
-                        className={`w-full rounded ${isCreditLocked ? "blur-[2px] opacity-70" : ""}`}
+                        className="w-full rounded"
                       />
-                      {isCreditLocked && (
-                        <div className="absolute inset-0 flex items-center justify-center rounded bg-black/30 text-xs font-semibold text-white">
-                          Saved design locked
-                        </div>
-                      )}
-                      {showRemoveBgAlert && (
-                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
-                          Removing the background costs 1 credit.
-                        </div>
-                      )}
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3 rounded bg-gray-900/80 px-2 py-1.5 text-xs text-white dark:bg-gray-800/90">
                       <span className="opacity-80">Costs 1 credit</span>
                       <button
                         type="button"
                         onClick={() => void handleToggleBackground(imageUrl)}
-                        disabled={!!isRemoving || isCreditLocked}
+                        disabled={!!isRemoving}
                         className="rounded bg-white/10 px-2 py-1 font-semibold hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
                         title="Remove background"
                         aria-label="Remove background"
@@ -959,7 +957,7 @@ const RamadanMugMenPage: NextPage = () => {
 
                       <button
                         className={`${isRamadanAdUser ? "w-full" : "inline-block"} px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition`}
-                        disabled={previewCooldown !== null || isCreditLocked}
+                        disabled={previewCooldown !== null}
                         onClick={() => {
                           if (
                             selectedAspectRatio === "16:9" &&

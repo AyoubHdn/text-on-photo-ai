@@ -1,5 +1,2 @@
--- No-op.
--- This migration was generated before ProductVariantAvailabilityCache existed,
--- so renaming its index breaks clean replay on shadow databases.
--- The table and correct indexes are created later in
--- 20260313183000_add_product_variant_availability_cache.
+-- RenameIndex
+ALTER INDEX "ProductVariantAvailabilityCache_productType_variantId_countryCo" RENAME TO "ProductVariantAvailabilityCache_productType_variantId_count_key";

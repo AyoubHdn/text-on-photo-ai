@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import {
@@ -75,40 +76,44 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const normalizedEmail = input.email.trim().toLowerCase();
+      const paidTrafficLeadSelect = {
+        id: true,
+        email: true,
+        name: true,
+        credits: true,
+        paidTrafficUser: true,
+        hasGeneratedDesign: true,
+        hasVisitedCheckout: true,
+      } as const;
       const existingUser = await ctx.prisma.user.findUnique({
         where: { email: normalizedEmail },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          credits: true,
-          paidTrafficUser: true,
-          hasGeneratedDesign: true,
-          hasVisitedCheckout: true,
-        },
+        select: paidTrafficLeadSelect,
       });
 
-      const resolvedUser = existingUser
-        ? await ctx.prisma.user.update({
-            where: { id: existingUser.id },
-            data: {
-              name: existingUser.name ?? input.name,
-              paidTrafficUser: true,
-              hasGeneratedDesign:
-                Boolean(input.hasGeneratedDesign) || existingUser.hasGeneratedDesign,
-              hasVisitedCheckout:
-                Boolean(input.hasVisitedCheckout) || existingUser.hasVisitedCheckout,
-            },
-            select: {
-              email: true,
-              name: true,
-              credits: true,
-              paidTrafficUser: true,
-              hasGeneratedDesign: true,
-              hasVisitedCheckout: true,
-            },
-          })
-        : await ctx.prisma.user.create({
+      const updateExistingLead = (userId: string, current?: {
+        name: string | null;
+        hasGeneratedDesign: boolean;
+        hasVisitedCheckout: boolean;
+      }) =>
+        ctx.prisma.user.update({
+          where: { id: userId },
+          data: {
+            name: current?.name ?? input.name,
+            paidTrafficUser: true,
+            hasGeneratedDesign:
+              Boolean(input.hasGeneratedDesign) || Boolean(current?.hasGeneratedDesign),
+            hasVisitedCheckout:
+              Boolean(input.hasVisitedCheckout) || Boolean(current?.hasVisitedCheckout),
+          },
+          select: paidTrafficLeadSelect,
+        });
+
+      let resolvedUser;
+      if (existingUser) {
+        resolvedUser = await updateExistingLead(existingUser.id, existingUser);
+      } else {
+        try {
+          resolvedUser = await ctx.prisma.user.create({
             data: {
               email: normalizedEmail,
               name: input.name,
@@ -116,15 +121,27 @@ export const userRouter = createTRPCRouter({
               hasGeneratedDesign: Boolean(input.hasGeneratedDesign),
               hasVisitedCheckout: Boolean(input.hasVisitedCheckout),
             },
-            select: {
-              email: true,
-              name: true,
-              credits: true,
-              paidTrafficUser: true,
-              hasGeneratedDesign: true,
-              hasVisitedCheckout: true,
-            },
+            select: paidTrafficLeadSelect,
           });
+        } catch (error) {
+          if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === "P2002"
+          ) {
+            const racedUser = await ctx.prisma.user.findUnique({
+              where: { email: normalizedEmail },
+              select: paidTrafficLeadSelect,
+            });
+            if (racedUser) {
+              resolvedUser = await updateExistingLead(racedUser.id, racedUser);
+            } else {
+              throw error;
+            }
+          } else {
+            throw error;
+          }
+        }
+      }
 
       try {
         await updateMauticContact(

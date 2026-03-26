@@ -28,6 +28,12 @@ export type FunnelContext = {
 };
 
 const ROUTE_OVERRIDES: Record<string, FunnelOverride> = {
+  "arabic-name-mug-v1": {
+    funnel: "arabic_name_mug_v1",
+    niche: "arabic_name_gift",
+    product_type: "physical_product",
+    traffic_type: "paid",
+  },
   "ramadan-mug-men": {
     funnel: "ramadan_mug_men",
     niche: "muslim_men_usa",

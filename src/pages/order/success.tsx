@@ -23,6 +23,31 @@ export default function OrderSuccess() {
   const order = orderQuery.data;
   const hasTrackedPurchaseRef = useRef(false);
   const hasTrackedMetaPurchaseRef = useRef(false);
+  const getPaidFunnelPurchaseContext = () => {
+    const lastGenerator =
+      typeof window !== "undefined" ? window.localStorage.getItem("last-generator") : null;
+    const source = generatorFromQuery ?? sourcePageFromQuery ?? lastGenerator;
+
+    if (source === "arabic-name-mug-v1") {
+      return {
+        funnel: "arabic_name_mug_v1",
+        product_type: "physical_product",
+        niche: "arabic_name_gift",
+        traffic_type: "paid" as const,
+        source_page: "arabic-name-mug-v1",
+      };
+    }
+
+    if (source === "ramadan-mug-v2") {
+      return {
+        funnel: "ramadan_mug_v2",
+        traffic_type: "paid" as const,
+        source_page: "ramadan-mug-v2",
+      };
+    }
+
+    return null;
+  };
   const productLabel =
     order?.productKey === "tshirt"
       ? "T-shirt"
@@ -46,6 +71,7 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     const mapToHref = (value: string | null) => {
+      if (value === "arabic-name-mug-v1") return "/arabic-name-mug-v1";
       if (value === "ramadan-mug-men") return "/ramadan-mug-men";
       if (value === "ramadan-mug-v2") return "/ramadan-mug-v2";
       if (value === "ramadan-mug") return "/ramadan-mug";
@@ -72,11 +98,7 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     if (!order || hasTrackedPurchaseRef.current) return;
-    const isRamadanMugV2Flow =
-      generatorFromQuery === "ramadan-mug-v2" ||
-      sourcePageFromQuery === "ramadan-mug-v2" ||
-      (typeof window !== "undefined" &&
-        window.localStorage.getItem("last-generator") === "ramadan-mug-v2");
+    const paidFunnelContext = getPaidFunnelPurchaseContext();
     if (typeof window !== "undefined" && orderIdValue) {
       const key = `ga4_purchase_${orderIdValue}`;
       if (window.sessionStorage.getItem(key)) {
@@ -89,13 +111,7 @@ export default function OrderSuccess() {
       value: Number(order.totalPrice ?? 0),
       currency: "USD",
       order_id: orderIdValue,
-      ...(isRamadanMugV2Flow
-        ? {
-            funnel: "ramadan_mug_v2",
-            traffic_type: "paid",
-            source_page: "ramadan-mug-v2",
-          }
-        : {}),
+      ...(paidFunnelContext ?? {}),
     });
     hasTrackedPurchaseRef.current = true;
   }, [generatorFromQuery, order, orderIdValue, sourcePageFromQuery]);
@@ -103,10 +119,7 @@ export default function OrderSuccess() {
   useEffect(() => {
     if (!order || !orderIdValue || hasTrackedMetaPurchaseRef.current) return;
     if (typeof window === "undefined") return;
-    const isRamadanMugV2Flow =
-      generatorFromQuery === "ramadan-mug-v2" ||
-      sourcePageFromQuery === "ramadan-mug-v2" ||
-      window.localStorage.getItem("last-generator") === "ramadan-mug-v2";
+    const paidFunnelContext = getPaidFunnelPurchaseContext();
 
     const key = `meta_purchase_${orderIdValue}`;
     if (window.sessionStorage.getItem(key)) {
@@ -127,13 +140,7 @@ export default function OrderSuccess() {
         content_ids: [order.productKey],
         content_category: "physical_product",
         order_id: orderIdValue,
-        ...(isRamadanMugV2Flow
-          ? {
-              funnel: "ramadan_mug_v2",
-              traffic_type: "paid",
-              source_page: "ramadan-mug-v2",
-            }
-          : {}),
+        ...(paidFunnelContext ?? {}),
       },
       { eventID: `physical_order_${orderIdValue}` },
     );
