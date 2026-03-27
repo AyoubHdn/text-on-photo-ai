@@ -3,16 +3,20 @@
 import { type NextPage } from "next";
 import Image from "next/image";
 import { api } from "~/utils/api";
-import { useState } from "react"; // <-- Import useState
+import { useState } from "react";
 import { SeoHead } from "~/component/SeoHead";
 import { env } from "~/env.mjs";
-import { buildCommunityImageAlt } from "~/lib/styleImageAlt";
+import { getCommunityImagePresentation } from "~/lib/styleImageAlt";
 
 const CommunityPage: NextPage = () => {
     const { data: icons, isLoading } = api.icons.getCommunityIcons.useQuery();
-    const [popupImage, setPopupImage] = useState<string | null>(null);
+    const [popupImage, setPopupImage] = useState<{
+        src: string;
+        alt: string;
+    } | null>(null);
 
-    const openPopup = (imageUrl: string) => setPopupImage(imageUrl);
+    const openPopup = (imageUrl: string, imageAlt: string) =>
+        setPopupImage({ src: imageUrl, alt: imageAlt });
     const closePopup = () => setPopupImage(null);
 
     return (
@@ -33,28 +37,37 @@ const CommunityPage: NextPage = () => {
 
         {/* --- START: THE FINAL, CORRECTED GALLERY GRID --- */}
         <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {icons?.map((icon) => (
-                <li 
-                    key={icon.id} 
-                    className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
-                    onClick={() => openPopup(`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`)}
-                >
-                    {/* This wrapper div enforces a square aspect ratio for a uniform grid */}
-                    <div className="aspect-square w-full bg-gray-200 dark:bg-gray-800">
-                        <Image 
-                            src={`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`}
-                            alt={buildCommunityImageAlt(icon.prompt)}
-                            fill // The 'fill' prop is essential
-                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                    </div>
-                    {/* Optional: Add an overlay on hover */}
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <p className="text-white text-xs text-center p-2 truncate">{icon.prompt}</p>
-                    </div>
-                </li>
-            ))}
+            {icons?.map((icon) => {
+                const imageUrl = `https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
+                const imagePresentation = getCommunityImagePresentation({
+                    metadata: icon.metadata,
+                    prompt: icon.prompt,
+                });
+
+                return (
+                    <li 
+                        key={icon.id} 
+                        className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
+                        onClick={() => openPopup(imageUrl, imagePresentation.alt)}
+                    >
+                        {/* This wrapper div enforces a square aspect ratio for a uniform grid */}
+                        <div className="aspect-square w-full bg-gray-200 dark:bg-gray-800">
+                            <Image 
+                                src={imageUrl}
+                                alt={imagePresentation.alt}
+                                fill
+                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                        </div>
+                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <p className="px-3 text-center text-xs leading-snug text-white">
+                                {imagePresentation.alt}
+                            </p>
+                        </div>
+                    </li>
+                );
+            })}
         </ul>
         {/* --- END: THE FINAL, CORRECTED GALLERY GRID --- */}
 
@@ -71,8 +84,8 @@ const CommunityPage: NextPage = () => {
               </button>
               {/* Using a standard img tag here for simplicity in a modal */}
               <img
-                src={popupImage}
-                alt="Fullscreen view of a community-generated design"
+                src={popupImage.src}
+                alt={popupImage.alt}
                 className="max-w-screen-lg max-h-[90vh] rounded-lg object-contain"
               />
             </div>

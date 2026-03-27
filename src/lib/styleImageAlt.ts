@@ -9,6 +9,19 @@ type PromptAltOptions = {
   title?: string;
 };
 
+type CommunityStyleAltParams = {
+  kind: PromptKind;
+  templateAlt?: string | null;
+  primaryText?: string | null;
+  secondaryText?: string | null;
+  styleLabel?: string | null;
+};
+
+type CommunityImageMetadata = {
+  communityAlt?: string | null;
+  communityTitle?: string | null;
+};
+
 type StylePromptEntry = {
   altText?: string;
   prompt: string;
@@ -37,6 +50,10 @@ function truncateAlt(value: string, maxLength = 160) {
   const shortened = value.slice(0, maxLength).trim();
   const lastSpace = shortened.lastIndexOf(" ");
   return `${shortened.slice(0, lastSpace > 0 ? lastSpace : maxLength).trim()}.`;
+}
+
+function normalizeInlineText(value?: string | null) {
+  return value?.replace(/\s+/g, " ").trim() ?? "";
 }
 
 function cleanPromptText(prompt: string, kind: PromptKind) {
@@ -208,6 +225,119 @@ function extractPromptSubject(prompt: string) {
   )?.[1];
 
   return explicitName?.trim() ?? null;
+}
+
+function getCommunitySubject(params: CommunityStyleAltParams) {
+  const primaryText = normalizeInlineText(params.primaryText);
+  const secondaryText = normalizeInlineText(params.secondaryText);
+
+  if (params.kind === "couple") {
+    const parts = [primaryText, secondaryText].filter(Boolean);
+    return parts.length > 0 ? parts.join(" and ") : "two names";
+  }
+
+  if (primaryText) {
+    return primaryText;
+  }
+
+  return params.kind === "arabic" ? "custom Arabic name" : "custom name";
+}
+
+function getCommunityFallbackAlt(params: CommunityStyleAltParams) {
+  const subject = getCommunitySubject(params);
+  const label =
+    params.kind === "couple"
+      ? "Couple name art"
+      : params.kind === "arabic"
+        ? "Arabic name art"
+        : "Name art";
+
+  return truncateAlt(`${label} featuring ${subject}`);
+}
+
+export function buildCommunityAltFromStyle(params: CommunityStyleAltParams) {
+  const templateAlt = normalizeInlineText(params.templateAlt);
+  if (!templateAlt) {
+    return getCommunityFallbackAlt(params);
+  }
+
+  const primaryText = normalizeInlineText(params.primaryText);
+  const secondaryText = normalizeInlineText(params.secondaryText);
+  const subject = getCommunitySubject(params);
+  let alt = templateAlt;
+
+  if (params.kind === "couple") {
+    if (primaryText) {
+      alt = alt.replace(/\bfirst name\b/gi, primaryText);
+    }
+    if (secondaryText) {
+      alt = alt.replace(/\bsecond name\b/gi, secondaryText);
+    }
+    alt = alt.replace(/\btwo names\b/gi, subject);
+  } else if (primaryText) {
+    alt = alt.replace(/custom Arabic name/gi, primaryText);
+    alt = alt.replace(/custom name/gi, primaryText);
+  }
+
+  alt = alt.replace(/\bexample:/i, `featuring ${subject}:`);
+
+  return truncateAlt(normalizeInlineText(alt));
+}
+
+export function buildCommunityTitleFromStyle(params: CommunityStyleAltParams) {
+  const primaryText = normalizeInlineText(params.primaryText);
+  const secondaryText = normalizeInlineText(params.secondaryText);
+  const styleLabel = normalizeInlineText(params.styleLabel);
+
+  let subject = "";
+
+  if (params.kind === "couple") {
+    const parts = [primaryText, secondaryText].filter(Boolean);
+    subject = parts.length > 0 ? parts.join(" & ") : "Couple design";
+  } else {
+    subject =
+      primaryText || (params.kind === "arabic" ? "Arabic design" : "Name design");
+  }
+
+  return styleLabel ? `${subject} - ${styleLabel}` : subject;
+}
+
+function extractCommunityImageMetadata(
+  metadata?: unknown,
+): CommunityImageMetadata | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return null;
+  }
+
+  const maybeMetadata = metadata as Record<string, unknown>;
+  const communityAlt =
+    typeof maybeMetadata.communityAlt === "string"
+      ? maybeMetadata.communityAlt
+      : null;
+  const communityTitle =
+    typeof maybeMetadata.communityTitle === "string"
+      ? maybeMetadata.communityTitle
+      : null;
+
+  if (!communityAlt && !communityTitle) {
+    return null;
+  }
+
+  return { communityAlt, communityTitle };
+}
+
+export function getCommunityImagePresentation(params: {
+  metadata?: unknown;
+  prompt?: string | null;
+}) {
+  const communityMetadata = extractCommunityImageMetadata(params.metadata);
+  const alt =
+    normalizeInlineText(communityMetadata?.communityAlt) ||
+    buildCommunityImageAlt(params.prompt);
+  const title =
+    normalizeInlineText(communityMetadata?.communityTitle) || alt;
+
+  return { alt, title };
 }
 
 export function buildCommunityImageAlt(prompt?: string | null) {

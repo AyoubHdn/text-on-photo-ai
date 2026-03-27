@@ -125,6 +125,7 @@ export const iconRouter = createTRPCRouter({
       select: {
         id: true,
         prompt: true,
+        metadata: true,
       },
     });
 

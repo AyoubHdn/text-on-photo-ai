@@ -9,7 +9,7 @@ import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "~/component/Button";
 import { SeoHead } from "~/component/SeoHead";
-import { buildCommunityImageAlt } from "~/lib/styleImageAlt";
+import { getCommunityImagePresentation } from "~/lib/styleImageAlt";
 import { FEATURED_NAME_PAGES } from "~/lib/nameArtSeo";
 import {
   buildCollectionPageSchema,
@@ -663,7 +663,13 @@ function PopularTodaySection() {
         </div>
 
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {icons.map((icon: { id: string; prompt: string | null }) => (
+          {icons.map((icon: { id: string; prompt: string | null; metadata?: unknown }) => {
+            const imagePresentation = getCommunityImagePresentation({
+              metadata: icon.metadata,
+              prompt: icon.prompt,
+            });
+
+            return (
             <li
               key={icon.id}
               className="group overflow-hidden rounded-2xl shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
@@ -672,7 +678,7 @@ function PopularTodaySection() {
                 <div className="relative aspect-square w-full bg-gray-200 dark:bg-gray-800">
                   <Image
                     src={`https://${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`}
-                    alt={buildCommunityImageAlt(icon.prompt)}
+                    alt={imagePresentation.alt}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -680,7 +686,8 @@ function PopularTodaySection() {
                 </div>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
     </section>

@@ -22,7 +22,11 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
-import { buildPromptImageAlt } from "~/lib/styleImageAlt";
+import {
+  buildCommunityAltFromStyle,
+  buildCommunityTitleFromStyle,
+  buildPromptImageAlt,
+} from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -78,6 +82,8 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const [selectedModel, setSelectedModel] = useState<AIModel>("flux-schnell");
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
+  const [selectedStyleAltText, setSelectedStyleAltText] = useState<string | null>(null);
+  const [selectedStyleLabel, setSelectedStyleLabel] = useState<string | null>(null);
   const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
@@ -352,6 +358,21 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
+        communityAlt: selectedStyleAltText
+          ? buildCommunityAltFromStyle({
+              kind: "couple",
+              templateAlt: selectedStyleAltText,
+              primaryText: form.name1,
+              secondaryText: form.name2,
+              styleLabel: selectedStyleLabel,
+            })
+          : undefined,
+        communityTitle: buildCommunityTitleFromStyle({
+          kind: "couple",
+          primaryText: form.name1,
+          secondaryText: form.name2,
+          styleLabel: selectedStyleLabel ?? activeSubTab ?? activeTab,
+        }),
       },
     };
   };
@@ -387,10 +408,18 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     triggerGeneration();
   };
 
-  const handleImageSelect = (basePrompt: string, src: string, allowColors = true) => {
+  const handleImageSelect = (
+    basePrompt: string,
+    src: string,
+    altText: string,
+    styleLabel: string,
+    allowColors = true,
+  ) => {
     setSelectedImage(src);
     setForm((prev) => ({ ...prev, basePrompt }));
     setSelectedStyleImage(src);
+    setSelectedStyleAltText(altText);
+    setSelectedStyleLabel(styleLabel);
     setError("");
     setAllowCustomColors(allowColors);
   };
@@ -561,7 +590,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                 const allowColors = item.allowCustomColors !== false;
                 const styleImagePath = item.src.replace(/\.webp$/, "e.webp");
                 return (
-                  <div key={idx} className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${selectedImage === item.src ? "ring-4 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, allowColors)}>
+                  <div key={idx} className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${selectedImage === item.src ? "ring-4 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, activeSubTab || activeTab, allowColors)}>
                     <img
                       src={styleImagePath}
                       alt={item.altText}

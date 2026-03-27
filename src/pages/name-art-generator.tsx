@@ -22,7 +22,11 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackGA, trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
-import { buildPromptImageAlt } from "~/lib/styleImageAlt";
+import {
+  buildCommunityAltFromStyle,
+  buildCommunityTitleFromStyle,
+  buildPromptImageAlt,
+} from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -71,6 +75,8 @@ const NameArtGeneratorPage: NextPage = () => {
   const [selectedModel, setSelectedModel] = useState<AIModel>("flux-schnell");
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
+  const [selectedStyleAltText, setSelectedStyleAltText] = useState<string | null>(null);
+  const [selectedStyleLabel, setSelectedStyleLabel] = useState<string | null>(null);
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
   const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -355,6 +361,19 @@ const NameArtGeneratorPage: NextPage = () => {
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
+        communityAlt: selectedStyleAltText
+          ? buildCommunityAltFromStyle({
+              kind: "name",
+              templateAlt: selectedStyleAltText,
+              primaryText: form.name,
+              styleLabel: selectedStyleLabel,
+            })
+          : undefined,
+        communityTitle: buildCommunityTitleFromStyle({
+          kind: "name",
+          primaryText: form.name,
+          styleLabel: selectedStyleLabel ?? activeSubTab ?? activeTab,
+        }),
       },
     };
   };
@@ -377,10 +396,18 @@ const NameArtGeneratorPage: NextPage = () => {
     triggerGeneration();
   };
 
-  const handleImageSelect = (basePrompt: string, src: string, allowColors = true) => {
+  const handleImageSelect = (
+    basePrompt: string,
+    src: string,
+    altText: string,
+    styleLabel: string,
+    allowColors = true,
+  ) => {
     setSelectedImage(src);
     setForm((prev) => ({ ...prev, basePrompt }));
     setSelectedStyleImage(src);
+    setSelectedStyleAltText(altText);
+    setSelectedStyleLabel(styleLabel);
     setError("");
     setAllowCustomColors(allowColors);
   };
@@ -614,7 +641,7 @@ const NameArtGeneratorPage: NextPage = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
               {(stylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
-                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.allowCustomColors)}>
+                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, activeSubTab || activeTab, item.allowCustomColors)}>
                     <Image
                       src={item.src.replace(/\.webp$/, "e.webp")}
                       alt={item.altText}

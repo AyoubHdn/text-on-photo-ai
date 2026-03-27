@@ -1069,6 +1069,8 @@ export const generateRouter = createTRPCRouter({
           .object({
             category: z.string().optional(),
             subcategory: z.string().optional(),
+            communityAlt: z.string().optional(),
+            communityTitle: z.string().optional(),
           })
           .optional(),
         paidTrafficUser: z.boolean().optional(),
@@ -1135,6 +1137,8 @@ export const generateRouter = createTRPCRouter({
           metadata: {
             category: input.metadata?.category ?? null,
             subcategory: input.metadata?.subcategory ?? null,
+            communityAlt: input.metadata?.communityAlt ?? null,
+            communityTitle: input.metadata?.communityTitle ?? null,
           },
           model: input.model,
           numberOfImages: effectiveNumberOfImages,
@@ -1190,6 +1194,8 @@ export const generateRouter = createTRPCRouter({
                         model: input.model,
                         category: input.metadata?.category ?? null,
                         subcategory: input.metadata?.subcategory ?? null,
+                        communityAlt: input.metadata?.communityAlt ?? null,
+                        communityTitle: input.metadata?.communityTitle ?? null,
                         sourcePage: input.sourcePage ?? null,
                         paidTrafficUser: true,
                       },
@@ -1325,6 +1331,8 @@ export const generateRouter = createTRPCRouter({
                       model: input.model,
                       category: input.metadata?.category ?? null,
                       subcategory: input.metadata?.subcategory ?? null,
+                      communityAlt: input.metadata?.communityAlt ?? null,
+                      communityTitle: input.metadata?.communityTitle ?? null,
                       sourcePage: input.sourcePage ?? null,
                     },
                   },

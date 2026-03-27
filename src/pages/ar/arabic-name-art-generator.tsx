@@ -21,7 +21,11 @@ import {
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
 import { arabicStylesData } from "~/data/arabicStylesData";
 import { createGenerationRequestId } from "~/lib/generationRequest";
-import { buildPromptImageAlt } from "~/lib/styleImageAlt";
+import {
+  buildCommunityAltFromStyle,
+  buildCommunityTitleFromStyle,
+  buildPromptImageAlt,
+} from "~/lib/styleImageAlt";
 import { api } from "~/utils/api";
 
 interface StyleItem {
@@ -70,6 +74,8 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
     useState<ArabicGeneratorModel>("google/nano-banana-2");
   const [selectedAspectRatio, setSelectedAspectRatio] =
     useState<AspectRatio>("1:1");
+  const [selectedStyleAltText, setSelectedStyleAltText] = useState<string | null>(null);
+  const [selectedStyleLabel, setSelectedStyleLabel] = useState<string | null>(null);
   const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const [shareModalData, setShareModalData] = useState<{
@@ -257,6 +263,19 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
       metadata: {
         category: activeTab || undefined,
         subcategory: activeSubTab || undefined,
+        communityAlt: selectedStyleAltText
+          ? buildCommunityAltFromStyle({
+              kind: "arabic",
+              templateAlt: selectedStyleAltText,
+              primaryText: form.name,
+              styleLabel: selectedStyleLabel,
+            })
+          : undefined,
+        communityTitle: buildCommunityTitleFromStyle({
+          kind: "arabic",
+          primaryText: form.name,
+          styleLabel: selectedStyleLabel ?? activeSubTab ?? activeTab,
+        }),
       },
     });
   };
@@ -274,9 +293,16 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
     void submitGeneration();
   };
 
-  const handleImageSelect = (basePrompt: string, src: string) => {
+  const handleImageSelect = (
+    basePrompt: string,
+    src: string,
+    altText: string,
+    styleLabel: string,
+  ) => {
     setSelectedImage(src);
     setForm((prev) => ({ ...prev, basePrompt }));
+    setSelectedStyleAltText(altText);
+    setSelectedStyleLabel(styleLabel);
     setError("");
   };
 
@@ -427,7 +453,9 @@ const ArabicNameArtGeneratorPageAr: NextPage = () => {
                   className={`cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${
                     selectedImage === item.src ? "ring-4 ring-blue-500 ring-offset-2" : ""
                   }`}
-                  onClick={() => handleImageSelect(item.basePrompt, item.src)}
+                  onClick={() =>
+                    handleImageSelect(item.basePrompt, item.src, item.altText, item.name)
+                  }
                 >
                   <Image src={item.src} alt={item.altText} width={200} height={200} className="aspect-square h-auto w-full object-cover" />
                   <div className="truncate p-2 text-center text-xs font-medium">{item.name}</div>
