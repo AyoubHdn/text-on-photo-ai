@@ -7,12 +7,14 @@
 import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 
 export default function FreeCreditUnlock() {
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [dailyLimitMessage, setDailyLimitMessage] = useState<string | null>(null);
+  const defaultTotalCreditsAfterReward = CPX_DAILY_REWARD_CREDITS + 1;
 
   const unlock = async () => {
     setUnlocking(true);
@@ -68,7 +70,7 @@ export default function FreeCreditUnlock() {
   return (
     <>
       <Head>
-        <title>Get 3 Free Credits - Name Design AI</title>
+        <title>Get {CPX_DAILY_REWARD_CREDITS} Extra Credits - Name Design AI</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
@@ -96,42 +98,44 @@ export default function FreeCreditUnlock() {
                 className="text-4xl font-semibold text-gray-900 md:text-5xl dark:text-white"
                 style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}
               >
-                Get 3 free credits
+                Get {CPX_DAILY_REWARD_CREDITS} extra credits
               </h1>
 
               <p className="text-base text-gray-700 md:text-lg dark:text-slate-200">
-                Complete an optional survey and receive 3 free credits immediately after a successful completion.
-                Use them to keep creating without paying.
+                Complete an optional survey and receive {CPX_DAILY_REWARD_CREDITS} extra
+                credits immediately after a successful completion. If you are on the
+                default 1-credit balance, that brings you to {defaultTotalCreditsAfterReward}{" "}
+                total credits.
               </p>
 
               {/* What it unlocks */}
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">
-                  What 3 credits unlock
+                  What {CPX_DAILY_REWARD_CREDITS} extra credits unlock
                 </p>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                   <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-slate-900/60">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      1 high-quality Flux Dev generation
+                      {CPX_DAILY_REWARD_CREDITS} standard Name Art designs
                     </p>
                     <p className="mt-2 text-xs text-gray-600 dark:text-slate-300">
-                      Ideal for a premium, polished result.
+                      Try multiple styles or names without paying.
                     </p>
                   </div>
                   <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-slate-900/60">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      Or 3 standard Name Art designs
+                      Or {CPX_DAILY_REWARD_CREDITS} background removals
                     </p>
                     <p className="mt-2 text-xs text-gray-600 dark:text-slate-300">
-                      Try multiple styles or names.
+                      Clean exports for print, editing, or sharing.
                     </p>
                   </div>
                   <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-slate-900/60">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      Or background removal
+                      {defaultTotalCreditsAfterReward} total credits on a new account
                     </p>
                     <p className="mt-2 text-xs text-gray-600 dark:text-slate-300">
-                      Clean export for print or sharing.
+                      Enough for 1 Flux Dev generation if you start from the default balance.
                     </p>
                   </div>
                 </div>
@@ -155,7 +159,7 @@ export default function FreeCreditUnlock() {
                 disabled={unlocking}
                 className="w-full rounded-2xl bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#0ea5e9] py-4 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:brightness-110 disabled:opacity-60"
               >
-                {unlocking ? "Opening survey..." : "Get 3 Free Credits"}
+                {unlocking ? "Opening survey..." : `Get ${CPX_DAILY_REWARD_CREDITS} Extra Credits`}
               </button>
 
               {/* Login required */}
@@ -165,7 +169,7 @@ export default function FreeCreditUnlock() {
                   <Link href="/api/auth/signin" className="text-blue-700 underline dark:text-sky-300">
                     sign in
                   </Link>{" "}
-                  to earn 3 free credits.
+                  to earn {CPX_DAILY_REWARD_CREDITS} extra credits.
                 </p>
               )}
 

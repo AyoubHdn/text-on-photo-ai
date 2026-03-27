@@ -1,7 +1,8 @@
 // src/pages/api/cpa/cpx/postback.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
-import { Prisma } from "@prisma/client";
+import { Prisma, type CpaResult } from "@prisma/client";
+import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
 
@@ -19,7 +20,7 @@ function getUtcDayRange(date: Date) {
   return { start, end };
 }
 
-function mapCpxType(type: string | undefined, payout: number) {
+function mapCpxType(type: string | undefined, payout: number): CpaResult {
   if (type === "complete") return "complete";
   if (type === "out") return payout > 0 ? "screenout_bonus" : "screenout_no_bonus";
   return "screenout_no_bonus";
@@ -69,7 +70,7 @@ export default async function handler(
     let finalStatus: "approved" | "rejected" = requestedApproved
       ? "approved"
       : "rejected";
-    let finalResult = result;
+    let finalResult: CpaResult = result;
 
     if (requestedApproved && result !== "screenout_no_bonus") {
       const approvedToday = await prisma.cpaUnlock.findFirst({
@@ -115,7 +116,9 @@ export default async function handler(
         await prisma.user.update({
           where: { id: userId },
           data: {
-            credits: new Prisma.Decimal(user.credits).plus(new Prisma.Decimal(3)),
+            credits: new Prisma.Decimal(user.credits).plus(
+              new Prisma.Decimal(CPX_DAILY_REWARD_CREDITS),
+            ),
           },
         });
       }

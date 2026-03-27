@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useBuyCredits } from "~/hook/useBuyCredits";
+import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 
@@ -385,7 +386,7 @@ export function CreditUpgradeModal({
                 Need a cheaper way to continue?
               </div>
               <div className="mt-1 text-xs text-emerald-100/90">
-                Unlock 3 free credits with a survey. Available once per day.
+                Unlock {CPX_DAILY_REWARD_CREDITS} extra credits with a survey. Available once per day.
               </div>
               <button
                 type="button"
@@ -393,7 +394,9 @@ export function CreditUpgradeModal({
                 disabled={isSurveyUnlocking}
                 className="mt-3 rounded-md bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-60"
               >
-                {isSurveyUnlocking ? "Opening survey..." : "Unlock 3 Free Credits"}
+                {isSurveyUnlocking
+                  ? "Opening survey..."
+                  : `Unlock ${CPX_DAILY_REWARD_CREDITS} Extra Credits`}
               </button>
               {surveyMessage && (
                 <div className="mt-2 text-xs text-emerald-100">

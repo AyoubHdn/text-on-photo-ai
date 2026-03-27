@@ -1,0 +1,1 @@
+export const CPX_DAILY_REWARD_CREDITS = 2;
