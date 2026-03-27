@@ -641,7 +641,7 @@ const generateImages = async (
       prompt,
       aspect_ratio: aspectRatio,
       output_format: "png",
-      resolution: "2K",
+      resolution: model === "google/nano-banana-2" ? "1K" : "2K",
       safety_filter_level: "block_only_high",
     };
   } else if (model === "flux-schnell") {
