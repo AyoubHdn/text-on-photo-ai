@@ -23,6 +23,7 @@ export default function OrderSuccess() {
   const order = orderQuery.data;
   const hasTrackedPurchaseRef = useRef(false);
   const hasTrackedMetaPurchaseRef = useRef(false);
+  const hasTrackedMetaPhysicalPurchaseRef = useRef(false);
   const getPaidFunnelPurchaseContext = () => {
     const lastGenerator =
       typeof window !== "undefined" ? window.localStorage.getItem("last-generator") : null;
@@ -147,6 +148,39 @@ export default function OrderSuccess() {
 
     window.sessionStorage.setItem(key, "1");
     hasTrackedMetaPurchaseRef.current = true;
+  }, [generatorFromQuery, order, orderIdValue, sourcePageFromQuery]);
+
+  useEffect(() => {
+    if (!order || !orderIdValue || hasTrackedMetaPhysicalPurchaseRef.current) return;
+    if (typeof window === "undefined") return;
+    const paidFunnelContext = getPaidFunnelPurchaseContext();
+
+    const key = `meta_physical_purchase_${orderIdValue}`;
+    if (window.sessionStorage.getItem(key)) {
+      hasTrackedMetaPhysicalPurchaseRef.current = true;
+      return;
+    }
+
+    const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof maybeFbq !== "function") return;
+
+    maybeFbq(
+      "trackCustom",
+      "PhysicalPurchase",
+      {
+        value: Number(order.totalPrice ?? 0),
+        currency: "USD",
+        content_type: "product",
+        content_ids: [order.productKey],
+        content_category: "physical_product",
+        order_id: orderIdValue,
+        ...(paidFunnelContext ?? {}),
+      },
+      { eventID: `physical_purchase_${orderIdValue}` },
+    );
+
+    window.sessionStorage.setItem(key, "1");
+    hasTrackedMetaPhysicalPurchaseRef.current = true;
   }, [generatorFromQuery, order, orderIdValue, sourcePageFromQuery]);
 
   return (

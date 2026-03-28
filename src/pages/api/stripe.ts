@@ -33,11 +33,15 @@ export const config = {
   },
 };
 
-type MetaPurchaseInput = {
+type MetaConversionEventName = "Purchase" | "PhysicalPurchase";
+
+type MetaConversionInput = {
+  eventName: MetaConversionEventName;
   eventId: string;
   value: number;
   currency: string;
   contentType: "credits" | "product";
+  contentCategory: "credits" | "physical_product";
   contentIds: string[];
   email?: string | null;
   externalId?: string | null;
@@ -71,7 +75,7 @@ function getRequestIp(req: NextApiRequest): string | null {
   return req.socket?.remoteAddress ?? null;
 }
 
-async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
+async function sendMetaConversionEvent(input: MetaConversionInput) {
   if (!env.META_PIXEL_ID || !env.META_ACCESS_TOKEN) return;
 
   try {
@@ -100,7 +104,7 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
 
     const payload: {
       data: Array<{
-        event_name: "Purchase";
+        event_name: MetaConversionEventName;
         event_time: number;
         event_id: string;
         action_source: "website";
@@ -117,7 +121,7 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
     } = {
       data: [
         {
-          event_name: "Purchase",
+          event_name: input.eventName,
           event_time: Math.floor(Date.now() / 1000),
           event_id: input.eventId,
           action_source: "website",
@@ -128,9 +132,7 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
             currency: input.currency,
             content_type: input.contentType,
             content_ids: input.contentIds,
-            // Added for Meta custom conversions: distinguish credits vs physical product purchases.
-            content_category:
-              input.contentType === "credits" ? "credits" : "physical_product",
+            content_category: input.contentCategory,
           },
         },
       ],
@@ -152,6 +154,27 @@ async function sendMetaPurchaseEvent(input: MetaPurchaseInput) {
   } catch (err) {
     console.error("Meta CAPI request failed:", err);
   }
+}
+
+async function sendMetaPurchaseEvent(
+  input: Omit<MetaConversionInput, "eventName" | "contentCategory">,
+) {
+  return sendMetaConversionEvent({
+    ...input,
+    eventName: "Purchase",
+    contentCategory: input.contentType === "credits" ? "credits" : "physical_product",
+  });
+}
+
+async function sendMetaPhysicalPurchaseEvent(
+  input: Omit<MetaConversionInput, "eventName" | "contentType" | "contentCategory">,
+) {
+  return sendMetaConversionEvent({
+    ...input,
+    eventName: "PhysicalPurchase",
+    contentType: "product",
+    contentCategory: "physical_product",
+  });
 }
 
 const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -399,6 +422,19 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         value: Number(order.totalPrice ?? 0),
         currency: "USD",
         contentType: "product",
+        contentIds: [order.productKey],
+        email: preferredEmail,
+        externalId: order.userId ?? preferredEmail ?? null,
+        fbp: completedEvent.metadata?.fbp ?? null,
+        fbc: completedEvent.metadata?.fbc ?? null,
+        clientIpAddress,
+        clientUserAgent,
+        eventSourceUrl: `${env.NEXTAUTH_URL}/order/success?orderId=${order.id}`,
+      });
+      await sendMetaPhysicalPurchaseEvent({
+        eventId: `physical_purchase_${order.id}`,
+        value: Number(order.totalPrice ?? 0),
+        currency: "USD",
         contentIds: [order.productKey],
         email: preferredEmail,
         externalId: order.userId ?? preferredEmail ?? null,
