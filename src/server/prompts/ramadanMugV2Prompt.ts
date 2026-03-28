@@ -1,3 +1,5 @@
+import { FULL_BLEED_ARTWORK_PROMPT_RULES } from "~/lib/fullBleedArtworkPromptRules";
+
 type Recipient =
   | "My Husband"
   | "My Wife"
@@ -33,12 +35,13 @@ export function buildRamadanMugV2Prompt(params: {
     languageRule,
     `Art direction: ${tone}.`,
     "Output requirement: a flat 2D printable artwork only, one centered hero composition, square composition, print-ready for transfer onto a mug.",
-    "Critical background constraint: never use a plain white, light gray, pale cream, empty studio, or blank paper background; always use a rich full-bleed dark or saturated artistic background integrated into the design.",
+    "Critical background constraint: never use a plain white, light gray, pale cream, empty studio, blank paper background, or pale textured surface around the artwork; always use a rich full-bleed dark or saturated artistic background integrated into the design.",
+    ...FULL_BLEED_ARTWORK_PROMPT_RULES,
     "Critical constraint: do not show any mug, cup, handle, tumbler, plate, product, product mockup, packaging, label, print preview, tabletop, room, candle, dates, hands, lifestyle scene, camera framing, photography setup, or any physical object.",
     "Critical constraint: the result must be only the design artwork itself, not the design applied onto an object.",
     "No extra words, logos, signatures, frames, borders, mockup context, presentation context, or image-inside-image layout.",
     "Flat graphic design only, not product photography, not a 3D render of an object, not an embossed mug, not a printed cup scene.",
-    "High readability, clean edges, balanced negative space, premium Ramadan aesthetic, isolated artwork, design-only, with a deliberate non-removable background.",
+    "High readability, clean edges, balanced negative space, premium Ramadan aesthetic, design-only, full-bleed finished artwork, with a deliberate non-removable background.",
     "arabic calligraphy masterpiece, flat 2D artwork, 8k resolution",
   ].join(" ");
 }

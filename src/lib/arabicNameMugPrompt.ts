@@ -1,3 +1,5 @@
+import { FULL_BLEED_ARTWORK_PROMPT_RULES } from "~/lib/fullBleedArtworkPromptRules";
+
 export type ArabicNameMugGiftIntent =
   | "Me"
   | "My Husband"
@@ -32,10 +34,11 @@ export function buildArabicNameMugPrompt(params: {
     languageRule,
     `Art direction: ${GIFT_INTENT_TONE[params.giftIntent]}.`,
     "Output requirement: a flat 2D printable artwork only, one centered hero composition, square composition, print-ready for transfer onto a mug.",
-    "Critical background constraint: avoid plain white, empty studio, blank paper, or mockup presentation backgrounds; always use a rich full-bleed artistic background integrated into the design.",
+    "Critical background constraint: avoid plain white, light gray, pale cream, empty studio, blank paper, or mockup presentation backgrounds; always use a rich full-bleed artistic background integrated into the design.",
+    ...FULL_BLEED_ARTWORK_PROMPT_RULES,
     "Critical constraint: do not show any mug, cup, handle, tumbler, plate, product, mockup, packaging, label, print preview, tabletop, room, hands, lifestyle scene, camera framing, or photography setup.",
     "Critical constraint: the result must be only the design artwork itself, not the design applied onto an object.",
     "No extra words, logos, signatures, frames, borders, mockup context, presentation context, or image-inside-image layout.",
-    "High readability, clean edges, balanced negative space, premium Arabic calligraphy aesthetic, isolated artwork, design-only, 8k resolution.",
+    "High readability, clean edges, balanced negative space, premium Arabic calligraphy aesthetic, design-only, full-bleed finished artwork, 8k resolution.",
   ].join(" ");
 }
