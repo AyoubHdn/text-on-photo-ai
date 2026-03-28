@@ -18,8 +18,11 @@ import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 import type { AspectRatio } from "~/server/printful/aspects";
 import type { MugPreviewMode } from "~/server/printful/previewModes";
-import crypto from "crypto";
 import { sendOrderConfirmedEmail } from "~/server/mautic/transactional";
+import {
+  sendMetaPhysicalPurchaseEvent,
+  sendMetaPurchaseEvent,
+} from "~/server/meta/sendConversionEvent";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -33,37 +36,6 @@ export const config = {
   },
 };
 
-type MetaConversionEventName = "Purchase" | "PhysicalPurchase";
-
-type MetaConversionInput = {
-  eventName: MetaConversionEventName;
-  eventId: string;
-  value: number;
-  currency: string;
-  contentType: "credits" | "product";
-  contentCategory: "credits" | "physical_product";
-  contentIds: string[];
-  email?: string | null;
-  externalId?: string | null;
-  fbp?: string | null;
-  fbc?: string | null;
-  clientIpAddress?: string | null;
-  clientUserAgent?: string | null;
-  eventSourceUrl?: string;
-};
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-function hashEmail(email: string) {
-  return crypto.createHash("sha256").update(email).digest("hex");
-}
-
-function hashValue(value: string) {
-  return crypto.createHash("sha256").update(value).digest("hex");
-}
-
 function getRequestIp(req: NextApiRequest): string | null {
   const forwardedFor = req.headers["x-forwarded-for"];
   if (typeof forwardedFor === "string" && forwardedFor.length > 0) {
@@ -73,108 +45,6 @@ function getRequestIp(req: NextApiRequest): string | null {
     return forwardedFor[0]?.split(",")[0]?.trim() ?? null;
   }
   return req.socket?.remoteAddress ?? null;
-}
-
-async function sendMetaConversionEvent(input: MetaConversionInput) {
-  if (!env.META_PIXEL_ID || !env.META_ACCESS_TOKEN) return;
-
-  try {
-    const userData: Record<string, string[]> = {};
-    if (input.email) {
-      const normalized = normalizeEmail(input.email);
-      if (normalized) {
-        userData.em = [hashEmail(normalized)];
-      }
-    }
-    if (input.externalId) {
-      userData.external_id = [hashValue(input.externalId)];
-    }
-    if (input.fbp) {
-      userData.fbp = [input.fbp];
-    }
-    if (input.fbc) {
-      userData.fbc = [input.fbc];
-    }
-    if (input.clientIpAddress) {
-      userData.client_ip_address = [input.clientIpAddress];
-    }
-    if (input.clientUserAgent) {
-      userData.client_user_agent = [input.clientUserAgent];
-    }
-
-    const payload: {
-      data: Array<{
-        event_name: MetaConversionEventName;
-        event_time: number;
-        event_id: string;
-        action_source: "website";
-        event_source_url?: string;
-        user_data?: Record<string, string[]>;
-        custom_data: {
-          value: number;
-          currency: string;
-          content_type: string;
-          content_ids: string[];
-          content_category: "credits" | "physical_product";
-        };
-      }>;
-    } = {
-      data: [
-        {
-          event_name: input.eventName,
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: input.eventId,
-          action_source: "website",
-          ...(input.eventSourceUrl ? { event_source_url: input.eventSourceUrl } : {}),
-          ...(Object.keys(userData).length > 0 ? { user_data: userData } : {}),
-          custom_data: {
-            value: input.value,
-            currency: input.currency,
-            content_type: input.contentType,
-            content_ids: input.contentIds,
-            content_category: input.contentCategory,
-          },
-        },
-      ],
-    };
-
-    const res = await fetch(
-      `https://graph.facebook.com/v18.0/${env.META_PIXEL_ID}/events?access_token=${env.META_ACCESS_TOKEN}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      },
-    );
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Meta CAPI error:", res.status, text);
-    }
-  } catch (err) {
-    console.error("Meta CAPI request failed:", err);
-  }
-}
-
-async function sendMetaPurchaseEvent(
-  input: Omit<MetaConversionInput, "eventName" | "contentCategory">,
-) {
-  return sendMetaConversionEvent({
-    ...input,
-    eventName: "Purchase",
-    contentCategory: input.contentType === "credits" ? "credits" : "physical_product",
-  });
-}
-
-async function sendMetaPhysicalPurchaseEvent(
-  input: Omit<MetaConversionInput, "eventName" | "contentType" | "contentCategory">,
-) {
-  return sendMetaConversionEvent({
-    ...input,
-    eventName: "PhysicalPurchase",
-    contentType: "product",
-    contentCategory: "physical_product",
-  });
 }
 
 const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
