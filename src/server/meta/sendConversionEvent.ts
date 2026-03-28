@@ -18,7 +18,6 @@ export type MetaConversionInput = {
   clientIpAddress?: string | null;
   clientUserAgent?: string | null;
   eventSourceUrl?: string;
-  testEventCode?: string | null;
 };
 
 export type MetaSendResult =
@@ -86,7 +85,6 @@ export async function sendMetaConversionEvent(
         content_category: "credits" | "physical_product";
       };
     }>;
-    test_event_code?: string;
   } = {
     data: [
       {
@@ -105,7 +103,6 @@ export async function sendMetaConversionEvent(
         },
       },
     ],
-    ...(input.testEventCode ? { test_event_code: input.testEventCode } : {}),
   };
 
   const res = await fetch(
