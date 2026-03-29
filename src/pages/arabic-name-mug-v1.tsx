@@ -33,6 +33,10 @@ type SavedState = {
   transparentMockupUrl?: string | null;
   mockupUrl?: string | null;
   mockupSourceUrl?: string | null;
+  freeGenerationUsed?: boolean;
+  generatedGiftIntent?: ArabicNameMugGiftIntent | "";
+  generatedName?: string;
+  generatedStyleId?: string;
 };
 
 const SOURCE_PAGE = "arabic-name-mug-v1";
@@ -127,8 +131,14 @@ const ArabicNameMugV1Page: NextPage = () => {
   const [transparentUrl, setTransparentUrl] = useState<string | null>(null);
   const [useTransparentDesign, setUseTransparentDesign] = useState(true);
   const [hasFree, setHasFree] = useState(false);
+  const [freeGenerationUsed, setFreeGenerationUsed] = useState(false);
   const [mockupOriginal, setMockupOriginal] = useState<string | null>(null);
   const [mockupTransparent, setMockupTransparent] = useState<string | null>(null);
+  const [generatedGiftIntent, setGeneratedGiftIntent] = useState<
+    ArabicNameMugGiftIntent | ""
+  >("");
+  const [generatedName, setGeneratedName] = useState("");
+  const [generatedStyleId, setGeneratedStyleId] = useState("");
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
   const [busyDesign, setBusyDesign] = useState(false);
@@ -165,7 +175,10 @@ const ArabicNameMugV1Page: NextPage = () => {
   const effectiveGiftIntent = giftIntent || "Someone Special";
   const intentCopy = GIFT_INTENT_COPY[effectiveGiftIntent];
   const canAffordRegen = (credits.data ?? 0) >= REGEN_CREDITS;
-  const guestFreeDesignLocked = hasFree && hasSavedDesign && !isLoggedIn;
+  const guestFreeDesignUsed = freeGenerationUsed && !isLoggedIn;
+  const guestFreeDesignLocked = guestFreeDesignUsed && hasSavedDesign;
+  const lockedGiftIntent = generatedGiftIntent || giftIntent;
+  const lockedName = generatedName || name;
   const trackBase = useMemo(
     () => ({
       ...getFunnelContext({
@@ -238,6 +251,7 @@ const ArabicNameMugV1Page: NextPage = () => {
       setTransparentUrl(saved.transparentUrl ?? null);
       setUseTransparentDesign(saved.useTransparentDesign ?? Boolean(saved.transparentUrl));
       setHasFree(Boolean(saved.hasFree));
+      setFreeGenerationUsed(Boolean(saved.freeGenerationUsed ?? saved.hasFree));
       const legacyOriginalMockup =
         saved.mockupUrl && saved.mockupSourceUrl === saved.designUrl ? saved.mockupUrl : null;
       const legacyTransparentMockup =
@@ -248,6 +262,9 @@ const ArabicNameMugV1Page: NextPage = () => {
       setMockupTransparent(
         saved.mockupTransparent ?? saved.transparentMockupUrl ?? legacyTransparentMockup ?? null,
       );
+      setGeneratedGiftIntent(saved.generatedGiftIntent ?? saved.giftIntent ?? "");
+      setGeneratedName(saved.generatedName ?? saved.name ?? "");
+      setGeneratedStyleId(saved.generatedStyleId ?? saved.styleId ?? "");
       setEmail(saved.email ?? "");
     } catch {
       // ignore invalid stored state
@@ -274,9 +291,13 @@ const ArabicNameMugV1Page: NextPage = () => {
       transparentUrl,
       useTransparentDesign,
       hasFree,
+      freeGenerationUsed,
       email,
       mockupOriginal,
       mockupTransparent,
+      generatedGiftIntent,
+      generatedName,
+      generatedStyleId,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
   }, [
@@ -289,9 +310,13 @@ const ArabicNameMugV1Page: NextPage = () => {
     transparentUrl,
     useTransparentDesign,
     hasFree,
+    freeGenerationUsed,
     mockupOriginal,
     mockupTransparent,
     email,
+    generatedGiftIntent,
+    generatedName,
+    generatedStyleId,
   ]);
 
   useEffect(() => {
@@ -402,6 +427,22 @@ const ArabicNameMugV1Page: NextPage = () => {
     setMockupTransparent(null);
   };
 
+  const showGuestFreeDesignLockedError = (message: string) => {
+    setErr(message);
+  };
+
+  const selectGiftIntent = (nextGiftIntent: ArabicNameMugGiftIntent) => {
+    if (guestFreeDesignUsed && lockedGiftIntent && nextGiftIntent !== lockedGiftIntent) {
+      showGuestFreeDesignLockedError(
+        "Your free design is already saved. Sign in to create a new version for a different recipient.",
+      );
+      return;
+    }
+
+    setGiftIntent(nextGiftIntent);
+    setErr("");
+  };
+
   const capturePaidTrafficLeadIfNeeded = async (
     rawEmail: string,
     stage: "lead" | "checkout",
@@ -451,7 +492,7 @@ const ArabicNameMugV1Page: NextPage = () => {
       setUpgradeOpen(true);
       return;
     }
-    if (!requiresPaidGeneration && guestFreeDesignLocked) {
+    if (!requiresPaidGeneration && guestFreeDesignUsed) {
       setErr("Your free design is already saved. Sign in to generate another style.");
       return;
     }
@@ -507,8 +548,12 @@ const ArabicNameMugV1Page: NextPage = () => {
         setTransparentUrl(nextTransparent);
         setUseTransparentDesign(Boolean(nextTransparent));
         setHasFree(true);
+        setFreeGenerationUsed(true);
         setMockupOriginal(null);
         setMockupTransparent(null);
+        setGeneratedGiftIntent(effectiveGiftIntent);
+        setGeneratedName(name.trim());
+        setGeneratedStyleId(styleId);
         setStep(6);
 
         fireEvent("generate_design_completed", {
@@ -802,12 +847,16 @@ const ArabicNameMugV1Page: NextPage = () => {
                       </button>
                       <button
                         onClick={() => {
+                          if (guestFreeDesignUsed) {
+                            startGeneratorSignIn();
+                            return;
+                          }
                           clearGeneratedState();
                           setStep(2);
                         }}
                         className={SECONDARY_BUTTON_CLASS}
                       >
-                        Start a new design
+                        {guestFreeDesignUsed ? "Sign in to start a new design" : "Start a new design"}
                       </button>
                     </div>
                   </div>
@@ -832,7 +881,8 @@ const ArabicNameMugV1Page: NextPage = () => {
                   {GIFT_INTENTS.map((option) => (
                     <button
                       key={option}
-                      onClick={() => setGiftIntent(option)}
+                      type="button"
+                      onClick={() => selectGiftIntent(option)}
                       className={`rounded-2xl border px-4 py-4 text-left transition ${
                         giftIntent === option
                           ? "border-[#2563EB] bg-[#2563EB] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]"
@@ -885,9 +935,16 @@ const ArabicNameMugV1Page: NextPage = () => {
                     autoFocus
                     value={name}
                     onChange={(event) => {
+                      if (guestFreeDesignUsed && lockedName && event.target.value !== lockedName) {
+                        showGuestFreeDesignLockedError(
+                          "Your free design is already saved. Sign in to create a new version with a different name.",
+                        );
+                        return;
+                      }
                       setName(event.target.value);
                       setErr("");
                     }}
+                    readOnly={guestFreeDesignUsed && Boolean(lockedName)}
                     placeholder="Ahmed, Fatima, Omar, Amina"
                     className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-4 text-base text-slate-900 placeholder:text-gray-400"
                   />

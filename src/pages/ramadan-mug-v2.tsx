@@ -27,6 +27,10 @@ type Saved = {
   transparentUrl: string | null;
   variant: Variant;
   hasFree: boolean;
+  freeGenerationUsed?: boolean;
+  generatedRecipient?: Recipient | "";
+  generatedName?: string;
+  generatedStyleId?: string;
   mockupOriginal: string | null;
   mockupTransparent: string | null;
   email: string;
@@ -120,8 +124,12 @@ const RamadanMugV2Page: NextPage = () => {
   const [transparentUrl, setTransparentUrl] = useState<string | null>(null);
   const [variant, setVariant] = useState<Variant>("original");
   const [hasFree, setHasFree] = useState(false);
+  const [freeGenerationUsed, setFreeGenerationUsed] = useState(false);
   const [mockupOriginal, setMockupOriginal] = useState<string | null>(null);
   const [mockupTransparent, setMockupTransparent] = useState<string | null>(null);
+  const [generatedRecipient, setGeneratedRecipient] = useState<Recipient | "">("");
+  const [generatedName, setGeneratedName] = useState("");
+  const [generatedStyleId, setGeneratedStyleId] = useState("");
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
   const [busyDesign, setBusyDesign] = useState(false);
@@ -242,8 +250,12 @@ const RamadanMugV2Page: NextPage = () => {
       setTransparentUrl(s.transparentUrl ?? null);
       setVariant(s.variant ?? "original");
       setHasFree(Boolean(s.hasFree));
+      setFreeGenerationUsed(Boolean(s.freeGenerationUsed ?? s.hasFree));
       setMockupOriginal(s.mockupOriginal ?? null);
       setMockupTransparent(s.mockupTransparent ?? null);
+      setGeneratedRecipient(s.generatedRecipient ?? s.recipient ?? "");
+      setGeneratedName(s.generatedName ?? s.name ?? "");
+      setGeneratedStyleId(s.generatedStyleId ?? s.styleId ?? "");
       setEmail(s.email ?? "");
     } catch {
       // ignore invalid stored state
@@ -270,6 +282,10 @@ const RamadanMugV2Page: NextPage = () => {
       transparentUrl,
       variant,
       hasFree,
+      freeGenerationUsed,
+      generatedRecipient,
+      generatedName,
+      generatedStyleId,
       mockupOriginal,
       mockupTransparent,
       email,
@@ -285,6 +301,10 @@ const RamadanMugV2Page: NextPage = () => {
     transparentUrl,
     variant,
     hasFree,
+    freeGenerationUsed,
+    generatedRecipient,
+    generatedName,
+    generatedStyleId,
     mockupOriginal,
     mockupTransparent,
     email,
@@ -401,7 +421,26 @@ const RamadanMugV2Page: NextPage = () => {
   };
 
   const canAffordRegen = (credits.data ?? 0) >= REGEN_CREDITS;
-  const styleSelectionRequiresSignIn = hasFree && !!designUrl && !isLoggedIn;
+  const guestFreeDesignUsed = freeGenerationUsed && !isLoggedIn;
+  const styleSelectionRequiresSignIn = guestFreeDesignUsed;
+  const lockedRecipient = generatedRecipient || recipient;
+  const lockedName = generatedName || name;
+
+  const showGuestFreeDesignLockedError = (message: string) => {
+    setErr(message);
+  };
+
+  const selectRecipient = (nextRecipient: Recipient) => {
+    if (guestFreeDesignUsed && lockedRecipient && nextRecipient !== lockedRecipient) {
+      showGuestFreeDesignLockedError(
+        "Your free design is already saved. Sign in to create a new version for a different recipient.",
+      );
+      return;
+    }
+
+    setRecipient(nextRecipient);
+    setErr("");
+  };
 
   const capturePaidTrafficLeadIfNeeded = async (
     rawEmail: string,
@@ -480,6 +519,10 @@ const RamadanMugV2Page: NextPage = () => {
       return;
     }
     const requiresPaidGeneration = paid || isLoggedIn;
+    if (!requiresPaidGeneration && guestFreeDesignUsed) {
+      setErr("Your free design is already saved. Sign in to generate another version.");
+      return;
+    }
     if (requiresPaidGeneration && (credits.data ?? 0) < REGEN_CREDITS) {
       retryRef.current = () => {
         void runGeneration(true);
@@ -534,8 +577,12 @@ const RamadanMugV2Page: NextPage = () => {
         setTransparentUrl(nextTransparent);
         setVariant(nextTransparent ? "transparent" : "original");
         setHasFree(true);
+        setFreeGenerationUsed(true);
         setMockupOriginal(null);
         setMockupTransparent(null);
+        setGeneratedRecipient((recipient || "Someone Special") as Recipient);
+        setGeneratedName(name.trim());
+        setGeneratedStyleId(styleId);
         setStep(6);
         fireEvent("generate_design_completed", {
           style_id: styleId,
@@ -884,7 +931,13 @@ const RamadanMugV2Page: NextPage = () => {
                     Continue with my design
                   </button>
                   <button
-                    onClick={() => setStep(4)}
+                    onClick={() => {
+                      if (guestFreeDesignUsed) {
+                        void signIn(undefined, { callbackUrl: router.asPath });
+                        return;
+                      }
+                      setStep(4);
+                    }}
                     className="mt-3 w-full rounded-2xl border border-[#2563EB] px-4 py-4 font-semibold text-[#2563EB]"
                   >
                     Create a new one
@@ -922,7 +975,13 @@ const RamadanMugV2Page: NextPage = () => {
                     Continue with my design
                   </button>
                   <button
-                    onClick={() => setStep(2)}
+                    onClick={() => {
+                      if (guestFreeDesignUsed) {
+                        void signIn(undefined, { callbackUrl: router.asPath });
+                        return;
+                      }
+                      setStep(2);
+                    }}
                     className="mt-3 w-full rounded-2xl border border-[#2563EB] px-4 py-4 font-semibold text-[#2563EB]"
                   >
                     Create a new one
@@ -950,7 +1009,7 @@ const RamadanMugV2Page: NextPage = () => {
               {RECIPIENTS.map((r) => (
                 <button
                   key={r}
-                  onClick={() => setRecipient(r)}
+                  onClick={() => selectRecipient(r)}
                   className={`w-full rounded-2xl border px-4 py-4 text-left ${
                     recipient === r ? "border-[#2563EB] bg-blue-50" : "border-gray-300"
                   }`}
@@ -977,9 +1036,16 @@ const RamadanMugV2Page: NextPage = () => {
                 autoFocus
                 value={name}
                 onChange={(e) => {
+                  if (guestFreeDesignUsed && lockedName && e.target.value !== lockedName) {
+                    showGuestFreeDesignLockedError(
+                      "Your free design is already saved. Sign in to create a new version with a different name.",
+                    );
+                    return;
+                  }
                   setName(e.target.value);
                   setErr("");
                 }}
+                readOnly={guestFreeDesignUsed && Boolean(lockedName)}
                 placeholder="Example: Ahmed, Fatima, Omar"
                 className="mt-4 w-full rounded-2xl border border-gray-300 px-4 py-4"
               />

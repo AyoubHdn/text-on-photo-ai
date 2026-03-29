@@ -262,17 +262,17 @@ export const productOrderRouter = createTRPCRouter({
             });
 
             if (!order) throw new Error("Order not found");
+            const isValidGuestToken = verifyGuestOrderToken(
+              input.accessToken,
+              input.orderId,
+            );
             if (ctx.session?.user?.id) {
-              if (order.userId !== ctx.session.user.id) {
+              if (order.userId !== ctx.session.user.id && !isValidGuestToken) {
                 throw new TRPCError({ code: "UNAUTHORIZED" });
               }
               return order;
             }
 
-            const isValidGuestToken = verifyGuestOrderToken(
-              input.accessToken,
-              input.orderId,
-            );
             if (!isValidGuestToken) {
               throw new TRPCError({ code: "UNAUTHORIZED" });
             }

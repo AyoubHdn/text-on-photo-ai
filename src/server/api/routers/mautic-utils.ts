@@ -26,6 +26,14 @@ interface MauticContactPayload {
   last_interaction_brand?: string;
 }
 
+function normalizeCustomFieldValue(
+  value: string | number | boolean | null | undefined,
+): string | number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (typeof value === "boolean") return value ? 1 : 0;
+  return value;
+}
+
 function formatCreditsForMautic(value: number | string | Prisma.Decimal): string {
   const creditDecimal = new Prisma.Decimal(value);
   // In Mautic, treat legacy preview-only balances as empty for campaign filters.
@@ -41,7 +49,7 @@ export async function updateMauticContact(
     // These will be specific to the brand calling the function
     brand_specific_credits?: number | string | Prisma.Decimal | null;
     brand_specific_plan?: string | null;
-    customFields?: Record<string, string | number | null | undefined>;
+    customFields?: Record<string, string | number | boolean | null | undefined>;
   },
   currentBrand: 'namedesignai' | 'gaminglogoai'
 ): Promise<MauticApiResponse> {
@@ -95,8 +103,9 @@ export async function updateMauticContact(
 
   if (contactInput.customFields) {
     for (const [key, value] of Object.entries(contactInput.customFields)) {
-      if (value !== null && value !== undefined && value !== "") {
-        mauticPayloadForApi[key] = value;
+      const normalizedValue = normalizeCustomFieldValue(value);
+      if (normalizedValue !== undefined) {
+        mauticPayloadForApi[key] = normalizedValue;
       }
     }
   }

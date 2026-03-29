@@ -41,6 +41,8 @@ type Props = {
   onCooldownStart?: (seconds: number) => void;
   funnelMode?: "default" | "paid_traffic_offer";
   paidTrafficUser?: boolean;
+  transparentImageUrl?: string | null;
+  useTransparent?: boolean;
 };
 
 type SelectedProductConfig = {
@@ -97,6 +99,8 @@ export function ProductPreviewModal({
   onCooldownStart,
   funnelMode = "default",
   paidTrafficUser = false,
+  transparentImageUrl: initialTransparentImageUrl = null,
+  useTransparent: initialUseTransparent = false,
 }: Props) {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [mockupUrl, setMockupUrl] = useState<string | null>(null);
@@ -519,10 +523,10 @@ export function ProductPreviewModal({
 
   useEffect(() => {
     if (!originalImageUrl) return;
-    setUseTransparent(false);
-    setTransparentImageUrl(null);
+    setUseTransparent(Boolean(initialUseTransparent && initialTransparentImageUrl));
+    setTransparentImageUrl(initialTransparentImageUrl);
     setIsRemovingBackground(false);
-  }, [originalImageUrl]);
+  }, [initialTransparentImageUrl, initialUseTransparent, originalImageUrl]);
 
   /* ---------------------------------------------------
      2) Fetch LIVE variants from Printful

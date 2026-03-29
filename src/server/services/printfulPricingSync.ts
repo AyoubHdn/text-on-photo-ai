@@ -118,6 +118,12 @@ function parsePrice(value?: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function isPrintfulRateLimitError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes("429") || message.includes("rate limit");
+}
+
 function isSellableAvailability(value?: string | null) {
   const normalized = value?.trim().toLowerCase();
   if (!normalized) return false;

@@ -444,17 +444,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
     try {
       const incrementCreditsDecimal = new Prisma.Decimal(incrementCredits);
-      let updatedUser:
-        | {
-            email: string | null;
-            name: string | null;
-            credits: Prisma.Decimal;
-            plan: "None" | "Starter" | "Pro" | "Elite";
-          }
-        | null = null;
-      let alreadyProcessed = false;
-
-      await prisma.$transaction(async (tx) => {
+      const transactionResult = await prisma.$transaction(async (tx) => {
         try {
           await tx.stripeWebhookEvent.create({
             data: {
@@ -469,8 +459,10 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             err instanceof Prisma.PrismaClientKnownRequestError &&
             err.code === "P2002"
           ) {
-            alreadyProcessed = true;
-            return;
+            return {
+              alreadyProcessed: true as const,
+              updatedUser: null,
+            };
           }
           throw err;
         }
@@ -488,7 +480,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           incrementCreditsDecimal
         );
 
-        updatedUser = await tx.user.update({
+        const updatedUser = await tx.user.update({
           where: { id: userId },
           data: {
             credits: updatedCredits,
@@ -501,12 +493,18 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             plan: true,
           },
         });
+
+        return {
+          alreadyProcessed: false as const,
+          updatedUser,
+        };
       });
 
-      if (alreadyProcessed) {
+      if (transactionResult.alreadyProcessed) {
         break;
       }
 
+      const updatedUser = transactionResult.updatedUser;
       if (updatedUser?.email) {
         await updateMauticContact(
           {

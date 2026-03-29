@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { signIn, useSession } from "next-auth/react";
 import { SeoHead } from "~/component/SeoHead";
 import { api } from "~/utils/api";
 import { useEffect, useRef, useState } from "react";
@@ -8,11 +9,14 @@ import { trackEvent } from "~/lib/ga";
 export default function OrderSuccess() {
   const router = useRouter();
   const { orderId, generator, accessToken, sourcePage } = router.query;
+  const { data: session } = useSession();
   const orderIdValue = typeof orderId === "string" ? orderId : "";
   const accessTokenValue =
     typeof accessToken === "string" ? accessToken : undefined;
   const generatorFromQuery = typeof generator === "string" ? generator : null;
   const sourcePageFromQuery = typeof sourcePage === "string" ? sourcePage : null;
+  const isLoggedIn = Boolean(session?.user?.id);
+  const shouldShowSaveDesignCta = Boolean(accessTokenValue) && !isLoggedIn;
   const orderQuery = api.productOrder.getOrder.useQuery(
     { orderId: orderIdValue, accessToken: accessTokenValue },
     { enabled: !!orderIdValue }
@@ -201,6 +205,26 @@ export default function OrderSuccess() {
         <div className="font-semibold">Your personalized product is now being prepared.</div>
         <div className="mt-1">Want another design? Create one now while your inspiration is fresh.</div>
       </div>
+
+      {shouldShowSaveDesignCta ? (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-left text-sm text-amber-950">
+          <div className="font-semibold">Save this design to your account</div>
+          <div className="mt-1">
+            Sign in with the same email you used at checkout so you can come back to this purchase and design later without depending on this private link.
+          </div>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                void signIn(undefined, { callbackUrl: router.asPath });
+              }}
+              className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 font-semibold text-white transition hover:bg-amber-700"
+            >
+              Sign In To Save Design
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {shouldShowPreview && (
         <div className="mb-6 overflow-hidden rounded-xl border bg-white shadow-sm">

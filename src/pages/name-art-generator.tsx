@@ -824,9 +824,9 @@ const NameArtGeneratorPage: NextPage = () => {
                 const imageId = extractImageId(imageUrl);
                 const isRemoving = imageId ? removingBackgroundMap[imageId] : false;
                 const isTransparent = imageId ? useTransparentMap[imageId] : false;
-                const displayUrl =
+                const displayUrl: string =
                   imageId && isTransparent && transparentUrls[imageId]
-                    ? transparentUrls[imageId]
+                    ? (transparentUrls[imageId] ?? imageUrl)
                     : imageUrl;
                 return (
                 <div key={index} className="flex flex-col">

@@ -127,7 +127,7 @@ export default async function handler(
             return sizeKey ? allowedSizeKeys.has(sizeKey) : false;
           }
 
-          const normalizedSizeKey = normalizePricingSizeKey(productKey, {
+          const normalizedSizeKey = normalizePricingSizeKey(product.key, {
             name: variant.name,
             size: variant.size,
             color: variant.color,
