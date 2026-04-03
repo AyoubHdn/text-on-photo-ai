@@ -10,7 +10,7 @@ import { env } from "~/env.mjs";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 
 import { createMockupTask } from "~/server/printful/mockup";
-import { pollMockupTask } from "~/server/printful/pollMockup";
+import { pollMockupTaskWithExtras } from "~/server/printful/pollMockup";
 import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
 import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
@@ -257,23 +257,45 @@ export default async function handler(
     }
 
     // ✅ 3. Poll until mockup is ready
-    const mockupUrl = await pollMockupTask(task.result.task_key);
+    const mockupResult = await pollMockupTaskWithExtras(task.result.task_key);
 
-    if (!mockupUrl) {
+    if (!mockupResult.primaryMockupUrl) {
       throw new Error("Mockup not generated");
     }
 
-    const mockupRes = await fetchMockupWithRetry(mockupUrl);
-
-    const mockupBuffer = Buffer.from(await mockupRes.arrayBuffer());
+    const primaryMockupRes = await fetchMockupWithRetry(mockupResult.primaryMockupUrl);
+    const primaryMockupBuffer = Buffer.from(await primaryMockupRes.arrayBuffer());
     const stableMockupUrl = await convertWebpToPngAndUpload(
-      mockupBuffer,
-      uploadOwnerId
+      primaryMockupBuffer,
+      uploadOwnerId,
     );
+
+    const extraMockupSettled = await Promise.allSettled(
+      mockupResult.extraMockupUrls.map(async (mockupUrl) => {
+        const mockupRes = await fetchMockupWithRetry(mockupUrl);
+        const mockupBuffer = Buffer.from(await mockupRes.arrayBuffer());
+
+        return convertWebpToPngAndUpload(mockupBuffer, uploadOwnerId);
+      }),
+    );
+
+    const stableExtraMockupUrls = extraMockupSettled.flatMap((result) => {
+      if (result.status === "fulfilled") {
+        return [result.value];
+      }
+
+      console.warn("[PRINTFUL_PREVIEW_EXTRA_MOCKUP_FAILED]", result.reason);
+      return [];
+    });
+
+    if (!stableMockupUrl) {
+      throw new Error("Mockup not generated");
+    }
 
     return res.status(200).json({
       success: true,
       mockupUrl: stableMockupUrl,
+      extraMockupUrls: stableExtraMockupUrls,
       product,
       chargedCredits: 0,
       usedFreeRamadanPreview: false,

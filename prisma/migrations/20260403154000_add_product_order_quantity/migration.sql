@@ -1,0 +1,2 @@
+ALTER TABLE "ProductOrder"
+ADD COLUMN "quantity" INTEGER NOT NULL DEFAULT 1;

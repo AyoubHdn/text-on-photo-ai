@@ -13,6 +13,10 @@ export default async function handler(
   }
 
   const { variantId, countryCode, stateCode, quantity } = req.body;
+  const normalizedQuantity =
+    typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0
+      ? Math.floor(quantity)
+      : 1;
 
   if (!variantId || !countryCode) {
     return res.status(400).json({ error: "Missing params" });
@@ -37,7 +41,7 @@ export default async function handler(
           items: [
             {
               variant_id: variantId,
-              quantity: 1,
+              quantity: normalizedQuantity,
             },
           ],
         }),

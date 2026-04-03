@@ -276,6 +276,11 @@ export default function OrderSuccess() {
         {variantSummary && (
           <div className="text-sm text-muted-foreground">{variantSummary}</div>
         )}
+        {typeof order?.quantity === "number" && (
+          <div className="text-sm text-muted-foreground">
+            Quantity: {order.quantity}
+          </div>
+        )}
         {order?.country && (
           <div className="text-sm text-muted-foreground">Shipping: {order.country}</div>
         )}

@@ -9,13 +9,18 @@ export async function calculateProductPriceFromCache({
   productType,
   sizeKey,
   countryCode,
+  quantity = 1,
 }: {
   productType: ProductType;
   sizeKey: string;
   countryCode: string;
+  quantity?: number;
 }) {
   const normalizedCountry = countryCode.trim().toUpperCase();
   const normalizedSizeKey = sizeKey.trim();
+  const normalizedQuantity = Number.isFinite(quantity)
+    ? Math.max(1, Math.floor(quantity))
+    : 1;
 
   const cached = await prisma.productPricingCache.findUnique({
     where: {
@@ -32,16 +37,27 @@ export async function calculateProductPriceFromCache({
   }
 
   const margin = PRODUCT_MARGINS[productType];
-  const supplierSubtotal = Number(cached.baseCost) + Number(cached.shippingCost);
-  const safetyBuffer = supplierSubtotal * SAFETY_BUFFER_RATE;
-  const total = supplierSubtotal + safetyBuffer + margin;
+  const unitBaseCost = Number(cached.baseCost);
+  const unitShippingCost = Number(cached.shippingCost);
+  const unitSupplierSubtotal = unitBaseCost + unitShippingCost;
+  const unitSafetyBuffer = unitSupplierSubtotal * SAFETY_BUFFER_RATE;
+  const unitTotal = unitSupplierSubtotal + unitSafetyBuffer + margin;
+  const baseCost = Number((unitBaseCost * normalizedQuantity).toFixed(2));
+  const shippingCost = Number((unitShippingCost * normalizedQuantity).toFixed(2));
+  const totalMargin = Number((margin * normalizedQuantity).toFixed(2));
+  const total = Number((unitTotal * normalizedQuantity).toFixed(2));
 
   return {
-    baseCost: Number(cached.baseCost),
-    margin,
-    shippingCost: Number(cached.shippingCost),
+    quantity: normalizedQuantity,
+    unitBaseCost,
+    unitShippingCost,
+    unitMargin: margin,
+    unitTotalPrice: Number(unitTotal.toFixed(2)),
+    baseCost,
+    margin: totalMargin,
+    shippingCost,
     currency: "USD",
-    totalPrice: Number(total.toFixed(2)),
+    totalPrice: total,
     shippingIncluded: true,
     shippingCountry: normalizedCountry,
   };

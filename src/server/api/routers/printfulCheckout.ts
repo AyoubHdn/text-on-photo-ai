@@ -19,6 +19,7 @@ import { assertVariantAvailableInCountry } from "~/server/services/productVarian
 import { verifyGuestOrderToken } from "~/server/guestOrderToken";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { resolveCheckoutUser } from "~/server/checkout/resolveCheckoutUser";
+import { getProductOrderQuantity } from "~/server/orders/quantity";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -253,6 +254,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
 
       const pricingVariant = resolvePricingVariant(order);
       const productType = order.productKey as ProductType;
+      const orderQuantity = await getProductOrderQuantity(order.id);
       if (!["poster", "tshirt", "mug"].includes(productType)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -273,6 +275,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
           productType,
           sizeKey: pricingVariant,
           countryCode,
+          quantity: orderQuantity,
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Pricing unavailable";
@@ -344,6 +347,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
             type: "printful_order",
             orderId: order.id,
             userId: resolvedUser.id,
+            quantity: String(orderQuantity),
             fbp: input.tracking?.fbp ?? "",
             fbc: input.tracking?.fbc ?? "",
           },
@@ -351,12 +355,17 @@ export const printfulCheckoutRouter = createTRPCRouter({
             {
               price_data: {
                 currency: "usd",
-                unit_amount: Math.round(pricing.totalPrice * 100),
                 product_data: {
-                  name: "Custom Printed Product",
+                  name:
+                    order.productKey === "mug"
+                      ? "Custom Printed Mug"
+                      : order.productKey === "tshirt"
+                      ? "Custom Printed T-Shirt"
+                      : "Custom Printed Poster",
                 },
+                unit_amount: Math.round(pricing.unitTotalPrice * 100),
               },
-              quantity: 1,
+              quantity: orderQuantity,
             },
           ],
           success_url: successUrl.toString(),

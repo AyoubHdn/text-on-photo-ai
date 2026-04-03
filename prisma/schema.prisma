@@ -181,6 +181,7 @@ model ProductOrder {
 
     productKey   String   // poster | tshirt | mug
     variantId    Int
+    quantity     Int      @default(1)
     variantName  String?
     size         String?
     color        String?

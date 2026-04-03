@@ -20,6 +20,10 @@ import {
 } from "~/server/guestOrderToken";
 import { env } from "~/env.mjs";
 import { resolveCheckoutUser } from "~/server/checkout/resolveCheckoutUser";
+import {
+  getProductOrderQuantity,
+  setProductOrderQuantity,
+} from "~/server/orders/quantity";
 
 const TRUSTED_S3_HOST = `${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com`;
 
@@ -98,6 +102,7 @@ export const productOrderRouter = createTRPCRouter({
       z.object({
         productKey: z.enum(["poster", "tshirt", "mug"]),
         variantId: z.number(),
+        quantity: z.number().int().min(1).max(10).optional(),
         variantName: z.string().optional(),
         size: z.string().optional(),
         color: z.string().optional(),
@@ -172,6 +177,7 @@ export const productOrderRouter = createTRPCRouter({
           productType: input.productKey,
           sizeKey: input.pricingVariant,
           countryCode: input.shippingCountry,
+          quantity: input.quantity ?? 1,
         });
 
         if (
@@ -214,6 +220,11 @@ export const productOrderRouter = createTRPCRouter({
             status: "pending",
         },
         });
+
+      if ((input.quantity ?? 1) !== 1) {
+        await setProductOrderQuantity(order.id, input.quantity ?? 1);
+      }
+
       return {
         orderId: order.id,
         accessToken: isGuest ? createGuestOrderToken(order.id) : null,
@@ -248,6 +259,93 @@ export const productOrderRouter = createTRPCRouter({
 
         return { success: true };
     }),
+    updateQuantity: publicProcedure
+      .input(
+        z.object({
+          orderId: z.string(),
+          accessToken: z.string().optional(),
+          quantity: z.number().int().min(1).max(6),
+          countryCode: z.string().default("US"),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const order = await prisma.productOrder.findUnique({
+          where: { id: input.orderId },
+        });
+
+        if (!order) throw new Error("Order not found");
+
+        const hasOwnerSession = ctx.session?.user?.id === order.userId;
+        const hasGuestAccess = verifyGuestOrderToken(
+          input.accessToken,
+          input.orderId,
+        );
+
+        if (!hasOwnerSession && !hasGuestAccess) {
+          throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+
+        const pricingVariant = resolvePricingVariant(order);
+        const productType = order.productKey as "poster" | "tshirt" | "mug";
+
+        let pricing;
+        try {
+          if (productType !== "tshirt") {
+            await assertVariantAvailableInCountry({
+              productType,
+              variantId: order.variantId,
+              countryCode: input.countryCode,
+            });
+          }
+
+          pricing = await calculateProductPriceFromCache({
+            productType,
+            sizeKey: pricingVariant,
+            countryCode: input.countryCode,
+            quantity: input.quantity,
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "Unable to update quantity.";
+          if (
+            message === "Pricing not available for this variant." ||
+            message === "This product variant is not available in this country."
+          ) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Physical shipping is not available in this country yet.",
+            });
+          }
+
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message,
+          });
+        }
+
+        await setProductOrderQuantity(order.id, input.quantity);
+
+        await prisma.productOrder.update({
+          where: { id: order.id },
+          data: {
+            basePrice: pricing.baseCost,
+            margin: pricing.margin,
+            shippingPrice: pricing.shippingCost,
+            shippingCurrency: pricing.currency,
+            totalPrice: pricing.totalPrice,
+          },
+        });
+
+        return {
+          success: true,
+          quantity: pricing.quantity,
+          totalPrice: pricing.totalPrice,
+          unitTotalPrice: pricing.unitTotalPrice,
+          shippingPrice: pricing.shippingCost,
+          basePrice: pricing.baseCost,
+          currency: pricing.currency,
+        };
+      }),
 
     getOrder: publicProcedure
         .input(
@@ -270,14 +368,20 @@ export const productOrderRouter = createTRPCRouter({
               if (order.userId !== ctx.session.user.id && !isValidGuestToken) {
                 throw new TRPCError({ code: "UNAUTHORIZED" });
               }
-              return order;
+              return {
+                ...order,
+                quantity: await getProductOrderQuantity(order.id),
+              };
             }
 
             if (!isValidGuestToken) {
               throw new TRPCError({ code: "UNAUTHORIZED" });
             }
 
-            return order;
+            return {
+              ...order,
+              quantity: await getProductOrderQuantity(order.id),
+            };
         }),
     getCheckoutPricing: publicProcedure
       .input(
@@ -306,6 +410,7 @@ export const productOrderRouter = createTRPCRouter({
 
         const pricingVariant = resolvePricingVariant(order);
         const productType = order.productKey as "poster" | "tshirt" | "mug";
+        const orderQuantity = await getProductOrderQuantity(order.id);
         let pricing;
         try {
           if (productType !== "tshirt") {
@@ -320,6 +425,7 @@ export const productOrderRouter = createTRPCRouter({
             productType,
             sizeKey: pricingVariant,
             countryCode: input.countryCode,
+            quantity: orderQuantity,
           });
         } catch (error) {
           const message =
@@ -342,6 +448,8 @@ export const productOrderRouter = createTRPCRouter({
 
         return {
           totalPrice: pricing.totalPrice,
+          quantity: pricing.quantity,
+          unitTotalPrice: pricing.unitTotalPrice,
           shippingPrice: pricing.shippingCost,
           basePrice: pricing.baseCost,
           currency: pricing.currency,

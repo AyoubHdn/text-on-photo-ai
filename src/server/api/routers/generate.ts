@@ -1364,6 +1364,7 @@ export const generateRouter = createTRPCRouter({
         generationRequestId: z.string().trim().min(1).max(120),
         herName: z.string().trim().min(2).max(40),
         hisName: z.string().trim().min(2).max(40),
+        centerText: z.string().trim().max(50).optional(),
         mode: z.enum(["names_only", "avatar_name"]),
         style: z.string().trim().min(1),
         herPhotoUrl: z.string().url().optional(),
@@ -1404,12 +1405,14 @@ export const generateRouter = createTRPCRouter({
         styleId: styleConfig.id,
         herName: input.herName,
         hisName: input.hisName,
+        centerText: input.centerText,
       });
       const promptHash = hashValue(wrapPrompt);
       const inputHash = hashValue(
         JSON.stringify({
           herName: input.herName,
           hisName: input.hisName,
+          centerText: input.centerText ?? null,
           style: input.style,
           herPhotoUrl: input.herPhotoUrl ?? null,
           hisPhotoUrl: input.hisPhotoUrl ?? null,
@@ -1429,7 +1432,7 @@ export const generateRouter = createTRPCRouter({
         inputHash,
       };
 
-      const totalCredits = new Prisma.Decimal(4);
+      const totalCredits = new Prisma.Decimal(9);
 
       const imageUrls = await executeIdempotentGenerationRequest(
         {

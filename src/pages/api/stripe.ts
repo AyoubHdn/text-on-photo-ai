@@ -23,6 +23,7 @@ import {
   sendMetaPhysicalPurchaseEvent,
   sendMetaPurchaseEvent,
 } from "~/server/meta/sendConversionEvent";
+import { getProductOrderQuantity } from "~/server/orders/quantity";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -100,6 +101,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
         console.error("ProductOrder not found:", orderId);
         break;
       }
+      const orderQuantity = await getProductOrderQuantity(order.id);
 
       const existingPrintfulOrder = await prisma.printfulOrder.findUnique({
         where: { productOrderId: orderId },
@@ -227,7 +229,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           items: [
             {
               variant_id: order.variantId,
-              quantity: 1,
+              quantity: orderQuantity,
               files: [{ url: printImageUrl }],
             },
           ],

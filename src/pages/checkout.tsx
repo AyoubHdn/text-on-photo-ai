@@ -355,6 +355,7 @@ export default function CheckoutPage() {
         userId: string;
         productKey: string;
         variantId: number;
+        quantity: number;
         aspect: string | null;
         previewMode: string | null;
         imageUrl: string;
@@ -398,6 +399,7 @@ export default function CheckoutPage() {
     );
 
     const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
+    const updateOrderQuantity = api.productOrder.updateQuantity.useMutation();
     const createStripeSession = api.printfulCheckout.createCheckout.useMutation();
     const ensureFinalPreview = api.checkout.ensureFinalPreview.useMutation();
     const fallbackSourcePage =
@@ -411,6 +413,7 @@ export default function CheckoutPage() {
       fallbackSourcePage,
     });
     const isSubmittingCheckout = createStripeSession.isLoading;
+    const isUpdatingQuantity = updateOrderQuantity.isLoading;
 
 
     const previewCooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -515,8 +518,18 @@ export default function CheckoutPage() {
     const productPrice = Number(
       checkoutPricingQuery.data?.totalPrice ?? order?.totalPrice ?? 0,
     );
+    const orderQuantity = Math.max(
+      1,
+      Number(checkoutPricingQuery.data?.quantity ?? order?.quantity ?? 1),
+    );
     const totalPrice = productPrice;
     const checkoutCopy = getCheckoutCopy(order?.productKey ?? "mug");
+    const quantityItemLabel =
+      order?.productKey === "tshirt"
+        ? "t-shirt"
+        : order?.productKey === "poster"
+        ? "poster"
+        : "mug";
     const deliveryEstimate = getDeliveryEstimate(
       order?.productKey ?? "mug",
       address.country,
@@ -540,6 +553,50 @@ export default function CheckoutPage() {
         if (showShippingValidation && localShippingErrors[field]) return localShippingErrors[field];
         if (backendFieldErrors[field]) return backendFieldErrors[field];
         return null;
+    };
+
+    const updateCheckoutQuantity = async (nextQuantity: number) => {
+        if (!order) return;
+        if (nextQuantity === orderQuantity || isUpdatingQuantity) return;
+
+        setProductNotice(null);
+        setShippingNotice(null);
+
+        try {
+          await updateOrderQuantity.mutateAsync({
+            orderId: order.id,
+            accessToken: accessTokenValue,
+            quantity: nextQuantity,
+            countryCode: address.country,
+          });
+
+          await Promise.all([orderQuery.refetch(), checkoutPricingQuery.refetch()]);
+
+          setBackendFieldErrors((prev) => {
+            if (!prev.country) return prev;
+            const next = { ...prev };
+            delete next.country;
+            return next;
+          });
+        } catch (error) {
+          const message =
+            error instanceof TRPCClientError
+              ? error.message
+              : error instanceof Error
+              ? error.message
+              : "Unable to update quantity.";
+
+          if (isCountryAvailabilityError(message)) {
+            setBackendFieldErrors((prev) => ({
+              ...prev,
+              country: "Shipping is not available in this country yet.",
+            }));
+            setShippingNotice(null);
+            return;
+          }
+
+          setProductNotice(message);
+        }
     };
 
     const getProductConfigErrors = () => {
@@ -843,6 +900,10 @@ export default function CheckoutPage() {
                 </div>
                 )}
 
+                <div>
+                    <strong>Quantity:</strong> {orderQuantity}
+                </div>
+
                 {order.productKey === "mug" && order.previewMode && (
                 <div>
                     <strong>Print position:</strong>{" "}
@@ -1052,8 +1113,50 @@ export default function CheckoutPage() {
 
         <h3 className="text-lg font-semibold">Order summary</h3>
 
+        <div className="rounded-xl border border-gray-200 bg-white p-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-gray-900">Quantity</div>
+              <div className="mt-1 text-xs text-gray-500">
+                Update how many {quantityItemLabel}s you want before payment.
+              </div>
+            </div>
+
+            <div className="inline-flex items-center rounded-xl border border-gray-300 bg-white">
+              <button
+                type="button"
+                onClick={() => void updateCheckoutQuantity(Math.max(1, orderQuantity - 1))}
+                disabled={orderQuantity <= 1 || isUpdatingQuantity || isSubmittingCheckout}
+                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Decrease quantity"
+              >
+                -
+              </button>
+              <div className="min-w-[3.25rem] border-x border-gray-300 px-4 py-3 text-center text-base font-semibold text-slate-900">
+                {orderQuantity}
+              </div>
+              <button
+                type="button"
+                onClick={() => void updateCheckoutQuantity(Math.min(6, orderQuantity + 1))}
+                disabled={orderQuantity >= 6 || isUpdatingQuantity || isSubmittingCheckout}
+                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {isUpdatingQuantity && (
+            <div className="mt-2 text-xs text-gray-500">Updating quantity...</div>
+          )}
+        </div>
+
         <div className="flex justify-between text-sm">
-        <span>Product price</span>
+        <span>
+          Product price ({orderQuantity} {quantityItemLabel}
+          {orderQuantity > 1 ? "s" : ""})
+        </span>
         <span>${formatPrice(productPrice)}</span>
         </div>
 
@@ -1091,6 +1194,7 @@ export default function CheckoutPage() {
         disabled={
           previewStatus === "generating" ||
           checkoutPricingQuery.isLoading ||
+          isUpdatingQuantity ||
           isSubmittingCheckout
         }
         onClick={async () => { if (!order) return;

@@ -41,8 +41,10 @@ type SavedState = {
   mode: CoupleNameMugMode;
   style: CoupleNameMugStyleId;
   generatedStyleId?: CoupleNameMugStyleId | null;
+  quantity: number;
   herName: string;
   hisName: string;
+  centerText: string;
   herPhotoUrl: string | null;
   hisPhotoUrl: string | null;
   herDesignUrl: string | null;
@@ -51,13 +53,17 @@ type SavedState = {
   transparentWrapUrl: string | null;
   useTransparentDesign: boolean;
   mockupOriginal: string | null;
+  mockupOriginalSecondary?: string | null;
+  mockupOriginalCenter?: string | null;
   mockupTransparent: string | null;
+  mockupTransparentSecondary?: string | null;
+  mockupTransparentCenter?: string | null;
   mockupUrl?: string | null;
   email: string;
   freeGenerationUsed: boolean;
 };
 
-const REGEN_CREDITS = 4;
+const REGEN_CREDITS = 9;
 const MUG_VARIANT_ID = 1320;
 const STEP_NAMES: Record<Step, string> = {
   1: "intro",
@@ -189,29 +195,29 @@ export function CoupleNameMugFunnel({
     lockedMode === "avatar_name"
       ? "Turn Two Photos Into A Matching Couple Mug"
       : lockedMode === "names_only"
-      ? "Create A Romantic Two-Side Name Mug"
-      : "Build A Romantic Two-Side Mug In Minutes";
+      ? "Create A Romantic Full-Wrap Name Mug"
+      : "Build A Romantic Full-Wrap Mug In Minutes";
   const heroDescription =
     lockedMode === "avatar_name"
-      ? "Upload one photo for her and one for him. We turn them into matching AI avatars with names on both sides."
+      ? "Upload one photo for her and one for him. We turn them into matching AI avatars inside one coordinated full-wrap mug design."
       : lockedMode === "names_only"
-      ? "Put her name on one side and his name on the other in one matching romantic style."
-      : "Put one name on each side, or transform two photos into matching romantic avatars with names below.";
+      ? "Place her name and his name inside one matching romantic full-wrap design."
+      : "Create one full-wrap romantic mug design with either two names or two matching AI avatars.";
   const heroHighlights =
     lockedMode === "avatar_name"
       ? [
-          "Side 1 for her avatar + name",
-          "Side 2 for his avatar + name",
+          "One coordinated full-wrap avatar design",
+          "Her portrait and his portrait in one matching style",
           "Gift-ready mug preview before checkout",
         ]
       : lockedMode === "names_only"
       ? [
-          "Side 1 for her name",
-          "Side 2 for his name",
+          "One coordinated full-wrap name design",
+          "Her name and his name in one matching style",
           "Gift-ready mug preview before checkout",
         ]
       : [
-          "Side 1 for her, side 2 for him",
+          "One full-wrap design across the mug",
           "Names-only or AI avatar + name version",
           "Gift-ready mug preview before checkout",
         ];
@@ -222,8 +228,10 @@ export function CoupleNameMugFunnel({
   const [mode, setMode] = useState<CoupleNameMugMode>(defaultMode);
   const [style, setStyle] = useState<CoupleNameMugStyleId>(DEFAULT_COUPLE_NAME_MUG_V1_STYLE_ID);
   const [generatedStyleId, setGeneratedStyleId] = useState<CoupleNameMugStyleId | null>(null);
+  const [quantity, setQuantity] = useState(1);
   const [herName, setHerName] = useState("");
   const [hisName, setHisName] = useState("");
+  const [centerText, setCenterText] = useState("");
   const [herPhotoUrl, setHerPhotoUrl] = useState<string | null>(null);
   const [hisPhotoUrl, setHisPhotoUrl] = useState<string | null>(null);
   const [herDesignUrl, setHerDesignUrl] = useState<string | null>(null);
@@ -232,7 +240,11 @@ export function CoupleNameMugFunnel({
   const [transparentWrapUrl, setTransparentWrapUrl] = useState<string | null>(null);
   const [useTransparentDesign, setUseTransparentDesign] = useState(false);
   const [mockupOriginal, setMockupOriginal] = useState<string | null>(null);
+  const [mockupOriginalSecondary, setMockupOriginalSecondary] = useState<string | null>(null);
+  const [mockupOriginalCenter, setMockupOriginalCenter] = useState<string | null>(null);
   const [mockupTransparent, setMockupTransparent] = useState<string | null>(null);
+  const [mockupTransparentSecondary, setMockupTransparentSecondary] = useState<string | null>(null);
+  const [mockupTransparentCenter, setMockupTransparentCenter] = useState<string | null>(null);
   const [freeGenerationUsed, setFreeGenerationUsed] = useState(false);
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
@@ -276,6 +288,14 @@ export function CoupleNameMugFunnel({
     useTransparentDesign && transparentWrapUrl ? "transparent" : "original";
   const selectedMockupUrl =
     selectedPreviewKey === "transparent" ? mockupTransparent : mockupOriginal;
+  const selectedSecondaryMockupUrl =
+    selectedPreviewKey === "transparent"
+      ? mockupTransparentSecondary
+      : mockupOriginalSecondary;
+  const selectedCenterMockupUrl =
+    selectedPreviewKey === "transparent"
+      ? mockupTransparentCenter
+      : mockupOriginalCenter;
   const hasTransparentOption = Boolean(transparentWrapUrl);
   const hasPreviewForSelectedDesign = Boolean(selectedMockupUrl);
   const isBackgroundRemoved = Boolean(useTransparentDesign && transparentWrapUrl);
@@ -332,15 +352,21 @@ export function CoupleNameMugFunnel({
     setTransparentWrapUrl(null);
     setUseTransparentDesign(false);
     setMockupOriginal(null);
+    setMockupOriginalSecondary(null);
+    setMockupOriginalCenter(null);
     setMockupTransparent(null);
+    setMockupTransparentSecondary(null);
+    setMockupTransparentCenter(null);
   };
 
   const resetBuilder = () => {
     setMode(defaultMode);
     setStyle(DEFAULT_COUPLE_NAME_MUG_V1_STYLE_ID);
     setGeneratedStyleId(null);
+    setQuantity(1);
     setHerName("");
     setHisName("");
+    setCenterText("");
     setHerPhotoUrl(null);
     setHisPhotoUrl(null);
     resetDesignAssets();
@@ -367,8 +393,14 @@ export function CoupleNameMugFunnel({
       setMode(lockedMode ?? saved.mode ?? "names_only");
       setStyle(saved.style ?? DEFAULT_COUPLE_NAME_MUG_V1_STYLE_ID);
       setGeneratedStyleId(saved.generatedStyleId ?? saved.style ?? null);
+      setQuantity(
+        typeof saved.quantity === "number" && Number.isFinite(saved.quantity)
+          ? Math.max(1, Math.min(6, Math.floor(saved.quantity)))
+          : 1,
+      );
       setHerName(saved.herName ?? "");
       setHisName(saved.hisName ?? "");
+      setCenterText(saved.centerText ?? "");
       setHerPhotoUrl(saved.herPhotoUrl ?? null);
       setHisPhotoUrl(saved.hisPhotoUrl ?? null);
       setHerDesignUrl(saved.herDesignUrl ?? null);
@@ -379,7 +411,11 @@ export function CoupleNameMugFunnel({
       const legacyOriginalMockup =
         saved.mockupUrl && saved.wrapUrl ? saved.mockupUrl : null;
       setMockupOriginal(saved.mockupOriginal ?? legacyOriginalMockup ?? null);
+      setMockupOriginalSecondary(saved.mockupOriginalSecondary ?? null);
+      setMockupOriginalCenter(saved.mockupOriginalCenter ?? null);
       setMockupTransparent(saved.mockupTransparent ?? null);
+      setMockupTransparentSecondary(saved.mockupTransparentSecondary ?? null);
+      setMockupTransparentCenter(saved.mockupTransparentCenter ?? null);
       setEmail(saved.email ?? "");
       setFreeGenerationUsed(Boolean(saved.freeGenerationUsed));
     } catch {
@@ -414,8 +450,10 @@ export function CoupleNameMugFunnel({
       mode,
       style,
       generatedStyleId,
+      quantity,
       herName,
       hisName,
+      centerText,
       herPhotoUrl,
       hisPhotoUrl,
       herDesignUrl,
@@ -424,7 +462,11 @@ export function CoupleNameMugFunnel({
       transparentWrapUrl,
       useTransparentDesign,
       mockupOriginal,
+      mockupOriginalSecondary,
+      mockupOriginalCenter,
       mockupTransparent,
+      mockupTransparentSecondary,
+      mockupTransparentCenter,
       email,
       freeGenerationUsed,
     };
@@ -434,15 +476,21 @@ export function CoupleNameMugFunnel({
     email,
     freeGenerationUsed,
     generatedStyleId,
+    quantity,
     hasHydratedSavedState,
     herDesignUrl,
     herName,
     herPhotoUrl,
     hisDesignUrl,
     hisName,
+    centerText,
     hisPhotoUrl,
     mockupOriginal,
+    mockupOriginalSecondary,
+    mockupOriginalCenter,
     mockupTransparent,
+    mockupTransparentSecondary,
+    mockupTransparentCenter,
     mode,
     style,
     step,
@@ -654,7 +702,7 @@ export function CoupleNameMugFunnel({
       setErr("Your free design is already saved. Sign in to create another version.");
       return;
     }
-    if (isLoggedIn && freeGenerationUsed && !canAffordRegen) {
+    if (isLoggedIn && !canAffordRegen) {
       retryRef.current = () => {
         void runGeneration();
       };
@@ -682,12 +730,13 @@ export function CoupleNameMugFunnel({
           generationRequestId,
           herName: herName.trim(),
           hisName: hisName.trim(),
-        mode,
-        style,
-        herPhotoUrl: herPhotoUrl ?? undefined,
-        hisPhotoUrl: hisPhotoUrl ?? undefined,
-        sourcePage,
-      });
+          centerText: centerText.trim() || undefined,
+          mode,
+          style,
+          herPhotoUrl: herPhotoUrl ?? undefined,
+          hisPhotoUrl: hisPhotoUrl ?? undefined,
+          sourcePage,
+        });
 
         if (!result.herDesignUrl || !result.hisDesignUrl || !result.wrapUrl) {
           throw new Error("No generated artwork was returned.");
@@ -735,7 +784,14 @@ export function CoupleNameMugFunnel({
     }
   };
 
-  const makePreview = async (imageUrl: string): Promise<string> => {
+  const makePreview = async (
+    imageUrl: string,
+    previewMode: "center" | "full-wrap",
+  ): Promise<{
+    primaryMockupUrl: string;
+    secondaryMockupUrl: string | null;
+    centerMockupUrl: string | null;
+  }> => {
     if (!imageUrl) {
       throw new Error("Generate your design first.");
     }
@@ -747,17 +803,25 @@ export function CoupleNameMugFunnel({
         productKey: "mug",
         imageUrl,
         variantId: MUG_VARIANT_ID,
-        previewMode: "full-wrap",
+        previewMode,
         paidTrafficUser: true,
       }),
     });
-    const data = (await response.json()) as { mockupUrl?: string; error?: string };
+    const data = (await response.json()) as {
+      mockupUrl?: string;
+      extraMockupUrls?: string[];
+      error?: string;
+    };
 
     if (!response.ok || !data.mockupUrl) {
       throw new Error(data.error || "Unable to generate mug preview");
     }
 
-    return data.mockupUrl;
+    return {
+      primaryMockupUrl: data.mockupUrl,
+      secondaryMockupUrl: data.extraMockupUrls?.[0] ?? null,
+      centerMockupUrl: data.extraMockupUrls?.[1] ?? null,
+    };
   };
 
   const goStep7 = async () => {
@@ -769,18 +833,56 @@ export function CoupleNameMugFunnel({
 
     setErr("");
     setStep(7);
-    if (hasPreviewForSelectedDesign) return;
+    if (hasPreviewForSelectedDesign && selectedCenterMockupUrl) return;
 
     try {
       previewLockRef.current = true;
       setBusyPreview(true);
-      const nextMockup = await makePreview(selectedDesign);
+      const [fullWrapResult, centerResult] = await Promise.allSettled([
+        hasPreviewForSelectedDesign
+          ? Promise.resolve(null)
+          : makePreview(selectedDesign, "full-wrap"),
+        selectedCenterMockupUrl ? Promise.resolve(null) : makePreview(selectedDesign, "center"),
+      ]);
       setPreviewProgress(100);
-      if (selectedPreviewKey === "transparent") {
-        setMockupTransparent(nextMockup);
-      } else {
-        setMockupOriginal(nextMockup);
+
+      if (fullWrapResult.status === "fulfilled" && fullWrapResult.value) {
+        if (selectedPreviewKey === "transparent") {
+          setMockupTransparent(fullWrapResult.value.primaryMockupUrl);
+          setMockupTransparentSecondary(fullWrapResult.value.secondaryMockupUrl);
+          if (fullWrapResult.value.centerMockupUrl) {
+            setMockupTransparentCenter(fullWrapResult.value.centerMockupUrl);
+          }
+        } else {
+          setMockupOriginal(fullWrapResult.value.primaryMockupUrl);
+          setMockupOriginalSecondary(fullWrapResult.value.secondaryMockupUrl);
+          if (fullWrapResult.value.centerMockupUrl) {
+            setMockupOriginalCenter(fullWrapResult.value.centerMockupUrl);
+          }
+        }
       }
+
+      const hasCenterFromFullWrap =
+        fullWrapResult.status === "fulfilled" && Boolean(fullWrapResult.value?.centerMockupUrl);
+
+      if (!hasCenterFromFullWrap && centerResult.status === "fulfilled" && centerResult.value) {
+        if (selectedPreviewKey === "transparent") {
+          setMockupTransparentCenter(centerResult.value.primaryMockupUrl);
+        } else {
+          setMockupOriginalCenter(centerResult.value.primaryMockupUrl);
+        }
+      } else if (!hasCenterFromFullWrap && centerResult.status === "rejected") {
+        console.warn("[COUPLE_NAME_MUG_CENTER_PREVIEW_FAILED]", centerResult.reason);
+      }
+
+      if (!hasPreviewForSelectedDesign) {
+        const fullWrapPreviewFailed =
+          fullWrapResult.status === "rejected" || !fullWrapResult.value?.primaryMockupUrl;
+        if (fullWrapPreviewFailed) {
+          throw new Error("Unable to generate mug preview");
+        }
+      }
+
       fireEvent("mug_preview_generated", {
         version: mode,
         style,
@@ -800,7 +902,7 @@ export function CoupleNameMugFunnel({
       setErr("Preview is required before checkout.");
       return;
     }
-    if (!emailOk(email)) {
+    if (!isLoggedIn && !emailOk(email)) {
       setErr("Enter a valid email address.");
       return;
     }
@@ -812,6 +914,7 @@ export function CoupleNameMugFunnel({
       const order = await createOrder.mutateAsync({
         productKey: "mug",
         variantId: MUG_VARIANT_ID,
+        quantity,
         variantName: "White Glossy Mug 11 oz",
         size: "11 oz",
         imageUrl: selectedDesign,
@@ -851,7 +954,7 @@ export function CoupleNameMugFunnel({
         }
       }
 
-      const payload = { ...trackBase, value: 0, currency: "USD" };
+      const payload = { ...trackBase, value: 0, currency: "USD", quantity };
       trackEvent("begin_checkout", payload);
       fireMetaCustomEvent("begin_checkout", payload);
 
@@ -939,21 +1042,12 @@ export function CoupleNameMugFunnel({
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
               Saved design
             </p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="overflow-hidden rounded-xl bg-[#F8F8F8] p-2">
-                <img
-                  src={herDesignUrl ?? ""}
-                  alt="Her mug side"
-                  className="aspect-square w-full object-cover"
-                />
-              </div>
-              <div className="overflow-hidden rounded-xl bg-[#F8F8F8] p-2">
-                <img
-                  src={hisDesignUrl ?? ""}
-                  alt="His mug side"
-                  className="aspect-square w-full object-cover"
-                />
-              </div>
+            <div className="mt-4 overflow-hidden rounded-xl bg-[#F8F8F8] p-3">
+              <img
+                src={wrapUrl ?? ""}
+                alt="Saved couple mug wrap design"
+                className="h-48 w-full object-contain"
+              />
             </div>
             <p className="mt-4 text-lg font-semibold text-slate-900">
               {herName && hisName ? `${herName} & ${hisName}` : "Your couple mug design"}
@@ -961,6 +1055,9 @@ export function CoupleNameMugFunnel({
             <p className="mt-1 text-sm text-gray-600">
               {mode === "avatar_name" ? "Avatar + Name" : "Names Only"} • {selectedStyle.name}
             </p>
+            {centerText.trim().length > 0 && (
+              <p className="mt-1 text-sm text-gray-500">Center text: {centerText.trim()}</p>
+            )}
             <div className="mt-4 grid grid-cols-1 gap-3">
               <button
                 onClick={() => setStep(hasPreviewForSelectedDesign ? 7 : 6)}
@@ -1165,12 +1262,14 @@ export function CoupleNameMugFunnel({
               ? "Continue with current design"
               : freeGenerationUsed && isLoggedIn
               ? `Generate Another Version (${REGEN_CREDITS} credits)`
+              : isLoggedIn
+              ? `Generate Design (${REGEN_CREDITS} credits)`
               : "Generate My Free Design"}
           </button>
 
-          {freeGenerationUsed && isLoggedIn && !hasSavedDesign && (
+          {isLoggedIn && !hasSavedDesign && (
             <p className="text-center text-xs text-gray-500">
-              Your free design is already used. New versions cost {REGEN_CREDITS} credits.
+              Each new generation on this funnel costs {REGEN_CREDITS} credits.
             </p>
           )}
         </div>
@@ -1187,7 +1286,7 @@ export function CoupleNameMugFunnel({
             <p className="mt-2 text-sm text-gray-600">
               {mode === "avatar_name"
                 ? "Upload both photos and add both names."
-                : "Add both names for the final two-side mug design."}
+                : "Add both names for the final full-wrap mug design."}
             </p>
           </div>
           <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
@@ -1245,6 +1344,33 @@ export function CoupleNameMugFunnel({
               placeholder="Adam"
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-[#2563EB]"
             />
+          </div>
+
+          <div className={WHITE_CARD_CLASS}>
+            <label className="text-sm font-semibold text-slate-900">
+              Date or short message
+              <span className="ml-1 font-normal text-gray-500">(optional)</span>
+            </label>
+            <input
+              value={centerText}
+              onChange={(event) => {
+                if (guestFreeDesignLocked) {
+                  showGuestFreeDesignLockedError(
+                    "Your free design is already saved. Sign in to create another version.",
+                  );
+                  return;
+                }
+                setCenterText(event.target.value);
+                resetDesignAssets();
+              }}
+              readOnly={guestFreeDesignLocked}
+              maxLength={50}
+              placeholder="Forever & Always • 12.06.2024"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-[#2563EB]"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              This text will be placed in the center below both names.
+            </p>
           </div>
         </div>
 
@@ -1498,23 +1624,17 @@ export function CoupleNameMugFunnel({
           <p className="mt-1 text-sm text-gray-500">
             {mode === "avatar_name" ? "Avatar + Name" : "Names Only"} in {selectedStyle.name}.
           </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Quantity: {quantity} mug{quantity > 1 ? "s" : ""}
+          </p>
+          {centerText.trim().length > 0 && (
+            <p className="mt-1 text-sm text-gray-500">Center text: {centerText.trim()}</p>
+          )}
         </div>
 
         <div className="mt-5 grid gap-3">
           <button onClick={() => void goStep7()} className={PRIMARY_BUTTON_CLASS}>
             Generate Mug Preview
-          </button>
-          <button
-            onClick={() => {
-              if (guestFreeDesignUsed) {
-                startGeneratorSignIn();
-                return;
-              }
-              setStep(3);
-            }}
-            className={SECONDARY_BUTTON_CLASS}
-          >
-            {guestFreeDesignUsed ? "Sign in to create another version" : "Edit names and photos"}
           </button>
         </div>
       </div>
@@ -1540,6 +1660,58 @@ export function CoupleNameMugFunnel({
                 />
               </div>
             </div>
+          ) : selectedCenterMockupUrl ? (
+            <div className="grid gap-3 p-3 sm:grid-cols-3">
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                {selectedSecondaryMockupUrl ? (
+                  <img
+                    src={selectedSecondaryMockupUrl}
+                    alt="Couple mug alternate preview"
+                    className="w-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={selectedMockupUrl}
+                    alt="Couple mug preview side"
+                    className="w-full object-cover"
+                  />
+                )}
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <img
+                  src={selectedCenterMockupUrl}
+                  alt="Couple mug center preview"
+                  className="w-full object-cover"
+                />
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <img
+                  src={selectedMockupUrl}
+                  alt="Couple mug primary preview"
+                  className="w-full object-cover"
+                />
+              </div>
+            </div>
+          ) : selectedSecondaryMockupUrl ? (
+            <div className="grid gap-3 p-3 sm:grid-cols-2">
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <img
+                  src={selectedSecondaryMockupUrl}
+                  alt="Couple mug alternate preview"
+                  className="w-full object-cover"
+                />
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <img
+                  src={selectedMockupUrl}
+                  alt="Couple mug primary preview"
+                  className="w-full object-cover"
+                />
+              </div>
+            </div>
           ) : (
             <img
               src={selectedMockupUrl}
@@ -1547,6 +1719,41 @@ export function CoupleNameMugFunnel({
               className="w-full object-cover"
             />
           )}
+        </div>
+
+        <div className={`${WHITE_CARD_CLASS} mt-5`}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-slate-900">Quantity</div>
+              <div className="mt-1 text-xs text-gray-500">
+                Order up to 6 mugs with this same design.
+              </div>
+            </div>
+
+            <div className="inline-flex items-center rounded-xl border border-gray-300 bg-white">
+              <button
+                type="button"
+                onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+                disabled={quantity <= 1 || busyCheckout}
+                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Decrease quantity"
+              >
+                -
+              </button>
+              <div className="min-w-[3.25rem] border-x border-gray-300 px-4 py-3 text-center text-base font-semibold text-slate-900">
+                {quantity}
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuantity((current) => Math.min(6, current + 1))}
+                disabled={quantity >= 6 || busyCheckout}
+                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
 
         {!isLoggedIn && (
@@ -1571,9 +1778,6 @@ export function CoupleNameMugFunnel({
             className={PRIMARY_BUTTON_CLASS}
           >
             {busyCheckout ? "Starting Checkout..." : "Continue To Checkout"}
-          </button>
-          <button onClick={() => setStep(6)} className={SECONDARY_BUTTON_CLASS}>
-            Back To Review
           </button>
         </div>
       </div>
