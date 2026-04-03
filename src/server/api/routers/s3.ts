@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // ~/server/api/routers/s3.ts
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { S3Client } from "@aws-sdk/client-s3";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
@@ -50,6 +50,41 @@ export const s3Router = createTRPCRouter({
       } catch (error) {
         console.error("Error creating presigned URL:", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not create upload URL." });
+      }
+    }),
+  createPublicImageUploadUrl: publicProcedure
+    .input(
+      z.object({
+        filename: z.string().trim().min(1).max(200),
+        filetype: z.string().trim().min(1).max(100),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const key = `guest-uploads/couple-mug/${Date.now()}_${input.filename}`;
+
+        const { url, fields } = await createPresignedPost(s3Client, {
+          Bucket: BUCKET_NAME,
+          Key: key,
+          Conditions: [
+            ["content-length-range", 0, 10485760],
+            ["starts-with", "$Content-Type", "image/"],
+          ],
+          Fields: {
+            "Content-Type": input.filetype,
+          },
+          Expires: 600,
+        });
+
+        const publicUrl = `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${key}`;
+
+        return { url, fields, publicUrl };
+      } catch (error) {
+        console.error("Error creating public upload URL:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not create upload URL.",
+        });
       }
     }),
 });

@@ -13,18 +13,27 @@ import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { Readable } from "stream";
 import { ARABIC_NAME_MUG_V1_STYLES } from "~/config/arabicNameMugV1Styles";
+import {
+  getCoupleNameMugV1Style,
+  type CoupleNameMugMode,
+  type CoupleNameMugStyleId,
+} from "~/config/coupleNameMugV1Style";
 import { RAMADAN_MUG_V2_STYLES } from "~/config/ramadanMugV2Styles";
 import {
   getArabicTierByModel,
   isArabicGeneratorSourcePage,
 } from "~/config/arabicGenerator";
 import { buildArabicNameMugPrompt } from "~/lib/arabicNameMugPrompt";
+import { buildCoupleNameMugWrapPrompt } from "~/lib/coupleNameMugPrompt";
 import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
 import { buildRamadanMugV2Prompt } from "~/server/prompts/ramadanMugV2Prompt";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
+import { extractCoupleMugSidePreviews } from "~/server/image/extractCoupleMugSidePreviews";
+import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import sharp from "sharp";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -35,19 +44,49 @@ const s3 = new AWS.S3({
 });
 
 const BUCKET_NAME = env.NEXT_PUBLIC_S3_BUCKET_NAME;
+const TRUSTED_S3_HOST = `${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com`;
 
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
 });
 
-const ASPECT_RATIO_VALUES = ["1:1", "4:5", "3:2", "16:9"] as const;
+const ASPECT_RATIO_VALUES = ["1:1", "4:5", "3:2", "16:9", "21:9"] as const;
 type AspectRatioValue = (typeof ASPECT_RATIO_VALUES)[number];
+type GenerationAspectRatio = AspectRatioValue | "match_input_image";
+type GenerationCustomSize = { width: number; height: number };
+const FLUX_2_PRO_MAX_WIDTH = 1440;
+const FLUX_2_DEV_MAX_WIDTH = 1440;
+const FLUX_2_KLEIN_SUPPORTED_ASPECT_RATIOS = [
+  "1:1",
+  "16:9",
+  "9:16",
+  "3:2",
+  "2:3",
+  "4:3",
+  "3:4",
+  "5:4",
+  "4:5",
+  "21:9",
+  "9:21",
+  "match_input_image",
+] as const;
 
 const FRIENDLY_GENERATION_BUSY_MESSAGE =
   "Generation is temporarily busy at our AI provider due to high demand. Please try again shortly. If generation fails, your credits are refunded automatically.";
 const DEFAULT_GENERATION_TIMEOUT_MS = 120000;
-const NANO_BANANA_ATTEMPT_TIMEOUT_MS = 45000;
-const GENERATION_REQUEST_WAIT_TIMEOUT_MS = DEFAULT_GENERATION_TIMEOUT_MS + 10000;
+const NANO_BANANA_ATTEMPT_TIMEOUT_BY_MODEL_MS = {
+  "google/nano-banana": DEFAULT_GENERATION_TIMEOUT_MS,
+  "google/nano-banana-pro": 180000,
+  "google/nano-banana-2": DEFAULT_GENERATION_TIMEOUT_MS,
+} as const;
+const NANO_BANANA_MAX_ATTEMPT_TIMEOUT_MS = Math.max(
+  ...Object.values(NANO_BANANA_ATTEMPT_TIMEOUT_BY_MODEL_MS),
+);
+const NANO_BANANA_TIMEOUT_MESSAGE_PREFIX =
+  "Generation timed out while waiting for ";
+const GENERATION_REQUEST_WAIT_TIMEOUT_MS =
+  Math.max(DEFAULT_GENERATION_TIMEOUT_MS, NANO_BANANA_MAX_ATTEMPT_TIMEOUT_MS) +
+  10000;
 const GENERATION_REQUEST_POLL_INTERVAL_MS = 500;
 const GUEST_GENERATION_WINDOW_MS = 10 * 60 * 1000;
 const GUEST_GENERATION_MAX_REQUESTS = 5;
@@ -90,6 +129,36 @@ type GenerateImagesResult = {
   imagesBase64: string[];
   predictionId: string | null;
 };
+
+function isTrustedAssetUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && parsed.hostname === TRUSTED_S3_HOST;
+  } catch {
+    return false;
+  }
+}
+
+function getS3PublicUrl(key: string) {
+  return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${key}`;
+}
+
+async function uploadS3Buffer(params: {
+  key: string;
+  body: Buffer;
+  contentType: string;
+}) {
+  await s3
+    .putObject({
+      Bucket: BUCKET_NAME,
+      Key: params.key,
+      Body: params.body,
+      ContentType: params.contentType,
+    })
+    .promise();
+
+  return getS3PublicUrl(params.key);
+}
 
 function hashValue(value: string) {
   return createHash("sha256").update(value).digest("hex");
@@ -211,6 +280,9 @@ function normalizeGenerationErrorMessage(error: unknown): string {
     lower.includes("prediction failed") ||
     lower.includes("service is currently unavailable") ||
     lower.includes("(e003)") ||
+    lower.includes("canceled") ||
+    lower.includes("cancelled") ||
+    lower.includes("aborted") ||
     lower.includes("timeout") ||
     lower.includes("timed out")
   ) {
@@ -525,6 +597,11 @@ function getOrCreateGuestGenerationPromise(
 function isPngOutputModel(model: string) {
   return (
     model === "ideogram-ai/ideogram-v2-turbo" ||
+    model === "black-forest-labs/flux-2-pro" ||
+    model === "black-forest-labs/flux-2-dev" ||
+    model === "black-forest-labs/flux-2-klein-9b" ||
+    model === "black-forest-labs/flux-kontext-pro" ||
+    model === "google/nano-banana" ||
     model === "google/nano-banana-pro" ||
     model === "google/nano-banana-2"
   );
@@ -533,19 +610,101 @@ function isPngOutputModel(model: string) {
 function isSingleOutputModel(model: string) {
   return (
     model === "ideogram-ai/ideogram-v2-turbo" ||
+    model === "black-forest-labs/flux-2-pro" ||
+    model === "black-forest-labs/flux-2-dev" ||
+    model === "black-forest-labs/flux-2-klein-9b" ||
+    model === "black-forest-labs/flux-kontext-pro" ||
+    model === "google/nano-banana" ||
     model === "google/nano-banana-pro" ||
     model === "google/nano-banana-2"
   );
 }
 
+function clampCustomSizeToMaxWidth(
+  size: GenerationCustomSize,
+  maxWidth: number,
+): GenerationCustomSize {
+  if (size.width <= maxWidth) {
+    return size;
+  }
+
+  const scale = maxWidth / size.width;
+  return {
+    width: maxWidth,
+    height: Math.max(1, Math.round(size.height * scale)),
+  };
+}
+
+async function prepareFlux2ProReferenceImage(params: {
+  sourceUrl: string;
+  generationRequestId: string;
+  slot: "her" | "his";
+}) {
+  const response = await fetch(params.sourceUrl);
+  if (!response.ok) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Failed to fetch reference image from ${params.sourceUrl}`,
+    });
+  }
+
+  const sourceBuffer = await response.buffer();
+  const processedBuffer = await sharp(sourceBuffer)
+    .rotate()
+    .resize({
+      width: 1280,
+      height: 1280,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality: 86,
+      mozjpeg: true,
+    })
+    .toBuffer();
+
+  const key = `reference-images/couple-mug/flux-2-pro/${params.generationRequestId}_${params.slot}_${randomUUID()}.jpg`;
+
+  return uploadS3Buffer({
+    key,
+    body: processedBuffer,
+    contentType: "image/jpeg",
+  });
+}
+
+function pickClosestAspectRatioForKlein(size: GenerationCustomSize) {
+  const targetRatio = size.width / Math.max(size.height, 1);
+  const candidates = FLUX_2_KLEIN_SUPPORTED_ASPECT_RATIOS.filter(
+    (value) => value !== "match_input_image",
+  );
+
+  let best = candidates[0] ?? "21:9";
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const candidate of candidates) {
+    const [width, height] = candidate.split(":").map(Number);
+    if (!width || !height) continue;
+    const ratio = width / height;
+    const distance = Math.abs(ratio - targetRatio);
+    if (distance < bestDistance) {
+      best = candidate;
+      bestDistance = distance;
+    }
+  }
+
+  return best;
+}
+
 async function runNanoBananaPrediction(
-  model: "google/nano-banana-pro" | "google/nano-banana-2",
+  model: "google/nano-banana" | "google/nano-banana-pro" | "google/nano-banana-2",
   input: Record<string, any>,
   context?: {
     logContext?: GenerationLogContext;
     onPredictionCreated?: (predictionId: string) => Promise<void> | void;
   },
 ) {
+  const timeoutMs = NANO_BANANA_ATTEMPT_TIMEOUT_BY_MODEL_MS[model];
+  const timeoutMessage = `${NANO_BANANA_TIMEOUT_MESSAGE_PREFIX}${model}`;
   const prediction = await replicate.predictions.create({
     model,
     input,
@@ -564,8 +723,8 @@ async function runNanoBananaPrediction(
   try {
     const completedPrediction = await withTimeout(
       replicate.wait(prediction, { interval: 1000 }),
-      NANO_BANANA_ATTEMPT_TIMEOUT_MS,
-      "Generation timed out while waiting for Nano Banana",
+      timeoutMs,
+      timeoutMessage,
     );
 
     return {
@@ -573,10 +732,7 @@ async function runNanoBananaPrediction(
       predictionId: prediction.id,
     };
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes("Generation timed out while waiting for Nano Banana")
-    ) {
+    if (error instanceof Error && error.message.startsWith(NANO_BANANA_TIMEOUT_MESSAGE_PREFIX)) {
       if (context?.logContext) {
         logGenerationEvent("replicate_prediction_cancel_requested", {
           ...context.logContext,
@@ -617,13 +773,22 @@ async function fetchAndEncodeImage(url: string): Promise<string> {
 const generateImages = async (
   prompt: string,
   numberOfImages = 1,
-  aspectRatio: AspectRatioValue = "1:1",
+  aspectRatio: GenerationAspectRatio = "1:1",
   model:
     | "flux-schnell"
     | "flux-dev"
+    | "black-forest-labs/flux-2-pro"
+    | "black-forest-labs/flux-2-dev"
+    | "black-forest-labs/flux-2-klein-9b"
+    | "black-forest-labs/flux-kontext-pro"
     | "ideogram-ai/ideogram-v2-turbo"
+    | "google/nano-banana"
     | "google/nano-banana-pro"
     | "google/nano-banana-2",
+  options?: {
+    inputImageUrls?: string[];
+    customSize?: GenerationCustomSize;
+  },
   context?: {
     logContext?: GenerationLogContext;
     onPredictionCreated?: (predictionId: string) => Promise<void> | void;
@@ -635,15 +800,30 @@ const generateImages = async (
   let predictionId: string | null = null;
 
   // --- 1. CONFIGURATION ---
-  if (model === "google/nano-banana-pro" || model === "google/nano-banana-2") {
+  if (
+    model === "google/nano-banana" ||
+    model === "google/nano-banana-pro" ||
+    model === "google/nano-banana-2"
+  ) {
     path = model;
     input = {
       prompt,
       aspect_ratio: aspectRatio,
       output_format: "png",
-      resolution: model === "google/nano-banana-2" ? "1K" : "2K",
-      safety_filter_level: "block_only_high",
     };
+    if (model === "google/nano-banana-pro") {
+      input.safety_filter_level = "block_only_high";
+    }
+    if (model === "google/nano-banana-pro") {
+      input.resolution = "2K";
+      input.allow_fallback_model = true;
+    }
+    if (model === "google/nano-banana-2") {
+      input.resolution = "1K";
+    }
+    if (options?.inputImageUrls?.length) {
+      input.image_input = options.inputImageUrls;
+    }
   } else if (model === "flux-schnell") {
     path = "black-forest-labs/flux-schnell";
     input = {
@@ -656,6 +836,10 @@ const generateImages = async (
       output_quality: 80,
       num_inference_steps: 4,
     };
+    if (options?.inputImageUrls?.[0]) {
+      input.image = options.inputImageUrls[0];
+      input.prompt_strength = 0.82;
+    }
   } else if (model === "flux-dev") {
     path = "black-forest-labs/flux-dev";
     input = {
@@ -668,6 +852,86 @@ const generateImages = async (
       output_quality: 80,
       num_inference_steps: 28,
     };
+    if (options?.inputImageUrls?.[0]) {
+      input.image = options.inputImageUrls[0];
+      input.prompt_strength = 0.82;
+    }
+  } else if (model === "black-forest-labs/flux-kontext-pro") {
+    path = "black-forest-labs/flux-kontext-pro";
+    input = {
+      prompt,
+      output_format: "png",
+      prompt_upsampling: true,
+      safety_tolerance: 2,
+      aspect_ratio: options?.inputImageUrls?.[0] ? "match_input_image" : aspectRatio,
+    };
+    if (options?.inputImageUrls?.[0]) {
+      input.input_image = options.inputImageUrls[0];
+    }
+    if (numberOfImages > 1) numberOfImages = 1;
+  } else if (model === "black-forest-labs/flux-2-pro") {
+    path = model;
+    input = {
+      prompt,
+      output_format: "png",
+      prompt_upsampling: false,
+      safety_tolerance: 2,
+    };
+    if (options?.customSize) {
+      const scaledCustomSize = clampCustomSizeToMaxWidth(
+        options.customSize,
+        FLUX_2_PRO_MAX_WIDTH,
+      );
+      input.aspect_ratio = "custom";
+      input.width = scaledCustomSize.width;
+      input.height = scaledCustomSize.height;
+    } else {
+      input.aspect_ratio = aspectRatio;
+    }
+    if (options?.inputImageUrls?.length) {
+      input.input_images = options.inputImageUrls;
+    }
+    if (numberOfImages > 1) numberOfImages = 1;
+  } else if (model === "black-forest-labs/flux-2-dev") {
+    path = model;
+    input = {
+      prompt,
+      output_format: "png",
+      prompt_upsampling: false,
+      safety_tolerance: 2,
+    };
+    if (options?.customSize) {
+      const scaledCustomSize = clampCustomSizeToMaxWidth(
+        options.customSize,
+        FLUX_2_DEV_MAX_WIDTH,
+      );
+      input.aspect_ratio = "custom";
+      input.width = scaledCustomSize.width;
+      input.height = scaledCustomSize.height;
+    } else {
+      input.aspect_ratio = aspectRatio;
+    }
+    if (options?.inputImageUrls?.length) {
+      input.input_images = options.inputImageUrls;
+    }
+    if (numberOfImages > 1) numberOfImages = 1;
+  } else if (model === "black-forest-labs/flux-2-klein-9b") {
+    path = model;
+    input = {
+      prompt,
+      output_format: "png",
+      prompt_upsampling: false,
+      safety_tolerance: 2,
+    };
+    if (options?.customSize) {
+      input.aspect_ratio = pickClosestAspectRatioForKlein(options.customSize);
+    } else {
+      input.aspect_ratio = aspectRatio;
+    }
+    if (options?.inputImageUrls?.length) {
+      input.input_images = options.inputImageUrls;
+    }
+    if (numberOfImages > 1) numberOfImages = 1;
   } else if (model === "ideogram-ai/ideogram-v2-turbo") {
     path = "ideogram-ai/ideogram-v2-turbo";
     input = {
@@ -697,7 +961,11 @@ const generateImages = async (
   console.log(`Calling Replicate model: ${model}`);
   let rawOutput: unknown;
   try {
-    if (model === "google/nano-banana-pro" || model === "google/nano-banana-2") {
+    if (
+      model === "google/nano-banana" ||
+      model === "google/nano-banana-pro" ||
+      model === "google/nano-banana-2"
+    ) {
       const nanoBananaResult = await runNanoBananaPrediction(model, input, context);
       rawOutput = nanoBananaResult.output;
       predictionId = nanoBananaResult.predictionId;
@@ -779,6 +1047,43 @@ const generateImages = async (
   };
 };
 
+async function storeGeneratedAsset(params: {
+  prisma: PrismaClient;
+  prompt: string;
+  userId: string | null;
+  metadata: Record<string, unknown>;
+  buffer: Buffer;
+  contentType: string;
+}) {
+  const normalizedBuffer =
+    params.contentType === "image/png"
+      ? await sharp(params.buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer()
+      : params.buffer;
+
+  const icon = await params.prisma.icon.create({
+    data: {
+      prompt: params.prompt,
+      userId: params.userId ?? undefined,
+      isPublic: false,
+      metadata: params.metadata as Prisma.InputJsonValue,
+    },
+  });
+
+  await s3
+    .putObject({
+      Bucket: BUCKET_NAME,
+      Body: normalizedBuffer,
+      Key: icon.id,
+      ContentType: params.contentType,
+    })
+    .promise();
+
+  return getS3PublicUrl(icon.id);
+}
+
 export const generateRouter = createTRPCRouter({
   generateGuestDesign: publicProcedure
     .input(
@@ -857,6 +1162,7 @@ export const generateRouter = createTRPCRouter({
                 1,
                 "1:1",
                 "google/nano-banana-pro",
+                undefined,
                 {
                   logContext,
                   onPredictionCreated: updatePredictionId,
@@ -990,6 +1296,7 @@ export const generateRouter = createTRPCRouter({
                 1,
                 "1:1",
                 "google/nano-banana-pro",
+                undefined,
                 {
                   logContext,
                   onPredictionCreated: updatePredictionId,
@@ -1049,6 +1356,336 @@ export const generateRouter = createTRPCRouter({
 
       return {
         design_url: designUrl,
+      };
+    }),
+  generateCoupleNameMugDesign: publicProcedure
+    .input(
+      z.object({
+        generationRequestId: z.string().trim().min(1).max(120),
+        herName: z.string().trim().min(2).max(40),
+        hisName: z.string().trim().min(2).max(40),
+        mode: z.enum(["names_only", "avatar_name"]),
+        style: z.string().trim().min(1),
+        herPhotoUrl: z.string().url().optional(),
+        hisPhotoUrl: z.string().url().optional(),
+        sourcePage: z
+          .enum([
+            "couple-name-mug-v1",
+            "couple-avatar-name-mug-v1",
+            "couple-names-only-mug-v1",
+          ])
+          .default("couple-name-mug-v1"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.mode === "avatar_name" && (!input.herPhotoUrl || !input.hisPhotoUrl)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Both photos are required for the avatar version.",
+        });
+      }
+
+      const userId = ctx.session?.user?.id ?? null;
+      const clientIp = getClientIp(ctx.req);
+      if (!userId) {
+        enforceGuestGenerationRateLimit(`${input.sourcePage}:${clientIp}`);
+      }
+
+      const styleConfig = getCoupleNameMugV1Style(input.style as CoupleNameMugStyleId);
+      if (styleConfig.id !== input.style) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid style selected.",
+        });
+      }
+
+      const wrapPrompt = buildCoupleNameMugWrapPrompt({
+        mode: input.mode,
+        styleId: styleConfig.id,
+        herName: input.herName,
+        hisName: input.hisName,
+      });
+      const promptHash = hashValue(wrapPrompt);
+      const inputHash = hashValue(
+        JSON.stringify({
+          herName: input.herName,
+          hisName: input.hisName,
+          style: input.style,
+          herPhotoUrl: input.herPhotoUrl ?? null,
+          hisPhotoUrl: input.hisPhotoUrl ?? null,
+          mode: input.mode,
+          model: "black-forest-labs/flux-2-pro",
+          sourcePage: input.sourcePage,
+          userId,
+        }),
+      );
+      const logContext: GenerationLogContext = {
+        generationRequestId: input.generationRequestId,
+        userId,
+        sourcePage: input.sourcePage,
+        requestType: "generateCoupleNameMugDesign",
+        model: "black-forest-labs/flux-2-pro",
+        promptHash,
+        inputHash,
+      };
+
+      const totalCredits = new Prisma.Decimal(4);
+
+      const imageUrls = await executeIdempotentGenerationRequest(
+        {
+          prisma: ctx.prisma,
+          ...logContext,
+          creditsCharged: userId ? totalCredits : undefined,
+        },
+        async ({ updatePredictionId }) => {
+          let updatedUser:
+            | { credits: Prisma.Decimal; email: string | null; name: string | null }
+            | null = null;
+
+          if (userId) {
+            updatedUser = await ctx.prisma.$transaction(async (tx) => {
+              const existingUser = await tx.user.findUnique({
+                where: { id: userId },
+                select: { credits: true, email: true, name: true },
+              });
+
+              if (!existingUser) {
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: "User not found after credit update",
+                });
+              }
+
+              const creditsDecimal = new Prisma.Decimal(existingUser.credits);
+              if (creditsDecimal.lessThan(totalCredits)) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: "You do not have enough credits",
+                });
+              }
+
+              return tx.user.update({
+                where: { id: userId },
+                data: {
+                  credits: creditsDecimal.minus(totalCredits),
+                  hasGeneratedDesign: true,
+                },
+                select: { credits: true, email: true, name: true },
+              });
+            });
+
+            if (updatedUser?.email) {
+              try {
+                await updateMauticContact(
+                  {
+                    email: updatedUser.email,
+                    name: updatedUser.name,
+                    brand_specific_credits: updatedUser.credits,
+                    customFields: {
+                      has_generated_design: 1,
+                    },
+                  },
+                  "namedesignai",
+                );
+              } catch (err) {
+                console.error("Error updating Mautic after couple mug credit deduction:", err);
+              }
+            }
+          }
+
+          try {
+            const mugConfig = MUG_PRINT_CONFIG[1320];
+            if (!mugConfig) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Mug print configuration not found.",
+              });
+            }
+
+            const referenceImageUrls =
+              input.mode === "avatar_name"
+                ? [input.herPhotoUrl as string, input.hisPhotoUrl as string]
+                : [];
+
+            if (
+              referenceImageUrls.some((imageUrl) => !isTrustedAssetUrl(imageUrl))
+            ) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Uploaded photos must use a trusted image URL.",
+              });
+            }
+
+            const preparedReferenceImageUrls =
+              input.mode === "avatar_name"
+                ? await Promise.all([
+                    prepareFlux2ProReferenceImage({
+                      sourceUrl: input.herPhotoUrl as string,
+                      generationRequestId: input.generationRequestId,
+                      slot: "her",
+                    }),
+                    prepareFlux2ProReferenceImage({
+                      sourceUrl: input.hisPhotoUrl as string,
+                      generationRequestId: input.generationRequestId,
+                      slot: "his",
+                    }),
+                  ])
+                : [];
+
+            const generatedWrap = await generateImages(
+              wrapPrompt,
+              1,
+              "1:1",
+              "black-forest-labs/flux-2-pro",
+              {
+                inputImageUrls: preparedReferenceImageUrls,
+                customSize: {
+                  width: 1440,
+                  height: 576,
+                },
+              },
+              {
+                logContext,
+                onPredictionCreated: updatePredictionId,
+              },
+            );
+            const wrapBaseImage = generatedWrap.imagesBase64[0];
+            if (!wrapBaseImage) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "No generated image returned by provider.",
+              });
+            }
+
+            const wrapBuffer = await sharp(Buffer.from(wrapBaseImage, "base64"))
+              .resize({
+                width: mugConfig.areaWidth,
+                height: mugConfig.areaHeight,
+                fit: "fill",
+              })
+              .png({ quality: 100 })
+              .withMetadata({ density: 300 })
+              .toBuffer();
+
+            const { herSideBuffer, hisSideBuffer } =
+              await extractCoupleMugSidePreviews({
+                wrapBuffer,
+              });
+
+            const herSideUrl = await storeGeneratedAsset({
+              prisma: ctx.prisma,
+              prompt: wrapPrompt,
+              userId,
+              metadata: {
+                kind: "couple_mug_side",
+                sourcePage: input.sourcePage,
+                paidTrafficUser: true,
+                side: "her",
+                mode: input.mode,
+                styleId: styleConfig.id,
+                generatedFrom: "full-wrap",
+              },
+              buffer: herSideBuffer,
+              contentType: "image/png",
+            });
+            const hisSideUrl = await storeGeneratedAsset({
+              prisma: ctx.prisma,
+              prompt: wrapPrompt,
+              userId,
+              metadata: {
+                kind: "couple_mug_side",
+                sourcePage: input.sourcePage,
+                paidTrafficUser: true,
+                side: "his",
+                mode: input.mode,
+                styleId: styleConfig.id,
+                generatedFrom: "full-wrap",
+              },
+              buffer: hisSideBuffer,
+              contentType: "image/png",
+            });
+
+            const wrapUrl = await storeGeneratedAsset({
+              prisma: ctx.prisma,
+              prompt: `Couple mug wrap for ${input.herName} and ${input.hisName}`,
+              userId,
+              metadata: {
+                kind: "couple_mug_wrap",
+                sourcePage: input.sourcePage,
+                paidTrafficUser: true,
+                mode: input.mode,
+                styleId: styleConfig.id,
+              },
+              buffer: wrapBuffer,
+              contentType: "image/png",
+            });
+
+            return {
+              imageUrls: [herSideUrl, hisSideUrl, wrapUrl],
+              predictionId: generatedWrap.predictionId,
+            };
+          } catch (generationOrStorageError) {
+            if (userId) {
+              try {
+                const refundedUser = await ctx.prisma.$transaction(async (tx) => {
+                  const existingUser = await tx.user.findUnique({
+                    where: { id: userId },
+                    select: { credits: true, email: true, name: true },
+                  });
+                  if (!existingUser) return null;
+
+                  const restoredCredits = new Prisma.Decimal(existingUser.credits).plus(
+                    totalCredits,
+                  );
+
+                  return tx.user.update({
+                    where: { id: userId },
+                    data: { credits: restoredCredits },
+                    select: { credits: true, email: true, name: true },
+                  });
+                });
+
+                if (refundedUser?.email) {
+                  try {
+                    await updateMauticContact(
+                      {
+                        email: refundedUser.email,
+                        name: refundedUser.name,
+                        brand_specific_credits: refundedUser.credits,
+                      },
+                      "namedesignai",
+                    );
+                  } catch (mauticErr) {
+                    console.error("Error updating Mautic after couple mug refund:", mauticErr);
+                  }
+                }
+              } catch (refundError) {
+                console.error("Couple mug credit refund failed:", refundError);
+              }
+            }
+
+            if (generationOrStorageError instanceof TRPCError) {
+              throw generationOrStorageError;
+            }
+            if (generationOrStorageError instanceof Error) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: normalizeGenerationErrorMessage(generationOrStorageError),
+              });
+            }
+
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Generation failed. Please try again.",
+            });
+          }
+        },
+      );
+
+      return {
+        herDesignUrl: imageUrls[0] ?? null,
+        hisDesignUrl: imageUrls[1] ?? null,
+        wrapUrl: imageUrls[2] ?? null,
       };
     }),
   generateIcon: publicProcedure
@@ -1177,6 +1814,7 @@ export const generateRouter = createTRPCRouter({
                 1,
                 input.aspectRatio,
                 input.model,
+                undefined,
                 {
                   logContext,
                   onPredictionCreated: updatePredictionId,
@@ -1313,6 +1951,7 @@ export const generateRouter = createTRPCRouter({
               effectiveNumberOfImages,
               input.aspectRatio,
               input.model,
+              undefined,
               {
                 logContext,
                 onPredictionCreated: updatePredictionId,

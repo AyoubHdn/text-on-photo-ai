@@ -43,6 +43,36 @@ export default function OrderSuccess() {
       };
     }
 
+    if (source === "couple-name-mug-v1") {
+      return {
+        funnel: "couple_name_mug_v1",
+        product_type: "physical_product",
+        niche: "romantic",
+        traffic_type: "paid" as const,
+        source_page: "couple-name-mug-v1",
+      };
+    }
+
+    if (source === "couple-avatar-name-mug-v1") {
+      return {
+        funnel: "couple_avatar_name_mug_v1",
+        product_type: "physical_product",
+        niche: "romantic",
+        traffic_type: "paid" as const,
+        source_page: "couple-avatar-name-mug-v1",
+      };
+    }
+
+    if (source === "couple-names-only-mug-v1") {
+      return {
+        funnel: "couple_names_only_mug_v1",
+        product_type: "physical_product",
+        niche: "romantic",
+        traffic_type: "paid" as const,
+        source_page: "couple-names-only-mug-v1",
+      };
+    }
+
     if (source === "ramadan-mug-v2") {
       return {
         funnel: "ramadan_mug_v2",
@@ -77,6 +107,9 @@ export default function OrderSuccess() {
   useEffect(() => {
     const mapToHref = (value: string | null) => {
       if (value === "arabic-name-mug-v1") return "/arabic-name-mug-v1";
+      if (value === "couple-name-mug-v1") return "/couple-name-mug-v1";
+      if (value === "couple-avatar-name-mug-v1") return "/couple-avatar-name-mug-v1";
+      if (value === "couple-names-only-mug-v1") return "/couple-names-only-mug-v1";
       if (value === "ramadan-mug-men") return "/ramadan-mug-men";
       if (value === "ramadan-mug-v2") return "/ramadan-mug-v2";
       if (value === "ramadan-mug") return "/ramadan-mug";

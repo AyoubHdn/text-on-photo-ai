@@ -43,6 +43,15 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
   "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
   "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
   "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
+  "/couple-name-mug-v1": { sourcePage: "couple-name-mug-v1", promotedProduct: "mug" },
+  "/couple-avatar-name-mug-v1": {
+    sourcePage: "couple-avatar-name-mug-v1",
+    promotedProduct: "mug",
+  },
+  "/couple-names-only-mug-v1": {
+    sourcePage: "couple-names-only-mug-v1",
+    promotedProduct: "mug",
+  },
 };
 
 const DIGITAL_ART_INTEREST_PATH_MAP: Record<string, DigitalArtInterest> = {

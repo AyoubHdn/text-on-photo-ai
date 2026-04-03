@@ -4,6 +4,12 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { Plan } from "@prisma/client";
 
+const EXCLUDED_COMMUNITY_SOURCE_PAGES = [
+  "couple-name-mug-v1",
+  "couple-avatar-name-mug-v1",
+  "couple-names-only-mug-v1",
+] as const;
+
 export const iconRouter = createTRPCRouter({
   // --- START: UPGRADED PROCEDURE ---
   // Renamed from getIcons to be more specific. It now also fetches the user's plan.
@@ -38,18 +44,21 @@ export const iconRouter = createTRPCRouter({
   // --- END: UPGRADED PROCEDURE ---
 
   getCommunityIcons: publicProcedure.query(async({ctx}) => {
-      // --- START: NEW LOGIC ---
-      // This now correctly filters to only show icons that are marked as public
       const icons = await ctx.prisma.icon.findMany({
         where: {
-          isPublic: true, // Only fetch public icons
+          isPublic: true,
+          NOT: EXCLUDED_COMMUNITY_SOURCE_PAGES.map((sourcePage) => ({
+            metadata: {
+              path: ["sourcePage"],
+              equals: sourcePage,
+            },
+          })),
         },
         take: 50,
         orderBy: {
           createdAt: "desc"
         }
       });
-      // --- END: NEW LOGIC ---
       return icons;
     }),
 
@@ -112,6 +121,12 @@ export const iconRouter = createTRPCRouter({
     const icons = await ctx.prisma.icon.findMany({
       where: {
         isPublic: true,
+        NOT: EXCLUDED_COMMUNITY_SOURCE_PAGES.map((sourcePage) => ({
+          metadata: {
+            path: ["sourcePage"],
+            equals: sourcePage,
+          },
+        })),
         User: {
           plan: {
             not: Plan.None, // Starter | Pro | Elite only

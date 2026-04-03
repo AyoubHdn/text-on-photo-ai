@@ -20,6 +20,9 @@ import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 const KNOWN_SOURCE_PAGES = new Set([
   "arabic-name-art-generator",
   "arabic-name-mug-v1",
+  "couple-name-mug-v1",
+  "couple-avatar-name-mug-v1",
+  "couple-names-only-mug-v1",
   "couples-art-generator",
   "name-art-generator",
   "ramadan-mug-v2",
@@ -128,6 +131,12 @@ function getCheckoutSourcePage(options?: {
     ? "arabic-name-art-generator"
     : generatorKey === "arabic-name-mug-v1"
     ? "arabic-name-mug-v1"
+    : generatorKey === "couple-name-mug-v1"
+    ? "couple-name-mug-v1"
+    : generatorKey === "couple-avatar-name-mug-v1"
+    ? "couple-avatar-name-mug-v1"
+    : generatorKey === "couple-names-only-mug-v1"
+    ? "couple-names-only-mug-v1"
     : generatorKey === "couples"
     ? "couples-art-generator"
     : generatorKey === "default"
@@ -182,6 +191,13 @@ function isSecurePaymentConfigError(message: string): boolean {
 
 function getPaidMugStorageKey(sourcePage?: string | null): string | null {
   if (sourcePage === "arabic-name-mug-v1") return "arabic-name-mug-v1:funnel:v1";
+  if (sourcePage === "couple-name-mug-v1") return "couple-name-mug-v1:funnel:v1";
+  if (sourcePage === "couple-avatar-name-mug-v1") {
+    return "couple-avatar-name-mug-v1:funnel:v1";
+  }
+  if (sourcePage === "couple-names-only-mug-v1") {
+    return "couple-names-only-mug-v1:funnel:v1";
+  }
   if (sourcePage === "ramadan-mug-v2") return "ramadan-mug-v2:funnel:v4";
   return null;
 }
@@ -195,7 +211,19 @@ function getStoredPaidMugName(sourcePage?: string | null): string | null {
     const raw = window.localStorage.getItem(storageKey);
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as { name?: unknown };
+    const parsed = JSON.parse(raw) as {
+      name?: unknown;
+      herName?: unknown;
+      hisName?: unknown;
+    };
+    if (
+      typeof parsed.herName === "string" &&
+      parsed.herName.trim().length > 0 &&
+      typeof parsed.hisName === "string" &&
+      parsed.hisName.trim().length > 0
+    ) {
+      return `${parsed.herName.trim()} & ${parsed.hisName.trim()}`;
+    }
     if (typeof parsed.name === "string" && parsed.name.trim().length > 0) {
       return parsed.name.trim();
     }
@@ -820,6 +848,8 @@ export default function CheckoutPage() {
                     <strong>Print position:</strong>{" "}
                     {order.previewMode === "two-side"
                     ? "Two-side"
+                    : order.previewMode === "full-wrap"
+                    ? "Full wrap"
                     : "Center"}
                 </div>
                 )}

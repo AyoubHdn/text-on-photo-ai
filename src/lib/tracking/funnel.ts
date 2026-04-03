@@ -34,6 +34,24 @@ const ROUTE_OVERRIDES: Record<string, FunnelOverride> = {
     product_type: "physical_product",
     traffic_type: "paid",
   },
+  "couple-name-mug-v1": {
+    funnel: "couple_name_mug_v1",
+    niche: "romantic",
+    product_type: "physical_product",
+    traffic_type: "paid",
+  },
+  "couple-avatar-name-mug-v1": {
+    funnel: "couple_avatar_name_mug_v1",
+    niche: "romantic",
+    product_type: "physical_product",
+    traffic_type: "paid",
+  },
+  "couple-names-only-mug-v1": {
+    funnel: "couple_names_only_mug_v1",
+    niche: "romantic",
+    product_type: "physical_product",
+    traffic_type: "paid",
+  },
   "ramadan-mug-men": {
     funnel: "ramadan_mug_men",
     niche: "muslim_men_usa",
