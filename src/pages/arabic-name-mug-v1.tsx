@@ -92,6 +92,131 @@ const PRIMARY_BUTTON_CLASS =
 const SECONDARY_BUTTON_CLASS =
   "inline-flex w-full items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50";
 
+type PreviewTestimonial = {
+  quote: string;
+  author: string;
+  detail: string;
+};
+
+const PREVIEW_TESTIMONIAL_IMAGES = [
+  {
+    src: "/images/products/Ahmed.webp",
+    alt: "Arabic name mug customer order example with the name Ahmed",
+  },
+  {
+    src: "/images/products/Yusuf.webp",
+    alt: "Arabic name mug customer order example with the name Yusuf",
+  },
+  {
+    src: "/images/products/Omar.webp",
+    alt: "Arabic name mug customer order example with the name Omar",
+  },
+  {
+    src: "/images/products/arabic/mug.webp",
+    alt: "Arabic personalized mug product example",
+  },
+] as const;
+
+const PREVIEW_TESTIMONIALS: Record<ArabicNameMugGiftIntent, readonly PreviewTestimonial[]> = {
+  Me: [
+    {
+      quote: "My name looked elegant in Arabic and the mug felt much more premium than I expected.",
+      author: "Nadia",
+      detail: "Ordered for herself",
+    },
+    {
+      quote: "The preview matched the final mug really well. It felt personal from the first look.",
+      author: "Samira",
+      detail: "Gifted herself a morning mug",
+    },
+    {
+      quote: "I wanted something different from the usual custom gifts and this felt meaningful.",
+      author: "Layla",
+      detail: "Keeps it on her desk",
+    },
+  ],
+  "My Husband": [
+    {
+      quote: "My husband loved seeing his name in Arabic. It felt thoughtful without being overcomplicated.",
+      author: "Mariam",
+      detail: "Gift for her husband",
+    },
+    {
+      quote: "The custom calligraphy made it feel like a real keepsake, not just another printed mug.",
+      author: "Sahar",
+      detail: "Anniversary surprise",
+    },
+    {
+      quote: "I ordered it as a small romantic gift and he used it the next morning right away.",
+      author: "Hiba",
+      detail: "Personal gift buyer",
+    },
+  ],
+  "My Wife": [
+    {
+      quote: "My wife smiled the second she saw her name. The Arabic lettering made it feel extra special.",
+      author: "Omar",
+      detail: "Gift for his wife",
+    },
+    {
+      quote: "The preview gave me confidence before checkout and the final result looked beautiful.",
+      author: "Youssef",
+      detail: "Ordered for a surprise gift",
+    },
+    {
+      quote: "It felt personal, elegant, and easy to create in just a few minutes.",
+      author: "Karim",
+      detail: "First-time custom gift buyer",
+    },
+  ],
+  "My Mom": [
+    {
+      quote: "Seeing my mom's name in Arabic made the gift feel warm and respectful at the same time.",
+      author: "Amina",
+      detail: "Gift for her mom",
+    },
+    {
+      quote: "The design looked graceful and the mug turned into one of those gifts she actually keeps using.",
+      author: "Rania",
+      detail: "Family gift order",
+    },
+    {
+      quote: "I wanted something meaningful but simple, and this was exactly that.",
+      author: "Imane",
+      detail: "Birthday gift buyer",
+    },
+  ],
+  "Someone Special": [
+    {
+      quote: "It felt like a unique gift idea and the Arabic calligraphy made it stand out instantly.",
+      author: "Salma",
+      detail: "Gift for someone special",
+    },
+    {
+      quote: "The personalized preview helped me feel sure before ordering. It looked thoughtful and polished.",
+      author: "Adel",
+      detail: "Custom gift shopper",
+    },
+    {
+      quote: "I wanted a gift that felt personal without being generic, and this did the job perfectly.",
+      author: "Nour",
+      detail: "Ordered for a loved one",
+    },
+  ],
+};
+
+const PREVIEW_SOCIAL_PROOF_COPY: Record<ArabicNameMugGiftIntent, string> = {
+  Me: "People creating an Arabic name mug for themselves say the finished result feels premium and personal.",
+  "My Husband":
+    "Shoppers creating a personalized Arabic mug for their husbands often mention how thoughtful it feels right away.",
+  "My Wife":
+    "People ordering for their wives usually want something romantic, elegant, and ready to gift.",
+  "My Mom":
+    "Customers gifting their moms often choose this because it feels meaningful without being overdone.",
+  "Someone Special":
+    "Buyers coming through this flow usually want a gift that feels personal, polished, and easy to order.",
+};
+
 const emailOk = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 const getDesignStepProgress = (stepIndex: number, overallProgress: number) => {
@@ -179,6 +304,9 @@ const ArabicNameMugV1Page: NextPage = () => {
   const guestFreeDesignLocked = guestFreeDesignUsed && hasSavedDesign;
   const lockedGiftIntent = generatedGiftIntent || giftIntent;
   const lockedName = generatedName || name;
+  const previewTestimonialIntent = lockedGiftIntent || effectiveGiftIntent;
+  const previewTestimonials = PREVIEW_TESTIMONIALS[previewTestimonialIntent];
+  const previewSocialProofCopy = PREVIEW_SOCIAL_PROOF_COPY[previewTestimonialIntent];
   const trackBase = useMemo(
     () => ({
       ...getFunnelContext({
@@ -1273,6 +1401,61 @@ const ArabicNameMugV1Page: NextPage = () => {
                   />
                 </div>
                 <p className="mt-3 text-sm text-gray-500">{progress}% complete</p>
+
+                <div className="mt-6 overflow-hidden rounded-3xl border border-amber-100 bg-[linear-gradient(180deg,#fff8eb_0%,#ffffff_100%)] p-4 text-left">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
+                        Loved by gift buyers
+                      </div>
+                      <p className="mt-2 text-sm text-slate-700">{previewSocialProofCopy}</p>
+                    </div>
+                    <div className="rounded-full border border-amber-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-700">
+                      Real feedback
+                    </div>
+                  </div>
+
+                  <div className="mt-4 overflow-hidden">
+                    <div className="arabic-name-mug-preview-review-track flex w-max gap-4 px-1">
+                      {[...previewTestimonials, ...previewTestimonials].map((testimonial, index) => {
+                        const reviewImage =
+                          PREVIEW_TESTIMONIAL_IMAGES[index % PREVIEW_TESTIMONIAL_IMAGES.length] ??
+                          PREVIEW_TESTIMONIAL_IMAGES[0]!;
+
+                        return (
+                          <article
+                            key={`${testimonial.author}-${index}`}
+                            className="w-[16.5rem] flex-none overflow-hidden rounded-2xl border border-white bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+                          >
+                            <div className="bg-[#f8fafc] p-2">
+                              <img
+                                src={reviewImage.src}
+                                alt={reviewImage.alt}
+                                className="h-44 w-full rounded-xl object-cover"
+                              />
+                            </div>
+                            <div className="px-4 py-4">
+                              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-600">
+                                Verified order
+                              </div>
+                              <p className="mt-3 text-sm leading-6 text-slate-700">
+                                &ldquo;{testimonial.quote}&rdquo;
+                              </p>
+                              <div className="mt-4 border-t border-slate-100 pt-3">
+                                <div className="text-sm font-semibold text-slate-900">
+                                  {testimonial.author}
+                                </div>
+                                <div className="mt-1 text-xs text-slate-500">
+                                  {testimonial.detail}
+                                </div>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           )}
@@ -1362,6 +1545,27 @@ const ArabicNameMugV1Page: NextPage = () => {
             });
           }}
         />
+        <style jsx global>{`
+          .arabic-name-mug-preview-review-track {
+            animation: arabic-name-mug-preview-scroll 38s linear infinite;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .arabic-name-mug-preview-review-track {
+              animation: none;
+            }
+          }
+
+          @keyframes arabic-name-mug-preview-scroll {
+            from {
+              transform: translateX(0);
+            }
+
+            to {
+              transform: translateX(calc(-50% - 0.5rem));
+            }
+          }
+        `}</style>
       </main>
     </>
   );

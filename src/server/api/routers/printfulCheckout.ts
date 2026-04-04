@@ -339,6 +339,55 @@ export const printfulCheckoutRouter = createTRPCRouter({
 
       let session;
       try {
+        const fullPriceUnitAmount = Math.round(pricing.unitTotalPrice * 100);
+        const discountedUnitAmount = Math.round(pricing.discountedUnitTotalPrice * 100);
+        const discountAppliedToExtraMugs =
+          order.productKey === "mug" &&
+          orderQuantity >= 2 &&
+          pricing.discountAmount > 0;
+        const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+          discountAppliedToExtraMugs
+            ? [
+                {
+                  price_data: {
+                    currency: "usd",
+                    product_data: {
+                      name: "Custom Printed Mug",
+                    },
+                    unit_amount: fullPriceUnitAmount,
+                  },
+                  quantity: 1,
+                },
+                {
+                  price_data: {
+                    currency: "usd",
+                    product_data: {
+                      name: "Custom Printed Mug",
+                      description: "20% off every mug after the first",
+                    },
+                    unit_amount: discountedUnitAmount,
+                  },
+                  quantity: orderQuantity - 1,
+                },
+              ]
+            : [
+                {
+                  price_data: {
+                    currency: "usd",
+                    product_data: {
+                      name:
+                        order.productKey === "mug"
+                          ? "Custom Printed Mug"
+                          : order.productKey === "tshirt"
+                          ? "Custom Printed T-Shirt"
+                          : "Custom Printed Poster",
+                    },
+                    unit_amount: fullPriceUnitAmount,
+                  },
+                  quantity: orderQuantity,
+                },
+              ];
+
         session = await stripe.checkout.sessions.create({
           mode: "payment",
           payment_method_types: ["card"],
@@ -351,23 +400,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
             fbp: input.tracking?.fbp ?? "",
             fbc: input.tracking?.fbc ?? "",
           },
-          line_items: [
-            {
-              price_data: {
-                currency: "usd",
-                product_data: {
-                  name:
-                    order.productKey === "mug"
-                      ? "Custom Printed Mug"
-                      : order.productKey === "tshirt"
-                      ? "Custom Printed T-Shirt"
-                      : "Custom Printed Poster",
-                },
-                unit_amount: Math.round(pricing.unitTotalPrice * 100),
-              },
-              quantity: orderQuantity,
-            },
-          ],
+          line_items: lineItems,
           success_url: successUrl.toString(),
           cancel_url: cancelUrl.toString(),
         });

@@ -515,14 +515,25 @@ export default function CheckoutPage() {
     const localShippingErrors = validateShipping();
 
     // ✅ Normalize numbers ONCE
-    const productPrice = Number(
+    const totalPrice = Number(
       checkoutPricingQuery.data?.totalPrice ?? order?.totalPrice ?? 0,
     );
     const orderQuantity = Math.max(
       1,
       Number(checkoutPricingQuery.data?.quantity ?? order?.quantity ?? 1),
     );
-    const totalPrice = productPrice;
+    const fullPriceTotal = Number(
+      checkoutPricingQuery.data?.fullPriceTotal ?? totalPrice,
+    );
+    const discountAmount = Number(
+      checkoutPricingQuery.data?.discountAmount ?? 0,
+    );
+    const discountedQuantity = Math.max(
+      0,
+      Number(checkoutPricingQuery.data?.discountedQuantity ?? Math.max(orderQuantity - 1, 0)),
+    );
+    const hasExtraMugDiscount =
+      order?.productKey === "mug" && discountAmount > 0;
     const checkoutCopy = getCheckoutCopy(order?.productKey ?? "mug");
     const quantityItemLabel =
       order?.productKey === "tshirt"
@@ -534,6 +545,12 @@ export default function CheckoutPage() {
       order?.productKey ?? "mug",
       address.country,
     );
+    const quantityOfferCopy =
+      order?.productKey === "mug"
+        ? hasExtraMugDiscount
+          ? `20% off applied to ${discountedQuantity} extra mug${discountedQuantity > 1 ? "s" : ""}. You save $${formatPrice(discountAmount)}.`
+          : "Add more mugs and get 20% off every mug after the first."
+        : null;
     const displayedNameLabel = personalizedName
       ? `Name on mug: ${personalizedName}`
       : checkoutCopy.fallbackDesignLabel;
@@ -956,8 +973,13 @@ export default function CheckoutPage() {
                     {checkoutCopy.personalizedLabel}
                 </div>
                 <div className="mt-2 text-2xl font-semibold text-slate-900">
-                    <span>${formatPrice(productPrice)}</span>
+                    <span>${formatPrice(totalPrice)}</span>
                 </div>
+                {hasExtraMugDiscount && (
+                  <div className="mt-1 text-xs font-semibold text-emerald-700">
+                    Includes 20% off every extra mug after the first
+                  </div>
+                )}
                 <div className="mt-1 text-xs text-gray-500">Free shipping included</div>
                 <div className="mt-1 text-xs text-gray-500">Printed only after you order</div>
     </div>
@@ -1120,6 +1142,11 @@ export default function CheckoutPage() {
               <div className="mt-1 text-xs text-gray-500">
                 Update how many {quantityItemLabel}s you want before payment.
               </div>
+              {quantityOfferCopy && (
+                <div className="mt-2 text-xs font-semibold text-emerald-700">
+                  {quantityOfferCopy}
+                </div>
+              )}
             </div>
 
             <div className="inline-flex items-center rounded-xl border border-gray-300 bg-white">
@@ -1157,8 +1184,15 @@ export default function CheckoutPage() {
           Product price ({orderQuantity} {quantityItemLabel}
           {orderQuantity > 1 ? "s" : ""})
         </span>
-        <span>${formatPrice(productPrice)}</span>
+        <span>${formatPrice(hasExtraMugDiscount ? fullPriceTotal : totalPrice)}</span>
         </div>
+
+        {hasExtraMugDiscount && (
+          <div className="flex justify-between text-sm text-emerald-700">
+            <span>Extra mug discount (20%)</span>
+            <span>-${formatPrice(discountAmount)}</span>
+          </div>
+        )}
 
         <div className="flex justify-between text-sm">
             <span>Shipping</span>
@@ -1184,10 +1218,6 @@ export default function CheckoutPage() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
           Your design is printed only after your order - no mass production.
         </div>
-
-        <p className="text-center text-sm font-medium text-[#7C5A00]">
-          Perfect gift before Eid 🎁
-        </p>
 
         <button
             className="w-full py-3 rounded-lg bg-black text-white font-semibold disabled:opacity-50"
@@ -1399,9 +1429,21 @@ export default function CheckoutPage() {
         </p>
 
         <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-3 text-sm text-blue-900">
-          <div>🔒 Secure payment with Stripe</div>
-          <div>🖨️ Printed after you order</div>
-          <div>🛡️ Free replacement if damaged</div>
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/stripe-wordmark.svg"
+              alt="Stripe"
+              className="h-7 w-auto"
+            />
+            <div className="text-sm font-semibold text-slate-900">
+              Secure payment powered by Stripe
+            </div>
+          </div>
+          <div className="mt-3 space-y-1">
+            <div>Encrypted checkout for card payments</div>
+            <div>Printed after you order</div>
+            <div>Free replacement if damaged</div>
+          </div>
         </div>
         </div>
     </div>
