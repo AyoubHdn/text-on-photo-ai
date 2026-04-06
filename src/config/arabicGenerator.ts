@@ -1,4 +1,8 @@
 export const ARABIC_GENERATOR_SOURCE_PAGE = "arabic-name-art-generator";
+export const ARABIC_GENERATOR_SOURCE_PAGES = [
+  ARABIC_GENERATOR_SOURCE_PAGE,
+  "arabic-name-mug-v1",
+] as const;
 
 export const ARABIC_GENERATOR_TIERS = [
   {
@@ -25,7 +29,8 @@ export type ArabicGeneratorModel = ArabicGeneratorTier["model"];
 export function isArabicGeneratorSourcePage(
   sourcePage: string | null | undefined,
 ): boolean {
-  return (sourcePage ?? "").trim().toLowerCase() === ARABIC_GENERATOR_SOURCE_PAGE;
+  const normalizedSourcePage = (sourcePage ?? "").trim().toLowerCase();
+  return ARABIC_GENERATOR_SOURCE_PAGES.some((page) => page === normalizedSourcePage);
 }
 
 export function getArabicTierByModel(

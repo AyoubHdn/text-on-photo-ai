@@ -1269,7 +1269,7 @@ export const generateRouter = createTRPCRouter({
             JSON.stringify({
               aspectRatio: "1:1",
               giftIntent: input.giftIntent,
-              model: "google/nano-banana-pro",
+              model: "google/nano-banana-2",
               name: input.name,
               sourcePage: input.sourcePage,
               style: input.style,
@@ -1280,7 +1280,7 @@ export const generateRouter = createTRPCRouter({
             userId: null,
             sourcePage: input.sourcePage,
             requestType: "generatePaidMugGuestDesign",
-            model: "google/nano-banana-pro",
+            model: "google/nano-banana-2",
             promptHash,
             inputHash,
           };
@@ -1295,7 +1295,7 @@ export const generateRouter = createTRPCRouter({
                 prompt,
                 1,
                 "1:1",
-                "google/nano-banana-pro",
+                "google/nano-banana-2",
                 undefined,
                 {
                   logContext,

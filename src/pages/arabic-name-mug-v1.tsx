@@ -112,7 +112,7 @@ const PREVIEW_TESTIMONIAL_IMAGES = [
     alt: "Arabic name mug customer order example with the name Omar",
   },
   {
-    src: "/images/products/arabic/mug.webp",
+    src: "/images/products/ramadan.webp",
     alt: "Arabic personalized mug product example",
   },
 ] as const;
@@ -646,7 +646,7 @@ const ArabicNameMugV1Page: NextPage = () => {
               prompt: buildPrompt(),
               numberOfImages: 1,
               aspectRatio: "1:1",
-              model: "google/nano-banana-pro",
+              model: "google/nano-banana-2",
               metadata: {
                 category: SOURCE_PAGE,
                 subcategory: style?.name,
