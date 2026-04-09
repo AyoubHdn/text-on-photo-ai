@@ -56,6 +56,143 @@ export const POSTER_ASPECT_CONFIG: Record<AspectRatio, PrintAreaConfig> = {
 
 /* ---------------- MUGS ---------------- */
 
+/* ---------------- CANVAS ---------------- */
+
+const CANVAS_8X10_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 3900,
+  areaHeight: 3300,
+  width: 3900,
+  height: 3300,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_10X10_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 3900,
+  areaHeight: 3900,
+  width: 3900,
+  height: 3900,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_12X12_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 5400,
+  areaHeight: 5400,
+  width: 5400,
+  height: 5400,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_12X18_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 6300,
+  areaHeight: 4500,
+  width: 6300,
+  height: 4500,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_16X16_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 6600,
+  areaHeight: 6600,
+  width: 6600,
+  height: 6600,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_16X20_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 7800,
+  areaHeight: 6600,
+  width: 7800,
+  height: 6600,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_20X20_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 6900,
+  areaHeight: 6900,
+  width: 6900,
+  height: 6900,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_20X30_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 9900,
+  areaHeight: 6900,
+  width: 9900,
+  height: 6900,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_24X24_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 8100,
+  areaHeight: 8100,
+  width: 8100,
+  height: 8100,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_24X30_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 9900,
+  areaHeight: 8100,
+  width: 9900,
+  height: 8100,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_24X36_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 12600,
+  areaHeight: 9000,
+  width: 12600,
+  height: 9000,
+  top: 0,
+  left: 0,
+};
+
+const CANVAS_30X40_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 12900,
+  areaHeight: 9900,
+  width: 12900,
+  height: 9900,
+  top: 0,
+  left: 0,
+};
+
+export const CANVAS_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
+  ...createPrintAreaMap([19293], CANVAS_8X10_PRINT_AREA),
+  ...createPrintAreaMap([19296], CANVAS_10X10_PRINT_AREA),
+  ...createPrintAreaMap([823], CANVAS_12X12_PRINT_AREA),
+  ...createPrintAreaMap([19299], CANVAS_12X18_PRINT_AREA),
+  ...createPrintAreaMap([824], CANVAS_16X16_PRINT_AREA),
+  ...createPrintAreaMap([6], CANVAS_16X20_PRINT_AREA),
+  ...createPrintAreaMap([19308], CANVAS_20X20_PRINT_AREA),
+  ...createPrintAreaMap([19311], CANVAS_20X30_PRINT_AREA),
+  ...createPrintAreaMap([19314], CANVAS_24X24_PRINT_AREA),
+  ...createPrintAreaMap([19315], CANVAS_24X30_PRINT_AREA),
+  ...createPrintAreaMap([825], CANVAS_24X36_PRINT_AREA),
+  ...createPrintAreaMap([19323], CANVAS_30X40_PRINT_AREA),
+};
+
 const MUG_11OZ_PRINT_AREA: PrintAreaConfig = {
   fileType: "default",
   areaWidth: 2700,

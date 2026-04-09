@@ -3,6 +3,7 @@ import type { AspectRatio } from "~/server/printful/aspects";
 export type ProductKey =
   | "poster"
   | "framedPoster"
+  | "canvas"
   | "tshirt"
   | "mug"
   | "mugBlackGlossy"
@@ -28,6 +29,12 @@ export const PRODUCT_PRESENTATION: Record<ProductKey, ProductPresentation> = {
     cardDescription: "Enhanced matte paper framed poster, ready to hang",
     cardImage: "https://files.cdn.printful.com/o/products/2/product_1613463227.jpg",
     title: "Enhanced Matte Paper Framed Poster (in)",
+  },
+  canvas: {
+    cardLabel: "Canvas",
+    cardDescription: "Fade-resistant canvas print, hand-stretched and ready to hang",
+    cardImage: "https://files.cdn.printful.com/o/products/3/product_1613463725.jpg",
+    title: "Canvas (in)",
   },
   tshirt: {
     cardLabel: "T-Shirt",
@@ -66,6 +73,7 @@ export const PRODUCT_PRESENTATION: Record<ProductKey, ProductPresentation> = {
 export const PRODUCT_SUPPORTED_ASPECTS: Record<ProductKey, AspectRatio[]> = {
   poster: ["1:1", "4:5", "3:2"],
   framedPoster: ["1:1", "4:5", "3:2"],
+  canvas: ["1:1", "4:5", "3:2"],
   mug: ["1:1", "4:5", "3:2"],
   mugBlackGlossy: ["1:1", "4:5", "3:2"],
   mugColorInside: ["1:1", "4:5", "3:2"],
@@ -76,6 +84,7 @@ export const PRODUCT_SUPPORTED_ASPECTS: Record<ProductKey, AspectRatio[]> = {
 export const PRODUCTS_PAGE_PRODUCT_KEYS: ProductKey[] = [
   "poster",
   "framedPoster",
+  "canvas",
   "tshirt",
   "mug",
   "mugBlackGlossy",

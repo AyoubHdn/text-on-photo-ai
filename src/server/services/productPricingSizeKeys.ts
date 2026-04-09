@@ -5,6 +5,7 @@ export type PricedProductType =
   | "mugBlackGlossy"
   | "mugColorInside"
   | "coaster"
+  | "canvas"
   | "framedPoster"
   | "poster"
   | "tshirt";

@@ -29,6 +29,18 @@ export type PrintfulProduct =
       }[];
     }
   | {
+      key: "canvas";
+      name: string;
+      printfulProductId: number;
+      defaultVariantId: number;
+      defaultVariantIdByAspect: Partial<Record<PosterAspect, number>>;
+      variants: {
+        label: string;
+        variantId: number;
+        price: number;
+      }[];
+    }
+  | {
       key: "mug" | "mugBlackGlossy" | "mugColorInside";
       name: string;
       printfulProductId: number;
@@ -90,6 +102,31 @@ export const PRINTFUL_PRODUCTS: PrintfulProduct[] = [
       { label: 'Black / 10"x10"', variantId: 4652, price: 23.41, color: "Black", colorHex: "#000000" },
       { label: 'Black / 16"x20"', variantId: 4399, price: 41.77, color: "Black", colorHex: "#000000" },
       { label: 'Black / 20"x30"', variantId: 19520, price: 55.08, color: "Black", colorHex: "#000000" },
+    ],
+  },
+  {
+    key: "canvas",
+    name: "Canvas (in)",
+    printfulProductId: 3,
+    defaultVariantId: 6,
+    defaultVariantIdByAspect: {
+      "1:1": 824,
+      "4:5": 6,
+      "3:2": 19311,
+    },
+    variants: [
+      { label: '10"x10"', variantId: 19296, price: 16.83 },
+      { label: '12"x12"', variantId: 823, price: 21.93 },
+      { label: '16"x16"', variantId: 824, price: 28.05 },
+      { label: '20"x20"', variantId: 19308, price: 34.68 },
+      { label: '24"x24"', variantId: 19314, price: 42.84 },
+      { label: '8"x10"', variantId: 19293, price: 15.81 },
+      { label: '16"x20"', variantId: 6, price: 28.56 },
+      { label: '24"x30"', variantId: 19315, price: 50.49 },
+      { label: '30"x40"', variantId: 19323, price: 64.26 },
+      { label: '12"x18"', variantId: 19299, price: 24.99 },
+      { label: '20"x30"', variantId: 19311, price: 36.72 },
+      { label: '24"x36"', variantId: 825, price: 52.02 },
     ],
   },
   {

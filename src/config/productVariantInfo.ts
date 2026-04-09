@@ -42,6 +42,33 @@ export const FRAMED_POSTER_VARIANT_INFO: Record<string, string> = {
     "24x36 in (61 x 91.4 cm)\nExtra-large framed statement piece ready to hang\nAcrylite front protector and hanging hardware included",
 };
 
+export const CANVAS_VARIANT_INFO: Record<string, string> = {
+  "8x10":
+    "8x10 in (20.3 x 25.4 cm)\nCompact canvas print with vivid fade-resistant colors\nHand-stretched over solid wood stretcher bars",
+  "10x10":
+    "10x10 in (25.4 x 25.4 cm)\nSmall square canvas for desks, shelves, and gallery walls\nHand-stretched over solid wood stretcher bars",
+  "12x12":
+    "12x12 in (30.5 x 30.5 cm)\nBalanced square canvas for bedrooms and home offices\nFade-resistant print with mounting brackets included",
+  "12x18":
+    "12x18 in (30.5 x 45.7 cm)\nVertical canvas format with bold wall presence\nFade-resistant print with mounting brackets included",
+  "16x16":
+    "16x16 in (40.6 x 40.6 cm)\nStatement square canvas for feature walls and focal points\nHand-stretched over solid wood stretcher bars",
+  "16x20":
+    "16x20 in (40.6 x 50.8 cm)\nPopular canvas wall-art size with strong detail and presence\nFade-resistant print with mounting brackets included",
+  "20x20":
+    "20x20 in (50.8 x 50.8 cm)\nLarge square canvas for high-impact home decor\nHand-stretched over solid wood stretcher bars",
+  "20x30":
+    "20x30 in (50.8 x 76.2 cm)\nLarge canvas size for striking vertical wall displays\nFade-resistant print with mounting brackets included",
+  "24x24":
+    "24x24 in (61 x 61 cm)\nExtra-large square canvas that anchors the room\nHand-stretched over solid wood stretcher bars",
+  "24x30":
+    "24x30 in (61 x 76.2 cm)\nLarge premium canvas for statement wall arrangements\nFade-resistant print with mounting brackets included",
+  "24x36":
+    "24x36 in (61 x 91.4 cm)\nOversized canvas for bold gallery-style presentation\nFade-resistant print with mounting brackets included",
+  "30x40":
+    "30x40 in (76.2 x 101.6 cm)\nExtra-large statement canvas with vivid color and depth\nHand-stretched over solid wood stretcher bars",
+};
+
 export const MUG_VARIANT_INFO: Record<string, string> = {
   "11 oz":
     "11 oz (325 ml)\nHeight 3.8 in (9.6 cm), diameter 3.2 in (8.2 cm)\nClassic daily mug size, dishwasher & microwave safe",

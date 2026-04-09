@@ -87,6 +87,19 @@ function getCheckoutCopy(productKey: string) {
           "Free shipping included",
         ],
       };
+    case "canvas":
+      return {
+        personalizedLabel: "Your personalized canvas",
+        subtitle: "Canvas (in)",
+        fallbackDesignLabel: "Custom design selected for your canvas",
+        benefitsTitle: "Why customers choose this canvas",
+        benefits: [
+          "Fade-resistant poly-cotton blend canvas",
+          "Hand-stretched over solid wood stretcher bars",
+          "Mounting brackets included",
+          "Free shipping included",
+        ],
+      };
     case "tshirt":
       return {
         personalizedLabel: "Your personalized t-shirt",
@@ -605,6 +618,8 @@ export default function CheckoutPage() {
         ? "t-shirt"
         : order?.productKey === "coaster"
         ? "coaster"
+        : order?.productKey === "canvas"
+        ? "canvas print"
         : order?.productKey === "framedPoster"
         ? "framed poster"
         : order?.productKey === "poster"
@@ -627,6 +642,7 @@ export default function CheckoutPage() {
     const PRODUCT_LABELS = {
     poster: PRODUCT_PRESENTATION.poster.title,
     framedPoster: PRODUCT_PRESENTATION.framedPoster.title,
+    canvas: PRODUCT_PRESENTATION.canvas.title,
     tshirt: PRODUCT_PRESENTATION.tshirt.title,
     mug: PRODUCT_PRESENTATION.mug.title,
     mugBlackGlossy: PRODUCT_PRESENTATION.mugBlackGlossy.title,
@@ -711,7 +727,11 @@ export default function CheckoutPage() {
         issues.push("size");
         }
 
-        if (order.productKey === "poster" || order.productKey === "framedPoster") {
+        if (
+          order.productKey === "poster" ||
+          order.productKey === "framedPoster" ||
+          order.productKey === "canvas"
+        ) {
         if (!order.variantName) issues.push("variantName");
         if (!order.size) issues.push("size");
         if (order.productKey === "framedPoster" && !order.color) issues.push("color");
@@ -969,7 +989,7 @@ export default function CheckoutPage() {
                 </div>
                 )}
 
-                {(order.productKey === "poster" || order.productKey === "framedPoster") && order.size && (
+                {(order.productKey === "poster" || order.productKey === "framedPoster" || order.productKey === "canvas") && order.size && (
                 <div>
                     <strong>Size:</strong> {order.size}
                 </div>

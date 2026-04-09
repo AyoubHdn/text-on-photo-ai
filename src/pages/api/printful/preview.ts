@@ -243,6 +243,14 @@ export default async function handler(
       variantId = size.variantId;
       effectiveAspect = selectedAspect;
     }
+    else if (product.key === "canvas") {
+      const selectedAspect = aspect ?? "1:1";
+      variantId =
+        variantIdFromClient ??
+        product.defaultVariantIdByAspect[selectedAspect] ??
+        product.defaultVariantId;
+      effectiveAspect = undefined;
+    }
     else if (product.key === "framedPoster") {
       const selectedAspect = aspect ?? "1:1";
       variantId =

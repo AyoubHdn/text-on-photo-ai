@@ -3,6 +3,7 @@ type ProductType =
   | "mugBlackGlossy"
   | "mugColorInside"
   | "coaster"
+  | "canvas"
   | "framedPoster"
   | "tshirt"
   | "poster";
@@ -47,6 +48,13 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
           "Enhanced matte paper with ayous wood frame",
           "Acrylite front protector included",
           "Ready to hang with included hardware",
+          "Shipping available in selected countries",
+        ];
+      case "canvas":
+        return [
+          "Fade-resistant poly-cotton blend canvas",
+          "Hand-stretched over solid wood stretcher bars",
+          "1.25 in thick canvas profile",
           "Shipping available in selected countries",
         ];
       case "tshirt":

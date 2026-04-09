@@ -2,6 +2,7 @@
 import { isMugProductKey } from "~/config/physicalProducts";
 import { printfulRequest } from "./client";
 import {
+  CANVAS_PRINT_CONFIG,
   COASTER_PRINT_CONFIG,
   FRAMED_POSTER_PRINT_CONFIG,
   MUG_PRINT_CONFIG,
@@ -50,6 +51,24 @@ export async function createMockupTask(
   if (product.key === "framedPoster") {
     const config = FRAMED_POSTER_PRINT_CONFIG[variantId];
     if (!config) throw new Error("Framed poster print config not found");
+
+    files.push({
+      type: config.fileType,
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+  }
+
+  if (product.key === "canvas") {
+    const config = CANVAS_PRINT_CONFIG[variantId];
+    if (!config) throw new Error("Canvas print config not found");
 
     files.push({
       type: config.fileType,

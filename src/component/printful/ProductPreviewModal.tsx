@@ -17,6 +17,7 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
+  CANVAS_VARIANT_INFO,
   COASTER_VARIANT_INFO,
   FRAMED_POSTER_VARIANT_INFO,
   MUG_BLACK_GLOSSY_VARIANT_INFO,
@@ -164,6 +165,7 @@ export function ProductPreviewModal({
   const isTshirt = productKey === "tshirt";
   const isCoaster = productKey === "coaster";
   const isFramedPoster = productKey === "framedPoster";
+  const isCanvas = productKey === "canvas";
   const isMugProduct = isMugProductKey(productKey);
   const isMugBlackGlossy = productKey === "mugBlackGlossy";
   const isMugColorInside = productKey === "mugColorInside";
@@ -269,6 +271,13 @@ export function ProductPreviewModal({
     "16:9": [],                     // intentionally unsupported
   };
 
+  const CANVAS_VARIANTS_BY_ASPECT: Record<AspectRatio, number[]> = {
+    "1:1": [19296, 823, 824, 19308, 19314],
+    "4:5": [19293, 6, 19315, 19323],
+    "3:2": [19299, 19311, 825],
+    "16:9": [],
+  };
+
   const FRAMED_POSTER_SIZE_KEYS_BY_ASPECT: Record<AspectRatio, string[]> = {
     "1:1": ["10x10", "12x12", "14x14", "16x16", "18x18"],
     "4:5": ["8x10", "16x20"],
@@ -361,6 +370,10 @@ export function ProductPreviewModal({
     productKey === "poster" && selectedPosterSizeKey
       ? POSTER_VARIANT_INFO[selectedPosterSizeKey]
       : undefined;
+  const canvasInfoText =
+    productKey === "canvas" && selectedPosterSizeKey
+      ? CANVAS_VARIANT_INFO[selectedPosterSizeKey]
+      : undefined;
   const framedPosterInfoText =
     productKey === "framedPoster" && (selectedSize ?? selectedPosterSizeKey)
       ? FRAMED_POSTER_VARIANT_INFO[selectedSize ?? selectedPosterSizeKey ?? ""]
@@ -382,6 +395,10 @@ export function ProductPreviewModal({
 
     if (productKey === "poster") {
       return posterInfoText ?? "";
+    }
+
+    if (productKey === "canvas") {
+      return canvasInfoText ?? "";
     }
 
     if (productKey === "framedPoster") {
@@ -474,6 +491,20 @@ export function ProductPreviewModal({
       if (variantId && nextVariants.find((v) => v.id === variantId)) return;
       const allowed = POSTER_VARIANTS_BY_ASPECT[aspect];
       const defaultVariant = nextVariants.find((v) => allowed?.includes(v.id));
+      if (defaultVariant) {
+        setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
+      }
+      return;
+    }
+
+    if (key === "canvas") {
+      if (variantId && nextVariants.find((v) => v.id === variantId)) return;
+      const allowed = CANVAS_VARIANTS_BY_ASPECT[aspect];
+      const defaultVariant =
+        nextVariants.find((v) => allowed?.includes(v.id)) ??
+        nextVariants[0];
       if (defaultVariant) {
         setVariantId(defaultVariant.id);
       } else {
@@ -796,6 +827,10 @@ export function ProductPreviewModal({
             ? nextVariants.some((variant: Variant) =>
                 POSTER_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
               )
+            : productKey === "canvas"
+            ? nextVariants.some((variant: Variant) =>
+                CANVAS_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+              )
             : productKey === "framedPoster"
             ? nextVariants.some((variant: Variant) => {
                 const sizeKey = getPosterVariantSizeKey(variant);
@@ -1070,6 +1105,11 @@ export function ProductPreviewModal({
       return sizeLabel ? `Premium Poster (${sizeLabel})` : "Premium Poster";
     }
 
+    if (productKey === "canvas") {
+      const sizeLabel = getPosterSizeLabel();
+      return sizeLabel ? `Canvas (${sizeLabel})` : "Canvas";
+    }
+
     if (productKey === "framedPoster") {
       const sizeLabel = selectedSize ? formatPosterSizeLabelSafe(selectedSize) : getPosterSizeLabel();
       const details = [sizeLabel, selectedColor].filter(Boolean).join(" / ");
@@ -1119,7 +1159,11 @@ export function ProductPreviewModal({
       return selectedSize?.trim().toUpperCase() ?? null;
     }
 
-    if (productKey === "poster" || productKey === "framedPoster") {
+    if (
+      productKey === "poster" ||
+      productKey === "canvas" ||
+      productKey === "framedPoster"
+    ) {
       return (
         extractPosterSizeKeySafe(selectedVariant?.size) ??
         extractPosterSizeKeySafe(selectedVariant?.name) ??
@@ -1200,7 +1244,7 @@ export function ProductPreviewModal({
           : undefined
         : undefined;
     const posterSize =
-      productKey === "poster" || productKey === "framedPoster"
+      productKey === "poster" || productKey === "canvas" || productKey === "framedPoster"
         ? getPosterSizeLabel()
         : undefined;
     const mugSize = isMugProduct
@@ -1221,7 +1265,7 @@ export function ProductPreviewModal({
       size:
         productKey === "tshirt"
           ? selectedSize ?? undefined
-          : productKey === "poster" || productKey === "framedPoster"
+          : productKey === "poster" || productKey === "canvas" || productKey === "framedPoster"
           ? posterSize ?? undefined
           : productKey === "coaster"
           ? selectedSize ?? selectedVariant.size ?? selectedVariant.name ?? undefined
@@ -1611,15 +1655,19 @@ export function ProductPreviewModal({
               Printed on demand • High-quality materials
             </p>
 
-            {productKey === "poster" && (
+            {(productKey === "poster" || productKey === "canvas") && (
             <div className="mb-4">
               <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                Poster size
+                {productKey === "canvas" ? "Canvas size" : "Poster size"}
               </h4>
 
               <div className="flex flex-wrap gap-2">
                 {variants
-                  .filter(v => POSTER_VARIANTS_BY_ASPECT[aspect]?.includes(v.id))
+                  .filter(v =>
+                    productKey === "canvas"
+                      ? CANVAS_VARIANTS_BY_ASPECT[aspect]?.includes(v.id)
+                      : POSTER_VARIANTS_BY_ASPECT[aspect]?.includes(v.id),
+                  )
                   .map(v => (
                     <button
                       key={v.id}
@@ -1925,7 +1973,7 @@ export function ProductPreviewModal({
 
             )}
 
-            {(productKey === "poster" || productKey === "framedPoster") && variantId && !isPaidTrafficFunnel && (
+            {(productKey === "poster" || productKey === "canvas" || productKey === "framedPoster") && variantId && !isPaidTrafficFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -2081,6 +2129,11 @@ export function ProductPreviewModal({
             {productKey === "poster" && (
               <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 Ready to frame and display.
+              </p>
+            )}
+            {productKey === "canvas" && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Hand-stretched canvas with mounting brackets included.
               </p>
             )}
             {productKey === "framedPoster" && (

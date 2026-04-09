@@ -70,7 +70,11 @@ function resolvePricingVariant(order: {
     return size;
   }
 
-  if (order.productKey === "poster" || order.productKey === "framedPoster") {
+  if (
+    order.productKey === "poster" ||
+    order.productKey === "framedPoster" ||
+    order.productKey === "canvas"
+  ) {
     const posterSize = normalizePosterSize(order.size) ?? normalizePosterSize(order.variantName);
     if (!posterSize) throw new Error("Missing poster size for pricing.");
     return posterSize;
@@ -283,6 +287,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
         ![
           "poster",
           "framedPoster",
+          "canvas",
           "tshirt",
           "mug",
           "mugBlackGlossy",
@@ -416,6 +421,8 @@ export const printfulCheckoutRouter = createTRPCRouter({
                           ? "Custom Printed Mug"
                           : order.productKey === "coaster"
                           ? "Custom Printed Coaster"
+                          : order.productKey === "canvas"
+                          ? "Custom Printed Canvas"
                           : order.productKey === "framedPoster"
                           ? "Custom Printed Framed Poster"
                           : order.productKey === "tshirt"
