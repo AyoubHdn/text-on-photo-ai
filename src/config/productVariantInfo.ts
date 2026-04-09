@@ -19,6 +19,29 @@ export const POSTER_VARIANT_INFO: Record<string, string> = {
     "24x36 in (61 x 91.4 cm)\nExtra-large statement piece\nIdeal for feature walls and bold artwork",
 };
 
+export const FRAMED_POSTER_VARIANT_INFO: Record<string, string> = {
+  "8x10":
+    "8x10 in (20.3 x 25.4 cm)\nEnhanced matte paper in a lightweight ayous wood frame\nAcrylite front protector and hanging hardware included",
+  "10x10":
+    "10x10 in (25.4 x 25.4 cm)\nSquare framed format for desks, shelves, and gallery walls\nAcrylite front protector and hanging hardware included",
+  "12x12":
+    "12x12 in (30.5 x 30.5 cm)\nBalanced square framed print with clean modern presence\nAcrylite front protector and hanging hardware included",
+  "12x18":
+    "12x18 in (30.5 x 45.7 cm)\nClassic vertical framed format on enhanced matte paper\nAcrylite front protector and hanging hardware included",
+  "14x14":
+    "14x14 in (35.6 x 35.6 cm)\nBold square framed print for bedrooms and home offices\nAcrylite front protector and hanging hardware included",
+  "16x16":
+    "16x16 in (40.6 x 40.6 cm)\nStatement square framed print with lightweight construction\nAcrylite front protector and hanging hardware included",
+  "16x20":
+    "16x20 in (40.6 x 50.8 cm)\nPopular framed wall-art size with premium matte finish\nAcrylite front protector and hanging hardware included",
+  "18x18":
+    "18x18 in (45.7 x 45.7 cm)\nLarge square framed format with strong visual impact\nAcrylite front protector and hanging hardware included",
+  "20x30":
+    "20x30 in (50.8 x 76.2 cm)\nLarge framed poster for high-impact wall display\nAcrylite front protector and hanging hardware included",
+  "24x36":
+    "24x36 in (61 x 91.4 cm)\nExtra-large framed statement piece ready to hang\nAcrylite front protector and hanging hardware included",
+};
+
 export const MUG_VARIANT_INFO: Record<string, string> = {
   "11 oz":
     "11 oz (325 ml)\nHeight 3.8 in (9.6 cm), diameter 3.2 in (8.2 cm)\nClassic daily mug size, dishwasher & microwave safe",

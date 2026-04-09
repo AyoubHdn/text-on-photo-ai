@@ -3,6 +3,7 @@ type ProductType =
   | "mugBlackGlossy"
   | "mugColorInside"
   | "coaster"
+  | "framedPoster"
   | "tshirt"
   | "poster";
 
@@ -39,6 +40,13 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
           "Glossy top with cork backing",
           "Rounded corners and non-slip base",
           "Water-repellent and heat-resistant",
+          "Shipping available in selected countries",
+        ];
+      case "framedPoster":
+        return [
+          "Enhanced matte paper with ayous wood frame",
+          "Acrylite front protector included",
+          "Ready to hang with included hardware",
           "Shipping available in selected countries",
         ];
       case "tshirt":

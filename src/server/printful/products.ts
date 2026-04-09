@@ -15,6 +15,20 @@ export type PrintfulProduct =
       sizes: PosterSize[];
     }
   | {
+      key: "framedPoster";
+      name: string;
+      printfulProductId: number;
+      defaultVariantId: number;
+      defaultVariantIdByAspect: Partial<Record<PosterAspect, number>>;
+      variants: {
+        label: string;
+        variantId: number;
+        price: number;
+        color?: string;
+        colorHex?: string;
+      }[];
+    }
+  | {
       key: "mug" | "mugBlackGlossy" | "mugColorInside";
       name: string;
       printfulProductId: number;
@@ -60,6 +74,22 @@ export const PRINTFUL_PRODUCTS: PrintfulProduct[] = [
       { label: "10x10", variantId: 6239, price: 7.89, aspect: "1:1" },
       { label: "16x20", variantId: 3877, price: 10.89, aspect: "4:5" },
       { label: "20x30", variantId: 16365, price: 17.89, aspect: "3:2" },
+    ],
+  },
+  {
+    key: "framedPoster",
+    name: "Enhanced Matte Paper Framed Poster (in)",
+    printfulProductId: 2,
+    defaultVariantId: 4399,
+    defaultVariantIdByAspect: {
+      "1:1": 4652,
+      "4:5": 4399,
+      "3:2": 19520,
+    },
+    variants: [
+      { label: 'Black / 10"x10"', variantId: 4652, price: 23.41, color: "Black", colorHex: "#000000" },
+      { label: 'Black / 16"x20"', variantId: 4399, price: 41.77, color: "Black", colorHex: "#000000" },
+      { label: 'Black / 20"x30"', variantId: 19520, price: 55.08, color: "Black", colorHex: "#000000" },
     ],
   },
   {

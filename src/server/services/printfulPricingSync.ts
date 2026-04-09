@@ -57,6 +57,7 @@ const PRODUCT_TECHNIQUE_BY_TYPE: Record<SyncProductType, string> = {
   mugBlackGlossy: "sublimation",
   mugColorInside: "sublimation",
   coaster: "sublimation",
+  framedPoster: "digital",
   poster: "digital",
 };
 
@@ -114,6 +115,7 @@ const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProduct
   { productType: "mugBlackGlossy", printfulProductId: 300 },
   { productType: "mugColorInside", printfulProductId: 403 },
   { productType: "coaster", printfulProductId: 611 },
+  { productType: "framedPoster", printfulProductId: 2 },
   { productType: "tshirt", printfulProductId: 71 },
   { productType: "poster", printfulProductId: 1 },
 ];
