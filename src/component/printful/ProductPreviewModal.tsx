@@ -18,6 +18,7 @@ import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
   COASTER_VARIANT_INFO,
+  FRAMED_POSTER_VARIANT_INFO,
   MUG_BLACK_GLOSSY_VARIANT_INFO,
   MUG_COLOR_INSIDE_VARIANT_INFO,
   MUG_VARIANT_INFO,
@@ -162,6 +163,7 @@ export function ProductPreviewModal({
   const isRamadanMugOffer = productKey === "mug" && sourcePage === "ramadan-mug";
   const isTshirt = productKey === "tshirt";
   const isCoaster = productKey === "coaster";
+  const isFramedPoster = productKey === "framedPoster";
   const isMugProduct = isMugProductKey(productKey);
   const isMugBlackGlossy = productKey === "mugBlackGlossy";
   const isMugColorInside = productKey === "mugColorInside";
@@ -267,6 +269,19 @@ export function ProductPreviewModal({
     "16:9": [],                     // intentionally unsupported
   };
 
+  const FRAMED_POSTER_SIZE_KEYS_BY_ASPECT: Record<AspectRatio, string[]> = {
+    "1:1": ["10x10", "12x12", "14x14", "16x16", "18x18"],
+    "4:5": ["8x10", "16x20"],
+    "3:2": ["12x18", "20x30", "24x36"],
+    "16:9": [],
+  };
+
+  const FRAMED_POSTER_DEFAULT_VARIANT_BY_ASPECT: Partial<Record<AspectRatio, number>> = {
+    "1:1": 4652,
+    "4:5": 4399,
+    "3:2": 19520,
+  };
+
   // Unicode-safe poster size helpers (do not touch mug/t-shirt logic).
   const normalizePosterSizeKey = (size?: string | null): string | null => {
     if (!size) return null;
@@ -336,24 +351,41 @@ export function ProductPreviewModal({
     return `${match[1]}x${match[2]}`;
   };
 
-  // Poster info depends on async variant selection (Printful)
-  // Must be derived reactively from selectedVariant
-  const posterInfoText = useMemo(() => {
-    if (productKey !== "poster") return undefined;
-    const sizeKey =
-      extractPosterSizeKeySafe(selectedVariant?.size) ??
-      extractPosterSizeKeySafe(selectedVariant?.name) ??
-      (normalizePosterSizeKey(selectedVariant?.size) || null);
-    if (!sizeKey) return undefined;
+  const getPosterVariantSizeKey = (variant?: Variant | null): string | null =>
+    extractPosterSizeKeySafe(variant?.size) ??
+    extractPosterSizeKeySafe(variant?.name) ??
+    normalizePosterSizeKey(variant?.size);
 
-    return POSTER_VARIANT_INFO[sizeKey];
-  }, [productKey, selectedVariant]);
+  const selectedPosterSizeKey = getPosterVariantSizeKey(selectedVariant);
+  const posterInfoText =
+    productKey === "poster" && selectedPosterSizeKey
+      ? POSTER_VARIANT_INFO[selectedPosterSizeKey]
+      : undefined;
+  const framedPosterInfoText =
+    productKey === "framedPoster" && (selectedSize ?? selectedPosterSizeKey)
+      ? FRAMED_POSTER_VARIANT_INFO[selectedSize ?? selectedPosterSizeKey ?? ""]
+      : undefined;
+
+  const framedPosterVariantsForAspect = useMemo(() => {
+    if (!isFramedPoster) return [];
+
+    return variants.filter((variant) => {
+      const sizeKey = getPosterVariantSizeKey(variant);
+      return sizeKey
+        ? FRAMED_POSTER_SIZE_KEYS_BY_ASPECT[aspect]?.includes(sizeKey)
+        : false;
+    });
+  }, [aspect, isFramedPoster, variants]);
 
   const getVariantInfo = () => {
     if (!productKey) return "";
 
     if (productKey === "poster") {
       return posterInfoText ?? "";
+    }
+
+    if (productKey === "framedPoster") {
+      return framedPosterInfoText ?? "";
     }
 
     if (productKey === "mug") {
@@ -394,22 +426,42 @@ export function ProductPreviewModal({
     return "";
   };
 
-  const availableSizes = Array.from(
-    new Set(
-      variants
-        .filter((v) => !isMugColorInside || !selectedColor || v.color === selectedColor)
-        .map((v) => v.size)
-        .filter(Boolean),
-    ),
+  const availableSizes = useMemo(
+    () => {
+      const sizeOptions: Array<string | null | undefined> = isFramedPoster
+        ? framedPosterVariantsForAspect
+            .filter((v) => !selectedColor || v.color === selectedColor)
+            .map((v) => getPosterVariantSizeKey(v))
+        : variants
+            .filter((v) => !isMugColorInside || !selectedColor || v.color === selectedColor)
+            .map((v) => v.size);
+
+      return Array.from(
+        new Set(
+          sizeOptions.filter((value): value is string => Boolean(value)),
+        ),
+      );
+    },
+    [framedPosterVariantsForAspect, isFramedPoster, isMugColorInside, selectedColor, variants],
   );
 
-  const availableColors = Array.from(
-    new Set(
-      variants
-        .filter((v) => !selectedSize || v.size === selectedSize)
-        .map((v) => v.color)
-        .filter(Boolean),
-    ),
+  const availableColors = useMemo(
+    () => {
+      const colorOptions: Array<string | null | undefined> = isFramedPoster
+        ? framedPosterVariantsForAspect
+            .filter((v) => !selectedSize || getPosterVariantSizeKey(v) === selectedSize)
+            .map((v) => v.color)
+        : variants
+            .filter((v) => !selectedSize || v.size === selectedSize)
+            .map((v) => v.color);
+
+      return Array.from(
+        new Set(
+          colorOptions.filter((value): value is string => Boolean(value)),
+        ),
+      );
+    },
+    [framedPosterVariantsForAspect, isFramedPoster, selectedSize, variants],
   );
 
   const ensureDefaultSelection = (
@@ -424,6 +476,72 @@ export function ProductPreviewModal({
       const defaultVariant = nextVariants.find((v) => allowed?.includes(v.id));
       if (defaultVariant) {
         setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
+      }
+      return;
+    }
+
+    if (key === "framedPoster") {
+      const eligibleVariants = nextVariants.filter((variant) => {
+        const sizeKey = getPosterVariantSizeKey(variant);
+        return sizeKey
+          ? FRAMED_POSTER_SIZE_KEYS_BY_ASPECT[aspect]?.includes(sizeKey)
+          : false;
+      });
+
+      if (eligibleVariants.length === 0) {
+        setVariantId(null);
+        setSelectedSize(null);
+        setSelectedColor(null);
+        return;
+      }
+
+      const currentMatch =
+        selectedSize && selectedColor
+          ? eligibleVariants.find(
+              (variant) =>
+                getPosterVariantSizeKey(variant) === selectedSize &&
+                variant.color === selectedColor,
+            )
+          : null;
+
+      if (currentMatch) {
+        setVariantId(currentMatch.id);
+        return;
+      }
+
+      const defaultVariant =
+        eligibleVariants.find(
+          (variant) => variant.id === FRAMED_POSTER_DEFAULT_VARIANT_BY_ASPECT[aspect],
+        ) ??
+        eligibleVariants.find((variant) => variant.color === "Black") ??
+        eligibleVariants[0];
+      const defaultSize =
+        getPosterVariantSizeKey(defaultVariant) ?? getPosterVariantSizeKey(eligibleVariants[0]);
+      const colorsForSize = eligibleVariants
+        .filter((variant) => getPosterVariantSizeKey(variant) === defaultSize)
+        .map((variant) => variant.color)
+        .filter(Boolean);
+      const defaultColor =
+        defaultVariant?.color && colorsForSize.includes(defaultVariant.color)
+          ? defaultVariant.color
+          : colorsForSize.includes("Black")
+          ? "Black"
+          : colorsForSize[0];
+
+      if (defaultSize) setSelectedSize(defaultSize);
+      if (defaultColor) setSelectedColor(defaultColor);
+
+      const match =
+        eligibleVariants.find(
+          (variant) =>
+            getPosterVariantSizeKey(variant) === defaultSize &&
+            variant.color === defaultColor,
+        ) ?? defaultVariant;
+
+      if (match) {
+        setVariantId(match.id);
       } else {
         setVariantId(null);
       }
@@ -673,14 +791,31 @@ export function ProductPreviewModal({
       .then((res) => res.json())
       .then((data) => {
         const nextVariants = data.variants || [];
+        const hasAspectCompatibleVariant =
+          productKey === "poster"
+            ? nextVariants.some((variant: Variant) =>
+                POSTER_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+              )
+            : productKey === "framedPoster"
+            ? nextVariants.some((variant: Variant) => {
+                const sizeKey = getPosterVariantSizeKey(variant);
+                return sizeKey
+                  ? FRAMED_POSTER_SIZE_KEYS_BY_ASPECT[aspect]?.includes(sizeKey)
+                  : false;
+              })
+            : true;
         setVariants(nextVariants);
-        if (nextVariants.length === 0) {
+        if (nextVariants.length === 0 || !hasAspectCompatibleVariant) {
           setVariantId(null);
           setPreviewVariantId(null);
           setSelectedColor(null);
           setSelectedSize(null);
           setMugVariantId(null);
-          setAvailabilityError("This product is not available in the selected country.");
+          setAvailabilityError(
+            nextVariants.length === 0
+              ? "This product is not available in the selected country."
+              : "This design aspect is not available in the selected country.",
+          );
           return;
         }
         ensureDefaultSelection(productKey, nextVariants);
@@ -752,6 +887,69 @@ export function ProductPreviewModal({
       setVariantId(match.id);
     }
   }, [selectedColor, selectedSize, variants, isMugColorInside]);
+
+  useEffect(() => {
+    if (!isFramedPoster || !selectedColor || !selectedSize) return;
+
+    const match = framedPosterVariantsForAspect.find(
+      (variant) =>
+        variant.color === selectedColor && getPosterVariantSizeKey(variant) === selectedSize,
+    );
+
+    if (match) {
+      setVariantId(match.id);
+    }
+  }, [selectedColor, selectedSize, framedPosterVariantsForAspect, isFramedPoster]);
+
+  useEffect(() => {
+    if (!isFramedPoster || !selectedSize) return;
+
+    const colorsForSize = framedPosterVariantsForAspect
+      .filter((variant) => getPosterVariantSizeKey(variant) === selectedSize)
+      .map((variant) => variant.color)
+      .filter(Boolean) as string[];
+
+    if (colorsForSize.length === 0) return;
+
+    if (!selectedColor || !colorsForSize.includes(selectedColor)) {
+      const fallbackColor =
+        colorsForSize.includes("Black") ? "Black" : colorsForSize[0];
+      if (fallbackColor) {
+        setSelectedColor(fallbackColor);
+      }
+    }
+  }, [selectedColor, selectedSize, framedPosterVariantsForAspect, isFramedPoster]);
+
+  useEffect(() => {
+    if (!isFramedPoster || !selectedColor) return;
+
+    const sizesForColor = framedPosterVariantsForAspect
+      .filter((variant) => variant.color === selectedColor)
+      .map((variant) => getPosterVariantSizeKey(variant))
+      .filter(Boolean) as string[];
+
+    if (sizesForColor.length === 0) return;
+
+    if (!selectedSize || !sizesForColor.includes(selectedSize)) {
+      const defaultSizeFromAspect = FRAMED_POSTER_DEFAULT_VARIANT_BY_ASPECT[aspect]
+        ? getPosterVariantSizeKey(
+            framedPosterVariantsForAspect.find(
+              (variant) =>
+                variant.id === FRAMED_POSTER_DEFAULT_VARIANT_BY_ASPECT[aspect] &&
+                variant.color === selectedColor,
+            ),
+          )
+        : null;
+      const fallbackSize =
+        defaultSizeFromAspect && sizesForColor.includes(defaultSizeFromAspect)
+          ? defaultSizeFromAspect
+          : sizesForColor[0];
+
+      if (fallbackSize) {
+        setSelectedSize(fallbackSize);
+      }
+    }
+  }, [selectedColor, selectedSize, framedPosterVariantsForAspect, isFramedPoster, aspect]);
 
   useEffect(() => {
     if (!isMugColorInside || !selectedSize) return;
@@ -859,9 +1057,8 @@ export function ProductPreviewModal({
 
   const getPosterSizeLabel = () => {
     const sizeKey =
-      extractPosterSizeKeySafe(selectedVariant?.size) ??
-      extractPosterSizeKeySafe(selectedVariant?.name) ??
-      normalizePosterSizeKey(selectedVariant?.size);
+      (productKey === "framedPoster" ? selectedSize : null) ??
+      getPosterVariantSizeKey(selectedVariant);
     return sizeKey ? formatPosterSizeLabelSafe(sizeKey) : selectedVariant?.name;
   };
 
@@ -871,6 +1068,14 @@ export function ProductPreviewModal({
     if (productKey === "poster") {
       const sizeLabel = getPosterSizeLabel();
       return sizeLabel ? `Premium Poster (${sizeLabel})` : "Premium Poster";
+    }
+
+    if (productKey === "framedPoster") {
+      const sizeLabel = selectedSize ? formatPosterSizeLabelSafe(selectedSize) : getPosterSizeLabel();
+      const details = [sizeLabel, selectedColor].filter(Boolean).join(" / ");
+      return details
+        ? `Enhanced Matte Paper Framed Poster (${details})`
+        : "Enhanced Matte Paper Framed Poster";
     }
 
     if (productKey === "mug") {
@@ -914,7 +1119,7 @@ export function ProductPreviewModal({
       return selectedSize?.trim().toUpperCase() ?? null;
     }
 
-    if (productKey === "poster") {
+    if (productKey === "poster" || productKey === "framedPoster") {
       return (
         extractPosterSizeKeySafe(selectedVariant?.size) ??
         extractPosterSizeKeySafe(selectedVariant?.name) ??
@@ -986,12 +1191,18 @@ export function ProductPreviewModal({
     }
 
     const colorHex =
-      productKey === "tshirt" || productKey === "mugBlackGlossy" || productKey === "mugColorInside"
+      productKey === "tshirt" ||
+      productKey === "mugBlackGlossy" ||
+      productKey === "mugColorInside" ||
+      productKey === "framedPoster"
         ? selectedColor
           ? colorHexMap.get(selectedColor)
           : undefined
         : undefined;
-    const posterSize = productKey === "poster" ? getPosterSizeLabel() : undefined;
+    const posterSize =
+      productKey === "poster" || productKey === "framedPoster"
+        ? getPosterSizeLabel()
+        : undefined;
     const mugSize = isMugProduct
       ? (selectedVariant.size ?? selectedVariant.name)
       : undefined;
@@ -1010,7 +1221,7 @@ export function ProductPreviewModal({
       size:
         productKey === "tshirt"
           ? selectedSize ?? undefined
-          : productKey === "poster"
+          : productKey === "poster" || productKey === "framedPoster"
           ? posterSize ?? undefined
           : productKey === "coaster"
           ? selectedSize ?? selectedVariant.size ?? selectedVariant.name ?? undefined
@@ -1018,11 +1229,17 @@ export function ProductPreviewModal({
           ? mugSize ?? undefined
           : undefined,
       color:
-        productKey === "tshirt" || productKey === "mugBlackGlossy" || productKey === "mugColorInside"
+        productKey === "tshirt" ||
+        productKey === "mugBlackGlossy" ||
+        productKey === "mugColorInside" ||
+        productKey === "framedPoster"
           ? selectedColor ?? undefined
           : undefined,
       colorHex:
-        productKey === "tshirt" || productKey === "mugBlackGlossy" || productKey === "mugColorInside"
+        productKey === "tshirt" ||
+        productKey === "mugBlackGlossy" ||
+        productKey === "mugColorInside" ||
+        productKey === "framedPoster"
           ? colorHex
           : undefined,
       printPosition,
@@ -1429,6 +1646,67 @@ export function ProductPreviewModal({
             </div>
           )}
 
+            {isFramedPoster && (
+              <>
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    Frame color
+                  </h4>
+
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map((color) => {
+                      const resolvedColor = color ?? "";
+                      const hex = colorHexMap.get(resolvedColor) ?? "#e5e7eb";
+                      return (
+                        <button
+                          key={resolvedColor}
+                          type="button"
+                          onClick={() => setSelectedColor(resolvedColor)}
+                          className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+                            selectedColor === resolvedColor
+                              ? "bg-blue-500 border-blue-500 text-white"
+                              : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                          }`}
+                        >
+                          <span
+                            className="h-4 w-4 rounded-full border border-black/10"
+                            style={{ backgroundColor: hex }}
+                          />
+                          <span>{resolvedColor}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    Framed poster size
+                  </h4>
+
+                  <div className="flex flex-wrap gap-2">
+                    {availableSizes.map((sizeKey) => {
+                      const normalizedSizeKey = sizeKey ?? "";
+                      return (
+                        <button
+                          key={normalizedSizeKey}
+                          type="button"
+                          onClick={() => setSelectedSize(normalizedSizeKey)}
+                          className={`px-4 py-2 rounded-md border text-sm transition ${
+                            selectedSize === normalizedSizeKey
+                              ? "bg-blue-500 border-blue-500 text-white"
+                              : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                          }`}
+                        >
+                          {formatPosterSizeLabelSafe(normalizedSizeKey)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
             {isCoaster && (
               <div className="mb-4">
                 <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
@@ -1647,7 +1925,7 @@ export function ProductPreviewModal({
 
             )}
 
-            {productKey === "poster" && variantId && !isPaidTrafficFunnel && (
+            {(productKey === "poster" || productKey === "framedPoster") && variantId && !isPaidTrafficFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -1803,6 +2081,11 @@ export function ProductPreviewModal({
             {productKey === "poster" && (
               <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 Ready to frame and display.
+              </p>
+            )}
+            {productKey === "framedPoster" && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Ready to hang with included hardware.
               </p>
             )}
             {isCoaster && (

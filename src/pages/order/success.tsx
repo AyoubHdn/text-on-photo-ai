@@ -95,6 +95,8 @@ export default function OrderSuccess() {
       ? PRODUCT_PRESENTATION.mugColorInside.title
       : order?.productKey === "coaster"
       ? PRODUCT_PRESENTATION.coaster.title
+      : order?.productKey === "framedPoster"
+      ? PRODUCT_PRESENTATION.framedPoster.title
       : order?.productKey === "poster"
       ? PRODUCT_PRESENTATION.poster.title
       : "Product";
@@ -115,6 +117,8 @@ export default function OrderSuccess() {
       ? [order?.size, order?.color, order?.previewMode].filter(Boolean).join(" / ")
       : order?.productKey === "coaster"
       ? [order?.size].filter(Boolean).join(" / ")
+      : order?.productKey === "framedPoster"
+      ? [order?.size, order?.color].filter(Boolean).join(" / ")
       : order?.productKey === "poster"
       ? [order?.variantName, order?.size].filter(Boolean).join(" / ")
       : "";

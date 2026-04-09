@@ -74,6 +74,19 @@ function getCheckoutCopy(productKey: string) {
           "Free shipping included",
         ],
       };
+    case "framedPoster":
+      return {
+        personalizedLabel: "Your personalized framed poster",
+        subtitle: "Enhanced Matte Paper Framed Poster (in)",
+        fallbackDesignLabel: "Custom design selected for your framed poster",
+        benefitsTitle: "Why customers choose this framed poster",
+        benefits: [
+          "Enhanced matte paper in a lightweight wooden frame",
+          "Acrylite front protector included",
+          "Hanging hardware included",
+          "Free shipping included",
+        ],
+      };
     case "tshirt":
       return {
         personalizedLabel: "Your personalized t-shirt",
@@ -592,6 +605,8 @@ export default function CheckoutPage() {
         ? "t-shirt"
         : order?.productKey === "coaster"
         ? "coaster"
+        : order?.productKey === "framedPoster"
+        ? "framed poster"
         : order?.productKey === "poster"
         ? "poster"
         : "mug";
@@ -611,6 +626,7 @@ export default function CheckoutPage() {
 
     const PRODUCT_LABELS = {
     poster: PRODUCT_PRESENTATION.poster.title,
+    framedPoster: PRODUCT_PRESENTATION.framedPoster.title,
     tshirt: PRODUCT_PRESENTATION.tshirt.title,
     mug: PRODUCT_PRESENTATION.mug.title,
     mugBlackGlossy: PRODUCT_PRESENTATION.mugBlackGlossy.title,
@@ -695,9 +711,10 @@ export default function CheckoutPage() {
         issues.push("size");
         }
 
-        if (order.productKey === "poster") {
+        if (order.productKey === "poster" || order.productKey === "framedPoster") {
         if (!order.variantName) issues.push("variantName");
         if (!order.size) issues.push("size");
+        if (order.productKey === "framedPoster" && !order.color) issues.push("color");
         }
 
         return issues;
@@ -946,15 +963,28 @@ export default function CheckoutPage() {
             </p>
 
             <div className="mt-2 text-sm text-gray-600 space-y-1">
-                {order.productKey === "poster" && order.variantName && (
+                {(order.productKey === "poster" || order.productKey === "framedPoster") && order.variantName && (
                 <div>
                     <strong>Variant:</strong> {order.variantName}
                 </div>
                 )}
 
-                {order.productKey === "poster" && order.size && (
+                {(order.productKey === "poster" || order.productKey === "framedPoster") && order.size && (
                 <div>
                     <strong>Size:</strong> {order.size}
+                </div>
+                )}
+
+                {order.productKey === "framedPoster" && order.color && (
+                <div className="flex items-center gap-2">
+                    <strong>Frame color:</strong>
+                    {order.colorHex && (
+                    <span
+                    className="inline-block w-4 h-4 rounded-full border"
+                    style={{ backgroundColor: order.colorHex }}
+                    />
+                    )}
+                    {order.color}
                 </div>
                 )}
 

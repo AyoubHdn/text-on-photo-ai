@@ -79,7 +79,7 @@ function resolvePricingVariant(order: {
     return size;
   }
 
-  if (order.productKey === "poster") {
+  if (order.productKey === "poster" || order.productKey === "framedPoster") {
     const posterSize =
       normalizePosterSize(order.size) ?? normalizePosterSize(order.variantName);
     if (!posterSize) throw new Error("Missing poster size for pricing.");
@@ -126,6 +126,7 @@ export const productOrderRouter = createTRPCRouter({
       z.object({
         productKey: z.enum([
           "poster",
+          "framedPoster",
           "tshirt",
           "mug",
           "mugBlackGlossy",
@@ -320,6 +321,7 @@ export const productOrderRouter = createTRPCRouter({
         const productType =
           order.productKey as
             | "poster"
+            | "framedPoster"
             | "tshirt"
             | "mug"
             | "mugBlackGlossy"
@@ -455,6 +457,7 @@ export const productOrderRouter = createTRPCRouter({
         const productType =
           order.productKey as
             | "poster"
+            | "framedPoster"
             | "tshirt"
             | "mug"
             | "mugBlackGlossy"
