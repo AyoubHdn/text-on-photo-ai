@@ -144,6 +144,7 @@ async function fetchAvailableVariantIdsForCountry(
   sellingRegionName: string,
 ): Promise<Set<number>> {
   const availableVariantIds = new Set<number>();
+  const normalizedRequestedRegion = sellingRegionName.trim().toLowerCase();
   const params = new URLSearchParams({
     selling_region_name: sellingRegionName,
     limit: "100",
@@ -159,8 +160,10 @@ async function fetchAvailableVariantIdsForCountry(
       if (!Number.isFinite(variantId)) continue;
 
       const hasSellableTechnique = (item.techniques ?? []).some((technique) =>
-        (technique.selling_regions ?? []).some((region) =>
-          isSellableAvailability(region.availability),
+        (technique.selling_regions ?? []).some(
+          (region) =>
+            region.name?.trim().toLowerCase() === normalizedRequestedRegion &&
+            isSellableAvailability(region.availability),
         ),
       );
 
@@ -422,47 +425,20 @@ export async function runPricingSync() {
     }
 
     for (const countryCode of SYNC_COUNTRIES) {
+      const legacyAvailableVariantIds = getAvailableVariantIdsFromLegacyAvailability(
+        variants,
+        countryCode,
+      );
       const sellableRegion = SELLING_REGION_BY_COUNTRY[countryCode];
-      let availableVariantIds = new Set<number>();
-      let hasAvailabilityGate = false;
-
-      if (sellableRegion) {
-        try {
-          const v2AvailableVariantIds = await fetchAvailableVariantIdsForCountry(
-            productType,
-            printfulProductId,
-            sellableRegion,
-          );
-
-          if (v2AvailableVariantIds.size > 0) {
-            availableVariantIds = v2AvailableVariantIds;
-            hasAvailabilityGate = true;
-          }
-        } catch (error) {
-          console.warn(
-            `[PRICING_SYNC] Availability lookup failed for ${productType} in ${countryCode}; falling back to live pricing checks`,
-            error,
-          );
-        }
-      }
-
-      if (!hasAvailabilityGate && productType === "tshirt") {
-        const legacyAvailableVariantIds = getAvailableVariantIdsFromLegacyAvailability(
-          variants,
-          countryCode,
-        );
-
-        if (legacyAvailableVariantIds && legacyAvailableVariantIds.size > 0) {
-          availableVariantIds = legacyAvailableVariantIds;
-          hasAvailabilityGate = true;
-        }
-      }
-
-      if (!hasAvailabilityGate && productType !== "tshirt") {
-        console.warn(
-          `[PRICING_SYNC] Availability metadata missing or empty for ${productType} in ${countryCode}; probing variants via live pricing`,
-        );
-      }
+      const availableVariantIds =
+        legacyAvailableVariantIds ??
+        (sellableRegion
+          ? await fetchAvailableVariantIdsForCountry(
+              productType,
+              printfulProductId,
+              sellableRegion,
+            )
+          : new Set<number>());
       const existingPricingRows = await prisma.productPricingCache.findMany({
         where: {
           productType,
@@ -490,7 +466,7 @@ export async function runPricingSync() {
       let hadRateLimitError = false;
 
       for (const record of normalizedVariants) {
-        if (hasAvailabilityGate && !availableVariantIds.has(record.variantId)) {
+        if (!availableVariantIds.has(record.variantId)) {
           continue;
         }
 
