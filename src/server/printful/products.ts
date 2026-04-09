@@ -41,6 +41,19 @@ export type PrintfulProduct =
       }[];
     }
   | {
+      key: "journal";
+      name: string;
+      printfulProductId: number;
+      defaultVariantId: number;
+      variants: {
+        label: string;
+        variantId: number;
+        price: number;
+        color?: string;
+        colorHex?: string;
+      }[];
+    }
+  | {
       key: "mug" | "mugBlackGlossy" | "mugColorInside";
       name: string;
       printfulProductId: number;
@@ -127,6 +140,21 @@ export const PRINTFUL_PRODUCTS: PrintfulProduct[] = [
       { label: '12"x18"', variantId: 19299, price: 24.99 },
       { label: '20"x30"', variantId: 19311, price: 36.72 },
       { label: '24"x36"', variantId: 825, price: 52.02 },
+    ],
+  },
+  {
+    key: "journal",
+    name: "Hardcover Journal Matte",
+    printfulProductId: 867,
+    defaultVariantId: 22658,
+    variants: [
+      {
+        label: 'White / 8"x5.75"',
+        variantId: 22658,
+        price: 9.58,
+        color: "White",
+        colorHex: "#ffffff",
+      },
     ],
   },
   {

@@ -5,6 +5,7 @@ import {
   CANVAS_PRINT_CONFIG,
   COASTER_PRINT_CONFIG,
   FRAMED_POSTER_PRINT_CONFIG,
+  JOURNAL_PRINT_CONFIG,
   MUG_PRINT_CONFIG,
   POSTER_ASPECT_CONFIG,
   type PrintAreaConfig,
@@ -69,6 +70,24 @@ export async function createMockupTask(
   if (product.key === "canvas") {
     const config = CANVAS_PRINT_CONFIG[variantId];
     if (!config) throw new Error("Canvas print config not found");
+
+    files.push({
+      type: config.fileType,
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+  }
+
+  if (product.key === "journal") {
+    const config = JOURNAL_PRINT_CONFIG[variantId];
+    if (!config) throw new Error("Journal print config not found");
 
     files.push({
       type: config.fileType,

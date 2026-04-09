@@ -68,6 +68,22 @@ function normalizeCoasterSize(value?: string | null): string | null {
   return `${match[1]}x${match[2]}`;
 }
 
+function normalizeJournalSize(value?: string | null): string | null {
+  if (!value) return null;
+
+  const normalized = value
+    .replace(/\u2033/g, "")
+    .replace(/"/g, "")
+    .replace(/\u00d7/g, "x")
+    .replace(/Ã—/g, "x")
+    .replace(/\s+/g, "")
+    .trim();
+
+  const match = normalized.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  return `${match[1]}x${match[2]}`;
+}
+
 function resolvePricingVariant(order: {
   productKey: string;
   size: string | null;
@@ -104,6 +120,13 @@ function resolvePricingVariant(order: {
     return coasterSize;
   }
 
+  if (order.productKey === "journal") {
+    const journalSize =
+      normalizeJournalSize(order.size) ?? normalizeJournalSize(order.variantName);
+    if (!journalSize) throw new Error("Missing journal size for pricing.");
+    return journalSize;
+  }
+
   throw new Error("Unsupported product for pricing.");
 }
 
@@ -132,6 +155,7 @@ export const productOrderRouter = createTRPCRouter({
           "poster",
           "framedPoster",
           "canvas",
+          "journal",
           "tshirt",
           "mug",
           "mugBlackGlossy",
@@ -328,6 +352,7 @@ export const productOrderRouter = createTRPCRouter({
             | "poster"
             | "framedPoster"
             | "canvas"
+            | "journal"
             | "tshirt"
             | "mug"
             | "mugBlackGlossy"
@@ -465,6 +490,7 @@ export const productOrderRouter = createTRPCRouter({
             | "poster"
             | "framedPoster"
             | "canvas"
+            | "journal"
             | "tshirt"
             | "mug"
             | "mugBlackGlossy"

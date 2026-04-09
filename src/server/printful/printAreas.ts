@@ -193,6 +193,22 @@ export const CANVAS_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
   ...createPrintAreaMap([19323], CANVAS_30X40_PRINT_AREA),
 };
 
+/* ---------------- JOURNAL ---------------- */
+
+const JOURNAL_PRINT_AREA: PrintAreaConfig = {
+  fileType: "front",
+  areaWidth: 4065,
+  areaHeight: 2850,
+  width: 4065,
+  height: 2850,
+  top: 0,
+  left: 0,
+};
+
+export const JOURNAL_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
+  ...createPrintAreaMap([22658], JOURNAL_PRINT_AREA),
+};
+
 const MUG_11OZ_PRINT_AREA: PrintAreaConfig = {
   fileType: "default",
   areaWidth: 2700,

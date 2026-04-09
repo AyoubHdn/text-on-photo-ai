@@ -13,9 +13,14 @@ import { pollMockupTaskWithExtras } from "~/server/printful/pollMockup";
 import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
 import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
-import { COASTER_PRINT_CONFIG, MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import {
+  COASTER_PRINT_CONFIG,
+  JOURNAL_PRINT_CONFIG,
+  MUG_PRINT_CONFIG,
+} from "~/server/printful/printAreas";
 import sharp from "sharp";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
+import { generateRectangularPrintImage } from "~/server/printful/generateRectangularPrintImage";
 
 const MOCKUP_FETCH_ATTEMPTS = 3;
 const MOCKUP_FETCH_RETRY_MS = 1200;
@@ -199,6 +204,27 @@ export default async function handler(
       );
     }
 
+    /* ---------------- JOURNAL ---------------- */
+    else if (product.key === "journal") {
+      const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
+      const journalConfig = JOURNAL_PRINT_CONFIG[resolvedVariantId];
+
+      if (!journalConfig) {
+        throw new Error(`Invalid journal variant: ${resolvedVariantId}`);
+      }
+
+      const journalBuffer = await generateRectangularPrintImage({
+        inputBuffer: printReadyBuffer,
+        printWidth: journalConfig.areaWidth,
+        printHeight: journalConfig.areaHeight,
+      });
+
+      printImageUrl = await convertWebpToPngAndUpload(
+        journalBuffer,
+        uploadOwnerId
+      );
+    }
+
     /* ---------------- T-SHIRT ---------------- */
     else if (product.key === "tshirt") {
       const tshirtBuffer = await generateTshirtPrintImage({
@@ -271,6 +297,10 @@ export default async function handler(
       effectivePreviewMode = previewMode ?? product.defaultPreviewMode;
     }
     else if (product.key === "coaster") {
+      variantId = variantIdFromClient ?? product.defaultVariantId;
+      effectiveAspect = undefined;
+    }
+    else if (product.key === "journal") {
       variantId = variantIdFromClient ?? product.defaultVariantId;
       effectiveAspect = undefined;
     }

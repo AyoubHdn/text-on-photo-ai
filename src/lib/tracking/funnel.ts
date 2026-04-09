@@ -157,6 +157,7 @@ function inferProductType(options: FunnelContextOptions, sourcePage: string): st
 
   const key = normalize(options.productKey ?? undefined);
   if (key === "canvas") return "canvas";
+  if (key === "journal") return "journal";
   if (key === "framedposter") return "framed_poster";
   if (key === "mugcolorinside") return "mug_color_inside";
   if (key === "mugblackglossy") return "mug_black_glossy";

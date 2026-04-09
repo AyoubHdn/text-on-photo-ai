@@ -9,6 +9,7 @@ export const PRODUCT_MARGINS = {
   poster: 10,   // $10 margin
   framedPoster: 12, // $12 margin
   canvas: 12, // $12 margin
+  journal: 8, // $8 margin
   tshirt: 10,   // $10 margin
   mug: 8,       // $8 margin
   mugBlackGlossy: 8, // $8 margin

@@ -4,6 +4,7 @@ export type ProductKey =
   | "poster"
   | "framedPoster"
   | "canvas"
+  | "journal"
   | "tshirt"
   | "mug"
   | "mugBlackGlossy"
@@ -35,6 +36,13 @@ export const PRODUCT_PRESENTATION: Record<ProductKey, ProductPresentation> = {
     cardDescription: "Fade-resistant canvas print, hand-stretched and ready to hang",
     cardImage: "https://files.cdn.printful.com/o/products/3/product_1613463725.jpg",
     title: "Canvas (in)",
+  },
+  journal: {
+    cardLabel: "Hardcover Journal Matte",
+    cardDescription: "Matte laminated hardcover journal with 150 lined pages",
+    cardImage:
+      "https://files.cdn.printful.com/o/upload/product-catalog-img/74/748c0511a2d90ae39f7840ec77cfc203_l",
+    title: "Hardcover Journal Matte",
   },
   tshirt: {
     cardLabel: "T-Shirt",
@@ -74,6 +82,7 @@ export const PRODUCT_SUPPORTED_ASPECTS: Record<ProductKey, AspectRatio[]> = {
   poster: ["1:1", "4:5", "3:2"],
   framedPoster: ["1:1", "4:5", "3:2"],
   canvas: ["1:1", "4:5", "3:2"],
+  journal: ["1:1", "4:5", "3:2"],
   mug: ["1:1", "4:5", "3:2"],
   mugBlackGlossy: ["1:1", "4:5", "3:2"],
   mugColorInside: ["1:1", "4:5", "3:2"],
@@ -85,6 +94,7 @@ export const PRODUCTS_PAGE_PRODUCT_KEYS: ProductKey[] = [
   "poster",
   "framedPoster",
   "canvas",
+  "journal",
   "tshirt",
   "mug",
   "mugBlackGlossy",

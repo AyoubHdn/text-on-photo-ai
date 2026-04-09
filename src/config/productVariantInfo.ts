@@ -69,6 +69,11 @@ export const CANVAS_VARIANT_INFO: Record<string, string> = {
     "30x40 in (76.2 x 101.6 cm)\nExtra-large statement canvas with vivid color and depth\nHand-stretched over solid wood stretcher bars",
 };
 
+export const JOURNAL_VARIANT_INFO: Record<string, string> = {
+  "8x5.75":
+    "5.75 x 8 in (14.6 x 20.3 cm)\nMatte laminated hardcover with 150 lined cream-colored pages\nPerforated pages and flexible sewn spine",
+};
+
 export const MUG_VARIANT_INFO: Record<string, string> = {
   "11 oz":
     "11 oz (325 ml)\nHeight 3.8 in (9.6 cm), diameter 3.2 in (8.2 cm)\nClassic daily mug size, dishwasher & microwave safe",

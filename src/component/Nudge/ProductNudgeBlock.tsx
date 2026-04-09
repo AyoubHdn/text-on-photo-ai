@@ -4,6 +4,7 @@ type ProductType =
   | "mugColorInside"
   | "coaster"
   | "canvas"
+  | "journal"
   | "framedPoster"
   | "tshirt"
   | "poster";
@@ -56,6 +57,13 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
           "Hand-stretched over solid wood stretcher bars",
           "1.25 in thick canvas profile",
           "Shipping available in selected countries",
+        ];
+      case "journal":
+        return [
+          "Matte laminated hardcover",
+          "150 lined cream-colored pages",
+          "Perforated pages for easy tear-out",
+          "Available in the US",
         ];
       case "tshirt":
         return [

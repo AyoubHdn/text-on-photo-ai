@@ -15,7 +15,11 @@ import sharp from "sharp";
 import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
 import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
-import { COASTER_PRINT_CONFIG, MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import {
+  COASTER_PRINT_CONFIG,
+  JOURNAL_PRINT_CONFIG,
+  MUG_PRINT_CONFIG,
+} from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 import type { AspectRatio } from "~/server/printful/aspects";
 import type { MugPreviewMode } from "~/server/printful/previewModes";
@@ -26,6 +30,8 @@ import {
 } from "~/server/meta/sendConversionEvent";
 import { getProductOrderQuantity } from "~/server/orders/quantity";
 import { isMugProductKey } from "~/config/physicalProducts";
+import { PRODUCT_PLACEMENT } from "~/server/printful/placements";
+import { generateRectangularPrintImage } from "~/server/printful/generateRectangularPrintImage";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -215,6 +221,22 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             coasterBuffer,
             order.userId
           );
+        } else if (order.productKey === "journal") {
+          const journalConfig = JOURNAL_PRINT_CONFIG[order.variantId];
+          if (!journalConfig) {
+            throw new Error(`Invalid journal variant: ${order.variantId}`);
+          }
+
+          const journalBuffer = await generateRectangularPrintImage({
+            inputBuffer: printReadyBuffer,
+            printWidth: journalConfig.areaWidth,
+            printHeight: journalConfig.areaHeight,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            journalBuffer,
+            order.userId
+          );
         } else if (order.productKey === "tshirt") {
           const tshirtBuffer = await generateTshirtPrintImage({
             inputBuffer: buffer,
@@ -240,6 +262,8 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
       let draftOrder: { result?: { id?: number } };
       try {
+        const placementType =
+          PRODUCT_PLACEMENT[order.productKey as keyof typeof PRODUCT_PLACEMENT];
         draftOrder = await printfulRequest("/orders", "POST", {
           // Draft order created after payment
           recipient,
@@ -248,7 +272,11 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             {
               variant_id: order.variantId,
               quantity: orderQuantity,
-              files: [{ url: printImageUrl }],
+              files: [
+                placementType
+                  ? { url: printImageUrl, type: placementType }
+                  : { url: printImageUrl },
+              ],
             },
           ],
           confirm: false,

@@ -20,6 +20,7 @@ import {
   CANVAS_VARIANT_INFO,
   COASTER_VARIANT_INFO,
   FRAMED_POSTER_VARIANT_INFO,
+  JOURNAL_VARIANT_INFO,
   MUG_BLACK_GLOSSY_VARIANT_INFO,
   MUG_COLOR_INSIDE_VARIANT_INFO,
   MUG_VARIANT_INFO,
@@ -166,6 +167,7 @@ export function ProductPreviewModal({
   const isCoaster = productKey === "coaster";
   const isFramedPoster = productKey === "framedPoster";
   const isCanvas = productKey === "canvas";
+  const isJournal = productKey === "journal";
   const isMugProduct = isMugProductKey(productKey);
   const isMugBlackGlossy = productKey === "mugBlackGlossy";
   const isMugColorInside = productKey === "mugColorInside";
@@ -360,6 +362,23 @@ export function ProductPreviewModal({
     return `${match[1]}x${match[2]}`;
   };
 
+  const normalizeJournalSizeKey = (value?: string | null): string | null => {
+    if (!value) return null;
+
+    const normalized = value
+      .replace(/\u2033/g, "")
+      .replace(/"/g, "")
+      .replace(/\u00d7/g, "x")
+      .replace(/×/g, "x")
+      .replace(/\s+/g, "")
+      .trim();
+
+    const match = normalized.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/i);
+    if (!match) return null;
+
+    return `${match[1]}x${match[2]}`;
+  };
+
   const getPosterVariantSizeKey = (variant?: Variant | null): string | null =>
     extractPosterSizeKeySafe(variant?.size) ??
     extractPosterSizeKeySafe(variant?.name) ??
@@ -377,6 +396,15 @@ export function ProductPreviewModal({
   const framedPosterInfoText =
     productKey === "framedPoster" && (selectedSize ?? selectedPosterSizeKey)
       ? FRAMED_POSTER_VARIANT_INFO[selectedSize ?? selectedPosterSizeKey ?? ""]
+      : undefined;
+  const journalSizeKey =
+    productKey === "journal"
+      ? normalizeJournalSizeKey(selectedVariant?.size) ??
+        normalizeJournalSizeKey(selectedVariant?.name)
+      : undefined;
+  const journalInfoText =
+    productKey === "journal" && journalSizeKey
+      ? JOURNAL_VARIANT_INFO[journalSizeKey]
       : undefined;
 
   const framedPosterVariantsForAspect = useMemo(() => {
@@ -403,6 +431,10 @@ export function ProductPreviewModal({
 
     if (productKey === "framedPoster") {
       return framedPosterInfoText ?? "";
+    }
+
+    if (productKey === "journal") {
+      return journalInfoText ?? "";
     }
 
     if (productKey === "mug") {
@@ -677,6 +709,29 @@ export function ProductPreviewModal({
       const defaultVariant =
         nextVariants.find((v) => v.id === 15662) ??
         nextVariants.find((v) => (v.size ?? v.name)?.includes("3.74")) ??
+        nextVariants[0];
+
+      if (defaultVariant) {
+        setSelectedSize(defaultVariant.size ?? defaultVariant.name ?? null);
+        setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
+        setSelectedSize(null);
+      }
+      return;
+    }
+
+    if (key === "journal") {
+      const existingVariant = variantId && nextVariants.find((v) => v.id === variantId);
+      if (existingVariant) {
+        setSelectedSize(existingVariant.size ?? existingVariant.name ?? null);
+        setVariantId(existingVariant.id);
+        return;
+      }
+
+      const defaultVariant =
+        nextVariants.find((v) => v.id === 22658) ??
+        nextVariants.find((v) => (v.size ?? v.name)?.includes("5.75")) ??
         nextVariants[0];
 
       if (defaultVariant) {
@@ -1142,6 +1197,13 @@ export function ProductPreviewModal({
       return sizeLabel ? `Cork-Back Coaster (${sizeLabel})` : "Cork-Back Coaster";
     }
 
+    if (productKey === "journal") {
+      const sizeLabel = selectedSize ?? selectedVariant?.size ?? selectedVariant?.name;
+      return sizeLabel
+        ? `Hardcover Journal Matte (${sizeLabel})`
+        : "Hardcover Journal Matte";
+    }
+
     if (productKey === "tshirt") {
       const size = selectedSize;
       const color = selectedColor;
@@ -1181,6 +1243,13 @@ export function ProductPreviewModal({
       return (
         normalizeCoasterSizeKey(selectedVariant?.size) ??
         normalizeCoasterSizeKey(selectedVariant?.name)
+      );
+    }
+
+    if (productKey === "journal") {
+      return (
+        normalizeJournalSizeKey(selectedVariant?.size) ??
+        normalizeJournalSizeKey(selectedVariant?.name)
       );
     }
 
@@ -1268,6 +1337,8 @@ export function ProductPreviewModal({
           : productKey === "poster" || productKey === "canvas" || productKey === "framedPoster"
           ? posterSize ?? undefined
           : productKey === "coaster"
+          ? selectedSize ?? selectedVariant.size ?? selectedVariant.name ?? undefined
+          : productKey === "journal"
           ? selectedSize ?? selectedVariant.size ?? selectedVariant.name ?? undefined
           : isMugProduct
           ? mugSize ?? undefined
@@ -2144,6 +2215,11 @@ export function ProductPreviewModal({
             {isCoaster && (
               <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 Water-repellent coaster with cork backing.
+              </p>
+            )}
+            {isJournal && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Matte hardcover journal with 150 lined pages.
               </p>
             )}
 

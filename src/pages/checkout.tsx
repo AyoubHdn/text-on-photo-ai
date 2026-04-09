@@ -100,6 +100,19 @@ function getCheckoutCopy(productKey: string) {
           "Free shipping included",
         ],
       };
+    case "journal":
+      return {
+        personalizedLabel: "Your personalized journal",
+        subtitle: "Hardcover Journal Matte",
+        fallbackDesignLabel: "Custom design selected for your journal",
+        benefitsTitle: "Why customers choose this journal",
+        benefits: [
+          "Matte laminated hardcover",
+          "150 lined cream-colored pages",
+          "Perforated pages for easy tear-out",
+          "Free shipping included",
+        ],
+      };
     case "tshirt":
       return {
         personalizedLabel: "Your personalized t-shirt",
@@ -620,6 +633,8 @@ export default function CheckoutPage() {
         ? "coaster"
         : order?.productKey === "canvas"
         ? "canvas print"
+        : order?.productKey === "journal"
+        ? "journal"
         : order?.productKey === "framedPoster"
         ? "framed poster"
         : order?.productKey === "poster"
@@ -643,6 +658,7 @@ export default function CheckoutPage() {
     poster: PRODUCT_PRESENTATION.poster.title,
     framedPoster: PRODUCT_PRESENTATION.framedPoster.title,
     canvas: PRODUCT_PRESENTATION.canvas.title,
+    journal: PRODUCT_PRESENTATION.journal.title,
     tshirt: PRODUCT_PRESENTATION.tshirt.title,
     mug: PRODUCT_PRESENTATION.mug.title,
     mugBlackGlossy: PRODUCT_PRESENTATION.mugBlackGlossy.title,
@@ -724,6 +740,10 @@ export default function CheckoutPage() {
         }
 
         if (order.productKey === "coaster" && !order.size) {
+        issues.push("size");
+        }
+
+        if (order.productKey === "journal" && !order.size) {
         issues.push("size");
         }
 
@@ -1015,6 +1035,12 @@ export default function CheckoutPage() {
                 )}
 
                 {order.productKey === "coaster" && order.size && (
+                <div>
+                    <strong>Size:</strong> {order.size}
+                </div>
+                )}
+
+                {order.productKey === "journal" && order.size && (
                 <div>
                     <strong>Size:</strong> {order.size}
                 </div>

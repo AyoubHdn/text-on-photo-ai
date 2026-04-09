@@ -6,8 +6,13 @@ import sharp from "sharp";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
-import { COASTER_PRINT_CONFIG, MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import {
+  COASTER_PRINT_CONFIG,
+  JOURNAL_PRINT_CONFIG,
+  MUG_PRINT_CONFIG,
+} from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
+import { generateRectangularPrintImage } from "~/server/printful/generateRectangularPrintImage";
 
 const SIGNING_SECRET =
   process.env.NEXTAUTH_SECRET ?? process.env.PRINTFUL_API_KEY ?? "preview-secret";
@@ -123,6 +128,21 @@ export default async function handler(
           .toBuffer(),
         printWidth: coasterConfig.areaWidth,
         printHeight: coasterConfig.areaHeight,
+      });
+    } else if (product.key === "journal") {
+      const resolvedVariantId = Number(variantId ?? product.defaultVariantId);
+      const journalConfig = JOURNAL_PRINT_CONFIG[resolvedVariantId];
+      if (!journalConfig) {
+        return res.status(400).json({ error: "Invalid journal variant" });
+      }
+
+      outputBuffer = await generateRectangularPrintImage({
+        inputBuffer: await sharp(buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer(),
+        printWidth: journalConfig.areaWidth,
+        printHeight: journalConfig.areaHeight,
       });
     } else if (product.key === "tshirt") {
       outputBuffer = await generateTshirtPrintImage({
