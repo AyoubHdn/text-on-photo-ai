@@ -100,6 +100,19 @@ function getCheckoutCopy(productKey: string) {
           "Free shipping included",
         ],
       };
+    case "mugBlackGlossy":
+      return {
+        personalizedLabel: "Your personalized mug",
+        subtitle: "Black Glossy Mug",
+        fallbackDesignLabel: "Custom Arabic name design",
+        benefitsTitle: "Why customers choose this mug",
+        benefits: [
+          "Glossy black ceramic finish",
+          "Lead and BPA-free material",
+          "Dishwasher & microwave safe",
+          "Free shipping included",
+        ],
+      };
     case "mugColorInside":
       return {
         personalizedLabel: "Your personalized mug",
@@ -110,6 +123,19 @@ function getCheckoutCopy(productKey: string) {
           "Colored rim, inside, and handle",
           "Lead and BPA-free ceramic",
           "Dishwasher & microwave safe",
+          "Free shipping included",
+        ],
+      };
+    case "coaster":
+      return {
+        personalizedLabel: "Your personalized coaster",
+        subtitle: "Cork-Back Coaster",
+        fallbackDesignLabel: "Custom design selected for your coaster",
+        benefitsTitle: "Why customers choose this coaster",
+        benefits: [
+          "Glossy hardboard top with cork backing",
+          "Rounded corners and non-slip base",
+          "Water-repellent and heat-resistant",
           "Free shipping included",
         ],
       };
@@ -564,6 +590,8 @@ export default function CheckoutPage() {
     const quantityItemLabel =
       order?.productKey === "tshirt"
         ? "t-shirt"
+        : order?.productKey === "coaster"
+        ? "coaster"
         : order?.productKey === "poster"
         ? "poster"
         : "mug";
@@ -585,7 +613,9 @@ export default function CheckoutPage() {
     poster: PRODUCT_PRESENTATION.poster.title,
     tshirt: PRODUCT_PRESENTATION.tshirt.title,
     mug: PRODUCT_PRESENTATION.mug.title,
+    mugBlackGlossy: PRODUCT_PRESENTATION.mugBlackGlossy.title,
     mugColorInside: PRODUCT_PRESENTATION.mugColorInside.title,
+    coaster: PRODUCT_PRESENTATION.coaster.title,
     };
 
     const isFieldInvalid = (field: string) =>
@@ -655,8 +685,14 @@ export default function CheckoutPage() {
 
         if (isMugProductKey(order.productKey)) {
         if (!order.size) issues.push("size");
-        if (order.productKey === "mugColorInside" && !order.color) issues.push("color");
+        if ((order.productKey === "mugColorInside" || order.productKey === "mugBlackGlossy") && !order.color) {
+          issues.push("color");
+        }
         if (!order.previewMode) issues.push("printPosition");
+        }
+
+        if (order.productKey === "coaster" && !order.size) {
+        issues.push("size");
         }
 
         if (order.productKey === "poster") {
@@ -928,7 +964,13 @@ export default function CheckoutPage() {
                 </div>
                 )}
 
-                {(order.productKey === "tshirt" || order.productKey === "mugColorInside") && order.color && (
+                {order.productKey === "coaster" && order.size && (
+                <div>
+                    <strong>Size:</strong> {order.size}
+                </div>
+                )}
+
+                {(order.productKey === "tshirt" || order.productKey === "mugBlackGlossy" || order.productKey === "mugColorInside") && order.color && (
                 <div className="flex items-center gap-2">
                     <strong>Color:</strong>
                     <span

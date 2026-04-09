@@ -52,6 +52,22 @@ function normalizePosterSize(value?: string | null): string | null {
   return `${match[1]}x${match[2]}`;
 }
 
+function normalizeCoasterSize(value?: string | null): string | null {
+  if (!value) return null;
+
+  const normalized = value
+    .replace(/\u2033/g, "")
+    .replace(/"/g, "")
+    .replace(/\u00d7/g, "x")
+    .replace(/×/g, "x")
+    .replace(/\s+/g, "")
+    .trim();
+
+  const match = normalized.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  return `${match[1]}x${match[2]}`;
+}
+
 function resolvePricingVariant(order: {
   productKey: string;
   size: string | null;
@@ -75,6 +91,13 @@ function resolvePricingVariant(order: {
     const match = source.match(/(11|15|20)\s*oz/i);
     if (!match) throw new Error("Missing mug size for pricing.");
     return `${match[1]} oz`;
+  }
+
+  if (order.productKey === "coaster") {
+    const coasterSize =
+      normalizeCoasterSize(order.size) ?? normalizeCoasterSize(order.variantName);
+    if (!coasterSize) throw new Error("Missing coaster size for pricing.");
+    return coasterSize;
   }
 
   throw new Error("Unsupported product for pricing.");
@@ -101,7 +124,14 @@ export const productOrderRouter = createTRPCRouter({
   createPendingOrder: publicProcedure
     .input(
       z.object({
-        productKey: z.enum(["poster", "tshirt", "mug", "mugColorInside"]),
+        productKey: z.enum([
+          "poster",
+          "tshirt",
+          "mug",
+          "mugBlackGlossy",
+          "mugColorInside",
+          "coaster",
+        ]),
         variantId: z.number(),
         quantity: z.number().int().min(1).max(10).optional(),
         variantName: z.string().optional(),
@@ -287,7 +317,14 @@ export const productOrderRouter = createTRPCRouter({
         }
 
         const pricingVariant = resolvePricingVariant(order);
-        const productType = order.productKey as "poster" | "tshirt" | "mug" | "mugColorInside";
+        const productType =
+          order.productKey as
+            | "poster"
+            | "tshirt"
+            | "mug"
+            | "mugBlackGlossy"
+            | "mugColorInside"
+            | "coaster";
 
         let pricing;
         try {
@@ -415,7 +452,14 @@ export const productOrderRouter = createTRPCRouter({
         }
 
         const pricingVariant = resolvePricingVariant(order);
-        const productType = order.productKey as "poster" | "tshirt" | "mug" | "mugColorInside";
+        const productType =
+          order.productKey as
+            | "poster"
+            | "tshirt"
+            | "mug"
+            | "mugBlackGlossy"
+            | "mugColorInside"
+            | "coaster";
         const orderQuantity = await getProductOrderQuantity(order.id);
         let pricing;
         try {

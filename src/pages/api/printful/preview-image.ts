@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
+import type { NextApiRequest, NextApiResponse } from "next";
 import sharp from "sharp";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
-import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
+import { COASTER_PRINT_CONFIG, MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 
 const SIGNING_SECRET =
@@ -34,7 +35,7 @@ const signParams = (canonical: string) =>
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -44,9 +45,7 @@ export default async function handler(
   const imageUrl = String(req.query.imageUrl ?? "");
   const aspect = req.query.aspect ? String(req.query.aspect) : undefined;
   const variantId = req.query.variantId ? String(req.query.variantId) : undefined;
-  const previewMode = req.query.previewMode
-    ? String(req.query.previewMode)
-    : undefined;
+  const previewMode = req.query.previewMode ? String(req.query.previewMode) : undefined;
   const expiresAt = String(req.query.expiresAt ?? "");
   const signature = String(req.query.sig ?? "");
 
@@ -88,10 +87,13 @@ export default async function handler(
     }
 
     const buffer = Buffer.from(await imageRes.arrayBuffer());
-
     let outputBuffer: Buffer;
 
-    if (product.key === "mug" || product.key === "mugColorInside") {
+    if (
+      product.key === "mug" ||
+      product.key === "mugBlackGlossy" ||
+      product.key === "mugColorInside"
+    ) {
       const resolvedVariantId = Number(variantId ?? product.defaultVariantId);
       const mugConfig = MUG_PRINT_CONFIG[resolvedVariantId];
       if (!mugConfig) {
@@ -107,12 +109,27 @@ export default async function handler(
         outputHeight: mugConfig.areaHeight,
         mode: (previewMode as "two-side" | "center" | "full-wrap") ?? "two-side",
       });
+    } else if (product.key === "coaster") {
+      const resolvedVariantId = Number(variantId ?? product.defaultVariantId);
+      const coasterConfig = COASTER_PRINT_CONFIG[resolvedVariantId];
+      if (!coasterConfig) {
+        return res.status(400).json({ error: "Invalid coaster variant" });
+      }
+
+      outputBuffer = await generateCoasterPrintImage({
+        inputBuffer: await sharp(buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer(),
+        printWidth: coasterConfig.areaWidth,
+        printHeight: coasterConfig.areaHeight,
+      });
     } else if (product.key === "tshirt") {
       outputBuffer = await generateTshirtPrintImage({
         inputBuffer: buffer,
         printWidth: 3810,
         printHeight: 4572,
-        aspect: (aspect as any) ?? "1:1",
+        aspect: (aspect as "1:1" | "4:5" | "3:2" | "16:9") ?? "1:1",
       });
     } else {
       outputBuffer = await sharp(buffer)

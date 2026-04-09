@@ -8,12 +8,12 @@ import { authOptions } from "~/server/auth";
 import { env } from "~/env.mjs";
 
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
-
 import { createMockupTask } from "~/server/printful/mockup";
 import { pollMockupTaskWithExtras } from "~/server/printful/pollMockup";
 import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
+import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
-import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import { COASTER_PRINT_CONFIG, MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 import sharp from "sharp";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 
@@ -153,7 +153,11 @@ export default async function handler(
     }
 
     /* ---------------- MUG ---------------- */
-    else if (product.key === "mug" || product.key === "mugColorInside") {
+    else if (
+      product.key === "mug" ||
+      product.key === "mugBlackGlossy" ||
+      product.key === "mugColorInside"
+    ) {
       const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
       const mugConfig = MUG_PRINT_CONFIG[resolvedVariantId];
 
@@ -170,6 +174,27 @@ export default async function handler(
 
       printImageUrl = await convertWebpToPngAndUpload(
         wrappedBuffer,
+        uploadOwnerId
+      );
+    }
+
+    /* ---------------- COASTER ---------------- */
+    else if (product.key === "coaster") {
+      const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
+      const coasterConfig = COASTER_PRINT_CONFIG[resolvedVariantId];
+
+      if (!coasterConfig) {
+        throw new Error(`Invalid coaster variant: ${resolvedVariantId}`);
+      }
+
+      const coasterBuffer = await generateCoasterPrintImage({
+        inputBuffer: printReadyBuffer,
+        printWidth: coasterConfig.areaWidth,
+        printHeight: coasterConfig.areaHeight,
+      });
+
+      printImageUrl = await convertWebpToPngAndUpload(
+        coasterBuffer,
         uploadOwnerId
       );
     }
@@ -220,11 +245,18 @@ export default async function handler(
     }
 
     /* ---------------- MUG ---------------- */
-    else if (product.key === "mug" || product.key === "mugColorInside") {
+    else if (
+      product.key === "mug" ||
+      product.key === "mugBlackGlossy" ||
+      product.key === "mugColorInside"
+    ) {
       variantId = variantIdFromClient ?? product.defaultVariantId;
       effectiveAspect = undefined;
       effectivePreviewMode = previewMode ?? product.defaultPreviewMode;
-
+    }
+    else if (product.key === "coaster") {
+      variantId = variantIdFromClient ?? product.defaultVariantId;
+      effectiveAspect = undefined;
     }
 
     /* ---------------- T-SHIRT ---------------- */

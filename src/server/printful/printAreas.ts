@@ -97,11 +97,29 @@ export const MUG_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
   ...createPrintAreaMap([1320], MUG_11OZ_PRINT_AREA),
   ...createPrintAreaMap([4830], MUG_15OZ_PRINT_AREA),
   ...createPrintAreaMap([16586], MUG_20OZ_PRINT_AREA),
+  ...createPrintAreaMap([9323], MUG_11OZ_PRINT_AREA),
+  ...createPrintAreaMap([9324], MUG_15OZ_PRINT_AREA),
   ...createPrintAreaMap(
     [11051, 11050, 12579, 12578, 11049, 11048, 17362, 17359, 17358, 17361],
     MUG_11OZ_PRINT_AREA,
   ),
   ...createPrintAreaMap([17196, 17197, 22373, 17200, 17199, 17360], MUG_15OZ_PRINT_AREA),
+};
+
+/* ---------------- COASTER ---------------- */
+
+const COASTER_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 1181,
+  areaHeight: 1181,
+  width: 1181,
+  height: 1181,
+  top: 0,
+  left: 0,
+};
+
+export const COASTER_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
+  ...createPrintAreaMap([15662], COASTER_PRINT_AREA),
 };
 
 /* ---------------- T-SHIRT (DTG) ---------------- */

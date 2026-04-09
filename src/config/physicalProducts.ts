@@ -1,6 +1,12 @@
 import type { AspectRatio } from "~/server/printful/aspects";
 
-export type ProductKey = "poster" | "tshirt" | "mug" | "mugColorInside";
+export type ProductKey =
+  | "poster"
+  | "tshirt"
+  | "mug"
+  | "mugBlackGlossy"
+  | "mugColorInside"
+  | "coaster";
 
 export type ProductPresentation = {
   cardLabel: string;
@@ -28,18 +34,34 @@ export const PRODUCT_PRESENTATION: Record<ProductKey, ProductPresentation> = {
     cardImage: "/images/products/mug.webp",
     title: "White Glossy Mug",
   },
+  mugBlackGlossy: {
+    cardLabel: "Black Glossy Mug",
+    cardDescription: "Sleek glossy ceramic mug in classic black",
+    cardImage:
+      "https://files.cdn.printful.com/o/upload/product-catalog-img/2e/2e374a575d31ab64fa9cb7f1af7db269_l",
+    title: "Black Glossy Mug",
+  },
   mugColorInside: {
     cardLabel: "White Ceramic Mug with Color Inside",
     cardDescription: "Glossy ceramic mug with a colored rim, inside, and handle",
     cardImage: "https://files.cdn.printful.com/o/products/403/product_1595515161.jpg",
     title: "White Ceramic Mug with Color Inside",
   },
+  coaster: {
+    cardLabel: "Cork-Back Coaster",
+    cardDescription: "Glossy square coaster with cork backing and rounded corners",
+    cardImage:
+      "https://files.cdn.printful.com/o/upload/product-catalog-img/d4/d41d6e69b8c865b6a4546ce030775f2f_l",
+    title: "Cork-Back Coaster",
+  },
 };
 
 export const PRODUCT_SUPPORTED_ASPECTS: Record<ProductKey, AspectRatio[]> = {
   poster: ["1:1", "4:5", "3:2"],
   mug: ["1:1", "4:5", "3:2"],
+  mugBlackGlossy: ["1:1", "4:5", "3:2"],
   mugColorInside: ["1:1", "4:5", "3:2"],
+  coaster: ["1:1"],
   tshirt: ["1:1", "4:5", "3:2", "16:9"],
 };
 
@@ -47,11 +69,13 @@ export const PRODUCTS_PAGE_PRODUCT_KEYS: ProductKey[] = [
   "poster",
   "tshirt",
   "mug",
+  "mugBlackGlossy",
   "mugColorInside",
+  "coaster",
 ];
 
 export function isMugProductKey(
   value: string | null | undefined,
-): value is "mug" | "mugColorInside" {
-  return value === "mug" || value === "mugColorInside";
+): value is "mug" | "mugBlackGlossy" | "mugColorInside" {
+  return value === "mug" || value === "mugBlackGlossy" || value === "mugColorInside";
 }

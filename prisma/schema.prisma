@@ -179,7 +179,7 @@ model ProductOrder {
     userId       String
     user         User     @relation(fields: [userId], references: [id])
 
-    productKey   String   // poster | tshirt | mug
+    productKey   String   // poster | tshirt | mug | mugBlackGlossy | mugColorInside | coaster
     variantId    Int
     quantity     Int      @default(1)
     variantName  String?
@@ -187,7 +187,7 @@ model ProductOrder {
     color        String?
     colorHex     String?
     aspect       String?
-    previewMode  String?  // for mug: two-side | center
+    previewMode  String?  // for mug products: two-side | center
     previewVariantId Int?
     isBackgroundRemoved Boolean? @default(false)
     snapshotVariantId Int?

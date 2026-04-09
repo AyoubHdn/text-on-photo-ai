@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { printfulRequest } from "./client";
-import { PrintfulProduct } from "./products";
-import { POSTER_ASPECT_CONFIG, MUG_PRINT_CONFIG, PrintAreaConfig,} from "./printAreas";
-import { TSHIRT_PRINT_CONFIG } from "./tshirtPrintAreas";
 import { isMugProductKey } from "~/config/physicalProducts";
+import { printfulRequest } from "./client";
+import {
+  COASTER_PRINT_CONFIG,
+  MUG_PRINT_CONFIG,
+  POSTER_ASPECT_CONFIG,
+  type PrintAreaConfig,
+} from "./printAreas";
+import type { PrintfulProduct } from "./products";
+import { TSHIRT_PRINT_CONFIG } from "./tshirtPrintAreas";
 
 type MockupTaskResponse = {
   result: {
@@ -16,12 +21,11 @@ export async function createMockupTask(
   product: PrintfulProduct,
   imageUrl: string,
   variantId: number,
-  aspect?: string, // posters only
+  aspect?: string,
 ) {
   let printConfig: PrintAreaConfig | undefined;
   const files: any[] = [];
 
-  /* ---------- POSTER ---------- */
   if (product.key === "poster") {
     if (!aspect) throw new Error("Poster aspect missing");
 
@@ -42,36 +46,49 @@ export async function createMockupTask(
     });
   }
 
-  /* ---------- MUG ---------- */
   if (isMugProductKey(product.key)) {
     const config = MUG_PRINT_CONFIG[variantId];
     if (!config) throw new Error("Mug print config not found");
 
-    const { areaWidth, areaHeight } = config;
-
-    // ONE image, already prepared (two-side / center / wrap)
     files.push({
       type: config.fileType,
       image_url: imageUrl,
       position: {
-        area_width: areaWidth,
-        area_height: areaHeight,
-        width: areaWidth,
-        height: areaHeight,
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.areaWidth,
+        height: config.areaHeight,
         top: 0,
         left: 0,
       },
     });
   }
 
-  /* ---------- T-SHIRT ---------- */
+  if (product.key === "coaster") {
+    const config = COASTER_PRINT_CONFIG[variantId];
+    if (!config) throw new Error("Coaster print config not found");
+
+    files.push({
+      type: config.fileType,
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+  }
+
   if (product.key === "tshirt") {
     const placement = "front";
     const config = TSHIRT_PRINT_CONFIG[placement];
 
     files.push({
-      type: config.fileType, // "front"
-      image_url: imageUrl,   // already positioned PNG
+      type: config.fileType,
+      image_url: imageUrl,
       position: {
         area_width: config.areaWidth,
         area_height: config.areaHeight,
@@ -98,6 +115,6 @@ export async function createMockupTask(
   return printfulRequest<MockupTaskResponse>(
     `/mockup-generator/create-task/${product.printfulProductId}`,
     "POST",
-    payload
+    payload,
   );
 }

@@ -43,6 +43,22 @@ function normalizePosterSize(value?: string | null): string | null {
   return `${match[1]}x${match[2]}`;
 }
 
+function normalizeCoasterSize(value?: string | null): string | null {
+  if (!value) return null;
+
+  const normalized = value
+    .replace(/\u2033/g, "")
+    .replace(/"/g, "")
+    .replace(/\u00d7/g, "x")
+    .replace(/×/g, "x")
+    .replace(/\s+/g, "")
+    .trim();
+
+  const match = normalized.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  return `${match[1]}x${match[2]}`;
+}
+
 function resolvePricingVariant(order: {
   productKey: string;
   size: string | null;
@@ -65,6 +81,13 @@ function resolvePricingVariant(order: {
     const match = source.match(/(11|15|20)\s*oz/i);
     if (!match) throw new Error("Missing mug size for pricing.");
     return `${match[1]} oz`;
+  }
+
+  if (order.productKey === "coaster") {
+    const coasterSize =
+      normalizeCoasterSize(order.size) ?? normalizeCoasterSize(order.variantName);
+    if (!coasterSize) throw new Error("Missing coaster size for pricing.");
+    return coasterSize;
   }
 
   throw new Error("Unsupported product for pricing.");
@@ -256,7 +279,11 @@ export const printfulCheckoutRouter = createTRPCRouter({
       const pricingVariant = resolvePricingVariant(order);
       const productType = order.productKey as ProductType;
       const orderQuantity = await getProductOrderQuantity(order.id);
-      if (!["poster", "tshirt", "mug", "mugColorInside"].includes(productType)) {
+      if (
+        !["poster", "tshirt", "mug", "mugBlackGlossy", "mugColorInside", "coaster"].includes(
+          productType,
+        )
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Unsupported product type for pricing.",
@@ -379,6 +406,8 @@ export const printfulCheckoutRouter = createTRPCRouter({
                       name:
                         isMugProductKey(order.productKey)
                           ? "Custom Printed Mug"
+                          : order.productKey === "coaster"
+                          ? "Custom Printed Coaster"
                           : order.productKey === "tshirt"
                           ? "Custom Printed T-Shirt"
                           : "Custom Printed Poster",

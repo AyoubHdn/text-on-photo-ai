@@ -157,6 +157,8 @@ function inferProductType(options: FunnelContextOptions, sourcePage: string): st
 
   const key = normalize(options.productKey ?? undefined);
   if (key === "mugcolorinside") return "mug_color_inside";
+  if (key === "mugblackglossy") return "mug_black_glossy";
+  if (key === "coaster") return "coaster";
   if (key === "mug" || key === "poster" || key === "tshirt") {
     return key;
   }

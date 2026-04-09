@@ -13,8 +13,9 @@ import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { printfulRequest } from "~/server/printful/client";
 import sharp from "sharp";
 import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
+import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
-import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
+import { COASTER_PRINT_CONFIG, MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 import type { AspectRatio } from "~/server/printful/aspects";
 import type { MugPreviewMode } from "~/server/printful/previewModes";
@@ -196,6 +197,22 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
 
           printImageUrl = await convertWebpToPngAndUpload(
             wrappedBuffer,
+            order.userId
+          );
+        } else if (order.productKey === "coaster") {
+          const coasterConfig = COASTER_PRINT_CONFIG[order.variantId];
+          if (!coasterConfig) {
+            throw new Error(`Invalid coaster variant: ${order.variantId}`);
+          }
+
+          const coasterBuffer = await generateCoasterPrintImage({
+            inputBuffer: printReadyBuffer,
+            printWidth: coasterConfig.areaWidth,
+            printHeight: coasterConfig.areaHeight,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            coasterBuffer,
             order.userId
           );
         } else if (order.productKey === "tshirt") {

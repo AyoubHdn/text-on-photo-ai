@@ -17,9 +17,11 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
+  COASTER_VARIANT_INFO,
+  MUG_BLACK_GLOSSY_VARIANT_INFO,
   MUG_COLOR_INSIDE_VARIANT_INFO,
-  POSTER_VARIANT_INFO,
   MUG_VARIANT_INFO,
+  POSTER_VARIANT_INFO,
   TSHIRT_SIZE_INFO,
 } from "~/config/productVariantInfo";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
@@ -159,7 +161,9 @@ export function ProductPreviewModal({
   const shippingCountries = SHIPPING_COUNTRY_OPTIONS;
   const isRamadanMugOffer = productKey === "mug" && sourcePage === "ramadan-mug";
   const isTshirt = productKey === "tshirt";
+  const isCoaster = productKey === "coaster";
   const isMugProduct = isMugProductKey(productKey);
+  const isMugBlackGlossy = productKey === "mugBlackGlossy";
   const isMugColorInside = productKey === "mugColorInside";
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
@@ -315,6 +319,23 @@ export function ProductPreviewModal({
   const formatPosterSizeLabel = (sizeKey: string) =>
     sizeKey.replace(/x/g, "″×") + "″";
 
+  const normalizeCoasterSizeKey = (value?: string | null): string | null => {
+    if (!value) return null;
+
+    const normalized = value
+      .replace(/\u2033/g, "")
+      .replace(/"/g, "")
+      .replace(/\u00d7/g, "x")
+      .replace(/×/g, "x")
+      .replace(/\s+/g, "")
+      .trim();
+
+    const match = normalized.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/i);
+    if (!match) return null;
+
+    return `${match[1]}x${match[2]}`;
+  };
+
   // Poster info depends on async variant selection (Printful)
   // Must be derived reactively from selectedVariant
   const posterInfoText = useMemo(() => {
@@ -343,12 +364,27 @@ export function ProductPreviewModal({
       return mugMatch ? MUG_VARIANT_INFO[mugMatch] : "";
     }
 
+    if (productKey === "mugBlackGlossy") {
+      const mugName = selectedVariant?.name ?? "";
+      const mugMatch = Object.keys(MUG_BLACK_GLOSSY_VARIANT_INFO).find((key) =>
+        mugName.includes(key),
+      );
+      return mugMatch ? MUG_BLACK_GLOSSY_VARIANT_INFO[mugMatch] : "";
+    }
+
     if (productKey === "mugColorInside") {
       const mugName = selectedVariant?.name ?? "";
       const mugMatch = Object.keys(MUG_COLOR_INSIDE_VARIANT_INFO).find((key) =>
         mugName.includes(key),
       );
       return mugMatch ? MUG_COLOR_INSIDE_VARIANT_INFO[mugMatch] : "";
+    }
+
+    if (productKey === "coaster") {
+      const coasterSize =
+        normalizeCoasterSizeKey(selectedVariant?.size) ??
+        normalizeCoasterSizeKey(selectedVariant?.name);
+      return coasterSize ? COASTER_VARIANT_INFO[coasterSize] ?? "" : "";
     }
 
     if (productKey === "tshirt") {
@@ -414,6 +450,28 @@ export function ProductPreviewModal({
       return;
     }
 
+    if (key === "mugBlackGlossy") {
+      const existingVariant =
+        (variantId && nextVariants.find((v) => v.id === variantId)) ||
+        (mugVariantId && nextVariants.find((v) => v.id === mugVariantId));
+      if (existingVariant) {
+        setSelectedColor(existingVariant.color ?? null);
+        setMugVariantId(existingVariant.id);
+        setVariantId(existingVariant.id);
+        return;
+      }
+      const defaultMug =
+        nextVariants.find((v) => v.id === 9323) ??
+        nextVariants.find((v) => (v.size ?? v.name)?.toLowerCase().includes("11 oz")) ??
+        nextVariants[0];
+      if (defaultMug) {
+        setSelectedColor(defaultMug.color ?? null);
+        setMugVariantId(defaultMug.id);
+        setVariantId(defaultMug.id);
+      }
+      return;
+    }
+
     if (key === "mugColorInside") {
       const currentMatch =
         selectedSize && selectedColor
@@ -455,6 +513,29 @@ export function ProductPreviewModal({
       } else {
         setVariantId(null);
         setMugVariantId(null);
+      }
+      return;
+    }
+
+    if (key === "coaster") {
+      const existingVariant = variantId && nextVariants.find((v) => v.id === variantId);
+      if (existingVariant) {
+        setSelectedSize(existingVariant.size ?? existingVariant.name ?? null);
+        setVariantId(existingVariant.id);
+        return;
+      }
+
+      const defaultVariant =
+        nextVariants.find((v) => v.id === 15662) ??
+        nextVariants.find((v) => (v.size ?? v.name)?.includes("3.74")) ??
+        nextVariants[0];
+
+      if (defaultVariant) {
+        setSelectedSize(defaultVariant.size ?? defaultVariant.name ?? null);
+        setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
+        setSelectedSize(null);
       }
       return;
     }
@@ -797,6 +878,11 @@ export function ProductPreviewModal({
       return sizeLabel ? `White Glossy Mug (${sizeLabel})` : "White Glossy Mug";
     }
 
+    if (productKey === "mugBlackGlossy") {
+      const sizeLabel = selectedVariant?.size ?? selectedVariant?.name;
+      return sizeLabel ? `Black Glossy Mug (${sizeLabel})` : "Black Glossy Mug";
+    }
+
     if (productKey === "mugColorInside") {
       const details = [selectedVariant?.size, selectedVariant?.color]
         .filter(Boolean)
@@ -804,6 +890,11 @@ export function ProductPreviewModal({
       return details
         ? `White Ceramic Mug with Color Inside (${details})`
         : "White Ceramic Mug with Color Inside";
+    }
+
+    if (productKey === "coaster") {
+      const sizeLabel = selectedSize ?? selectedVariant?.size ?? selectedVariant?.name;
+      return sizeLabel ? `Cork-Back Coaster (${sizeLabel})` : "Cork-Back Coaster";
     }
 
     if (productKey === "tshirt") {
@@ -835,6 +926,13 @@ export function ProductPreviewModal({
       const mugSource = `${selectedVariant?.size ?? ""} ${selectedVariant?.name ?? ""}`.trim();
       const mugMatch = mugSource.match(/(11|15|20)\s*oz/i);
       return mugMatch ? `${mugMatch[1]} oz` : null;
+    }
+
+    if (productKey === "coaster") {
+      return (
+        normalizeCoasterSizeKey(selectedVariant?.size) ??
+        normalizeCoasterSizeKey(selectedVariant?.name)
+      );
     }
 
     return null;
@@ -888,7 +986,7 @@ export function ProductPreviewModal({
     }
 
     const colorHex =
-      productKey === "tshirt" || productKey === "mugColorInside"
+      productKey === "tshirt" || productKey === "mugBlackGlossy" || productKey === "mugColorInside"
         ? selectedColor
           ? colorHexMap.get(selectedColor)
           : undefined
@@ -914,15 +1012,17 @@ export function ProductPreviewModal({
           ? selectedSize ?? undefined
           : productKey === "poster"
           ? posterSize ?? undefined
+          : productKey === "coaster"
+          ? selectedSize ?? selectedVariant.size ?? selectedVariant.name ?? undefined
           : isMugProduct
           ? mugSize ?? undefined
           : undefined,
       color:
-        productKey === "tshirt" || productKey === "mugColorInside"
+        productKey === "tshirt" || productKey === "mugBlackGlossy" || productKey === "mugColorInside"
           ? selectedColor ?? undefined
           : undefined,
       colorHex:
-        productKey === "tshirt" || productKey === "mugColorInside"
+        productKey === "tshirt" || productKey === "mugBlackGlossy" || productKey === "mugColorInside"
           ? colorHex
           : undefined,
       printPosition,
@@ -1329,6 +1429,39 @@ export function ProductPreviewModal({
             </div>
           )}
 
+            {isCoaster && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                  Coaster size
+                </h4>
+
+                <div className="flex flex-wrap gap-2">
+                  {variants.map((v) => {
+                    const value = v.size ?? v.name;
+                    if (!value) return null;
+
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(value);
+                          setVariantId(v.id);
+                        }}
+                        className={`px-4 py-2 rounded-md border text-sm transition ${
+                          variantId === v.id
+                            ? "bg-blue-500 border-blue-500 text-white"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                        }`}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {isMugProduct && !isPaidTrafficFunnel && (
             <>
               {isMugColorInside && (
@@ -1388,6 +1521,9 @@ export function ProductPreviewModal({
 
                           const nextVariant = variants.find((v) => (v.size ?? v.name) === value);
                           if (!nextVariant) return;
+                          if (isMugBlackGlossy) {
+                            setSelectedColor(nextVariant.color ?? null);
+                          }
                           setMugVariantId(nextVariant.id);
                           setVariantId(nextVariant.id);
                         }}
@@ -1667,6 +1803,11 @@ export function ProductPreviewModal({
             {productKey === "poster" && (
               <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 Ready to frame and display.
+              </p>
+            )}
+            {isCoaster && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Water-repellent coaster with cork backing.
               </p>
             )}
 

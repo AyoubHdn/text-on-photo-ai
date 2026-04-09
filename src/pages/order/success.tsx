@@ -89,8 +89,12 @@ export default function OrderSuccess() {
       ? PRODUCT_PRESENTATION.tshirt.title
       : order?.productKey === "mug"
       ? PRODUCT_PRESENTATION.mug.title
+      : order?.productKey === "mugBlackGlossy"
+      ? PRODUCT_PRESENTATION.mugBlackGlossy.title
       : order?.productKey === "mugColorInside"
       ? PRODUCT_PRESENTATION.mugColorInside.title
+      : order?.productKey === "coaster"
+      ? PRODUCT_PRESENTATION.coaster.title
       : order?.productKey === "poster"
       ? PRODUCT_PRESENTATION.poster.title
       : "Product";
@@ -109,6 +113,8 @@ export default function OrderSuccess() {
       ? [order?.size, order?.color].filter(Boolean).join(" / ")
       : isMugProductKey(order?.productKey)
       ? [order?.size, order?.color, order?.previewMode].filter(Boolean).join(" / ")
+      : order?.productKey === "coaster"
+      ? [order?.size].filter(Boolean).join(" / ")
       : order?.productKey === "poster"
       ? [order?.variantName, order?.size].filter(Boolean).join(" / ")
       : "";

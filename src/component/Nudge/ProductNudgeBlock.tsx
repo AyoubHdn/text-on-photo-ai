@@ -1,4 +1,10 @@
-type ProductType = "mug" | "mugColorInside" | "tshirt" | "poster";
+type ProductType =
+  | "mug"
+  | "mugBlackGlossy"
+  | "mugColorInside"
+  | "coaster"
+  | "tshirt"
+  | "poster";
 
 type ProductNudgeBlockProps = {
   productType: ProductType;
@@ -14,11 +20,25 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
           "Printed with premium quality",
           "Shipping available in selected countries",
         ];
+      case "mugBlackGlossy":
+        return [
+          "Glossy black ceramic finish",
+          "Lead and BPA-free material",
+          "Dishwasher & microwave safe",
+          "Shipping available in selected countries",
+        ];
       case "mugColorInside":
         return [
           "Colored rim, inside, and handle",
           "Lead and BPA-free ceramic",
           "Dishwasher & microwave safe",
+          "Shipping available in selected countries",
+        ];
+      case "coaster":
+        return [
+          "Glossy top with cork backing",
+          "Rounded corners and non-slip base",
+          "Water-repellent and heat-resistant",
           "Shipping available in selected countries",
         ];
       case "tshirt":
