@@ -141,23 +141,11 @@ function isSellableAvailability(value?: string | null) {
 async function fetchAvailableVariantIdsForCountry(
   productType: SyncProductType,
   printfulProductId: number,
-  countryCode: string,
+  sellingRegionName: string,
 ): Promise<Set<number>> {
   const availableVariantIds = new Set<number>();
-  const acceptedRegionsByCountry: Record<string, string[]> = {
-    US: ["north_america", "worldwide"],
-    CA: ["canada", "worldwide"],
-    GB: ["uk", "europe", "worldwide"],
-    AU: ["australia", "worldwide"],
-    NZ: ["new_zealand", "australia", "worldwide"],
-  };
-  const acceptedRegions = new Set(
-    (acceptedRegionsByCountry[countryCode] ?? [SELLING_REGION_BY_COUNTRY[countryCode], "worldwide"])
-      .filter((value): value is string => Boolean(value))
-      .map((value) => value.trim().toLowerCase()),
-  );
   const params = new URLSearchParams({
-    selling_region_name: "all",
+    selling_region_name: sellingRegionName,
     limit: "100",
     techniques: PRODUCT_TECHNIQUE_BY_TYPE[productType],
   });
@@ -171,10 +159,8 @@ async function fetchAvailableVariantIdsForCountry(
       if (!Number.isFinite(variantId)) continue;
 
       const hasSellableTechnique = (item.techniques ?? []).some((technique) =>
-        (technique.selling_regions ?? []).some(
-          (region) =>
-            acceptedRegions.has(region.name?.trim().toLowerCase() ?? "") &&
-            isSellableAvailability(region.availability),
+        (technique.selling_regions ?? []).some((region) =>
+          isSellableAvailability(region.availability),
         ),
       );
 
@@ -438,39 +424,43 @@ export async function runPricingSync() {
     for (const countryCode of SYNC_COUNTRIES) {
       const sellableRegion = SELLING_REGION_BY_COUNTRY[countryCode];
       let availableVariantIds = new Set<number>();
-      let usedLegacyAvailability = false;
+      let hasAvailabilityGate = false;
 
       if (sellableRegion) {
         try {
-          availableVariantIds = await fetchAvailableVariantIdsForCountry(
+          const v2AvailableVariantIds = await fetchAvailableVariantIdsForCountry(
             productType,
             printfulProductId,
-            countryCode,
+            sellableRegion,
           );
+
+          if (v2AvailableVariantIds.size > 0) {
+            availableVariantIds = v2AvailableVariantIds;
+            hasAvailabilityGate = true;
+          }
         } catch (error) {
           console.warn(
-            `[PRICING_SYNC] V2 availability lookup failed for ${productType} in ${countryCode}; falling back to legacy availability metadata`,
+            `[PRICING_SYNC] Availability lookup failed for ${productType} in ${countryCode}; falling back to live pricing checks`,
             error,
           );
-          const legacyAvailableVariantIds = getAvailableVariantIdsFromLegacyAvailability(
-            variants,
-            countryCode,
-          );
-          availableVariantIds = legacyAvailableVariantIds ?? new Set<number>();
-          usedLegacyAvailability = true;
         }
-      } else {
+      }
+
+      if (!hasAvailabilityGate && productType === "tshirt") {
         const legacyAvailableVariantIds = getAvailableVariantIdsFromLegacyAvailability(
           variants,
           countryCode,
         );
-        availableVariantIds = legacyAvailableVariantIds ?? new Set<number>();
-        usedLegacyAvailability = true;
+
+        if (legacyAvailableVariantIds && legacyAvailableVariantIds.size > 0) {
+          availableVariantIds = legacyAvailableVariantIds;
+          hasAvailabilityGate = true;
+        }
       }
 
-      if (usedLegacyAvailability && availableVariantIds.size === 0) {
+      if (!hasAvailabilityGate && productType !== "tshirt") {
         console.warn(
-          `[PRICING_SYNC] No availability found for ${productType} in ${countryCode} using legacy metadata`,
+          `[PRICING_SYNC] Availability metadata missing or empty for ${productType} in ${countryCode}; probing variants via live pricing`,
         );
       }
       const existingPricingRows = await prisma.productPricingCache.findMany({
@@ -500,7 +490,7 @@ export async function runPricingSync() {
       let hadRateLimitError = false;
 
       for (const record of normalizedVariants) {
-        if (!availableVariantIds.has(record.variantId)) {
+        if (hasAvailabilityGate && !availableVariantIds.has(record.variantId)) {
           continue;
         }
 
