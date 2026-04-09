@@ -1,4 +1,5 @@
 import { prisma } from "~/server/db";
+import { isMugProductKey } from "~/config/physicalProducts";
 import { PRODUCT_MARGINS } from "~/server/credits/constants";
 
 const SAFETY_BUFFER_RATE = 0.2;
@@ -15,7 +16,7 @@ function getQuantityDiscount({
   quantity: number;
   unitTotalPrice: number;
 }) {
-  const discountedQuantity = productType === "mug" ? Math.max(quantity - 1, 0) : 0;
+  const discountedQuantity = isMugProductKey(productType) ? Math.max(quantity - 1, 0) : 0;
   const unitDiscountAmount =
     discountedQuantity > 0
       ? Number((unitTotalPrice * EXTRA_MUG_DISCOUNT_RATE).toFixed(2))
@@ -95,7 +96,9 @@ export async function calculateProductPriceFromCache({
     discountAmount: quantityDiscount.discountAmount,
     discountedQuantity: quantityDiscount.discountedQuantity,
     discountLabel:
-      quantityDiscount.discountAmount > 0 ? "20% off every extra mug" : null,
+      quantityDiscount.discountAmount > 0 && isMugProductKey(productType)
+        ? "20% off every extra mug"
+        : null,
     totalPrice: total,
     shippingIncluded: true,
     shippingCountry: normalizedCountry,

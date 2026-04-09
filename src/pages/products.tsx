@@ -5,12 +5,21 @@ import { useMemo, useState } from "react";
 import { Button } from "~/component/Button";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
-import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
+import {
+  PRODUCT_PRESENTATION,
+  PRODUCTS_PAGE_PRODUCT_KEYS,
+  PRODUCT_SUPPORTED_ASPECTS,
+  type ProductKey,
+} from "~/config/physicalProducts";
 import type { AspectRatio } from "~/server/printful/aspects";
 import { api } from "~/utils/api";
 
-type ProductKey = "poster" | "tshirt" | "mug";
-type ProductEntry = (typeof GENERATOR_PRODUCT_THUMBNAILS.default)[number];
+type ProductEntry = {
+  key: ProductKey;
+  label: string;
+  description: string;
+  image: string;
+};
 
 type UserIcon = {
   id: string;
@@ -18,12 +27,6 @@ type UserIcon = {
   metadata?: {
     aspectRatio?: string | null;
   } | null;
-};
-
-const PRODUCT_SUPPORTED_ASPECTS: Record<ProductKey, AspectRatio[]> = {
-  poster: ["1:1", "4:5", "3:2"],
-  mug: ["1:1", "4:5", "3:2"],
-  tshirt: ["1:1", "4:5", "3:2", "16:9"],
 };
 
 const DEFAULT_CREATE_PATH = "/name-art-generator";
@@ -56,7 +59,16 @@ const ProductsPage: NextPage = () => {
     enabled: isLoggedIn,
   });
 
-  const allProducts = GENERATOR_PRODUCT_THUMBNAILS.default as ProductEntry[];
+  const allProducts = useMemo<ProductEntry[]>(
+    () =>
+      PRODUCTS_PAGE_PRODUCT_KEYS.map((key) => ({
+        key,
+        label: PRODUCT_PRESENTATION[key].cardLabel,
+        description: PRODUCT_PRESENTATION[key].cardDescription,
+        image: PRODUCT_PRESENTATION[key].cardImage,
+      })),
+    [],
+  );
   const currentProduct = useMemo(
     () => allProducts.find((product) => product.key === selectedProduct) ?? null,
     [allProducts, selectedProduct],

@@ -5,6 +5,7 @@ import { SeoHead } from "~/component/SeoHead";
 import { api } from "~/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "~/lib/ga";
+import { PRODUCT_PRESENTATION, isMugProductKey } from "~/config/physicalProducts";
 
 export default function OrderSuccess() {
   const router = useRouter();
@@ -85,20 +86,31 @@ export default function OrderSuccess() {
   };
   const productLabel =
     order?.productKey === "tshirt"
-      ? "T-shirt"
+      ? PRODUCT_PRESENTATION.tshirt.title
       : order?.productKey === "mug"
-      ? "Mug"
+      ? PRODUCT_PRESENTATION.mug.title
+      : order?.productKey === "mugColorInside"
+      ? PRODUCT_PRESENTATION.mugColorInside.title
       : order?.productKey === "poster"
-      ? "Poster"
+      ? PRODUCT_PRESENTATION.poster.title
       : "Product";
 
-  const variantSummary =
+  const variantSummaryLegacy =
     order?.productKey === "tshirt"
       ? [order?.size, order?.color].filter(Boolean).join(" • ")
       : order?.productKey === "mug"
       ? [order?.size, order?.previewMode].filter(Boolean).join(" • ")
       : order?.productKey === "poster"
       ? [order?.variantName, order?.size].filter(Boolean).join(" • ")
+      : "";
+
+  const variantSummary =
+    order?.productKey === "tshirt"
+      ? [order?.size, order?.color].filter(Boolean).join(" / ")
+      : isMugProductKey(order?.productKey)
+      ? [order?.size, order?.color, order?.previewMode].filter(Boolean).join(" / ")
+      : order?.productKey === "poster"
+      ? [order?.variantName, order?.size].filter(Boolean).join(" / ")
       : "";
 
   const previewUrl = order?.mockupUrl || order?.imageUrl || "";

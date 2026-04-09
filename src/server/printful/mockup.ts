@@ -3,6 +3,7 @@ import { printfulRequest } from "./client";
 import { PrintfulProduct } from "./products";
 import { POSTER_ASPECT_CONFIG, MUG_PRINT_CONFIG, PrintAreaConfig,} from "./printAreas";
 import { TSHIRT_PRINT_CONFIG } from "./tshirtPrintAreas";
+import { isMugProductKey } from "~/config/physicalProducts";
 
 type MockupTaskResponse = {
   result: {
@@ -42,7 +43,7 @@ export async function createMockupTask(
   }
 
   /* ---------- MUG ---------- */
-  if (product.key === "mug") {
+  if (isMugProductKey(product.key)) {
     const config = MUG_PRINT_CONFIG[variantId];
     if (!config) throw new Error("Mug print config not found");
 

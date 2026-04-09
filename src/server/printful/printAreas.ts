@@ -56,39 +56,52 @@ export const POSTER_ASPECT_CONFIG: Record<AspectRatio, PrintAreaConfig> = {
 
 /* ---------------- MUGS ---------------- */
 
+const MUG_11OZ_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 2700,
+  areaHeight: 1050,
+  width: 2700,
+  height: 1050,
+  top: 0,
+  left: 0,
+};
+
+const MUG_15OZ_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 2700,
+  areaHeight: 1140,
+  width: 2700,
+  height: 1140,
+  top: 0,
+  left: 0,
+};
+
+const MUG_20OZ_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 3070,
+  areaHeight: 1200,
+  width: 3070,
+  height: 1200,
+  top: 0,
+  left: 0,
+};
+
+function createPrintAreaMap(
+  variantIds: number[],
+  config: PrintAreaConfig,
+): Record<number, PrintAreaConfig> {
+  return Object.fromEntries(variantIds.map((variantId) => [variantId, config]));
+}
+
 export const MUG_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
-  // 11 oz
-  1320: {
-    fileType: "default",
-    areaWidth: 2700,
-    areaHeight: 1050,
-    width: 2700,
-    height: 1050,
-    top: 0,
-    left: 0,
-  },
-
-  // 15 oz
-  4830: {
-    fileType: "default",
-    areaWidth: 2700,
-    areaHeight: 1140,
-    width: 2700,
-    height: 1140,
-    top: 0,
-    left: 0,
-  },
-
-  // 20 oz
-  16586: {
-    fileType: "default",
-    areaWidth: 3070,
-    areaHeight: 1200,
-    width: 3070,
-    height: 1200,
-    top: 0,
-    left: 0,
-  },
+  ...createPrintAreaMap([1320], MUG_11OZ_PRINT_AREA),
+  ...createPrintAreaMap([4830], MUG_15OZ_PRINT_AREA),
+  ...createPrintAreaMap([16586], MUG_20OZ_PRINT_AREA),
+  ...createPrintAreaMap(
+    [11051, 11050, 12579, 12578, 11049, 11048, 17362, 17359, 17358, 17361],
+    MUG_11OZ_PRINT_AREA,
+  ),
+  ...createPrintAreaMap([17196, 17197, 22373, 17200, 17199, 17360], MUG_15OZ_PRINT_AREA),
 };
 
 /* ---------------- T-SHIRT (DTG) ---------------- */

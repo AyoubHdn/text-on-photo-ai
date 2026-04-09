@@ -9,4 +9,5 @@ export const PRODUCT_MARGINS = {
   poster: 10,   // $10 margin
   tshirt: 10,   // $10 margin
   mug: 8,       // $8 margin
+  mugColorInside: 8, // $8 margin
 } as const;

@@ -6,5 +6,6 @@ export type PrintfulPlacement =
 export const PRODUCT_PLACEMENT = {
   poster: "default",
   mug: "default",
+  mugColorInside: "default",
   tshirt: "front_large",
 } as const;

@@ -20,6 +20,7 @@ import { verifyGuestOrderToken } from "~/server/guestOrderToken";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { resolveCheckoutUser } from "~/server/checkout/resolveCheckoutUser";
 import { getProductOrderQuantity } from "~/server/orders/quantity";
+import { isMugProductKey } from "~/config/physicalProducts";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -59,7 +60,7 @@ function resolvePricingVariant(order: {
     return posterSize;
   }
 
-  if (order.productKey === "mug") {
+  if (isMugProductKey(order.productKey)) {
     const source = `${order.size ?? ""} ${order.variantName ?? ""}`.trim();
     const match = source.match(/(11|15|20)\s*oz/i);
     if (!match) throw new Error("Missing mug size for pricing.");
@@ -255,7 +256,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
       const pricingVariant = resolvePricingVariant(order);
       const productType = order.productKey as ProductType;
       const orderQuantity = await getProductOrderQuantity(order.id);
-      if (!["poster", "tshirt", "mug"].includes(productType)) {
+      if (!["poster", "tshirt", "mug", "mugColorInside"].includes(productType)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Unsupported product type for pricing.",
@@ -342,7 +343,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
         const fullPriceUnitAmount = Math.round(pricing.unitTotalPrice * 100);
         const discountedUnitAmount = Math.round(pricing.discountedUnitTotalPrice * 100);
         const discountAppliedToExtraMugs =
-          order.productKey === "mug" &&
+          isMugProductKey(order.productKey) &&
           orderQuantity >= 2 &&
           pricing.discountAmount > 0;
         const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
@@ -376,7 +377,7 @@ export const printfulCheckoutRouter = createTRPCRouter({
                     currency: "usd",
                     product_data: {
                       name:
-                        order.productKey === "mug"
+                        isMugProductKey(order.productKey)
                           ? "Custom Printed Mug"
                           : order.productKey === "tshirt"
                           ? "Custom Printed T-Shirt"

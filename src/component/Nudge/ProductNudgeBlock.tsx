@@ -1,4 +1,4 @@
-type ProductType = "mug" | "tshirt" | "poster";
+type ProductType = "mug" | "mugColorInside" | "tshirt" | "poster";
 
 type ProductNudgeBlockProps = {
   productType: ProductType;
@@ -12,6 +12,13 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
           "High-quality glossy ceramic",
           "Dishwasher & microwave safe",
           "Printed with premium quality",
+          "Shipping available in selected countries",
+        ];
+      case "mugColorInside":
+        return [
+          "Colored rim, inside, and handle",
+          "Lead and BPA-free ceramic",
+          "Dishwasher & microwave safe",
           "Shipping available in selected countries",
         ];
       case "tshirt":

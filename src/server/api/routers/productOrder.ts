@@ -24,6 +24,7 @@ import {
   getProductOrderQuantity,
   setProductOrderQuantity,
 } from "~/server/orders/quantity";
+import { isMugProductKey } from "~/config/physicalProducts";
 
 const TRUSTED_S3_HOST = `${env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com`;
 
@@ -69,7 +70,7 @@ function resolvePricingVariant(order: {
     return posterSize;
   }
 
-  if (order.productKey === "mug") {
+  if (isMugProductKey(order.productKey)) {
     const source = `${order.size ?? ""} ${order.variantName ?? ""}`.trim();
     const match = source.match(/(11|15|20)\s*oz/i);
     if (!match) throw new Error("Missing mug size for pricing.");
@@ -100,7 +101,7 @@ export const productOrderRouter = createTRPCRouter({
   createPendingOrder: publicProcedure
     .input(
       z.object({
-        productKey: z.enum(["poster", "tshirt", "mug"]),
+        productKey: z.enum(["poster", "tshirt", "mug", "mugColorInside"]),
         variantId: z.number(),
         quantity: z.number().int().min(1).max(10).optional(),
         variantName: z.string().optional(),
@@ -286,7 +287,7 @@ export const productOrderRouter = createTRPCRouter({
         }
 
         const pricingVariant = resolvePricingVariant(order);
-        const productType = order.productKey as "poster" | "tshirt" | "mug";
+        const productType = order.productKey as "poster" | "tshirt" | "mug" | "mugColorInside";
 
         let pricing;
         try {
@@ -414,7 +415,7 @@ export const productOrderRouter = createTRPCRouter({
         }
 
         const pricingVariant = resolvePricingVariant(order);
-        const productType = order.productKey as "poster" | "tshirt" | "mug";
+        const productType = order.productKey as "poster" | "tshirt" | "mug" | "mugColorInside";
         const orderQuantity = await getProductOrderQuantity(order.id);
         let pricing;
         try {

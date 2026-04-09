@@ -24,6 +24,7 @@ import {
   sendMetaPurchaseEvent,
 } from "~/server/meta/sendConversionEvent";
 import { getProductOrderQuantity } from "~/server/orders/quantity";
+import { isMugProductKey } from "~/config/physicalProducts";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -180,7 +181,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
           .withMetadata({ density: 300 })
           .toBuffer();
 
-        if (order.productKey === "mug") {
+        if (isMugProductKey(order.productKey)) {
           const mugConfig = MUG_PRINT_CONFIG[order.variantId];
           if (!mugConfig) {
             throw new Error(`Invalid mug variant: ${order.variantId}`);

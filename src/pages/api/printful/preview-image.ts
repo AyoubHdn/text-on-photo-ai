@@ -91,8 +91,8 @@ export default async function handler(
 
     let outputBuffer: Buffer;
 
-    if (product.key === "mug") {
-      const resolvedVariantId = Number(variantId ?? 1320);
+    if (product.key === "mug" || product.key === "mugColorInside") {
+      const resolvedVariantId = Number(variantId ?? product.defaultVariantId);
       const mugConfig = MUG_PRINT_CONFIG[resolvedVariantId];
       if (!mugConfig) {
         return res.status(400).json({ error: "Invalid mug variant" });

@@ -28,6 +28,13 @@ export const MUG_VARIANT_INFO: Record<string, string> = {
     "20 oz (590 ml)\nHeight 4.3 in (10.9 cm), diameter 3.7 in (9.3 cm)\nExtra-large mug for long drinks or all-day use",
 };
 
+export const MUG_COLOR_INSIDE_VARIANT_INFO: Record<string, string> = {
+  "11 oz":
+    "11 oz (325 ml)\nHeight 3.79 in (9.6 cm), diameter 3.25 in (8.3 cm)\nLead and BPA-free ceramic with colored rim, inside, and handle\nDishwasher & microwave safe",
+  "15 oz":
+    "15 oz (444 ml)\nHeight 4.69 in (11.9 cm), diameter 3.35 in (8.5 cm)\nLead and BPA-free ceramic with colored rim, inside, and handle\nDishwasher & microwave safe",
+};
+
 export const TSHIRT_SIZE_INFO: Record<string, string> = {
   XS:
     "XS\nSlim fit with a snug feel\nBest for a fitted, tailored look",

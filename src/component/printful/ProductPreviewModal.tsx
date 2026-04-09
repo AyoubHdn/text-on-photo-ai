@@ -17,11 +17,17 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
+  MUG_COLOR_INSIDE_VARIANT_INFO,
   POSTER_VARIANT_INFO,
   MUG_VARIANT_INFO,
   TSHIRT_SIZE_INFO,
 } from "~/config/productVariantInfo";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
+import {
+  PRODUCT_PRESENTATION,
+  isMugProductKey,
+  type ProductKey,
+} from "~/config/physicalProducts";
 
 type Variant = {
   id: number;
@@ -35,7 +41,7 @@ type Variant = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  productKey: "poster" | "tshirt" | "mug" | null;
+  productKey: ProductKey | null;
   imageUrl: string | null;
   aspect: AspectRatio;
   onCooldownStart?: (seconds: number) => void;
@@ -46,7 +52,7 @@ type Props = {
 };
 
 type SelectedProductConfig = {
-  productKey: "poster" | "tshirt" | "mug";
+  productKey: ProductKey;
   variantId: number;
   variantName: string;
   size?: string;
@@ -152,6 +158,9 @@ export function ProductPreviewModal({
   const [offerRemainingSeconds, setOfferRemainingSeconds] = useState(0);
   const shippingCountries = SHIPPING_COUNTRY_OPTIONS;
   const isRamadanMugOffer = productKey === "mug" && sourcePage === "ramadan-mug";
+  const isTshirt = productKey === "tshirt";
+  const isMugProduct = isMugProductKey(productKey);
+  const isMugColorInside = productKey === "mugColorInside";
 
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
   const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
@@ -334,6 +343,14 @@ export function ProductPreviewModal({
       return mugMatch ? MUG_VARIANT_INFO[mugMatch] : "";
     }
 
+    if (productKey === "mugColorInside") {
+      const mugName = selectedVariant?.name ?? "";
+      const mugMatch = Object.keys(MUG_COLOR_INSIDE_VARIANT_INFO).find((key) =>
+        mugName.includes(key),
+      );
+      return mugMatch ? MUG_COLOR_INSIDE_VARIANT_INFO[mugMatch] : "";
+    }
+
     if (productKey === "tshirt") {
       return selectedSize ? TSHIRT_SIZE_INFO[selectedSize] ?? "" : "";
     }
@@ -341,39 +358,22 @@ export function ProductPreviewModal({
     return "";
   };
 
-  const isTshirt = productKey === "tshirt";
-
-  const colors = isTshirt
-    ? Array.from(
-        new Map(
-          variants
-            .filter(v => v.color)
-            .map(v => [v.color!, v])
-        ).keys()
-      )
-    : [];
-
-  const sizes = isTshirt
-    ? Array.from(
-        new Set(
-          variants
-            .filter(v => v.size)
-            .map(v => v.size!)
-        )
-      )
-    : [];
-
-    const availableSizes = Array.from(
-      new Set(variants.map(v => v.size).filter(Boolean))
-    );
+  const availableSizes = Array.from(
+    new Set(
+      variants
+        .filter((v) => !isMugColorInside || !selectedColor || v.color === selectedColor)
+        .map((v) => v.size)
+        .filter(Boolean),
+    ),
+  );
 
   const availableColors = Array.from(
     new Set(
       variants
-        .filter(v => !selectedSize || v.size === selectedSize)
-        .map(v => v.color)
-        .filter(Boolean)
-    )
+        .filter((v) => !selectedSize || v.size === selectedSize)
+        .map((v) => v.color)
+        .filter(Boolean),
+    ),
   );
 
   const ensureDefaultSelection = (
@@ -410,6 +410,51 @@ export function ProductPreviewModal({
       if (defaultMug) {
         setMugVariantId(defaultMug.id);
         setVariantId(defaultMug.id);
+      }
+      return;
+    }
+
+    if (key === "mugColorInside") {
+      const currentMatch =
+        selectedSize && selectedColor
+          ? nextVariants.find(
+              (v) => v.size === selectedSize && v.color === selectedColor,
+            )
+          : null;
+      if (currentMatch) {
+        setMugVariantId(currentMatch.id);
+        setVariantId(currentMatch.id);
+        return;
+      }
+
+      const defaultVariant =
+        nextVariants.find((v) => v.size === "11 oz" && v.color === "Black") ??
+        nextVariants.find((v) => v.size === "11 oz") ??
+        nextVariants[0];
+      const defaultSize = defaultVariant?.size ?? nextVariants[0]?.size;
+      const colorsForSize = nextVariants
+        .filter((v) => v.size === defaultSize)
+        .map((v) => v.color)
+        .filter(Boolean);
+      const defaultColor =
+        defaultVariant?.color && colorsForSize.includes(defaultVariant.color)
+          ? defaultVariant.color
+          : colorsForSize.includes("Black")
+          ? "Black"
+          : colorsForSize[0];
+
+      if (defaultSize) setSelectedSize(defaultSize);
+      if (defaultColor) setSelectedColor(defaultColor);
+
+      const match =
+        nextVariants.find((v) => v.size === defaultSize && v.color === defaultColor) ??
+        defaultVariant;
+      if (match) {
+        setMugVariantId(match.id);
+        setVariantId(match.id);
+      } else {
+        setVariantId(null);
+        setMugVariantId(null);
       }
       return;
     }
@@ -614,6 +659,56 @@ export function ProductPreviewModal({
     }
   }, [selectedSize, variants, isTshirt]);
 
+  useEffect(() => {
+    if (!isMugColorInside || !selectedColor || !selectedSize) return;
+
+    const match = variants.find(
+      (v) => v.color === selectedColor && v.size === selectedSize,
+    );
+
+    if (match) {
+      setMugVariantId(match.id);
+      setVariantId(match.id);
+    }
+  }, [selectedColor, selectedSize, variants, isMugColorInside]);
+
+  useEffect(() => {
+    if (!isMugColorInside || !selectedSize) return;
+
+    const colorsForSize = variants
+      .filter((v) => v.size === selectedSize)
+      .map((v) => v.color)
+      .filter(Boolean) as string[];
+
+    if (colorsForSize.length === 0) return;
+
+    if (!selectedColor || !colorsForSize.includes(selectedColor)) {
+      const fallbackColor =
+        colorsForSize.includes("Black") ? "Black" : colorsForSize[0];
+      if (fallbackColor) {
+        setSelectedColor(fallbackColor);
+      }
+    }
+  }, [selectedColor, selectedSize, variants, isMugColorInside]);
+
+  useEffect(() => {
+    if (!isMugColorInside || !selectedColor) return;
+
+    const sizesForColor = variants
+      .filter((v) => v.color === selectedColor)
+      .map((v) => v.size)
+      .filter(Boolean) as string[];
+
+    if (sizesForColor.length === 0) return;
+
+    if (!selectedSize || !sizesForColor.includes(selectedSize)) {
+      const fallbackSize = sizesForColor.includes("11 oz") ? "11 oz" : sizesForColor[0];
+      if (fallbackSize) {
+        setSelectedSize(fallbackSize);
+      }
+    }
+  }, [selectedColor, selectedSize, variants, isMugColorInside]);
+
 
   const colorHexMap = new Map<string, string>();
 
@@ -702,6 +797,15 @@ export function ProductPreviewModal({
       return sizeLabel ? `White Glossy Mug (${sizeLabel})` : "White Glossy Mug";
     }
 
+    if (productKey === "mugColorInside") {
+      const details = [selectedVariant?.size, selectedVariant?.color]
+        .filter(Boolean)
+        .join(" / ");
+      return details
+        ? `White Ceramic Mug with Color Inside (${details})`
+        : "White Ceramic Mug with Color Inside";
+    }
+
     if (productKey === "tshirt") {
       const size = selectedSize;
       const color = selectedColor;
@@ -727,9 +831,13 @@ export function ProductPreviewModal({
       );
     }
 
-    const mugSource = `${selectedVariant?.size ?? ""} ${selectedVariant?.name ?? ""}`.trim();
-    const mugMatch = mugSource.match(/(11|15|20)\s*oz/i);
-    return mugMatch ? `${mugMatch[1]} oz` : null;
+    if (isMugProductKey(productKey)) {
+      const mugSource = `${selectedVariant?.size ?? ""} ${selectedVariant?.name ?? ""}`.trim();
+      const mugMatch = mugSource.match(/(11|15|20)\s*oz/i);
+      return mugMatch ? `${mugMatch[1]} oz` : null;
+    }
+
+    return null;
   };
 
   const pricingVariant = getPricingVariant();
@@ -779,12 +887,19 @@ export function ProductPreviewModal({
       return null;
     }
 
-    const colorHex = selectedColor ? colorHexMap.get(selectedColor) : undefined;
+    const colorHex =
+      productKey === "tshirt" || productKey === "mugColorInside"
+        ? selectedColor
+          ? colorHexMap.get(selectedColor)
+          : undefined
+        : undefined;
     const posterSize = productKey === "poster" ? getPosterSizeLabel() : undefined;
-    const mugSize = productKey === "mug" ? (selectedVariant.size ?? selectedVariant.name) : undefined;
+    const mugSize = isMugProduct
+      ? (selectedVariant.size ?? selectedVariant.name)
+      : undefined;
 
     const printPosition =
-      productKey === "mug"
+      isMugProduct
         ? mugPreviewMode === "center"
           ? "center"
           : "two-side"
@@ -799,11 +914,17 @@ export function ProductPreviewModal({
           ? selectedSize ?? undefined
           : productKey === "poster"
           ? posterSize ?? undefined
-          : productKey === "mug"
+          : isMugProduct
           ? mugSize ?? undefined
           : undefined,
-      color: productKey === "tshirt" ? selectedColor ?? undefined : undefined,
-      colorHex: productKey === "tshirt" ? colorHex : undefined,
+      color:
+        productKey === "tshirt" || productKey === "mugColorInside"
+          ? selectedColor ?? undefined
+          : undefined,
+      colorHex:
+        productKey === "tshirt" || productKey === "mugColorInside"
+          ? colorHex
+          : undefined,
       printPosition,
       aspect,
       variantIdUsedForPreview: previewVariantId,
@@ -964,7 +1085,7 @@ export function ProductPreviewModal({
       return;
     }
     const previewOverride =
-      productKey === "mug"
+      isMugProduct
         ? { variantId: mugVariantId ?? undefined, previewMode: mugPreviewMode }
         : { variantId: variantId ?? undefined };
 
@@ -1104,9 +1225,7 @@ export function ProductPreviewModal({
             {/* Product title */}
             <div className="flex items-center gap-2 mb-1">
               <h4 className="text-xl font-semibold capitalize">
-                {productKey === "poster" && "Premium Poster"}
-                {productKey === "tshirt" && "Unisex T-Shirt"}
-                {productKey === "mug" && "White Glossy Mug"}
+                {productKey ? PRODUCT_PRESENTATION[productKey].title : ""}
               </h4>
               {infoText && (
                 <span className="relative inline-flex items-center group/info">
@@ -1210,31 +1329,78 @@ export function ProductPreviewModal({
             </div>
           )}
 
-            {productKey === "mug" && !isPaidTrafficFunnel && (
+            {isMugProduct && !isPaidTrafficFunnel && (
             <>
+              {isMugColorInside && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    Inside color
+                  </h4>
+
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map((color) => {
+                      const resolvedColor = color ?? "";
+                      const hex = colorHexMap.get(resolvedColor) ?? "#e5e7eb";
+                      return (
+                        <button
+                          key={resolvedColor}
+                          type="button"
+                          onClick={() => setSelectedColor(resolvedColor)}
+                          className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+                            selectedColor === resolvedColor
+                              ? "bg-blue-500 border-blue-500 text-white"
+                              : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                          }`}
+                        >
+                          <span
+                            className="h-4 w-4 rounded-full border border-black/10"
+                            style={{ backgroundColor: hex }}
+                          />
+                          <span>{resolvedColor}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Mug size selector */}
               <div className="mb-4">
                 <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Mug size</h4>
 
-                <div className="flex gap-2">
-                  {variants.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => {
-                        setMugVariantId(v.id);
-                        setVariantId(v.id);
-                      }}
-                      className={`px-4 py-2 rounded-md border text-sm transition
-                        ${
-                          mugVariantId === v.id
+                <div className="flex flex-wrap gap-2">
+                  {(isMugColorInside ? availableSizes : variants.map((v) => v.size ?? v.name)).map((value) => {
+                    if (!value) return null;
+                    const isActive = isMugColorInside
+                      ? selectedSize === value
+                      : variants.find((v) => v.id === mugVariantId)?.size === value ||
+                        variants.find((v) => v.id === mugVariantId)?.name === value;
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => {
+                          if (isMugColorInside) {
+                            setSelectedSize(value);
+                            return;
+                          }
+
+                          const nextVariant = variants.find((v) => (v.size ?? v.name) === value);
+                          if (!nextVariant) return;
+                          setMugVariantId(nextVariant.id);
+                          setVariantId(nextVariant.id);
+                        }}
+                        className={`px-4 py-2 rounded-md border text-sm transition ${
+                          isActive
                             ? "bg-blue-500 border-blue-500 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
-                        }
-                      `}
-                    >
-                      {v.size ?? v.name}
-                    </button>
-                  ))}
+                        }`}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1355,7 +1521,7 @@ export function ProductPreviewModal({
               </Button>
             )}
 
-            {productKey === "mug" && mugVariantId && !isPaidTrafficFunnel && (
+            {isMugProduct && mugVariantId && !isPaidTrafficFunnel && (
             <Button
               className="w-full mb-4"
               disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -1488,7 +1654,7 @@ export function ProductPreviewModal({
               Continue to checkout
             </Button>
 
-            {productKey === "mug" && (
+            {isMugProduct && (
               <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 Order today - ships in 2–4 business days.
               </p>

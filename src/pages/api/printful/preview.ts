@@ -153,8 +153,8 @@ export default async function handler(
     }
 
     /* ---------------- MUG ---------------- */
-    else if (product.key === "mug") {
-      const resolvedVariantId = variantIdFromClient ?? 1320;
+    else if (product.key === "mug" || product.key === "mugColorInside") {
+      const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
       const mugConfig = MUG_PRINT_CONFIG[resolvedVariantId];
 
       if (!mugConfig) {
@@ -220,11 +220,8 @@ export default async function handler(
     }
 
     /* ---------------- MUG ---------------- */
-    else if (product.key === "mug") {
-      // Default to 11oz if user didn't select a size yet
-      const DEFAULT_MUG_VARIANT = 1320; // White Glossy Mug 11 oz
-
-      variantId = variantIdFromClient ?? DEFAULT_MUG_VARIANT;
+    else if (product.key === "mug" || product.key === "mugColorInside") {
+      variantId = variantIdFromClient ?? product.defaultVariantId;
       effectiveAspect = undefined;
       effectivePreviewMode = previewMode ?? product.defaultPreviewMode;
 

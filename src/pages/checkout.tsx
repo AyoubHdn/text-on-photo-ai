@@ -16,6 +16,7 @@ import { TRPCClientError } from "@trpc/client";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext, markEventTrackedOnce } from "~/lib/tracking/funnel";
 import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
+import { PRODUCT_PRESENTATION, isMugProductKey } from "~/config/physicalProducts";
 
 const KNOWN_SOURCE_PAGES = new Set([
   "arabic-name-art-generator",
@@ -38,7 +39,7 @@ export function formatPrice(value: number) {
 }
 
 function getDeliveryEstimate(productKey: string, countryCode: string): string {
-  if (productKey !== "mug") {
+  if (!isMugProductKey(productKey)) {
     return "Estimated delivery shown at payment step";
   }
 
@@ -87,6 +88,31 @@ function getCheckoutCopy(productKey: string) {
         ],
       };
     case "mug":
+      return {
+        personalizedLabel: "Your personalized mug",
+        subtitle: "Personalized Arabic Calligraphy Mug",
+        fallbackDesignLabel: "Custom Arabic name design",
+        benefitsTitle: "Why customers choose this mug",
+        benefits: [
+          "High-quality glossy ceramic",
+          "Dishwasher & microwave safe",
+          "Printed with premium inks",
+          "Free shipping included",
+        ],
+      };
+    case "mugColorInside":
+      return {
+        personalizedLabel: "Your personalized mug",
+        subtitle: "White Ceramic Mug with Color Inside",
+        fallbackDesignLabel: "Custom Arabic name design",
+        benefitsTitle: "Why customers choose this mug",
+        benefits: [
+          "Colored rim, inside, and handle",
+          "Lead and BPA-free ceramic",
+          "Dishwasher & microwave safe",
+          "Free shipping included",
+        ],
+      };
     default:
       return {
         personalizedLabel: "Your personalized mug",
@@ -533,7 +559,7 @@ export default function CheckoutPage() {
       Number(checkoutPricingQuery.data?.discountedQuantity ?? Math.max(orderQuantity - 1, 0)),
     );
     const hasExtraMugDiscount =
-      order?.productKey === "mug" && discountAmount > 0;
+      isMugProductKey(order?.productKey) && discountAmount > 0;
     const checkoutCopy = getCheckoutCopy(order?.productKey ?? "mug");
     const quantityItemLabel =
       order?.productKey === "tshirt"
@@ -546,7 +572,7 @@ export default function CheckoutPage() {
       address.country,
     );
     const quantityOfferCopy =
-      order?.productKey === "mug"
+      isMugProductKey(order?.productKey)
         ? hasExtraMugDiscount
           ? `20% off applied to ${discountedQuantity} extra mug${discountedQuantity > 1 ? "s" : ""}. You save $${formatPrice(discountAmount)}.`
           : "Add more mugs and get 20% off every mug after the first."
@@ -556,9 +582,10 @@ export default function CheckoutPage() {
       : checkoutCopy.fallbackDesignLabel;
 
     const PRODUCT_LABELS = {
-    poster: "Premium Poster",
-    tshirt: "Unisex T-Shirt",
-    mug: "White Glossy Mug",
+    poster: PRODUCT_PRESENTATION.poster.title,
+    tshirt: PRODUCT_PRESENTATION.tshirt.title,
+    mug: PRODUCT_PRESENTATION.mug.title,
+    mugColorInside: PRODUCT_PRESENTATION.mugColorInside.title,
     };
 
     const isFieldInvalid = (field: string) =>
@@ -626,8 +653,9 @@ export default function CheckoutPage() {
         if (!order.color) issues.push("color");
         }
 
-        if (order.productKey === "mug") {
+        if (isMugProductKey(order.productKey)) {
         if (!order.size) issues.push("size");
+        if (order.productKey === "mugColorInside" && !order.color) issues.push("color");
         if (!order.previewMode) issues.push("printPosition");
         }
 
@@ -900,7 +928,7 @@ export default function CheckoutPage() {
                 </div>
                 )}
 
-                {order.productKey === "tshirt" && order.color && (
+                {(order.productKey === "tshirt" || order.productKey === "mugColorInside") && order.color && (
                 <div className="flex items-center gap-2">
                     <strong>Color:</strong>
                     <span
@@ -911,7 +939,7 @@ export default function CheckoutPage() {
                 </div>
                 )}
 
-                {order.productKey === "mug" && order.size && (
+                {isMugProductKey(order.productKey) && order.size && (
                 <div>
                     <strong>Size:</strong> {order.size}
                 </div>
@@ -921,7 +949,7 @@ export default function CheckoutPage() {
                     <strong>Quantity:</strong> {orderQuantity}
                 </div>
 
-                {order.productKey === "mug" && order.previewMode && (
+                {isMugProductKey(order.productKey) && order.previewMode && (
                 <div>
                     <strong>Print position:</strong>{" "}
                     {order.previewMode === "two-side"

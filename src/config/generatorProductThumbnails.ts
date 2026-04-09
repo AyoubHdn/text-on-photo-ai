@@ -1,4 +1,4 @@
-export type ProductKey = "poster" | "tshirt" | "mug";
+import type { ProductKey } from "~/config/physicalProducts";
 
 export type ProductThumbnail = {
   key: ProductKey;

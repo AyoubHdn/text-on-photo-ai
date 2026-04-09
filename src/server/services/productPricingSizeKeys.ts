@@ -1,4 +1,6 @@
-export type PricedProductType = "mug" | "poster" | "tshirt";
+import { isMugProductKey } from "~/config/physicalProducts";
+
+export type PricedProductType = "mug" | "mugColorInside" | "poster" | "tshirt";
 
 export type RawPricingVariant = {
   name?: string;
@@ -38,7 +40,7 @@ export function normalizePricingSizeKey(
 ): string | null {
   const composite = `${variant.size ?? ""} ${variant.name ?? ""}`.trim();
 
-  if (productType === "mug") {
+  if (isMugProductKey(productType)) {
     return normalizeMugSizeKey(composite);
   }
 

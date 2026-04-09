@@ -54,6 +54,7 @@ type ProductAvailabilityResponse = {
 const PRODUCT_TECHNIQUE_BY_TYPE: Record<SyncProductType, string> = {
   tshirt: "dtg",
   mug: "sublimation",
+  mugColorInside: "sublimation",
   poster: "digital",
 };
 
@@ -108,6 +109,7 @@ const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
 
 const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProductId: number }> = [
   { productType: "mug", printfulProductId: 19 },
+  { productType: "mugColorInside", printfulProductId: 403 },
   { productType: "tshirt", printfulProductId: 71 },
   { productType: "poster", printfulProductId: 1 },
 ];

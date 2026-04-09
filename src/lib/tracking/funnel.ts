@@ -156,7 +156,10 @@ function inferProductType(options: FunnelContextOptions, sourcePage: string): st
   if (explicit) return explicit;
 
   const key = normalize(options.productKey ?? undefined);
-  if (key === "mug" || key === "poster" || key === "tshirt") return key;
+  if (key === "mugcolorinside") return "mug_color_inside";
+  if (key === "mug" || key === "poster" || key === "tshirt") {
+    return key;
+  }
 
   const page = normalize(sourcePage);
   if (page.includes("checkout") || page.includes("order/success")) return "physical_product";
