@@ -7,7 +7,7 @@ import {
 } from "~/server/services/productPricingSizeKeys";
 import { SELLING_REGION_BY_COUNTRY } from "~/server/printful/catalogVariants";
 
-type SyncProductType = PricedProductType;
+export type SyncProductType = PricedProductType;
 
 type RawVariant = {
   id?: number;
@@ -123,6 +123,30 @@ const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProduct
   { productType: "tshirt", printfulProductId: 71 },
   { productType: "poster", printfulProductId: 1 },
 ];
+
+function getProductSyncConfig(
+  productTypes?: readonly SyncProductType[],
+): Array<{ productType: SyncProductType; printfulProductId: number }> {
+  if (!productTypes || productTypes.length === 0) {
+    return PRODUCT_SYNC_CONFIG;
+  }
+
+  const requestedProductTypes = new Set(productTypes);
+  const selectedConfig = PRODUCT_SYNC_CONFIG.filter(({ productType }) =>
+    requestedProductTypes.has(productType),
+  );
+
+  const missingProductTypes = productTypes.filter(
+    (productType) =>
+      !selectedConfig.some((config) => config.productType === productType),
+  );
+
+  if (missingProductTypes.length > 0) {
+    throw new Error(`Unsupported pricing sync products: ${missingProductTypes.join(", ")}`);
+  }
+
+  return selectedConfig;
+}
 
 function parsePrice(value?: string): number | null {
   if (!value) return null;
@@ -400,8 +424,12 @@ async function fetchVariantPricingByCountry(
   };
 }
 
-export async function runPricingSync() {
-  for (const { productType, printfulProductId } of PRODUCT_SYNC_CONFIG) {
+export async function runPricingSync(options?: {
+  productTypes?: readonly SyncProductType[];
+}) {
+  const selectedConfig = getProductSyncConfig(options?.productTypes);
+
+  for (const { productType, printfulProductId } of selectedConfig) {
     const configuredVariantIds = getConfiguredVariantIds(productType);
     const variants = (await fetchProductVariants(productType, printfulProductId)).filter((variant) => {
       if (!configuredVariantIds) return true;
@@ -652,4 +680,8 @@ export async function runPricingSync() {
       }
     }
   }
+
+  return {
+    productTypes: selectedConfig.map((config) => config.productType),
+  };
 }

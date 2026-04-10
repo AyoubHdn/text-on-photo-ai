@@ -1,14 +1,11 @@
 // pages/api/cron-sync.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { env } from "~/env.mjs";
 import { processDueDeliveredEmailSchedules } from "~/server/mautic/deliveryScheduler";
-import { runPricingSync } from "~/server/services/printfulPricingSync";
 import { syncAllContactsToMautic } from "~/server/mautic/syncContacts";
+import { isAuthorizedCronRequest } from "~/server/cron/authorizeCron";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Check the Authorization header (Vercel will include CRON_SECRET as a Bearer token)
-  const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader !== `Bearer ${env.CRON_SECRET}`) {
+  if (!isAuthorizedCronRequest(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -29,10 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           cursor: cursorRaw ?? null,
         })
       : null;
-    await runPricingSync();
 
     return res.status(200).json({
-      pricingSync: { ok: true },
+      pricingSync: {
+        skipped: true,
+        reason: "Pricing sync runs in dedicated cron shards.",
+      },
       deliveredEmails: deliveredResult,
       mauticSync: result ?? {
         skipped: true,

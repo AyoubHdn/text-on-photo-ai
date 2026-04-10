@@ -1,9 +1,28 @@
 {
-    "crons": [
-      {
-        "path": "/api/cron-sync",
-        "schedule": "0 10 * * *"
-      }
-    ]
-  }
-  
+  "crons": [
+    {
+      "path": "/api/cron-sync",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron-sync-pricing/standard-mugs",
+      "schedule": "5 10 * * *"
+    },
+    {
+      "path": "/api/cron-sync-pricing/color-mugs",
+      "schedule": "10 10 * * *"
+    },
+    {
+      "path": "/api/cron-sync-pricing/wall-art",
+      "schedule": "15 10 * * *"
+    },
+    {
+      "path": "/api/cron-sync-pricing/apparel",
+      "schedule": "20 10 * * *"
+    },
+    {
+      "path": "/api/cron-sync-pricing/misc",
+      "schedule": "25 10 * * *"
+    }
+  ]
+}
