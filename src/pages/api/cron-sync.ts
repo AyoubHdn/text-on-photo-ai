@@ -13,7 +13,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    await runPricingSync();
     const deliveredResult = await processDueDeliveredEmailSchedules();
     const mauticSyncEnabled = req.query.mautic_sync === "1";
     const limitRaw = Array.isArray(req.query.mautic_limit)
@@ -30,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           cursor: cursorRaw ?? null,
         })
       : null;
+    await runPricingSync();
 
     return res.status(200).json({
       pricingSync: { ok: true },
