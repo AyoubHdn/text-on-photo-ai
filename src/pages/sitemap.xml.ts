@@ -31,7 +31,6 @@ const getPriority = (rawPage: string) => {
   const primaryLandingPages = new Set([
     "/name-art",
     "/arabic-name-art",
-    "/ar/arabic-name-art",
     "/couples-art",
     "/personalized-gifts",
     "/personalized-name-mugs",
@@ -101,7 +100,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/name-art/styles",
     "/arabic-name-art",
     "/arabic-name-art/styles",
-    "/ar/arabic-name-art",
     "/couples-art",
     "/couples-art/styles",
     "/personalized-gifts",

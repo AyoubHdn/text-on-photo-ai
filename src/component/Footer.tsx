@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FaFacebook, FaPinterest, FaTwitter } from "react-icons/fa";
 
 import { PrimaryLink } from "./PrimaryLink";
@@ -27,10 +26,10 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
     );
   }
 
-  const textGenerators = [
-    { href: "/name-art-generator", name: "Name Art Generator" },
-    { href: "/arabic-name-art-generator", name: "Arabic Name Art Generator" },
-    { href: "/couples-name-art-generator", name: "Couples Art Generator" },
+  const createLinks = [
+    { href: "/name-art", name: "Name Art" },
+    { href: "/arabic-name-art", name: "Arabic Name Art" },
+    { href: "/couples-art", name: "Couples Art" },
   ];
 
   const giftLinks = [
@@ -110,7 +109,7 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
           <div>
             <h3 className="mb-4 text-lg font-semibold">Create</h3>
             <ul className="flex flex-col gap-3">
-              {textGenerators.map((link) => (
+              {createLinks.map((link) => (
                 <li key={link.href}>
                   <PrimaryLink href={link.href} className="text-sm">
                     {link.name}

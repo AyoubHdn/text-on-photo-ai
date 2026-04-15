@@ -62,15 +62,10 @@ const ArabicArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="AI Arabic Calligraphy Generator | Islamic Name Art | NameDesignAI"
-        description="Turn your name into Arabic calligraphy-inspired art with AI. Explore Thuluth, Diwani, Kufic, and modern Arabic name art for decor, branding, and personalized gifts."
+        title="Arabic Name Art Generator | AI Arabic Calligraphy Styles | NameDesignAI"
+        description="Create Arabic name art with AI-powered calligraphy styles. Explore Thuluth, Diwani, Kufic, and modern Arabic lettering for gifts, wall art, branding, and decor."
         path="/arabic-name-art"
-        keywords="arabic calligraphy generator, ai islamic art, arabic name design, thuluth maker, diwani calligraphy, 3d arabic text, islamic logo maker, arabic tattoo design"
-        alternates={[
-          { hrefLang: "en", href: "/arabic-name-art" },
-          { hrefLang: "ar", href: "/ar/arabic-name-art" },
-          { hrefLang: "x-default", href: "/arabic-name-art" },
-        ]}
+        keywords="arabic name art, arabic calligraphy generator, arabic name design, thuluth calligraphy, diwani calligraphy, kufic calligraphy, custom arabic wall art"
         jsonLd={[buildFAQSchema(arabicFaqs)]}
       />
 
@@ -79,23 +74,16 @@ const ArabicArtLandingPage: NextPage = () => {
           <div className="absolute left-0 top-0 h-full w-full opacity-10 dark:opacity-5" />
 
           <div className="container relative z-10 mx-auto">
-            <div className="mb-4 flex justify-end">
-              <Link href="/ar/arabic-name-art">
-                <button className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/80 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-200 dark:hover:bg-gray-700">
-                  <FiGlobe className="text-blue-600" />
-                  <span>Arabic</span>
-                </button>
-              </Link>
-            </div>
             <span className="mb-6 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
               AI Arabic calligraphy tool
             </span>
             <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-6xl lg:text-7xl">
-              Turn your name into an Arabic masterpiece
+              Create Arabic name art in calligraphy-inspired styles
             </h1>
             <h2 className="mx-auto mb-10 max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300 md:text-2xl">
               Blend the feel of traditional calligraphy with modern AI to create
-              Arabic name art for decor, branding, gifts, and social use.
+              Arabic name art for gifts, decor, branding, and identity-rich
+              visuals without losing the focus on Arabic lettering.
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link href="/arabic-name-art-generator">
@@ -109,6 +97,14 @@ const ArabicArtLandingPage: NextPage = () => {
                 </button>
               </Link>
             </div>
+            <p className="mx-auto mt-6 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+              Looking for broader Latin-letter or decorative name styles instead?
+              {" "}
+              <Link href="/name-art" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200">
+                Start with the main Name Art page
+              </Link>
+              .
+            </p>
           </div>
         </section>
 
