@@ -65,6 +65,7 @@ const CouplesArtLandingPage: NextPage = () => {
         title="Couples Name Art Generator | Create Romantic Custom Designs"
         description="Create couple name art for anniversaries, weddings, and meaningful personalized gifts. Explore romantic, modern, and playful styles while keeping the focus on couple name art."
         path="/couples-art"
+        keywords="couples name art, couple name art generator, romantic name art, anniversary gift art, wedding name design, custom couple art"
         jsonLd={[
           buildCollectionPageSchema({
             name: "Couples Name Art Generator",

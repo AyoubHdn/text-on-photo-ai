@@ -72,6 +72,26 @@ const getBlogPostPaths = () => {
     .map((filename) => `/blog/${filename.replace(/\.mdx?$/, "")}`);
 };
 
+// Pages whose content changes frequently — get today's lastmod
+const isDynamicPage = (page: string) =>
+  page === "/" ||
+  page === "/blog" ||
+  /^\/blog\/[^/]+$/.test(page) ||
+  /^\/name-art\/[^/]+$/.test(page) ||
+  /^\/name-art\/styles\/[^/]+$/.test(page) ||
+  /^\/couples-art\/styles\/[^/]+$/.test(page) ||
+  /^\/arabic-name-art\/styles\/[^/]+$/.test(page);
+
+const getChangefreq = (page: string) => {
+  if (page === "/") return "daily";
+  const priority = getPriority(page);
+  if (priority === "0.9" || priority === "0.8") return "weekly";
+  if (priority === "0.7" || priority === "0.6") return "monthly";
+  return "yearly";
+};
+
+const STATIC_LASTMOD = "2025-01-01";
+
 const generateSiteMap = (allPages: string[]) => {
   const today = new Date().toISOString().split("T")[0];
 
@@ -80,10 +100,12 @@ const generateSiteMap = (allPages: string[]) => {
 ${allPages
   .map((rawPage) => {
     const page = normalizePath(rawPage);
+    const lastmod = isDynamicPage(page) ? today : STATIC_LASTMOD;
     return `
   <url>
     <loc>${SITE_URL}${page}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${getChangefreq(page)}</changefreq>
     <priority>${getPriority(page)}</priority>
   </url>`;
   })
@@ -128,6 +150,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   ]));
 
   res.setHeader("Content-Type", "text/xml");
+  res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=3600");
   res.write(generateSiteMap(allPages));
   res.end();
 

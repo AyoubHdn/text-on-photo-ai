@@ -18,8 +18,11 @@ const config = {
   },
   
   images: {
-    domains: [
-      "name-design-ai.s3.us-east-1.amazonaws.com",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "name-design-ai.s3.us-east-1.amazonaws.com",
+      },
     ],
   },
 
@@ -43,12 +46,12 @@ const config = {
       {
         source: "/ramadan-mug",
         destination: "/ramadan-mug-v2",
-        permanent: false,
+        permanent: true,
       },
       {
         source: "/ramadan-mug-men",
         destination: "/ramadan-mug-v2",
-        permanent: false,
+        permanent: true,
       },
       {
         source: "/wedding-invitations",

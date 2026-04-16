@@ -47,6 +47,8 @@ export function buildOrganizationSchema() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
+    description:
+      "AI-powered platform for personalized name art, Arabic calligraphy, and custom gifts. Create name designs for mugs, wall art, shirts, and more.",
     logo: toAbsoluteUrl("/logo.webp"),
     sameAs: [
       "https://www.facebook.com/profile.php?id=61571453621496",
@@ -62,6 +64,14 @@ export function buildWebsiteSchema() {
     "@type": "WebSite",
     name: SITE_NAME,
     url: SITE_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/name-art-generator?name={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 
