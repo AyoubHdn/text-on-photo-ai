@@ -278,15 +278,18 @@ const ArabicArtLandingPage: NextPage = () => {
             <h2 className="mb-12 text-center text-3xl font-bold md:text-4xl">
               Frequently asked questions
             </h2>
-            <div className="space-y-6">
+            <div className="space-y-4">
               {arabicFaqs.map((faq) => (
-                <div
+                <details
                   key={faq.question}
-                  className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-700"
+                  className="group rounded-xl bg-white p-6 shadow-sm dark:bg-gray-700"
                 >
-                  <h3 className="mb-2 text-lg font-bold">{faq.question}</h3>
-                  <p className="text-gray-600 dark:text-gray-300">{faq.answer}</p>
-                </div>
+                  <summary className="flex cursor-pointer list-none items-center justify-between">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{faq.question}</h3>
+                    <span className="text-2xl font-bold text-slate-400 transition-transform duration-300 group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-4 leading-relaxed text-gray-600 dark:text-gray-300">{faq.answer}</p>
+                </details>
               ))}
             </div>
           </div>

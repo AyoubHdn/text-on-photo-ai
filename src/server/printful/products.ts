@@ -41,6 +41,42 @@ export type PrintfulProduct =
       }[];
     }
   | {
+      key: "postcard";
+      name: string;
+      printfulProductId: number;
+      defaultVariantId: number;
+      variants: {
+        label: string;
+        variantId: number;
+        price: number;
+      }[];
+    }
+  | {
+      key: "candle";
+      name: string;
+      printfulProductId: number;
+      defaultVariantId: number;
+      variants: {
+        label: string;
+        variantId: number;
+        price: number;
+        color?: string;
+        colorHex?: string;
+      }[];
+    }
+  | {
+      key: "pillow";
+      name: string;
+      printfulProductId: number;
+      defaultVariantId: number;
+      defaultVariantIdByAspect: Partial<Record<PosterAspect, number>>;
+      variants: {
+        label: string;
+        variantId: number;
+        price: number;
+      }[];
+    }
+  | {
       key: "journal";
       name: string;
       printfulProductId: number;
@@ -140,6 +176,45 @@ export const PRINTFUL_PRODUCTS: PrintfulProduct[] = [
       { label: '12"x18"', variantId: 19299, price: 24.99 },
       { label: '20"x30"', variantId: 19311, price: 36.72 },
       { label: '24"x36"', variantId: 825, price: 52.02 },
+    ],
+  },
+  {
+    key: "postcard",
+    name: "Standard Postcard",
+    printfulProductId: 433,
+    defaultVariantId: 11513,
+    variants: [{ label: '4"x6"', variantId: 11513, price: 1.5 }],
+  },
+  {
+    key: "candle",
+    name: "Scented Soy Candle, 9oz",
+    printfulProductId: 861,
+    defaultVariantId: 22455,
+    variants: [
+      { label: "Apple Harvest / 9 oz", variantId: 22804, price: 11.27, color: "Apple Harvest" },
+      { label: "Christmas Warmth / 9 oz", variantId: 22806, price: 11.27, color: "Christmas Warmth" },
+      { label: "Cinnamon Vanilla / 9 oz", variantId: 22807, price: 11.27, color: "Cinnamon Vanilla" },
+      { label: "Clean Cotton / 9 oz", variantId: 22808, price: 11.27, color: "Clean Cotton" },
+      { label: "Coconut Cream and Cardamom / 9 oz", variantId: 22809, price: 11.27, color: "Coconut Cream and Cardamom" },
+      { label: "Peppered Passionfruit / 9 oz", variantId: 22810, price: 11.27, color: "Peppered Passionfruit" },
+      { label: "Sea Salt and Orchid / 9 oz", variantId: 22811, price: 11.27, color: "Sea Salt and Orchid" },
+      { label: "Unscented / 9 oz", variantId: 22812, price: 11.27, color: "Unscented" },
+      { label: "White Sage and Lavender / 9 oz", variantId: 22455, price: 11.27, color: "White Sage and Lavender" },
+    ],
+  },
+  {
+    key: "pillow",
+    name: "All-Over Print Basic Pillow",
+    printfulProductId: 83,
+    defaultVariantId: 4532,
+    defaultVariantIdByAspect: {
+      "1:1": 4532,
+      "3:2": 9513,
+    },
+    variants: [
+      { label: '18"x18"', variantId: 4532, price: 16.27 },
+      { label: '20"x12"', variantId: 9513, price: 15.25 },
+      { label: '22"x22"', variantId: 11075, price: 18.31 },
     ],
   },
   {

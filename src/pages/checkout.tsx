@@ -100,6 +100,45 @@ function getCheckoutCopy(productKey: string) {
           "Free shipping included",
         ],
       };
+    case "postcard":
+      return {
+        personalizedLabel: "Your personalized postcard",
+        subtitle: "Standard Postcard",
+        fallbackDesignLabel: "Custom design selected for your postcard",
+        benefitsTitle: "Why customers choose this postcard",
+        benefits: [
+          "Thick matte cardboard paper",
+          "Standard 4 x 6 in postcard format",
+          "Coated outer surface for a clean finish",
+          "Free shipping included",
+        ],
+      };
+    case "candle":
+      return {
+        personalizedLabel: "Your personalized candle",
+        subtitle: "Scented Soy Candle, 9oz",
+        fallbackDesignLabel: "Custom design selected for your candle",
+        benefitsTitle: "Why customers choose this candle",
+        benefits: [
+          "100% natural soy wax with a cotton wick",
+          "Smooth glass jar with a custom front label",
+          "Burn time of 50-60 hours",
+          "Free shipping included",
+        ],
+      };
+    case "pillow":
+      return {
+        personalizedLabel: "Your personalized pillow",
+        subtitle: "All-Over Print Basic Pillow",
+        fallbackDesignLabel: "Custom design selected for your pillow",
+        benefitsTitle: "Why customers choose this pillow",
+        benefits: [
+          "100% polyester case and insert included",
+          "Hidden zipper closure",
+          "Same design printed on both sides",
+          "Free shipping included",
+        ],
+      };
     case "journal":
       return {
         personalizedLabel: "Your personalized journal",
@@ -629,8 +668,14 @@ export default function CheckoutPage() {
     const quantityItemLabel =
       order?.productKey === "tshirt"
         ? "t-shirt"
+        : order?.productKey === "postcard"
+        ? "postcard"
+        : order?.productKey === "candle"
+        ? "candle"
         : order?.productKey === "coaster"
         ? "coaster"
+        : order?.productKey === "pillow"
+        ? "pillow"
         : order?.productKey === "canvas"
         ? "canvas print"
         : order?.productKey === "journal"
@@ -656,8 +701,11 @@ export default function CheckoutPage() {
 
     const PRODUCT_LABELS = {
     poster: PRODUCT_PRESENTATION.poster.title,
+    postcard: PRODUCT_PRESENTATION.postcard.title,
+    candle: PRODUCT_PRESENTATION.candle.title,
     framedPoster: PRODUCT_PRESENTATION.framedPoster.title,
     canvas: PRODUCT_PRESENTATION.canvas.title,
+    pillow: PRODUCT_PRESENTATION.pillow.title,
     journal: PRODUCT_PRESENTATION.journal.title,
     tshirt: PRODUCT_PRESENTATION.tshirt.title,
     mug: PRODUCT_PRESENTATION.mug.title,
@@ -739,7 +787,16 @@ export default function CheckoutPage() {
         if (!order.previewMode) issues.push("printPosition");
         }
 
+        if (order.productKey === "candle") {
+        if (!order.size) issues.push("size");
+        if (!order.color) issues.push("color");
+        }
+
         if (order.productKey === "coaster" && !order.size) {
+        issues.push("size");
+        }
+
+        if (order.productKey === "pillow" && !order.size) {
         issues.push("size");
         }
 
@@ -749,6 +806,7 @@ export default function CheckoutPage() {
 
         if (
           order.productKey === "poster" ||
+          order.productKey === "postcard" ||
           order.productKey === "framedPoster" ||
           order.productKey === "canvas"
         ) {
@@ -923,7 +981,12 @@ export default function CheckoutPage() {
 
 
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-white text-slate-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <p className="text-sm text-slate-500">Loading your order…</p>
+      </div>
+    );
     const orderErrorCode =
       orderError instanceof TRPCClientError ? orderError.data?.code : undefined;
     if (orderErrorCode === "UNAUTHORIZED") {
@@ -953,7 +1016,13 @@ export default function CheckoutPage() {
             path="/checkout"
             noindex
           />
-          <div>Order not found</div>
+          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-white px-4 text-center text-slate-900">
+            <p className="text-lg font-semibold">We couldn&apos;t find your order.</p>
+            <p className="text-sm text-slate-500">Return to your design and open checkout again.</p>
+            <a href="/name-art-generator" className="mt-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+              Back to generator
+            </a>
+          </div>
         </>
       );
     }
@@ -1009,9 +1078,15 @@ export default function CheckoutPage() {
                 </div>
                 )}
 
-                {(order.productKey === "poster" || order.productKey === "framedPoster" || order.productKey === "canvas") && order.size && (
+                {(order.productKey === "poster" || order.productKey === "postcard" || order.productKey === "framedPoster" || order.productKey === "canvas" || order.productKey === "pillow" || order.productKey === "candle") && order.size && (
                 <div>
                     <strong>Size:</strong> {order.size}
+                </div>
+                )}
+
+                {order.productKey === "candle" && order.color && (
+                <div>
+                    <strong>Scent:</strong> {order.color}
                 </div>
                 )}
 
@@ -1366,7 +1441,7 @@ export default function CheckoutPage() {
         </div>
 
         <button
-            className="w-full py-3 rounded-lg bg-black text-white font-semibold disabled:opacity-50"
+            className="w-full py-3 rounded-lg bg-emerald-600 text-white font-semibold transition hover:bg-emerald-700 disabled:opacity-50"
         disabled={
           previewStatus === "generating" ||
           checkoutPricingQuery.isLoading ||

@@ -123,11 +123,21 @@ const BuyCredits: React.FC = () => {
             <p className="mx-auto max-w-2xl text-sm text-gray-700 dark:text-gray-200 sm:text-base">
               Choose a credit pack and continue generating, previewing, and refining your design without interruptions.
             </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs font-medium text-gray-600 dark:text-gray-400">
+              <span>⚡ Instant activation</span>
+              <span>🔒 Secure payment via Stripe</span>
+              <span>💳 All major cards accepted</span>
+            </div>
           </section>
 
           <section className="mb-8 grid gap-5 md:grid-cols-3">
             {offers.map((offer, index) => {
-              const oldPrice = (offer.price * 2).toFixed(2);
+              const badgeLabel =
+                offer.plan === "elite"
+                  ? "Best Value"
+                  : offer.plan === "pro"
+                  ? "Most Popular"
+                  : null;
 
               return (
                 <div
@@ -138,39 +148,37 @@ const BuyCredits: React.FC = () => {
                       : "border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-900"
                   }`}
                 >
-                  <span className="absolute right-3 top-3 rounded bg-blue-600 px-2 py-1 text-xs font-bold uppercase text-white">
-                    50% Off
-                  </span>
-
-                  {offer.popular && (
-                    <span className="mb-4 inline-block rounded-full bg-blue-500 px-2 py-1 text-xs uppercase text-white">
-                      Most Popular
+                  {badgeLabel && (
+                    <span className={`mb-4 inline-block self-start rounded-full px-3 py-1 text-xs font-bold uppercase text-white ${offer.plan === "elite" ? "bg-emerald-600" : "bg-blue-500"}`}>
+                      {badgeLabel}
                     </span>
                   )}
 
-                  <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">{offer.name}</h2>
-                  <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">{offer.description}</p>
+                  <h2 className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">{offer.name}</h2>
+                  <p className="mb-5 text-sm text-gray-600 dark:text-gray-300">{offer.description}</p>
 
-                  <div className="mb-5">
-                    <p className="text-base text-gray-500 line-through dark:text-gray-400">${oldPrice}</p>
+                  <div className="mb-2">
                     <p className="text-4xl font-bold text-gray-900 dark:text-white">${offer.price.toFixed(2)}</p>
                   </div>
 
                   <p className="mb-1 text-gray-700 dark:text-gray-200">
-                    {offer.images} Credits / {offer.images} Images
+                    {offer.images} AI designs included
                   </p>
-                  <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Only ${offer.pricePerImage}/image</p>
-                  <p className="mb-4 text-center text-sm font-bold text-blue-700 dark:text-blue-300">Limited-time pricing</p>
+                  <p className="mb-5 text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    ${offer.pricePerImage} per design
+                  </p>
 
                   <button
                     id={`plan_${offer.plan}`}
-                    onClick={() => {
-                      void handleBuy(offer.plan);
-                    }}
-                    className="mt-auto w-full rounded-lg bg-blue-600 px-4 py-2.5 text-white transition hover:bg-blue-500"
+                    onClick={() => { void handleBuy(offer.plan); }}
+                    className={`mt-auto w-full rounded-lg px-4 py-3 font-semibold text-white transition ${
+                      offer.popular
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                    }`}
                     disabled={loadingPlan === offer.plan}
                   >
-                    {loadingPlan === offer.plan ? "Processing..." : "Buy Now"}
+                    {loadingPlan === offer.plan ? "Processing..." : `Get ${offer.images} Credits`}
                   </button>
                 </div>
               );
@@ -186,13 +194,23 @@ const BuyCredits: React.FC = () => {
           </p>
 
           <section className="mb-5 rounded-xl border border-blue-200 bg-blue-50/60 p-5 dark:border-blue-900 dark:bg-blue-950/30">
-            <h2 className="mb-3 text-lg font-semibold">Why Credits Matter</h2>
-            <ul className="grid gap-1 text-sm text-gray-700 dark:text-gray-300 sm:grid-cols-2">
-              <li>High-quality generation</li>
-              <li>Product previews</li>
-              <li>Background removal</li>
-              <li>Premium styles</li>
-            </ul>
+            <h2 className="mb-4 text-lg font-semibold">What you can do with credits</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: "🎨", label: "Generate AI name art", detail: "1 credit per Standard design" },
+                { icon: "✂️", label: "Remove background", detail: "1 credit — makes designs print-ready" },
+                { icon: "🖼️", label: "Preview on products", detail: "Free — no credits needed" },
+                { icon: "⬇️", label: "High-res download", detail: "Free — always included" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-start gap-3">
+                  <span className="text-xl">{item.icon}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{item.label}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
 
           <section className="grid gap-4 md:grid-cols-2">

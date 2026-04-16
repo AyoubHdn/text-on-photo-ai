@@ -108,6 +108,7 @@ const PersonalizedGiftsPage: NextPage = () => {
             "Relationship-focused gift page for anniversaries, weddings, and romantic keepsakes.",
         },
       ]}
+      categoryCardsHeading="Browse personalized gift categories"
       categoryCards={getCategoryCards([
         "/personalized-name-mugs",
         "/custom-name-shirts",

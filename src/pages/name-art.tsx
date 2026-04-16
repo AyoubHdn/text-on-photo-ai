@@ -1,4 +1,5 @@
 import { type NextPage } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { FaQuoteLeft } from "react-icons/fa";
@@ -86,26 +87,62 @@ const NameArtLandingPage: NextPage = () => {
       />
 
       <main className="bg-white dark:bg-gray-900">
-        <section className="bg-gray-50 px-4 py-20 dark:bg-gray-800 lg:py-32">
-          <div className="container mx-auto text-center">
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-              Transform your name into a work of art
-            </h1>
-            <h2 className="mx-auto mt-4 max-w-3xl text-xl text-gray-700 dark:text-gray-300 md:text-2xl">
-              The AI name art generator for custom decor, keepsakes, gifts, and
-              product-ready designs.
-            </h2>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-              Explore personalized styles for your name, initials, or phrase, then
-              move that artwork into wall art, mugs, shirts, and shareable visuals
-              without changing the core name-art intent.
-            </p>
-            <div className="mt-10">
-              <Link href="/name-art-generator">
-                <button className="inline-block rounded-lg bg-blue-500 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-600">
-                  Start Creating Name Art
-                </button>
-              </Link>
+        <section className="overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-16 dark:from-gray-900 dark:via-gray-900 dark:to-slate-900 lg:py-24">
+          <div className="container mx-auto">
+            <div className="grid items-center gap-12 lg:grid-cols-2">
+              <div>
+                <span className="inline-flex rounded-full bg-blue-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  AI name art generator
+                </span>
+                <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
+                  Transform your name into a work of art
+                </h1>
+                <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-slate-300">
+                  The AI name art generator for custom decor, keepsakes, gifts, and
+                  product-ready designs. Explore personalized styles for your name,
+                  initials, or phrase, then move that artwork into wall art, mugs, and shirts.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <Link
+                    href="/name-art-generator"
+                    className="inline-block rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-700"
+                  >
+                    Start Creating Name Art
+                  </Link>
+                  <Link
+                    href="#gallery"
+                    className="inline-block rounded-lg border border-slate-300 px-6 py-4 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
+                  >
+                    Browse Styles
+                  </Link>
+                </div>
+                <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
+                  <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">Free to start</span>
+                  <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">High-res downloads</span>
+                  <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">Print-ready products</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { src: "/styles/name-art/Floral/s5e.webp", alt: "Watercolor floral name art example", className: "row-span-2", aspectClass: "aspect-[4/6] h-full min-h-[280px]" },
+                  { src: "/styles/name-art/Abstract/s184e.webp", alt: "Golden glitter name art example", className: "", aspectClass: "aspect-[4/3]" },
+                  { src: "/styles/name-art/Gaming/s18e.webp", alt: "Neon sign name art example", className: "", aspectClass: "aspect-[4/3]" },
+                ].map((item) => (
+                  <article
+                    key={item.src}
+                    className={`group overflow-hidden rounded-3xl border border-white/70 bg-white shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/20 ${item.className}`}
+                  >
+                    <div className={`relative ${item.aspectClass}`}>
+                      <Image
+                        src={item.src}
+                        alt={item.alt}
+                        fill
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -145,7 +182,7 @@ const NameArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section id="gallery" className="bg-gray-50 py-24 dark:bg-gray-800">
           <div className="container mx-auto px-4 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               Explore a world of creative styles
@@ -313,10 +350,11 @@ const NameArtLandingPage: NextPage = () => {
               personalized products when the design is ready.
             </p>
             <div className="mt-8">
-              <Link href="/name-art-generator">
-                <button className="inline-block rounded-lg bg-blue-500 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-600">
-                  Start Name Art Generator
-                </button>
+              <Link
+                href="/name-art-generator"
+                className="inline-block rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-700"
+              >
+                Start Name Art Generator
               </Link>
             </div>
           </div>

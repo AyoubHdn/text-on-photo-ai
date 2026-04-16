@@ -52,6 +52,9 @@ type ProductAvailabilityResponse = {
 };
 
 const PRODUCT_TECHNIQUE_BY_TYPE: Record<SyncProductType, string> = {
+  postcard: "digital",
+  candle: "digital",
+  pillow: "cut-sew",
   tshirt: "dtg",
   mug: "sublimation",
   mugBlackGlossy: "sublimation",
@@ -113,6 +116,9 @@ const SHIPPING_RECIPIENT_BY_COUNTRY: Record<
 };
 
 const PRODUCT_SYNC_CONFIG: Array<{ productType: SyncProductType; printfulProductId: number }> = [
+  { productType: "postcard", printfulProductId: 433 },
+  { productType: "candle", printfulProductId: 861 },
+  { productType: "pillow", printfulProductId: 83 },
   { productType: "mug", printfulProductId: 19 },
   { productType: "mugBlackGlossy", printfulProductId: 300 },
   { productType: "mugColorInside", printfulProductId: 403 },

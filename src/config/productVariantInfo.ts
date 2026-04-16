@@ -69,6 +69,25 @@ export const CANVAS_VARIANT_INFO: Record<string, string> = {
     "30x40 in (76.2 x 101.6 cm)\nExtra-large statement canvas with vivid color and depth\nHand-stretched over solid wood stretcher bars",
 };
 
+export const POSTCARD_VARIANT_INFO: Record<string, string> = {
+  "4x6":
+    "4 x 6 in (101 x 152 mm)\nThick matte cardboard paper with a coated outer surface\n0.013 in (0.34 mm) thick for a sturdy premium feel",
+};
+
+export const CANDLE_VARIANT_INFO: Record<string, string> = {
+  "9 oz":
+    "9 oz (255 g)\n100% natural soy wax with a cotton wick in a clear glass jar\nBurn time 50-60 hours with a 3 x 2 in custom printed label",
+};
+
+export const PILLOW_VARIANT_INFO: Record<string, string> = {
+  "18x18":
+    "18 x 18 in (45.7 x 45.7 cm)\n100% polyester case and insert with hidden zipper\nSame design printed on front and back",
+  "20x12":
+    "20 x 12 in (50.8 x 30.5 cm)\nLumbar pillow format with hidden zipper and insert included\nSame design printed on front and back",
+  "22x22":
+    "22 x 22 in (55.9 x 55.9 cm)\nLarge accent pillow with shape-retaining insert included\nSame design printed on front and back",
+};
+
 export const JOURNAL_VARIANT_INFO: Record<string, string> = {
   "8x5.75":
     "5.75 x 8 in (14.6 x 20.3 cm)\nMatte laminated hardcover with 150 lined cream-colored pages\nPerforated pages and flexible sewn spine",

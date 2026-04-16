@@ -7,6 +7,8 @@ export const PRODUCT_PLACEMENT = {
   poster: "default",
   framedPoster: "default",
   canvas: "default",
+  postcard: "default",
+  candle: "front",
   journal: "front",
   mug: "default",
   mugBlackGlossy: "default",

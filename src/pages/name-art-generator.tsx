@@ -86,6 +86,7 @@ const NameArtGeneratorPage: NextPage = () => {
   const [useTransparentMap, setUseTransparentMap] = useState<Record<string, boolean>>({});
   const [removingBackgroundMap, setRemovingBackgroundMap] = useState<Record<string, boolean>>({});
   const [removeBgCreditAlertMap, setRemoveBgCreditAlertMap] = useState<Record<string, boolean>>({});
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
   const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("generate");
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
@@ -653,140 +654,117 @@ const NameArtGeneratorPage: NextPage = () => {
               ))}
             </div>
           </div>
-          {/* 3. Select AI Model */}
-          <h2 className="text-xl">3. Select AI Model</h2>
-          <FormGroup className="mb-12">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
-              {[
-                {
-                  name: "Standard",
-                  value: "flux-schnell" as AIModel,
-                  cost: 1,
-                  image:
-                    selectedStyleImage && selectedStyleImage.includes(".")
-                      ? selectedStyleImage
-                      : "/images/placeholder.png",
-                  label: undefined, // No extra label
-                },
-                {
-                  name: "Optimized",
-                  value: "flux-dev" as AIModel,
-                  cost: 3,
-                  image:
-                    selectedStyleImage && selectedStyleImage.includes(".")
-                      ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
-                      : "/images/placeholder.png",
-                  label: undefined,
-                },
-                
-              ].map((model) => (
-                <button
-                  key={model.value}
-                  type="button"
-                  onClick={() => setSelectedModel(model.value)}
-                  className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
-                    selectedModel === model.value
-                      ? "border-blue-500 ring-2 ring-blue-500"
-                      : "border-gray-300 hover:border-gray-500"
-                  }`}
-                >
-                  <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
-                    <img
-                      src={model.image}
-                      alt={model.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Render label if present (e.g. "Top Tier") */}
-                    {model.label && (
-                      <span className="absolute top-1 right-1 bg-red-300 text-black px-2 text-xs rounded">
-                        {model.label}
-                      </span>
-                    )}
+          {/* Advanced Options accordion */}
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedOptions((v) => !v)}
+              className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <span>Advanced options (model, size, count)</span>
+              <span className={`text-lg transition-transform duration-200 ${showAdvancedOptions ? "rotate-45" : ""}`}>+</span>
+            </button>
+
+            {showAdvancedOptions && (
+              <div className="border-t border-gray-200 px-4 pb-4 pt-4 dark:border-gray-700 space-y-6">
+                {/* AI Model */}
+                <div>
+                  <h2 className="text-base font-semibold mb-3">AI Model</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { name: "Standard", value: "flux-schnell" as AIModel, cost: 1, description: "Fast, 1 credit" },
+                      { name: "Optimized", value: "flux-dev" as AIModel, cost: 3, description: "Higher detail, 3 credits" },
+                    ].map((model) => (
+                      <button
+                        key={model.value}
+                        type="button"
+                        onClick={() => setSelectedModel(model.value)}
+                        className={`rounded-lg border p-3 text-left transition ${
+                          selectedModel === model.value
+                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/30"
+                            : "border-gray-300 hover:border-gray-400 dark:border-gray-600"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold">{model.name}</span>
+                        <span className="block text-xs text-gray-500 mt-0.5">{model.description}</span>
+                      </button>
+                    ))}
                   </div>
-                  <span className="text-sm font-semibold">{model.name}</span>
-                  <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
-                </button>
-              ))}
+                </div>
+
+                {/* Aspect Ratio */}
+                <div>
+                  <h2 className="text-base font-semibold mb-3">Image Size</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {aspectRatios.map((ratio) => (
+                      <button
+                        key={ratio.value}
+                        type="button"
+                        onClick={() => setSelectedAspectRatio(ratio.value)}
+                        className={`rounded-lg border p-3 text-center transition ${
+                          selectedAspectRatio === ratio.value
+                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/30"
+                            : "border-gray-300 hover:border-gray-400 dark:border-gray-600"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold">{ratio.label}</span>
+                        <span className="block text-xs text-gray-500 mt-0.5 leading-tight">{ratio.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Number of images */}
+                <div>
+                  <h2 className="text-base font-semibold mb-3">Number of designs</h2>
+                  <Input
+                    id="numberofImages"
+                    type="number"
+                    min={1}
+                    max={isIdeogramModel ? 1 : MAX_GENERATION_IMAGES}
+                    value={form.numberofImages}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === "") { setForm((prev) => ({ ...prev, numberofImages: raw })); return; }
+                      const parsed = Number.parseInt(raw, 10);
+                      if (!Number.isFinite(parsed)) return;
+                      const maxImages = isIdeogramModel ? 1 : MAX_GENERATION_IMAGES;
+                      const clamped = Math.min(maxImages, Math.max(1, parsed));
+                      setForm((prev) => ({ ...prev, numberofImages: String(clamped) }));
+                    }}
+                    disabled={isIdeogramModel}
+                    placeholder={isIdeogramModel ? "1 (Fixed)" : `1–${MAX_GENERATION_IMAGES}`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Credit balance indicator */}
+          {isLoggedIn && creditsQuery.data !== undefined && (
+            <div className={`flex items-center justify-between rounded-lg px-4 py-3 text-sm ${
+              (creditsQuery.data ?? 0) <= 0
+                ? "border border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+                : "border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+            }`}>
+              <span>
+                {(creditsQuery.data ?? 0) <= 0
+                  ? "No credits remaining — add credits to generate"
+                  : `${creditsQuery.data} credit${creditsQuery.data === 1 ? "" : "s"} remaining · this design costs ${getRequiredGenerateCredits()} credit${getRequiredGenerateCredits() === 1 ? "" : "s"}`}
+              </span>
+              {(creditsQuery.data ?? 0) <= 2 && (
+                <Link href="/buy-credits" className="ml-3 whitespace-nowrap font-semibold text-blue-600 hover:underline dark:text-blue-400">
+                  Get credits
+                </Link>
+              )}
             </div>
-          </FormGroup>
-          
-          {/* 4. Aspect Ratio */}
-          <h2 className="text-xl">4. Select Image Size</h2>
-          <FormGroup className="mb-12">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {aspectRatios.map((ratio) => {
-                const aspectClass = aspectVisualMap[ratio.value];
-                return (
-                  <button
-                    key={ratio.value}
-                    type="button"
-                    onClick={() => setSelectedAspectRatio(ratio.value)}
-                    className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
-                      selectedAspectRatio === ratio.value
-                        ? "border-blue-500 ring-2 ring-blue-500"
-                        : "border-gray-300 hover:border-gray-500"
-                    }`}
-                  >
-                    <div
-                      className={`w-full h-21 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
-                      style={{ backgroundColor: "#ddd" }}
-                    >
-                      <div className="text-center">
-                        <div className="font-semibold">{ratio.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {ratio.description}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </FormGroup>
-
-          {/* 5. Number of images */}
-          <h2 className="text-xl">5. How Many Designs You Want</h2>
-          <FormGroup className="mb-12">
-            <label htmlFor="numberofImages">Number of images</label>
-            <Input
-              required
-              id="numberofImages"
-              type="number"
-              min={1}
-              max={isIdeogramModel ? 1 : MAX_GENERATION_IMAGES}
-              value={form.numberofImages}
-              onChange={(e) => {
-                const raw = e.target.value;
-                if (raw === "") {
-                  setForm((prev) => ({ ...prev, numberofImages: raw }));
-                  return;
-                }
-
-                const parsed = Number.parseInt(raw, 10);
-                if (!Number.isFinite(parsed)) return;
-
-                const maxImages = isIdeogramModel ? 1 : MAX_GENERATION_IMAGES;
-                const clamped = Math.min(maxImages, Math.max(1, parsed));
-                setForm((prev) => ({ ...prev, numberofImages: String(clamped) }));
-              }}
-              disabled={isIdeogramModel}
-              placeholder={
-                isIdeogramModel
-                  ? "1 (Fixed)"
-                  : `1-${MAX_GENERATION_IMAGES}`
-              }
-            />
-          </FormGroup>
+          )}
 
           {error && (
-            <div className="bg-red-500 text-white rounded p-4 text-xl">
+            <div className="rounded bg-red-500 p-4 text-sm text-white">
               {error}{" "}
               {error === "You do not have enough credits" && (
-                <Link
-                  id="not-enough-credits-alert-btn"
-                  href="/buy-credits"
-                  className="underline font-bold ml-2"
-                >
+                <Link id="not-enough-credits-alert-btn" href="/buy-credits" className="ml-2 font-bold underline">
                   Buy Credits
                 </Link>
               )}
@@ -804,14 +782,21 @@ const NameArtGeneratorPage: NextPage = () => {
               </Link>
             </div>
           )}
-          
+
+          {isSubmittingGeneration && (
+            <div className="flex items-center justify-center gap-3 rounded-lg border border-blue-200 bg-blue-50 py-4 text-sm font-medium text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+              Generating your design — this takes about 10 seconds…
+            </div>
+          )}
+
           <Button
             type={isLoggedIn ? "submit" : "button"}
             onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
             isLoading={generateIcon.isLoading}
             disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
           >
-            {isLoggedIn ? "Generate" : "Sign in to Generate"}
+            {isLoggedIn ? "Generate Design" : "Sign in to Generate Free"}
           </Button>
           <GeneratorNudge generatorType="default" section="trust" />
         </form>

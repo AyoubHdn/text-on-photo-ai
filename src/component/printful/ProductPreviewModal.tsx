@@ -17,6 +17,7 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import {
+  CANDLE_VARIANT_INFO,
   CANVAS_VARIANT_INFO,
   COASTER_VARIANT_INFO,
   FRAMED_POSTER_VARIANT_INFO,
@@ -24,6 +25,8 @@ import {
   MUG_BLACK_GLOSSY_VARIANT_INFO,
   MUG_COLOR_INSIDE_VARIANT_INFO,
   MUG_VARIANT_INFO,
+  PILLOW_VARIANT_INFO,
+  POSTCARD_VARIANT_INFO,
   POSTER_VARIANT_INFO,
   TSHIRT_SIZE_INFO,
 } from "~/config/productVariantInfo";
@@ -167,6 +170,9 @@ export function ProductPreviewModal({
   const isCoaster = productKey === "coaster";
   const isFramedPoster = productKey === "framedPoster";
   const isCanvas = productKey === "canvas";
+  const isPostcard = productKey === "postcard";
+  const isCandle = productKey === "candle";
+  const isPillow = productKey === "pillow";
   const isJournal = productKey === "journal";
   const isMugProduct = isMugProductKey(productKey);
   const isMugBlackGlossy = productKey === "mugBlackGlossy";
@@ -280,6 +286,27 @@ export function ProductPreviewModal({
     "16:9": [],
   };
 
+  const POSTCARD_VARIANTS_BY_ASPECT: Record<AspectRatio, number[]> = {
+    "1:1": [],
+    "4:5": [],
+    "3:2": [11513],
+    "16:9": [],
+  };
+
+  const CANDLE_VARIANTS_BY_ASPECT: Record<AspectRatio, number[]> = {
+    "1:1": [],
+    "4:5": [],
+    "3:2": [22804, 22806, 22807, 22808, 22809, 22810, 22811, 22812, 22455],
+    "16:9": [],
+  };
+
+  const PILLOW_VARIANTS_BY_ASPECT: Record<AspectRatio, number[]> = {
+    "1:1": [4532, 11075],
+    "4:5": [],
+    "3:2": [9513],
+    "16:9": [],
+  };
+
   const FRAMED_POSTER_SIZE_KEYS_BY_ASPECT: Record<AspectRatio, string[]> = {
     "1:1": ["10x10", "12x12", "14x14", "16x16", "18x18"],
     "4:5": ["8x10", "16x20"],
@@ -379,6 +406,15 @@ export function ProductPreviewModal({
     return `${match[1]}x${match[2]}`;
   };
 
+  const normalizeCandleSizeKey = (value?: string | null): string | null => {
+    if (!value) return null;
+
+    const match = value.match(/(9)\s*oz/i);
+    if (!match) return null;
+
+    return `${match[1]} oz`;
+  };
+
   const getPosterVariantSizeKey = (variant?: Variant | null): string | null =>
     extractPosterSizeKeySafe(variant?.size) ??
     extractPosterSizeKeySafe(variant?.name) ??
@@ -392,6 +428,31 @@ export function ProductPreviewModal({
   const canvasInfoText =
     productKey === "canvas" && selectedPosterSizeKey
       ? CANVAS_VARIANT_INFO[selectedPosterSizeKey]
+      : undefined;
+  const postcardSizeKey =
+    productKey === "postcard"
+      ? selectedSize ?? getPosterVariantSizeKey(selectedVariant) ?? undefined
+      : undefined;
+  const postcardInfoText =
+    productKey === "postcard" && postcardSizeKey
+      ? POSTCARD_VARIANT_INFO[postcardSizeKey]
+      : undefined;
+  const candleSizeKey =
+    productKey === "candle"
+      ? normalizeCandleSizeKey(selectedVariant?.size) ??
+        normalizeCandleSizeKey(selectedVariant?.name)
+      : undefined;
+  const candleInfoText =
+    productKey === "candle" && candleSizeKey
+      ? CANDLE_VARIANT_INFO[candleSizeKey]
+      : undefined;
+  const pillowSizeKey =
+    productKey === "pillow"
+      ? selectedSize ?? getPosterVariantSizeKey(selectedVariant) ?? undefined
+      : undefined;
+  const pillowInfoText =
+    productKey === "pillow" && pillowSizeKey
+      ? PILLOW_VARIANT_INFO[pillowSizeKey]
       : undefined;
   const framedPosterInfoText =
     productKey === "framedPoster" && (selectedSize ?? selectedPosterSizeKey)
@@ -427,6 +488,18 @@ export function ProductPreviewModal({
 
     if (productKey === "canvas") {
       return canvasInfoText ?? "";
+    }
+
+    if (productKey === "postcard") {
+      return postcardInfoText ?? "";
+    }
+
+    if (productKey === "candle") {
+      return candleInfoText ?? "";
+    }
+
+    if (productKey === "pillow") {
+      return pillowInfoText ?? "";
     }
 
     if (productKey === "framedPoster") {
@@ -481,6 +554,12 @@ export function ProductPreviewModal({
         ? framedPosterVariantsForAspect
             .filter((v) => !selectedColor || v.color === selectedColor)
             .map((v) => getPosterVariantSizeKey(v))
+        : isPostcard
+          ? variants.map((v) => getPosterVariantSizeKey(v))
+        : isCandle
+          ? variants.map((v) => v.size)
+        : isPillow
+          ? variants.map((v) => getPosterVariantSizeKey(v))
         : variants
             .filter((v) => !isMugColorInside || !selectedColor || v.color === selectedColor)
             .map((v) => v.size);
@@ -491,7 +570,7 @@ export function ProductPreviewModal({
         ),
       );
     },
-    [framedPosterVariantsForAspect, isFramedPoster, isMugColorInside, selectedColor, variants],
+    [framedPosterVariantsForAspect, isCandle, isFramedPoster, isMugColorInside, isPillow, isPostcard, selectedColor, variants],
   );
 
   const availableColors = useMemo(
@@ -537,6 +616,129 @@ export function ProductPreviewModal({
       const defaultVariant =
         nextVariants.find((v) => allowed?.includes(v.id)) ??
         nextVariants[0];
+      if (defaultVariant) {
+        setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
+      }
+      return;
+    }
+
+    if (key === "postcard") {
+      const eligibleVariants = nextVariants.filter((variant) =>
+        POSTCARD_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+      );
+
+      if (eligibleVariants.length === 0) {
+        setVariantId(null);
+        setSelectedSize(null);
+        return;
+      }
+
+      const currentMatch =
+        selectedSize
+          ? eligibleVariants.find(
+              (variant) => getPosterVariantSizeKey(variant) === selectedSize,
+            )
+          : (variantId && eligibleVariants.find((variant) => variant.id === variantId)) ??
+            null;
+
+      if (currentMatch) {
+        setSelectedSize(getPosterVariantSizeKey(currentMatch) ?? selectedSize);
+        setVariantId(currentMatch.id);
+        return;
+      }
+
+      const defaultVariant =
+        eligibleVariants.find((variant) => variant.id === 11513) ??
+        eligibleVariants[0];
+      const defaultSize =
+        getPosterVariantSizeKey(defaultVariant) ??
+        getPosterVariantSizeKey(eligibleVariants[0]);
+
+      if (defaultSize) {
+        setSelectedSize(defaultSize);
+      }
+
+      if (defaultVariant) {
+        setVariantId(defaultVariant.id);
+      } else {
+        setVariantId(null);
+      }
+      return;
+    }
+
+    if (key === "candle") {
+      const eligibleVariants = nextVariants.filter((variant) =>
+        CANDLE_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+      );
+
+      if (eligibleVariants.length === 0) {
+        setVariantId(null);
+        setSelectedSize(null);
+        setSelectedColor(null);
+        return;
+      }
+
+      const currentMatch =
+        selectedColor
+          ? eligibleVariants.find((variant) => variant.color === selectedColor)
+          : (variantId && eligibleVariants.find((variant) => variant.id === variantId)) ??
+            null;
+
+      if (currentMatch) {
+        setSelectedColor(currentMatch.color ?? null);
+        setSelectedSize(currentMatch.size ?? null);
+        setVariantId(currentMatch.id);
+        return;
+      }
+
+      const defaultVariant =
+        eligibleVariants.find((variant) => variant.id === 22455) ??
+        eligibleVariants[0];
+
+      setSelectedColor(defaultVariant?.color ?? null);
+      setSelectedSize(defaultVariant?.size ?? null);
+      setVariantId(defaultVariant?.id ?? null);
+      return;
+    }
+
+    if (key === "pillow") {
+      const eligibleVariants = nextVariants.filter((variant) =>
+        PILLOW_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+      );
+
+      if (eligibleVariants.length === 0) {
+        setVariantId(null);
+        setSelectedSize(null);
+        return;
+      }
+
+      const currentMatch =
+        selectedSize
+          ? eligibleVariants.find(
+              (variant) => getPosterVariantSizeKey(variant) === selectedSize,
+            )
+          : (variantId && eligibleVariants.find((variant) => variant.id === variantId)) ??
+            null;
+
+      if (currentMatch) {
+        setSelectedSize(getPosterVariantSizeKey(currentMatch) ?? selectedSize);
+        setVariantId(currentMatch.id);
+        return;
+      }
+
+      const defaultVariant =
+        eligibleVariants.find((variant) => variant.id === 4532) ??
+        eligibleVariants[0];
+      const defaultSize =
+        getPosterVariantSizeKey(defaultVariant) ??
+        getPosterVariantSizeKey(eligibleVariants[0]);
+
+      if (defaultSize) {
+        setSelectedSize(defaultSize);
+      }
+
       if (defaultVariant) {
         setVariantId(defaultVariant.id);
       } else {
@@ -886,6 +1088,18 @@ export function ProductPreviewModal({
             ? nextVariants.some((variant: Variant) =>
                 CANVAS_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
               )
+            : productKey === "postcard"
+            ? nextVariants.some((variant: Variant) =>
+                POSTCARD_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+              )
+            : productKey === "candle"
+            ? nextVariants.some((variant: Variant) =>
+                CANDLE_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+              )
+            : productKey === "pillow"
+            ? nextVariants.some((variant: Variant) =>
+                PILLOW_VARIANTS_BY_ASPECT[aspect]?.includes(variant.id),
+              )
             : productKey === "framedPoster"
             ? nextVariants.some((variant: Variant) => {
                 const sizeKey = getPosterVariantSizeKey(variant);
@@ -977,6 +1191,38 @@ export function ProductPreviewModal({
       setVariantId(match.id);
     }
   }, [selectedColor, selectedSize, variants, isMugColorInside]);
+
+  useEffect(() => {
+    if (!isCandle || !selectedColor) return;
+
+    const match = variants.find((variant) => variant.color === selectedColor);
+
+    if (match) {
+      setSelectedSize(match.size ?? null);
+      setVariantId(match.id);
+    }
+  }, [isCandle, selectedColor, variants]);
+
+  useEffect(() => {
+    if (!isCandle || !selectedSize) return;
+
+    const scentsForSize = variants
+      .filter((variant) => variant.size === selectedSize)
+      .map((variant) => variant.color)
+      .filter(Boolean) as string[];
+
+    if (scentsForSize.length === 0) return;
+
+    if (!selectedColor || !scentsForSize.includes(selectedColor)) {
+      const fallbackScent =
+        scentsForSize.includes("White Sage and Lavender")
+          ? "White Sage and Lavender"
+          : scentsForSize[0];
+      if (fallbackScent) {
+        setSelectedColor(fallbackScent);
+      }
+    }
+  }, [isCandle, selectedColor, selectedSize, variants]);
 
   useEffect(() => {
     if (!isFramedPoster || !selectedColor || !selectedSize) return;
@@ -1147,7 +1393,13 @@ export function ProductPreviewModal({
 
   const getPosterSizeLabel = () => {
     const sizeKey =
-      (productKey === "framedPoster" ? selectedSize : null) ??
+      (
+        productKey === "framedPoster" ||
+        productKey === "pillow" ||
+        productKey === "postcard"
+          ? selectedSize
+          : null
+      ) ??
       getPosterVariantSizeKey(selectedVariant);
     return sizeKey ? formatPosterSizeLabelSafe(sizeKey) : selectedVariant?.name;
   };
@@ -1163,6 +1415,28 @@ export function ProductPreviewModal({
     if (productKey === "canvas") {
       const sizeLabel = getPosterSizeLabel();
       return sizeLabel ? `Canvas (${sizeLabel})` : "Canvas";
+    }
+
+    if (productKey === "postcard") {
+      const sizeLabel = selectedSize ? formatPosterSizeLabelSafe(selectedSize) : getPosterSizeLabel();
+      return sizeLabel ? `Standard Postcard (${sizeLabel})` : "Standard Postcard";
+    }
+
+    if (productKey === "candle") {
+      const sizeLabel =
+        normalizeCandleSizeKey(selectedVariant?.size) ??
+        normalizeCandleSizeKey(selectedVariant?.name);
+      const details = [selectedColor, sizeLabel].filter(Boolean).join(" / ");
+      return details
+        ? `Scented Soy Candle, 9oz (${details})`
+        : "Scented Soy Candle, 9oz";
+    }
+
+    if (productKey === "pillow") {
+      const sizeLabel = selectedSize ? formatPosterSizeLabelSafe(selectedSize) : getPosterSizeLabel();
+      return sizeLabel
+        ? `All-Over Print Basic Pillow (${sizeLabel})`
+        : "All-Over Print Basic Pillow";
     }
 
     if (productKey === "framedPoster") {
@@ -1223,6 +1497,8 @@ export function ProductPreviewModal({
 
     if (
       productKey === "poster" ||
+      productKey === "postcard" ||
+      productKey === "pillow" ||
       productKey === "canvas" ||
       productKey === "framedPoster"
     ) {
@@ -1237,6 +1513,13 @@ export function ProductPreviewModal({
       const mugSource = `${selectedVariant?.size ?? ""} ${selectedVariant?.name ?? ""}`.trim();
       const mugMatch = mugSource.match(/(11|15|20)\s*oz/i);
       return mugMatch ? `${mugMatch[1]} oz` : null;
+    }
+
+    if (productKey === "candle") {
+      return (
+        normalizeCandleSizeKey(selectedVariant?.size) ??
+        normalizeCandleSizeKey(selectedVariant?.name)
+      );
     }
 
     if (productKey === "coaster") {
@@ -1305,6 +1588,7 @@ export function ProductPreviewModal({
 
     const colorHex =
       productKey === "tshirt" ||
+      productKey === "candle" ||
       productKey === "mugBlackGlossy" ||
       productKey === "mugColorInside" ||
       productKey === "framedPoster"
@@ -1313,7 +1597,11 @@ export function ProductPreviewModal({
           : undefined
         : undefined;
     const posterSize =
-      productKey === "poster" || productKey === "canvas" || productKey === "framedPoster"
+      productKey === "poster" ||
+      productKey === "postcard" ||
+      productKey === "pillow" ||
+      productKey === "canvas" ||
+      productKey === "framedPoster"
         ? getPosterSizeLabel()
         : undefined;
     const mugSize = isMugProduct
@@ -1334,7 +1622,13 @@ export function ProductPreviewModal({
       size:
         productKey === "tshirt"
           ? selectedSize ?? undefined
-          : productKey === "poster" || productKey === "canvas" || productKey === "framedPoster"
+          : productKey === "candle"
+          ? normalizeCandleSizeKey(selectedSize ?? selectedVariant.size ?? selectedVariant.name) ?? undefined
+          : productKey === "poster" ||
+            productKey === "postcard" ||
+            productKey === "pillow" ||
+            productKey === "canvas" ||
+            productKey === "framedPoster"
           ? posterSize ?? undefined
           : productKey === "coaster"
           ? selectedSize ?? selectedVariant.size ?? selectedVariant.name ?? undefined
@@ -1345,6 +1639,7 @@ export function ProductPreviewModal({
           : undefined,
       color:
         productKey === "tshirt" ||
+        productKey === "candle" ||
         productKey === "mugBlackGlossy" ||
         productKey === "mugColorInside" ||
         productKey === "framedPoster"
@@ -1859,6 +2154,108 @@ export function ProductPreviewModal({
               </div>
             )}
 
+            {isPostcard && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                  Postcard size
+                </h4>
+
+                <div className="flex flex-wrap gap-2">
+                  {availableSizes.map((sizeKey) => {
+                    const normalizedSizeKey = sizeKey ?? "";
+                    const nextVariant = variants.find(
+                      (variant) => getPosterVariantSizeKey(variant) === normalizedSizeKey,
+                    );
+
+                    if (!nextVariant) return null;
+
+                    return (
+                      <button
+                        key={normalizedSizeKey}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(normalizedSizeKey);
+                          setVariantId(nextVariant.id);
+                        }}
+                        className={`px-4 py-2 rounded-md border text-sm transition ${
+                          selectedSize === normalizedSizeKey
+                            ? "bg-blue-500 border-blue-500 text-white"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                        }`}
+                      >
+                        {formatPosterSizeLabelSafe(normalizedSizeKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {isCandle && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                  Scent
+                </h4>
+
+                <div className="flex flex-wrap gap-2">
+                  {availableColors.map((color) => {
+                    const resolvedColor = color ?? "";
+                    return (
+                      <button
+                        key={resolvedColor}
+                        type="button"
+                        onClick={() => setSelectedColor(resolvedColor)}
+                        className={`rounded-md border px-3 py-2 text-sm transition ${
+                          selectedColor === resolvedColor
+                            ? "bg-blue-500 border-blue-500 text-white"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                        }`}
+                      >
+                        {resolvedColor}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {isPillow && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                  Pillow size
+                </h4>
+
+                <div className="flex flex-wrap gap-2">
+                  {availableSizes.map((sizeKey) => {
+                    const normalizedSizeKey = sizeKey ?? "";
+                    const nextVariant = variants.find(
+                      (variant) => getPosterVariantSizeKey(variant) === normalizedSizeKey,
+                    );
+
+                    if (!nextVariant) return null;
+
+                    return (
+                      <button
+                        key={normalizedSizeKey}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSize(normalizedSizeKey);
+                          setVariantId(nextVariant.id);
+                        }}
+                        className={`px-4 py-2 rounded-md border text-sm transition ${
+                          selectedSize === normalizedSizeKey
+                            ? "bg-blue-500 border-blue-500 text-white"
+                            : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
+                        }`}
+                      >
+                        {formatPosterSizeLabelSafe(normalizedSizeKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {isMugProduct && !isPaidTrafficFunnel && (
             <>
               {isMugColorInside && (
@@ -2044,7 +2441,7 @@ export function ProductPreviewModal({
 
             )}
 
-            {(productKey === "poster" || productKey === "canvas" || productKey === "framedPoster") && variantId && !isPaidTrafficFunnel && (
+            {(productKey === "poster" || productKey === "postcard" || productKey === "candle" || productKey === "pillow" || productKey === "canvas" || productKey === "framedPoster") && variantId && !isPaidTrafficFunnel && (
               <Button
                 className="w-full mb-4"
                 disabled={loadingPreview || previewCooldown !== null || isRemovingBackground}
@@ -2205,6 +2602,21 @@ export function ProductPreviewModal({
             {productKey === "canvas" && (
               <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 Hand-stretched canvas with mounting brackets included.
+              </p>
+            )}
+            {isPostcard && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Thick matte postcard with a coated front finish.
+              </p>
+            )}
+            {isCandle && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Natural soy wax candle with a 50-60 hour burn time.
+              </p>
+            )}
+            {isPillow && (
+              <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                Same design printed on both sides.
               </p>
             )}
             {productKey === "framedPoster" && (

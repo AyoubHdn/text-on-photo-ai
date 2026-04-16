@@ -1,4 +1,7 @@
 type ProductType =
+  | "postcard"
+  | "candle"
+  | "pillow"
   | "mug"
   | "mugBlackGlossy"
   | "mugColorInside"
@@ -16,6 +19,13 @@ type ProductNudgeBlockProps = {
 export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
   const points = (() => {
     switch (productType) {
+      case "postcard":
+        return [
+          "Thick matte cardboard paper",
+          "4 x 6 in standard postcard format",
+          "Coated outer surface for a clean finish",
+          "Shipping available in selected countries",
+        ];
       case "mug":
         return [
           "High-quality glossy ceramic",
@@ -57,6 +67,20 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
           "Hand-stretched over solid wood stretcher bars",
           "1.25 in thick canvas profile",
           "Shipping available in selected countries",
+        ];
+      case "candle":
+        return [
+          "100% natural soy wax",
+          "Cotton wick in a smooth glass jar",
+          "Custom 3 x 2 in front label",
+          "Available in the US",
+        ];
+      case "pillow":
+        return [
+          "100% polyester case and insert",
+          "Hidden zipper and machine-washable case",
+          "Same design printed on front and back",
+          "Available in the US",
         ];
       case "journal":
         return [

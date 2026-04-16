@@ -3,9 +3,9 @@ import type { PricedProductType } from "~/server/services/productPricingSizeKeys
 export const PRICING_SYNC_SHARDS = {
   "standard-mugs": ["mug", "mugBlackGlossy"],
   "color-mugs": ["mugColorInside"],
-  "wall-art": ["poster", "framedPoster", "canvas"],
+  "wall-art": ["poster", "framedPoster", "canvas", "pillow"],
   apparel: ["tshirt"],
-  misc: ["coaster", "journal"],
+  misc: ["coaster", "journal", "candle", "postcard"],
 } as const satisfies Record<string, readonly PricedProductType[]>;
 
 export type PricingSyncShard = keyof typeof PRICING_SYNC_SHARDS;

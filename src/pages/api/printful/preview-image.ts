@@ -7,9 +7,12 @@ import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
 import {
+  CANDLE_PRINT_CONFIG,
   COASTER_PRINT_CONFIG,
   JOURNAL_PRINT_CONFIG,
   MUG_PRINT_CONFIG,
+  PILLOW_PRINT_CONFIG,
+  POSTCARD_PRINT_CONFIG,
 } from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 import { generateRectangularPrintImage } from "~/server/printful/generateRectangularPrintImage";
@@ -143,6 +146,56 @@ export default async function handler(
           .toBuffer(),
         printWidth: journalConfig.areaWidth,
         printHeight: journalConfig.areaHeight,
+      });
+    } else if (product.key === "candle") {
+      const resolvedVariantId = Number(variantId ?? product.defaultVariantId);
+      const candleConfig = CANDLE_PRINT_CONFIG[resolvedVariantId];
+      if (!candleConfig) {
+        return res.status(400).json({ error: "Invalid candle variant" });
+      }
+
+      outputBuffer = await generateRectangularPrintImage({
+        inputBuffer: await sharp(buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer(),
+        printWidth: candleConfig.areaWidth,
+        printHeight: candleConfig.areaHeight,
+      });
+    } else if (product.key === "postcard") {
+      const resolvedVariantId = Number(variantId ?? product.defaultVariantId);
+      const postcardConfig = POSTCARD_PRINT_CONFIG[resolvedVariantId];
+      if (!postcardConfig) {
+        return res.status(400).json({ error: "Invalid postcard variant" });
+      }
+
+      outputBuffer = await generateRectangularPrintImage({
+        inputBuffer: await sharp(buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer(),
+        printWidth: postcardConfig.areaWidth,
+        printHeight: postcardConfig.areaHeight,
+      });
+    } else if (product.key === "pillow") {
+      const selectedAspect = (aspect as "1:1" | "3:2" | "4:5" | "16:9") ?? "1:1";
+      const resolvedVariantId = Number(
+        variantId ??
+          product.defaultVariantIdByAspect[selectedAspect] ??
+          product.defaultVariantId,
+      );
+      const pillowConfig = PILLOW_PRINT_CONFIG[resolvedVariantId];
+      if (!pillowConfig) {
+        return res.status(400).json({ error: "Invalid pillow variant" });
+      }
+
+      outputBuffer = await generateRectangularPrintImage({
+        inputBuffer: await sharp(buffer)
+          .png({ quality: 100 })
+          .withMetadata({ density: 300 })
+          .toBuffer(),
+        printWidth: pillowConfig.areaWidth,
+        printHeight: pillowConfig.areaHeight,
       });
     } else if (product.key === "tshirt") {
       outputBuffer = await generateTshirtPrintImage({

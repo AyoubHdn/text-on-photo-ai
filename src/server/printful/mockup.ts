@@ -2,11 +2,14 @@
 import { isMugProductKey } from "~/config/physicalProducts";
 import { printfulRequest } from "./client";
 import {
+  CANDLE_PRINT_CONFIG,
   CANVAS_PRINT_CONFIG,
   COASTER_PRINT_CONFIG,
   FRAMED_POSTER_PRINT_CONFIG,
   JOURNAL_PRINT_CONFIG,
   MUG_PRINT_CONFIG,
+  PILLOW_PRINT_CONFIG,
+  POSTCARD_PRINT_CONFIG,
   POSTER_ASPECT_CONFIG,
   type PrintAreaConfig,
 } from "./printAreas";
@@ -73,6 +76,72 @@ export async function createMockupTask(
 
     files.push({
       type: config.fileType,
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+  }
+
+  if (product.key === "postcard") {
+    const config = POSTCARD_PRINT_CONFIG[variantId];
+    if (!config) throw new Error("Postcard print config not found");
+
+    files.push({
+      type: config.fileType,
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+  }
+
+  if (product.key === "candle") {
+    const config = CANDLE_PRINT_CONFIG[variantId];
+    if (!config) throw new Error("Candle print config not found");
+
+    files.push({
+      type: config.fileType,
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+  }
+
+  if (product.key === "pillow") {
+    const config = PILLOW_PRINT_CONFIG[variantId];
+    if (!config) throw new Error("Pillow print config not found");
+
+    files.push({
+      type: "front",
+      image_url: imageUrl,
+      position: {
+        area_width: config.areaWidth,
+        area_height: config.areaHeight,
+        width: config.width,
+        height: config.height,
+        top: config.top,
+        left: config.left,
+      },
+    });
+    files.push({
+      type: "back",
       image_url: imageUrl,
       position: {
         area_width: config.areaWidth,

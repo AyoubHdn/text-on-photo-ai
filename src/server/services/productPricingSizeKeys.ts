@@ -1,6 +1,9 @@
 import { isMugProductKey } from "~/config/physicalProducts";
 
 export type PricedProductType =
+  | "postcard"
+  | "candle"
+  | "pillow"
   | "mug"
   | "mugBlackGlossy"
   | "mugColorInside"
@@ -35,6 +38,13 @@ export function normalizeMugSizeKey(value?: string): string | null {
   if (!value) return null;
 
   const match = value.match(/(11|15|20)\s*oz/i);
+  return match ? `${match[1]} oz` : null;
+}
+
+export function normalizeCandleSizeKey(value?: string): string | null {
+  if (!value) return null;
+
+  const match = value.match(/(9)\s*oz/i);
   return match ? `${match[1]} oz` : null;
 }
 
@@ -81,6 +91,10 @@ export function normalizePricingSizeKey(
 
   if (isMugProductKey(productType)) {
     return normalizeMugSizeKey(composite);
+  }
+
+  if (productType === "candle") {
+    return normalizeCandleSizeKey(composite);
   }
 
   if (productType === "tshirt") {

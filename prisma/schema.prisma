@@ -179,7 +179,7 @@ model ProductOrder {
     userId       String
     user         User     @relation(fields: [userId], references: [id])
 
-    productKey   String   // poster | framedPoster | canvas | journal | tshirt | mug | mugBlackGlossy | mugColorInside | coaster
+    productKey   String   // poster | framedPoster | canvas | postcard | candle | pillow | journal | tshirt | mug | mugBlackGlossy | mugColorInside | coaster
     variantId    Int
     quantity     Int      @default(1)
     variantName  String?

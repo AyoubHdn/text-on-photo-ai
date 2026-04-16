@@ -16,9 +16,12 @@ import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
 import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
 import {
+  CANDLE_PRINT_CONFIG,
   COASTER_PRINT_CONFIG,
   JOURNAL_PRINT_CONFIG,
   MUG_PRINT_CONFIG,
+  PILLOW_PRINT_CONFIG,
+  POSTCARD_PRINT_CONFIG,
 } from "~/server/printful/printAreas";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 import type { AspectRatio } from "~/server/printful/aspects";
@@ -237,6 +240,54 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             journalBuffer,
             order.userId
           );
+        } else if (order.productKey === "candle") {
+          const candleConfig = CANDLE_PRINT_CONFIG[order.variantId];
+          if (!candleConfig) {
+            throw new Error(`Invalid candle variant: ${order.variantId}`);
+          }
+
+          const candleBuffer = await generateRectangularPrintImage({
+            inputBuffer: printReadyBuffer,
+            printWidth: candleConfig.areaWidth,
+            printHeight: candleConfig.areaHeight,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            candleBuffer,
+            order.userId
+          );
+        } else if (order.productKey === "postcard") {
+          const postcardConfig = POSTCARD_PRINT_CONFIG[order.variantId];
+          if (!postcardConfig) {
+            throw new Error(`Invalid postcard variant: ${order.variantId}`);
+          }
+
+          const postcardBuffer = await generateRectangularPrintImage({
+            inputBuffer: printReadyBuffer,
+            printWidth: postcardConfig.areaWidth,
+            printHeight: postcardConfig.areaHeight,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            postcardBuffer,
+            order.userId
+          );
+        } else if (order.productKey === "pillow") {
+          const pillowConfig = PILLOW_PRINT_CONFIG[order.variantId];
+          if (!pillowConfig) {
+            throw new Error(`Invalid pillow variant: ${order.variantId}`);
+          }
+
+          const pillowBuffer = await generateRectangularPrintImage({
+            inputBuffer: printReadyBuffer,
+            printWidth: pillowConfig.areaWidth,
+            printHeight: pillowConfig.areaHeight,
+          });
+
+          printImageUrl = await convertWebpToPngAndUpload(
+            pillowBuffer,
+            order.userId
+          );
         } else if (order.productKey === "tshirt") {
           const tshirtBuffer = await generateTshirtPrintImage({
             inputBuffer: buffer,
@@ -264,6 +315,17 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
       try {
         const placementType =
           PRODUCT_PLACEMENT[order.productKey as keyof typeof PRODUCT_PLACEMENT];
+        const files =
+          order.productKey === "pillow"
+            ? [
+                { url: printImageUrl, type: "front" as const },
+                { url: printImageUrl, type: "back" as const },
+              ]
+            : [
+                placementType
+                  ? { url: printImageUrl, type: placementType }
+                  : { url: printImageUrl },
+              ];
         draftOrder = await printfulRequest("/orders", "POST", {
           // Draft order created after payment
           recipient,
@@ -272,11 +334,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
             {
               variant_id: order.variantId,
               quantity: orderQuantity,
-              files: [
-                placementType
-                  ? { url: printImageUrl, type: placementType }
-                  : { url: printImageUrl },
-              ],
+              files,
             },
           ],
           confirm: false,

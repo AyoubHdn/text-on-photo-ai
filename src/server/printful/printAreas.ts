@@ -193,6 +193,79 @@ export const CANVAS_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
   ...createPrintAreaMap([19323], CANVAS_30X40_PRINT_AREA),
 };
 
+/* ---------------- CANDLES ---------------- */
+
+const CANDLE_PRINT_AREA: PrintAreaConfig = {
+  fileType: "front",
+  areaWidth: 900,
+  areaHeight: 600,
+  width: 900,
+  height: 600,
+  top: 0,
+  left: 0,
+};
+
+export const CANDLE_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
+  ...createPrintAreaMap(
+    [22804, 22806, 22807, 22808, 22809, 22810, 22811, 22812, 22455],
+    CANDLE_PRINT_AREA,
+  ),
+};
+
+/* ---------------- POSTCARDS ---------------- */
+
+const POSTCARD_PRINT_AREA: PrintAreaConfig = {
+  fileType: "default",
+  areaWidth: 1842,
+  areaHeight: 1240,
+  width: 1842,
+  height: 1240,
+  top: 0,
+  left: 0,
+};
+
+export const POSTCARD_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
+  ...createPrintAreaMap([11513], POSTCARD_PRINT_AREA),
+};
+
+/* ---------------- PILLOWS ---------------- */
+
+const PILLOW_18X18_PRINT_AREA: PrintAreaConfig = {
+  fileType: "front",
+  areaWidth: 2850,
+  areaHeight: 2850,
+  width: 2850,
+  height: 2850,
+  top: 0,
+  left: 0,
+};
+
+const PILLOW_20X12_PRINT_AREA: PrintAreaConfig = {
+  fileType: "front",
+  areaWidth: 3150,
+  areaHeight: 1950,
+  width: 3150,
+  height: 1950,
+  top: 0,
+  left: 0,
+};
+
+const PILLOW_22X22_PRINT_AREA: PrintAreaConfig = {
+  fileType: "front",
+  areaWidth: 3450,
+  areaHeight: 3450,
+  width: 3450,
+  height: 3450,
+  top: 0,
+  left: 0,
+};
+
+export const PILLOW_PRINT_CONFIG: Record<number, PrintAreaConfig> = {
+  ...createPrintAreaMap([4532], PILLOW_18X18_PRINT_AREA),
+  ...createPrintAreaMap([9513], PILLOW_20X12_PRINT_AREA),
+  ...createPrintAreaMap([11075], PILLOW_22X22_PRINT_AREA),
+};
+
 /* ---------------- JOURNAL ---------------- */
 
 const JOURNAL_PRINT_AREA: PrintAreaConfig = {

@@ -39,6 +39,7 @@ type ProductCategoryPageProps = {
   eyebrow: string;
   intro: string;
   secondaryIntro: string;
+  categoryCardsHeading?: string;
   useCases: ContentCard[];
   highlights: ContentCard[];
   generatorLinks: PageLink[];
@@ -58,6 +59,7 @@ export function ProductCategoryPage({
   eyebrow,
   intro,
   secondaryIntro,
+  categoryCardsHeading,
   useCases,
   highlights,
   generatorLinks,
@@ -224,7 +226,7 @@ export function ProductCategoryPage({
           <div className="container mx-auto max-w-6xl">
             <div className="max-w-3xl">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                Browse personalized gift categories
+                {categoryCardsHeading ?? "Browse related categories"}
               </h2>
               <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
                 Use these category cards to narrow the gift idea by product,
@@ -308,20 +310,27 @@ export function ProductCategoryPage({
 
         <section className="bg-gray-50 px-4 py-16 dark:bg-gray-800">
           <div className="container mx-auto max-w-6xl">
-            <div className="max-w-3xl">
-              <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                See how the artwork looks on finished products
-              </h2>
-              <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
-                Product mockups show how the artwork can look on finished items
-                while keeping the design itself front and center.
-              </p>
+            <div className="grid items-end gap-4 md:flex md:items-end md:justify-between max-w-6xl">
+              <div className="max-w-3xl">
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                  See how the artwork looks on finished products
+                </h2>
+                <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
+                  Product mockups show how the artwork can look on finished items
+                  while keeping the design itself front and center.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 md:text-right">
+                <span className="rounded-full bg-white px-3 py-1.5 shadow-sm dark:bg-slate-800">Free worldwide shipping</span>
+                <span className="rounded-full bg-white px-3 py-1.5 shadow-sm dark:bg-slate-800">Printed per order</span>
+                <span className="rounded-full bg-white px-3 py-1.5 shadow-sm dark:bg-slate-800">Pricing shown at checkout</span>
+              </div>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
               {productMockups.map((mockup) => (
                 <article
                   key={`${mockup.href}-${mockup.title}`}
-                  className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                  className="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
                 >
                   <div className="relative aspect-[4/3]">
                     <Image
@@ -331,19 +340,21 @@ export function ProductCategoryPage({
                       className="object-cover"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className="flex flex-1 flex-col p-6">
                     <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                       {mockup.title}
                     </h3>
-                    <p className="mt-3 text-slate-600 dark:text-slate-300">
+                    <p className="mt-3 flex-1 text-slate-600 dark:text-slate-300">
                       {mockup.description}
                     </p>
-                    <Link
-                      href={mockup.href}
-                      className="mt-5 inline-flex rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
-                    >
-                      {mockup.ctaLabel}
-                    </Link>
+                    <div className="mt-5 flex items-center gap-3">
+                      <Link
+                        href={mockup.href}
+                        className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                      >
+                        {mockup.ctaLabel}
+                      </Link>
+                    </div>
                   </div>
                 </article>
               ))}

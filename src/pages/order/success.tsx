@@ -97,6 +97,12 @@ export default function OrderSuccess() {
       ? PRODUCT_PRESENTATION.coaster.title
       : order?.productKey === "canvas"
       ? PRODUCT_PRESENTATION.canvas.title
+      : order?.productKey === "postcard"
+      ? PRODUCT_PRESENTATION.postcard.title
+      : order?.productKey === "candle"
+      ? PRODUCT_PRESENTATION.candle.title
+      : order?.productKey === "pillow"
+      ? PRODUCT_PRESENTATION.pillow.title
       : order?.productKey === "journal"
       ? PRODUCT_PRESENTATION.journal.title
       : order?.productKey === "framedPoster"
@@ -122,6 +128,12 @@ export default function OrderSuccess() {
       : order?.productKey === "coaster"
       ? [order?.size].filter(Boolean).join(" / ")
       : order?.productKey === "canvas"
+      ? [order?.size].filter(Boolean).join(" / ")
+      : order?.productKey === "postcard"
+      ? [order?.size].filter(Boolean).join(" / ")
+      : order?.productKey === "candle"
+      ? [order?.color, order?.size].filter(Boolean).join(" / ")
+      : order?.productKey === "pillow"
       ? [order?.size].filter(Boolean).join(" / ")
       : order?.productKey === "journal"
       ? [order?.size].filter(Boolean).join(" / ")

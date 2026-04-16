@@ -7,7 +7,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 
-import { Button } from "~/component/Button";
 import { SeoHead } from "~/component/SeoHead";
 import { getCommunityImagePresentation } from "~/lib/styleImageAlt";
 import { FEATURED_NAME_PAGES } from "~/lib/nameArtSeo";
@@ -278,6 +277,7 @@ const HomePage: NextPage = () => {
       />
       <main className="bg-white dark:bg-gray-900">
         <HeroBanner />
+        <TrustStrip />
         <ProductsSection />
         <PopularNameExamplesSection />
         <ProductMockupSection />
@@ -346,19 +346,19 @@ function HeroBanner() {
             occasion-focused gifts.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <Button
-              onClick={handleScrollToProducts}
-              className="px-8 py-4 text-base md:text-lg"
+            <Link
+              href="/name-art-generator"
+              className="inline-block rounded-lg bg-blue-600 px-8 py-4 text-base font-bold text-white transition hover:bg-blue-700 md:text-lg"
               id="try-it-free-button-heroBanner"
             >
-              Explore Visual Generators
-            </Button>
-            <Link
-              href="#gift-ideas"
+              Create Your Design Free
+            </Link>
+            <button
+              onClick={handleScrollToProducts}
               className="rounded-lg border border-slate-300 px-6 py-4 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
             >
-              Browse Gift Ideas
-            </Link>
+              Browse Examples
+            </button>
           </div>
           <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
             <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">
@@ -399,6 +399,36 @@ function HeroBanner() {
         </div>
       </div>
     </section>
+  );
+}
+
+function TrustStrip() {
+  const stats = [
+    { icon: "🎨", label: "AI-generated designs", value: "10,000+" },
+    { icon: "🌍", label: "Shipped worldwide", value: "Free shipping" },
+    { icon: "⭐", label: "Customer satisfaction", value: "4.9 / 5" },
+    { icon: "🔒", label: "Secure checkout", value: "Powered by Stripe" },
+  ];
+
+  return (
+    <div className="border-y border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+      <div className="container mx-auto px-6 lg:px-8">
+        <ul className="flex flex-wrap items-center justify-center divide-y divide-slate-200 sm:divide-x sm:divide-y-0 dark:divide-slate-700">
+          {stats.map((stat) => (
+            <li
+              key={stat.label}
+              className="flex w-full items-center gap-3 px-6 py-4 sm:w-auto"
+            >
+              <span className="text-2xl">{stat.icon}</span>
+              <div>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{stat.value}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -719,7 +749,7 @@ function FinalCTASection() {
           ) : (
             <button
               className="rounded-lg bg-white px-8 py-4 text-lg font-bold text-blue-700 transition hover:bg-blue-50"
-              onClick={() => signIn().catch(console.error)}
+              onClick={() => void signIn(undefined, { callbackUrl: "/name-art-generator" })}
             >
               Sign Up and Create Your First Design
             </button>

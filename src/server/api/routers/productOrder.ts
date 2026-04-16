@@ -84,6 +84,14 @@ function normalizeJournalSize(value?: string | null): string | null {
   return `${match[1]}x${match[2]}`;
 }
 
+function normalizeCandleSize(value?: string | null): string | null {
+  if (!value) return null;
+
+  const match = value.match(/(9)\s*oz/i);
+  if (!match) return null;
+  return `${match[1]} oz`;
+}
+
 function resolvePricingVariant(order: {
   productKey: string;
   size: string | null;
@@ -97,6 +105,8 @@ function resolvePricingVariant(order: {
 
   if (
     order.productKey === "poster" ||
+    order.productKey === "postcard" ||
+    order.productKey === "pillow" ||
     order.productKey === "framedPoster" ||
     order.productKey === "canvas"
   ) {
@@ -111,6 +121,13 @@ function resolvePricingVariant(order: {
     const match = source.match(/(11|15|20)\s*oz/i);
     if (!match) throw new Error("Missing mug size for pricing.");
     return `${match[1]} oz`;
+  }
+
+  if (order.productKey === "candle") {
+    const candleSize =
+      normalizeCandleSize(order.size) ?? normalizeCandleSize(order.variantName);
+    if (!candleSize) throw new Error("Missing candle size for pricing.");
+    return candleSize;
   }
 
   if (order.productKey === "coaster") {
@@ -153,6 +170,9 @@ export const productOrderRouter = createTRPCRouter({
       z.object({
         productKey: z.enum([
           "poster",
+          "postcard",
+          "candle",
+          "pillow",
           "framedPoster",
           "canvas",
           "journal",
@@ -350,6 +370,9 @@ export const productOrderRouter = createTRPCRouter({
         const productType =
           order.productKey as
             | "poster"
+            | "postcard"
+            | "candle"
+            | "pillow"
             | "framedPoster"
             | "canvas"
             | "journal"
@@ -488,6 +511,9 @@ export const productOrderRouter = createTRPCRouter({
         const productType =
           order.productKey as
             | "poster"
+            | "postcard"
+            | "candle"
+            | "pillow"
             | "framedPoster"
             | "canvas"
             | "journal"

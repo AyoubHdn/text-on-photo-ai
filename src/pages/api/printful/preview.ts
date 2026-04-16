@@ -14,9 +14,12 @@ import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
 import { generateCoasterPrintImage } from "~/server/printful/generateCoasterPrintImage";
 import { generateMugWrapImage } from "~/server/printful/generateMugWrapImage";
 import {
+  CANDLE_PRINT_CONFIG,
   COASTER_PRINT_CONFIG,
   JOURNAL_PRINT_CONFIG,
   MUG_PRINT_CONFIG,
+  PILLOW_PRINT_CONFIG,
+  POSTCARD_PRINT_CONFIG,
 } from "~/server/printful/printAreas";
 import sharp from "sharp";
 import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
@@ -183,6 +186,26 @@ export default async function handler(
       );
     }
 
+    else if (product.key === "postcard") {
+      const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
+      const postcardConfig = POSTCARD_PRINT_CONFIG[resolvedVariantId];
+
+      if (!postcardConfig) {
+        throw new Error(`Invalid postcard variant: ${resolvedVariantId}`);
+      }
+
+      const postcardBuffer = await generateRectangularPrintImage({
+        inputBuffer: printReadyBuffer,
+        printWidth: postcardConfig.areaWidth,
+        printHeight: postcardConfig.areaHeight,
+      });
+
+      printImageUrl = await convertWebpToPngAndUpload(
+        postcardBuffer,
+        uploadOwnerId,
+      );
+    }
+
     /* ---------------- COASTER ---------------- */
     else if (product.key === "coaster") {
       const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
@@ -221,6 +244,48 @@ export default async function handler(
 
       printImageUrl = await convertWebpToPngAndUpload(
         journalBuffer,
+        uploadOwnerId
+      );
+    }
+    else if (product.key === "candle") {
+      const resolvedVariantId = variantIdFromClient ?? product.defaultVariantId;
+      const candleConfig = CANDLE_PRINT_CONFIG[resolvedVariantId];
+
+      if (!candleConfig) {
+        throw new Error(`Invalid candle variant: ${resolvedVariantId}`);
+      }
+
+      const candleBuffer = await generateRectangularPrintImage({
+        inputBuffer: printReadyBuffer,
+        printWidth: candleConfig.areaWidth,
+        printHeight: candleConfig.areaHeight,
+      });
+
+      printImageUrl = await convertWebpToPngAndUpload(
+        candleBuffer,
+        uploadOwnerId,
+      );
+    }
+    else if (product.key === "pillow") {
+      const selectedAspect = aspect ?? "1:1";
+      const resolvedVariantId =
+        variantIdFromClient ??
+        product.defaultVariantIdByAspect[selectedAspect] ??
+        product.defaultVariantId;
+      const pillowConfig = PILLOW_PRINT_CONFIG[resolvedVariantId];
+
+      if (!pillowConfig) {
+        throw new Error(`Invalid pillow variant: ${resolvedVariantId}`);
+      }
+
+      const pillowBuffer = await generateRectangularPrintImage({
+        inputBuffer: printReadyBuffer,
+        printWidth: pillowConfig.areaWidth,
+        printHeight: pillowConfig.areaHeight,
+      });
+
+      printImageUrl = await convertWebpToPngAndUpload(
+        pillowBuffer,
         uploadOwnerId
       );
     }
@@ -277,6 +342,18 @@ export default async function handler(
         product.defaultVariantId;
       effectiveAspect = undefined;
     }
+    else if (product.key === "postcard") {
+      variantId = variantIdFromClient ?? product.defaultVariantId;
+      effectiveAspect = undefined;
+    }
+    else if (product.key === "pillow") {
+      const selectedAspect = aspect ?? "1:1";
+      variantId =
+        variantIdFromClient ??
+        product.defaultVariantIdByAspect[selectedAspect] ??
+        product.defaultVariantId;
+      effectiveAspect = undefined;
+    }
     else if (product.key === "framedPoster") {
       const selectedAspect = aspect ?? "1:1";
       variantId =
@@ -301,6 +378,10 @@ export default async function handler(
       effectiveAspect = undefined;
     }
     else if (product.key === "journal") {
+      variantId = variantIdFromClient ?? product.defaultVariantId;
+      effectiveAspect = undefined;
+    }
+    else if (product.key === "candle") {
       variantId = variantIdFromClient ?? product.defaultVariantId;
       effectiveAspect = undefined;
     }

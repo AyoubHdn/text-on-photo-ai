@@ -4,6 +4,9 @@ export type ProductKey =
   | "poster"
   | "framedPoster"
   | "canvas"
+  | "postcard"
+  | "candle"
+  | "pillow"
   | "journal"
   | "tshirt"
   | "mug"
@@ -36,6 +39,25 @@ export const PRODUCT_PRESENTATION: Record<ProductKey, ProductPresentation> = {
     cardDescription: "Fade-resistant canvas print, hand-stretched and ready to hang",
     cardImage: "https://files.cdn.printful.com/o/products/3/product_1613463725.jpg",
     title: "Canvas (in)",
+  },
+  postcard: {
+    cardLabel: "Postcard",
+    cardDescription: "Thick matte postcard with a custom printed front",
+    cardImage: "https://files.cdn.printful.com/o/products/433/product_1602054891.jpg",
+    title: "Standard Postcard",
+  },
+  candle: {
+    cardLabel: "Soy Candle",
+    cardDescription: "Natural soy wax candle with a custom printed front label",
+    cardImage:
+      "https://files.cdn.printful.com/o/upload/product-catalog-img/28/280cf4f2390e842ed112dd43f290c401_l",
+    title: "Scented Soy Candle, 9oz",
+  },
+  pillow: {
+    cardLabel: "Basic Pillow",
+    cardDescription: "Soft all-over print pillow with insert included",
+    cardImage: "https://files.cdn.printful.com/o/products/83/product_1573737219.jpg",
+    title: "All-Over Print Basic Pillow",
   },
   journal: {
     cardLabel: "Hardcover Journal Matte",
@@ -82,6 +104,9 @@ export const PRODUCT_SUPPORTED_ASPECTS: Record<ProductKey, AspectRatio[]> = {
   poster: ["1:1", "4:5", "3:2"],
   framedPoster: ["1:1", "4:5", "3:2"],
   canvas: ["1:1", "4:5", "3:2"],
+  postcard: ["3:2"],
+  candle: ["3:2"],
+  pillow: ["1:1", "3:2"],
   journal: ["1:1", "4:5", "3:2"],
   mug: ["1:1", "4:5", "3:2"],
   mugBlackGlossy: ["1:1", "4:5", "3:2"],
@@ -94,6 +119,9 @@ export const PRODUCTS_PAGE_PRODUCT_KEYS: ProductKey[] = [
   "poster",
   "framedPoster",
   "canvas",
+  "postcard",
+  "candle",
+  "pillow",
   "journal",
   "tshirt",
   "mug",
