@@ -62,13 +62,13 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         : "container mx-auto flex h-16 items-center justify-center px-4 dark:bg-gray-800"
                 }
             >
-                <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-2">
+                <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-1.5">
                     <Image
                         src="/logo.webp"
                         alt="Name Design AI Icon"
-                        width={36}
-                        height={36}
-                        className="h-8 w-8 shrink-0 rounded sm:h-9 sm:w-9"
+                        width={40}
+                        height={40}
+                        className="h-9 w-9 shrink-0 rounded sm:h-10 sm:w-10"
                         unoptimized
                     />
                     <Image
@@ -76,7 +76,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         alt="Name Design AI"
                         width={160}
                         height={36}
-                        className="h-7 w-auto shrink-0 sm:h-8"
+                        className="h-[29px] w-auto shrink-0 sm:h-[33px]"
                         unoptimized
                     />
                 </PrimaryLink>
@@ -89,13 +89,13 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
             {/* --- LEFT NAVIGATION --- */}
             <ul className="flex gap-8 items-center">
                 <li className="shrink-0">
-                    <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-2">
+                    <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-1.5">
                         <Image
                             src="/logo.webp"
                             alt="Name Design AI Icon"
-                            width={36}
-                            height={36}
-                            className="h-8 w-8 shrink-0 rounded sm:h-9 sm:w-9"
+                            width={40}
+                            height={40}
+                            className="h-9 w-9 shrink-0 rounded sm:h-10 sm:w-10"
                             unoptimized
                         />
                         <Image
@@ -103,7 +103,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                             alt="Name Design AI"
                             width={160}
                             height={36}
-                            className="h-7 w-auto shrink-0 sm:h-8"
+                            className="h-[29px] w-auto shrink-0 sm:h-[33px]"
                             unoptimized
                         />
                     </PrimaryLink>

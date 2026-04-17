@@ -280,7 +280,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
         </div>
       ) : isCheckoutRoute ? (
         <div className="min-h-screen bg-white text-slate-900">
-          <Header minimal forceLight />
+          <Header minimal />
           <main>
             <Component {...pageProps} />
           </main>

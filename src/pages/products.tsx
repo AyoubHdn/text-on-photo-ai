@@ -222,6 +222,20 @@ const ProductsPage: NextPage = () => {
 
               {isLoggedIn && compatibleDesigns.length > 0 && (
                 <>
+                  <div className="mb-4 border-b border-slate-100 pb-4">
+                    <p className="mb-2 text-sm text-slate-500">Want a different design?</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link href="/name-art-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">
+                        + Name Art
+                      </Link>
+                      <Link href="/arabic-name-art-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">
+                        + Arabic Name Art
+                      </Link>
+                      <Link href="/couples-name-art-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">
+                        + Couple Art
+                      </Link>
+                    </div>
+                  </div>
                   <div className="mb-3 text-xs text-slate-500 dark:text-slate-400">
                     {compatibleDesigns.length} compatible design
                     {compatibleDesigns.length > 1 ? "s" : ""}

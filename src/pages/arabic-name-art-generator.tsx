@@ -120,6 +120,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const generationSubmitLockRef = useRef(false);
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
+  const productsSectionRef = useRef<HTMLElement>(null);
+  const hasScrolledToProducts = useRef(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
@@ -259,6 +261,16 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
     return () => clearInterval(timer);
   }, [previewCooldown]);
+
+  useEffect(() => {
+    if (imagesUrl.length > 0 && !hasScrolledToProducts.current) {
+      hasScrolledToProducts.current = true;
+      const timer = setTimeout(() => {
+        productsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [imagesUrl.length]);
 
   const startGeneratorSignIn = () => {
     try {
@@ -779,63 +791,83 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               </div>
             )}
 
-            <section className="mt-10">
-              <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
-                ✨ Your design is ready! Imagine this on your favorite mug, shirt, or framed on your wall.
+            <section ref={productsSectionRef} className="mt-10 scroll-mt-20">
+              {/* Nudge banner */}
+              <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-4 py-4">
+                <span className="text-3xl">☕</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-brand-900">Your art is ready to print!</p>
+                  <p className="text-sm text-brand-700">Preview it on a real mug below — free, no commitment.</p>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold mb-6 text-center">
-                Turn your design into a real product
-              </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {GENERATOR_PRODUCT_THUMBNAILS.arabic.map((p) => (
-                  <div
-                    key={p.key}
-                    className="group relative rounded-xl overflow-hidden border bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition"
-                  >
-                    <div className="relative h-44 bg-gray-100 dark:bg-gray-800">
-                      <img
-                        src={p.image}
-                        alt={p.label}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-
-                    <div className="p-4 text-center">
-                      <h4 className="text-lg font-semibold mb-1">{p.label}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        {p.description}
-                      </p>
-
-                      {previewCooldown !== null && (
-                        <div className="mb-4 rounded-lg bg-yellow-100 text-yellow-900 px-4 py-3 text-sm">
-                          Preview temporarily paused due to high demand.
-                          <br />
-                          You can try again in <strong>{previewCooldown}s</strong>.
-                        </div>
-                      )}
-
-                      <button
-                        className="inline-block px-8 py-4 text-l font-bold bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition"
-                        disabled={previewCooldown !== null}
-                        onClick={() => {
-                          if (
-                            selectedAspectRatio === "16:9" &&
-                              (p.key === "poster" || p.key === "mug"))
-                          {
-                            alert("This image size is not supported for this product.");
-                            return;
-                          }
-
-                          setPreviewProduct(p.key as "poster" | "tshirt" | "mug");
-                          setPreviewImage(getDisplayImageUrl(imagesUrl[0]?.imageUrl ?? null));
-                        }}
-                      >
-                        {previewCooldown !== null ? `Please wait ${previewCooldown}s` : "Preview (Free)"}
-                      </button>
-                    </div>
+              {/* Primary: Mug */}
+              <div className="overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm">
+                <div className="flex flex-col sm:flex-row">
+                  <div className="aspect-square w-full sm:w-1/2">
+                    <img src="/images/products/arabic/mug.webp" alt="Custom Mug" className="h-full w-full object-cover" />
                   </div>
-                ))}
+                  <div className="flex flex-col justify-center gap-4 p-6 sm:w-1/2">
+                    <div>
+                      <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-800">
+                        Most Popular Gift
+                      </span>
+                      <h4 className="mt-2 text-2xl font-bold text-slate-900">Custom Mug</h4>
+                      <p className="mt-1 text-sm text-gray-500">Your Arabic name art printed on a premium ceramic mug.</p>
+                    </div>
+                    <ul className="space-y-1 text-sm text-gray-700">
+                      {["High-quality glossy ceramic", "Dishwasher & microwave safe", "Premium print quality", "Shipping to selected countries"].map((pt) => (
+                        <li key={pt} className="flex items-start gap-2">
+                          <span className="text-brand-600">✔</span>{pt}
+                        </li>
+                      ))}
+                    </ul>
+                    {previewCooldown !== null && (
+                      <div className="rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-900">
+                        ⏳ Preview paused. Try again in <strong>{previewCooldown}s</strong>.
+                      </div>
+                    )}
+                    <button
+                      className="w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+                      disabled={previewCooldown !== null}
+                      onClick={() => {
+                        if (selectedAspectRatio === "16:9") {
+                          alert("This image size is not supported for mugs.");
+                          return;
+                        }
+                        setPreviewProduct("mug");
+                        setPreviewImage(getDisplayImageUrl(imagesUrl[0]?.imageUrl ?? null));
+                      }}
+                    >
+                      {previewCooldown !== null ? `Wait ${previewCooldown}s…` : "Preview on Mug — Free"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* More products */}
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="font-semibold text-slate-900">More Products</h4>
+                  <Link href="/products" className="text-sm font-medium text-brand-700 hover:underline">View all →</Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {GENERATOR_PRODUCT_THUMBNAILS.arabic.filter((p) => p.key !== "mug").map((p) => (
+                    <Link
+                      key={p.key}
+                      href="/products"
+                      className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
+                    >
+                      <div className="aspect-video overflow-hidden">
+                        <img src={p.image} alt={p.label} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                      </div>
+                      <div className="px-3 py-2">
+                        <div className="font-semibold text-slate-800">{p.label}</div>
+                        <div className="text-xs text-gray-500">{p.description}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </section>
           </>
