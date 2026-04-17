@@ -64,7 +64,7 @@ const generatorCards: VisualCard[] = [
     title: "Name Art Generator",
     description:
       "Turn any name into visual art for decor, gifts, profile images, and printable keepsakes.",
-    imageSrc: "/user-game-logo.webp",
+    imageSrc: "/name-art.webp",
     imageAlt: "Emma style personalized name art example from the Name Art Generator",
     eyebrow: "Visual generator",
     ctaLabel: "Explore generator",
@@ -84,7 +84,7 @@ const generatorCards: VisualCard[] = [
     title: "Couples Name Art",
     description:
       "Design romantic visuals for anniversaries, weddings, shared decor, and couple keepsakes.",
-    imageSrc: "/styles/couples/c021e.webp",
+    imageSrc: "/user-couple-art.webp",
     imageAlt: "Couple name art example for wedding and anniversary gifts",
     eyebrow: "Relationship art",
     ctaLabel: "See couple designs",
