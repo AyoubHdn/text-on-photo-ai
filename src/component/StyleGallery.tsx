@@ -41,8 +41,8 @@ export const StyleGallery: React.FC<StyleGalleryProps> = ({ galleryItems, galler
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
                   activeTab === tab.key 
-                  ? 'bg-blue-500 text-white shadow' 
-                  : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-brand-600 text-white shadow'
+                  : 'bg-white text-gray-600 hover:bg-cream-100'
               }`}
             >
               {tab.name}

@@ -69,12 +69,12 @@ const ArabicArtLandingPage: NextPage = () => {
         jsonLd={[buildFAQSchema(arabicFaqs)]}
       />
 
-      <main className="bg-white dark:bg-gray-900">
+      <main className="bg-white">
         <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white px-4 py-24 text-center dark:from-gray-800 dark:to-gray-900 lg:py-32">
           <div className="absolute left-0 top-0 h-full w-full opacity-10 dark:opacity-5" />
 
           <div className="container relative z-10 mx-auto">
-            <span className="mb-6 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+            <span className="mb-6 inline-block rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-brand-800">
               Arabic Name Gifts
             </span>
             <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-6xl lg:text-7xl">
@@ -87,12 +87,12 @@ const ArabicArtLandingPage: NextPage = () => {
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link href="/arabic-name-art-generator">
-                <button className="w-full rounded-xl bg-blue-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition hover:-translate-y-1 hover:bg-blue-700 hover:shadow-2xl sm:w-auto">
+                <button className="w-full rounded-xl bg-brand-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition hover:-translate-y-1 hover:bg-brand-700 hover:shadow-2xl sm:w-auto">
                   Create Arabic Art Now
                 </button>
               </Link>
               <Link href="#gallery">
-                <button className="w-full rounded-xl border-2 border-gray-200 bg-white px-8 py-4 text-lg font-bold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 sm:w-auto">
+                <button className="w-full rounded-xl border-2 border-cream-200 bg-white px-8 py-4 text-lg font-bold text-gray-700 transition hover:border-cream-300 hover:bg-cream-50 sm:w-auto">
                   View Examples
                 </button>
               </Link>
@@ -100,7 +100,7 @@ const ArabicArtLandingPage: NextPage = () => {
             <p className="mx-auto mt-6 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
               Looking for broader Latin-letter or decorative name styles instead?
               {" "}
-              <Link href="/name-art" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200">
+              <Link href="/name-art" className="font-semibold text-brand-700 hover:text-brand-800">
                 Start with the main Name Art page
               </Link>
               .
@@ -108,7 +108,7 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-white py-24 dark:bg-gray-900">
+        <section className="bg-white py-24">
           <div className="container mx-auto px-4">
             <div className="mb-16 text-center">
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
@@ -130,7 +130,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 </p>
               </div>
               <div className="flex flex-col items-center">
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-100 text-brand-700">
                   <FiLayers className="text-4xl" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold">2. Choose a Style</h3>
@@ -151,7 +151,7 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section id="gallery" className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section id="gallery" className="bg-cream-50 py-24">
           <div className="container mx-auto px-4">
             <div className="mb-16 text-center">
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
@@ -167,7 +167,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 <Link
                   key={style.title}
                   href={style.href}
-                  className="group relative cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg dark:bg-gray-700"
+                  className="group relative cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg"
                 >
                   <div className="relative aspect-square">
                     <Image
@@ -201,7 +201,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 </Link>
               </div>
               <Link href="/arabic-name-art-generator">
-                <button className="inline-block rounded-full bg-blue-600 px-10 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:shadow-xl">
+                <button className="inline-block rounded-full bg-brand-600 px-10 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-brand-700 hover:shadow-xl">
                   Try These Styles Now
                 </button>
               </Link>
@@ -209,7 +209,7 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-white py-24 dark:bg-gray-900">
+        <section className="bg-white py-24">
           <div className="container mx-auto px-4">
             <div className="mb-16 text-center">
               <h2 className="text-3xl font-bold md:text-4xl">Gift ideas built around the name</h2>
@@ -226,7 +226,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 </p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
-                <FiGlobe className="mb-4 text-4xl text-blue-500" />
+                <FiGlobe className="mb-4 text-4xl text-brand-600" />
                 <h3 className="mb-3 text-2xl font-bold">Framed wall art</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Print the design as a framed keepsake for a home, office, or shared space — a gift that stays visible.
@@ -243,7 +243,7 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section className="bg-cream-50 py-24">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">
               <h2 className="text-3xl font-bold md:text-4xl">
@@ -259,7 +259,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
                 >
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {link.title}
@@ -273,7 +273,7 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section className="bg-cream-50 py-24">
           <div className="container mx-auto max-w-3xl px-4">
             <h2 className="mb-12 text-center text-3xl font-bold md:text-4xl">
               Frequently asked questions
@@ -282,7 +282,7 @@ const ArabicArtLandingPage: NextPage = () => {
               {arabicFaqs.map((faq) => (
                 <details
                   key={faq.question}
-                  className="group rounded-xl bg-white p-6 shadow-sm dark:bg-gray-700"
+                  className="group rounded-xl bg-white p-6 shadow-sm border border-cream-100"
                 >
                   <summary className="flex cursor-pointer list-none items-center justify-between">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{faq.question}</h3>
@@ -295,16 +295,16 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-24 text-center text-white">
+        <section className="bg-gradient-to-r from-brand-600 to-brand-800 px-4 py-24 text-center text-white">
           <div className="container mx-auto">
             <h2 className="mb-6 text-3xl font-bold md:text-5xl">
               Ready to create your masterpiece?
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-xl text-blue-100">
+            <p className="mx-auto mb-10 max-w-2xl text-xl text-brand-100">
               Join users creating Arabic name art for identity, decor, branding, and gifts.
             </p>
             <Link href="/arabic-name-art-generator">
-              <button className="transform rounded-full bg-white px-10 py-5 text-lg font-bold text-blue-700 shadow-2xl transition hover:-translate-y-1 hover:bg-blue-50">
+              <button className="transform rounded-full bg-white px-10 py-5 text-lg font-bold text-brand-800 shadow-2xl transition hover:-translate-y-1 hover:bg-brand-50">
                 Generate Arabic Art Now
               </button>
             </Link>

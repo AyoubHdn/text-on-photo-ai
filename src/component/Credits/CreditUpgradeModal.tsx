@@ -328,7 +328,7 @@ export function CreditUpgradeModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-2xl rounded-xl border border-blue-900 bg-gray-950 text-white shadow-2xl">
+      <div className="w-full max-w-2xl rounded-xl border border-brand-900 bg-gray-950 text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-800 px-5 py-4">
           <h3 className="text-lg font-semibold">Upgrade Credits</h3>
           <button
@@ -342,7 +342,7 @@ export function CreditUpgradeModal({
         </div>
 
         <div className="px-5 py-4">
-          <p className="text-sm text-blue-300">
+          <p className="text-sm text-brand-300">
             You need {needed.toFixed(1)} more credits to continue.
           </p>
           <p className="mt-2 text-sm text-gray-300">{CONTEXT_COPY[context]}</p>
@@ -357,12 +357,12 @@ export function CreditUpgradeModal({
                 disabled={isProcessing}
                 className={`relative rounded-lg border p-3 text-left transition ${
                   offer.popular
-                    ? "border-blue-500 bg-blue-950/50"
-                    : "border-gray-700 bg-gray-900 hover:border-blue-500"
-                } ${selectedPlan === offer.plan ? "ring-2 ring-blue-500" : ""}`}
+                    ? "border-brand-500 bg-brand-950/50"
+                    : "border-gray-700 bg-gray-900 hover:border-brand-500"
+                } ${selectedPlan === offer.plan ? "ring-2 ring-brand-500" : ""}`}
               >
                 {offer.popular && (
-                  <span className="absolute -top-2 left-3 rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                  <span className="absolute -top-2 left-3 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                     Most Popular
                   </span>
                 )}
@@ -375,7 +375,7 @@ export function CreditUpgradeModal({
           </div>
 
           {statusMessage && (
-            <div className="mt-4 rounded-lg border border-blue-900 bg-blue-950/40 px-3 py-2 text-xs text-blue-200">
+            <div className="mt-4 rounded-lg border border-brand-900 bg-brand-950/40 px-3 py-2 text-xs text-brand-200">
               {statusMessage}
             </div>
           )}
@@ -411,7 +411,7 @@ export function CreditUpgradeModal({
               type="button"
               onClick={() => void handleManualPaymentCheck()}
               disabled={isCheckingPayment}
-              className="mt-3 rounded-md border border-gray-700 px-3 py-1.5 text-xs text-gray-200 hover:border-blue-500"
+              className="mt-3 rounded-md border border-gray-700 px-3 py-1.5 text-xs text-gray-200 hover:border-brand-500"
             >
               {isCheckingPayment ? "Checking..." : "I completed payment"}
             </button>

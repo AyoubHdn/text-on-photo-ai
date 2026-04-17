@@ -107,7 +107,7 @@ export default function FreeCreditResult() {
                   <Link
                     key={tool.href}
                     href={tool.href}
-                    className="block rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left hover:border-blue-600 transition"
+                    className="block rounded-xl border border-cream-200 p-4 text-left hover:border-brand-500 transition"
                   >
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200">
                       {tool.title}
@@ -133,7 +133,7 @@ export default function FreeCreditResult() {
 
               <Link
                 href="/unlock/free-credit"
-                className="inline-block mt-6 px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold"
+                className="inline-block mt-6 px-6 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 transition"
               >
                 Try Another Survey
               </Link>

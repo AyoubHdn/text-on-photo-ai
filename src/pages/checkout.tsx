@@ -718,7 +718,7 @@ export default function CheckoutPage() {
         (showShippingValidation && Boolean(localShippingErrors[field])) ||
         Boolean(backendFieldErrors[field]);
     const lightFieldClassName =
-        "!border-gray-300 !bg-white !text-gray-900 placeholder:!text-gray-500";
+        "!border-cream-200 !bg-white !text-gray-900 placeholder:!text-gray-500";
     const fieldErrorMessage = (field: string) => {
         if (showShippingValidation && localShippingErrors[field]) return localShippingErrors[field];
         if (backendFieldErrors[field]) return backendFieldErrors[field];
@@ -983,7 +983,7 @@ export default function CheckoutPage() {
 
     if (isLoading) return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-white text-slate-900">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
         <p className="text-sm text-slate-500">Loading your order…</p>
       </div>
     );
@@ -1019,7 +1019,7 @@ export default function CheckoutPage() {
           <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-white px-4 text-center text-slate-900">
             <p className="text-lg font-semibold">We couldn&apos;t find your order.</p>
             <p className="text-sm text-slate-500">Return to your design and open checkout again.</p>
-            <a href="/name-art-generator" className="mt-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+            <a href="/name-art-generator" className="mt-2 rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700">
               Back to generator
             </a>
           </div>
@@ -1045,7 +1045,7 @@ export default function CheckoutPage() {
     <div className="md:col-span-2 space-y-6">
 
         {/* Product card */}
-        <div className="rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm md:p-6">
+        <div className="rounded-2xl border border-cream-200 bg-cream-50 p-4 shadow-sm md:p-6">
         <div className="flex flex-col md:flex-row gap-4">
 
             <div className="relative w-full md:w-48 rounded-2xl bg-white p-3">
@@ -1190,7 +1190,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="text-right">
-                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                     {checkoutCopy.personalizedLabel}
                 </div>
                 <div className="mt-2 text-2xl font-semibold text-slate-900">
@@ -1208,7 +1208,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Shipping address */}
-        <div className="rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm md:p-6">
+        <div className="rounded-2xl border border-cream-200 bg-cream-50 p-4 shadow-sm md:p-6">
         <h3 className="text-lg font-semibold mb-4">
             Shipping address
         </h3>
@@ -1352,11 +1352,11 @@ export default function CheckoutPage() {
 
   {/* RIGHT — ORDER TOTAL */}
   <div className="md:col-span-1">
-    <div className="sticky top-6 rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm md:p-6 space-y-4">
+    <div className="sticky top-6 rounded-2xl border border-cream-200 bg-cream-50 p-4 shadow-sm md:p-6 space-y-4">
 
         <h3 className="text-lg font-semibold">Order summary</h3>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-3">
+        <div className="rounded-xl border border-cream-200 bg-white p-3">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-sm font-semibold text-gray-900">Quantity</div>
@@ -1370,24 +1370,24 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <div className="inline-flex items-center rounded-xl border border-gray-300 bg-white">
+            <div className="inline-flex items-center rounded-xl border border-cream-200 bg-white">
               <button
                 type="button"
                 onClick={() => void updateCheckoutQuantity(Math.max(1, orderQuantity - 1))}
                 disabled={orderQuantity <= 1 || isUpdatingQuantity || isSubmittingCheckout}
-                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-cream-50 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Decrease quantity"
               >
                 -
               </button>
-              <div className="min-w-[3.25rem] border-x border-gray-300 px-4 py-3 text-center text-base font-semibold text-slate-900">
+              <div className="min-w-[3.25rem] border-x border-cream-200 px-4 py-3 text-center text-base font-semibold text-slate-900">
                 {orderQuantity}
               </div>
               <button
                 type="button"
                 onClick={() => void updateCheckoutQuantity(Math.min(6, orderQuantity + 1))}
                 disabled={orderQuantity >= 6 || isUpdatingQuantity || isSubmittingCheckout}
-                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="px-4 py-3 text-lg font-semibold text-slate-900 transition hover:bg-cream-50 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Increase quantity"
               >
                 +
@@ -1649,7 +1649,7 @@ export default function CheckoutPage() {
           {deliveryEstimate}
         </p>
 
-        <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-3 text-sm text-blue-900">
+        <div className="rounded-xl border border-cream-200 bg-cream-50 px-3 py-3 text-sm text-slate-700">
           <div className="flex items-center gap-3">
             <img
               src="/images/stripe-wordmark.svg"

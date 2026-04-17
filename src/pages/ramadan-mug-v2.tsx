@@ -863,9 +863,9 @@ const RamadanMugV2Page: NextPage = () => {
       <main className="min-h-screen bg-white text-[#111111]">
         <div className="mx-auto w-full max-w-xl px-4 pb-28 pt-6">
           {isLoggedIn && (
-            <div className="mb-4 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm">
+            <div className="mb-4 flex items-center justify-between rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm">
               <span className="font-medium text-[#111111]">Your credits balance</span>
-              <span className="font-semibold text-[#2563EB]">
+              <span className="font-semibold text-brand-700">
                 {credits.data ?? 0} credits
               </span>
             </div>
@@ -880,7 +880,7 @@ const RamadanMugV2Page: NextPage = () => {
           </div>
           <div className="mb-4 h-2 rounded-full bg-gray-200">
             <div
-              className="h-2 rounded-full bg-[#2563EB]"
+              className="h-2 rounded-full bg-brand-600"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -906,7 +906,7 @@ const RamadanMugV2Page: NextPage = () => {
                     Your personalized Ramadan mug design is ready. Review it and continue to create a beautiful gift.
                   </p>
                   <div className="mt-5 w-full max-w-sm overflow-hidden rounded-3xl border border-gray-200 bg-white p-3 text-left shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                       Your personalized design
                     </p>
                     <img
@@ -926,7 +926,7 @@ const RamadanMugV2Page: NextPage = () => {
                   </div>
                   <button
                     onClick={() => setStep(6)}
-                    className="mt-6 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                    className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
                   >
                     Continue with my design
                   </button>
@@ -938,7 +938,7 @@ const RamadanMugV2Page: NextPage = () => {
                       }
                       setStep(4);
                     }}
-                    className="mt-3 w-full rounded-2xl border border-[#2563EB] px-4 py-4 font-semibold text-[#2563EB]"
+                    className="mt-3 w-full rounded-2xl border border-brand-500 px-4 py-4 font-semibold text-brand-700"
                   >
                     Create a new one
                   </button>
@@ -970,7 +970,7 @@ const RamadanMugV2Page: NextPage = () => {
                   </div>
                   <button
                     onClick={() => setStep(selectedMockup ? 7 : 6)}
-                    className="mt-6 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                    className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
                   >
                     Continue with my design
                   </button>
@@ -982,7 +982,7 @@ const RamadanMugV2Page: NextPage = () => {
                       }
                       setStep(2);
                     }}
-                    className="mt-3 w-full rounded-2xl border border-[#2563EB] px-4 py-4 font-semibold text-[#2563EB]"
+                    className="mt-3 w-full rounded-2xl border border-brand-500 px-4 py-4 font-semibold text-brand-700"
                   >
                     Create a new one
                   </button>
@@ -990,7 +990,7 @@ const RamadanMugV2Page: NextPage = () => {
               ) : (
                 <button
                   onClick={() => setStep(2)}
-                  className="mt-8 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                  className="mt-8 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
                 >
                   Start Designing
                 </button>
@@ -1011,7 +1011,7 @@ const RamadanMugV2Page: NextPage = () => {
                   key={r}
                   onClick={() => selectRecipient(r)}
                   className={`w-full rounded-2xl border px-4 py-4 text-left ${
-                    recipient === r ? "border-[#2563EB] bg-blue-50" : "border-gray-300"
+                    recipient === r ? "border-brand-500 bg-brand-50" : "border-cream-200"
                   }`}
                 >
                   {r}
@@ -1020,7 +1020,7 @@ const RamadanMugV2Page: NextPage = () => {
               <button
                 disabled={!recipient}
                 onClick={() => setStep(3)}
-                className="w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white disabled:opacity-50"
+                className="w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white disabled:opacity-50"
               >
                 Continue
               </button>
@@ -1059,7 +1059,7 @@ const RamadanMugV2Page: NextPage = () => {
                     : (fireEvent("mug_name_entered", { entered_name: name.trim() }),
                       setStep(4))
                 }
-                className="mt-6 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
               >
                 Next: Choose Style
               </button>
@@ -1088,7 +1088,7 @@ const RamadanMugV2Page: NextPage = () => {
                       selectStyle(s.id);
                     }}
                     className={`overflow-hidden rounded-2xl border text-left ${
-                      styleId === s.id ? "border-[#2563EB]" : "border-gray-200"
+                      styleId === s.id ? "border-brand-500" : "border-gray-200"
                     }`}
                   >
                     <div className="relative h-24">
@@ -1136,7 +1136,7 @@ const RamadanMugV2Page: NextPage = () => {
                             isDone
                               ? "text-green-600"
                               : isActive
-                              ? "text-[#2563EB]"
+                              ? "text-brand-700"
                               : "text-gray-400"
                           }`}
                         >
@@ -1153,7 +1153,7 @@ const RamadanMugV2Page: NextPage = () => {
                             isDone
                               ? "bg-green-500"
                               : isActive
-                              ? "bg-[#2563EB]"
+                              ? "bg-brand-600"
                               : "bg-gray-300"
                           }`}
                           style={{ width: `${rowProgress}%` }}
@@ -1176,7 +1176,7 @@ const RamadanMugV2Page: NextPage = () => {
                 <button
                   onClick={() => setVariant("original")}
                   className={`rounded-2xl border p-2 ${
-                    variant === "original" ? "border-[#2563EB]" : "border-gray-200"
+                    variant === "original" ? "border-brand-500" : "border-gray-200"
                   }`}
                 >
                   {designUrl ? (
@@ -1195,7 +1195,7 @@ const RamadanMugV2Page: NextPage = () => {
                   onClick={() => setVariant("transparent")}
                   className={`rounded-2xl border p-2 ${
                     variant === "transparent"
-                      ? "border-[#2563EB]"
+                      ? "border-brand-500"
                       : "border-gray-200"
                   }`}
                 >
@@ -1215,7 +1215,7 @@ const RamadanMugV2Page: NextPage = () => {
               </div>
               <button
                 onClick={() => void goStep7()}
-                className="mt-6 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
               >
                 See Mug Preview
               </button>
@@ -1267,7 +1267,7 @@ const RamadanMugV2Page: NextPage = () => {
               <button
                 disabled={busyCheckout || !selectedMockup}
                 onClick={() => void checkout()}
-                className="mt-6 w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white disabled:opacity-50"
+                className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white disabled:opacity-50"
               >
                 {busyCheckout ? "Loading checkout..." : "Continue to Secure Checkout →"}
               </button>
@@ -1293,7 +1293,7 @@ const RamadanMugV2Page: NextPage = () => {
                 </div>
                 <div className="h-3 rounded-full bg-gray-200">
                   <div
-                    className="h-3 rounded-full bg-[#2563EB]"
+                    className="h-3 rounded-full bg-brand-600"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -1353,7 +1353,7 @@ const RamadanMugV2Page: NextPage = () => {
                     }
                     void requestRegen();
                   }}
-                  className="w-full rounded-2xl border border-[#2563EB] px-4 py-4 font-semibold text-[#2563EB] disabled:opacity-50"
+                  className="w-full rounded-2xl border border-brand-500 px-4 py-4 font-semibold text-brand-700 disabled:opacity-50"
                 >
                   {!isLoggedIn
                     ? "Sign in to unlock more styles"
@@ -1370,7 +1370,7 @@ const RamadanMugV2Page: NextPage = () => {
                   if (hasFree && designUrl) return setStep(6);
                   void runGeneration(false);
                 }}
-                className="w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white disabled:opacity-50"
+                className="w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white disabled:opacity-50"
               >
                 {hasFree && designUrl
                   ? "Continue with my design"
@@ -1406,13 +1406,13 @@ const RamadanMugV2Page: NextPage = () => {
               <p className="mt-2 text-sm leading-6 text-gray-600">
                 Your free design is already saved. Sign in to choose another style and continue future generations from your account.
               </p>
-              <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-[#1E3A8A]">
+              <div className="mt-5 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
                 After sign-in, you can keep this design, switch styles, and then buy credits if you want more generations.
               </div>
               <div className="mt-6 space-y-3">
                 <button
                   onClick={() => void continueStyleUnlockSignIn()}
-                  className="w-full rounded-2xl bg-[#2563EB] px-4 py-4 font-semibold text-white"
+                  className="w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
                 >
                   Sign in to continue
                 </button>

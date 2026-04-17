@@ -331,10 +331,10 @@ function HeroBanner() {
   ];
 
   return (
-    <section className="overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-900 dark:to-slate-900">
+    <section className="overflow-hidden bg-gradient-to-br from-cream-50 via-white to-cream-100 dark:from-gray-900 dark:via-gray-900 dark:to-slate-900">
       <div className="container mx-auto grid gap-14 px-6 py-16 lg:grid-cols-[1.05fr,0.95fr] lg:px-8 lg:py-20">
         <div className="flex flex-col justify-center">
-          <span className="inline-flex w-fit rounded-full bg-blue-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+          <span className="inline-flex w-fit rounded-full bg-brand-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
             AI name art and personalized gifts
           </span>
           <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
@@ -348,29 +348,29 @@ function HeroBanner() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               href="/name-art-generator"
-              className="inline-block rounded-lg bg-blue-600 px-8 py-4 text-base font-bold text-white transition hover:bg-blue-700 md:text-lg"
+              className="inline-block rounded-lg bg-brand-600 px-8 py-4 text-base font-bold text-white transition hover:bg-brand-700 md:text-lg"
               id="try-it-free-button-heroBanner"
             >
               Create Your Design Free
             </Link>
             <button
               onClick={handleScrollToProducts}
-              className="rounded-lg border border-slate-300 px-6 py-4 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
+              className="rounded-lg border border-cream-200 px-6 py-4 font-semibold text-amber-900 transition hover:border-brand-400 hover:text-brand-700 dark:border-slate-600 dark:text-slate-200"
             >
               Browse Examples
             </button>
           </div>
           <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-            <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">
+            <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 dark:bg-slate-800">
               Name art examples
             </span>
-            <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">
+            <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 dark:bg-slate-800">
               Arabic calligraphy
             </span>
-            <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">
+            <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 dark:bg-slate-800">
               Product mockups
             </span>
-            <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">
+            <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 dark:bg-slate-800">
               Personalized gift pages
             </span>
           </div>
@@ -411,9 +411,9 @@ function TrustStrip() {
   ];
 
   return (
-    <div className="border-y border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+    <div className="border-y border-cream-200 bg-cream-50 dark:border-slate-700 dark:bg-slate-800/50">
       <div className="container mx-auto px-6 lg:px-8">
-        <ul className="flex flex-wrap items-center justify-center divide-y divide-slate-200 sm:divide-x sm:divide-y-0 dark:divide-slate-700">
+        <ul className="flex flex-wrap items-center justify-center divide-y divide-cream-200 sm:divide-x sm:divide-y-0 dark:divide-slate-700">
           {stats.map((stat) => (
             <li
               key={stat.label}
@@ -458,7 +458,7 @@ function ProductsSection() {
 
 function PopularNameExamplesSection() {
   return (
-    <section className="bg-gray-50 py-20 dark:bg-gray-800 lg:py-24">
+    <section className="bg-cream-50 py-20 dark:bg-gray-800 lg:py-24">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="max-w-3xl">
           <h2 className="text-4xl font-bold text-slate-900 dark:text-slate-100">
@@ -485,7 +485,7 @@ function PopularNameExamplesSection() {
               <Link
                 key={namePage.path}
                 href={namePage.path}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               >
                 {namePage.name} name art
               </Link>
@@ -525,7 +525,7 @@ function ProductMockupSection() {
 
 function GiftIdeasSection() {
   return (
-    <section id="gift-ideas" className="bg-gray-50 py-20 dark:bg-gray-800 lg:py-24">
+    <section id="gift-ideas" className="bg-cream-50 py-20 dark:bg-gray-800 lg:py-24">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="max-w-3xl">
           <h2 className="text-4xl font-bold text-slate-900 dark:text-slate-100">
@@ -612,7 +612,7 @@ function HowItWorksSection() {
               {trustPoints.map((point) => (
                 <div
                   key={point}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                  className="rounded-2xl border border-cream-200 bg-cream-50 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
                 >
                   <p className="font-medium text-slate-700 dark:text-slate-200">
                     {point}
@@ -654,9 +654,9 @@ function HowItWorksSection() {
           {steps.map((step, index) => (
             <div
               key={step.title}
-              className="rounded-2xl border border-slate-200 bg-gray-50 p-6 shadow-sm dark:border-slate-700 dark:bg-gray-800"
+              className="rounded-2xl border border-cream-200 bg-cream-50 p-6 shadow-sm dark:border-slate-700 dark:bg-gray-800"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-300">
                 Step {index + 1}
               </p>
               <h3 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -680,7 +680,7 @@ function PopularTodaySection() {
   if (isLoading || !icons?.length) return null;
 
   return (
-    <section className="bg-gray-50 py-20 dark:bg-gray-800 lg:py-24">
+    <section className="bg-cream-50 py-20 dark:bg-gray-800 lg:py-24">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="mb-12 max-w-3xl">
           <h2 className="text-4xl font-bold text-slate-900 dark:text-slate-100">
@@ -729,12 +729,12 @@ function FinalCTASection() {
   const isLoggedIn = !!session;
 
   return (
-    <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white">
+    <section className="bg-gradient-to-r from-brand-950 via-brand-900 to-brand-950 text-white">
       <div className="container mx-auto px-6 py-20 text-center">
         <h2 className="text-3xl font-bold md:text-4xl">
           Create a name that feels worth keeping
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-brand-100">
           Start with the artwork, then move into wall decor, mugs, shirts, or
           gift-ready products once the design direction is right.
         </p>
@@ -742,13 +742,13 @@ function FinalCTASection() {
           {isLoggedIn ? (
             <Link
               href="/name-art"
-              className="rounded-lg bg-white px-8 py-4 text-lg font-bold text-blue-700 transition hover:bg-blue-50"
+              className="rounded-lg bg-white px-8 py-4 text-lg font-bold text-brand-800 transition hover:bg-brand-50"
             >
               Create Name Art
             </Link>
           ) : (
             <button
-              className="rounded-lg bg-white px-8 py-4 text-lg font-bold text-blue-700 transition hover:bg-blue-50"
+              className="rounded-lg bg-white px-8 py-4 text-lg font-bold text-brand-800 transition hover:bg-brand-50"
               onClick={() => void signIn(undefined, { callbackUrl: "/name-art-generator" })}
             >
               Sign Up and Create Your First Design
@@ -783,7 +783,7 @@ function FAQSection() {
           {homepageFaqs.map((faq) => (
             <details
               key={faq.question}
-              className="group rounded-2xl bg-gray-50 p-6 shadow-md dark:bg-gray-800"
+              className="group rounded-2xl bg-cream-50 p-6 shadow-md dark:bg-gray-800"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -808,7 +808,7 @@ function VisualMarketplaceCard({ card }: { card: VisualCard }) {
   return (
     <Link
       href={card.href}
-      className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+      className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
@@ -820,7 +820,7 @@ function VisualMarketplaceCard({ card }: { card: VisualCard }) {
       </div>
       <div className="p-5">
         {card.eyebrow ? (
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-300">
             {card.eyebrow}
           </p>
         ) : null}
@@ -830,7 +830,7 @@ function VisualMarketplaceCard({ card }: { card: VisualCard }) {
         <p className="mt-3 text-slate-600 dark:text-slate-300">
           {card.description}
         </p>
-        <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+        <span className="mt-4 inline-flex text-sm font-semibold text-brand-700 dark:text-brand-300">
           {card.ctaLabel ?? "Explore page"}
         </span>
       </div>

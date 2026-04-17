@@ -70,7 +70,7 @@ export function OnboardingModal({
         <button
           type="button"
           onClick={onCta}
-          className="mt-5 w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+          className="mt-5 w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           {ctaLabel}
         </button>

@@ -620,7 +620,7 @@ const NameArtGeneratorPage: NextPage = () => {
               {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(stylesData).map((catKey) => (
-                  <button key={catKey} type="button" onClick={() => { setActiveTab(catKey); setActiveSubTab(Object.keys(stylesData[catKey]!)[0]!); }} className={`px-4 py-2 whitespace-nowrap font-semibold ${activeTab === catKey ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}`}>
+                  <button key={catKey} type="button" onClick={() => { setActiveTab(catKey); setActiveSubTab(Object.keys(stylesData[catKey]!)[0]!); }} className={`px-4 py-2 whitespace-nowrap font-semibold ${activeTab === catKey ? 'border-b-2 border-brand-500 text-brand-600' : 'text-gray-500 hover:text-gray-900'}`}>
                     {catKey}
                   </button>
                 ))}
@@ -632,7 +632,7 @@ const NameArtGeneratorPage: NextPage = () => {
               {showLeftSubCategoryArrow && <button type="button" onClick={() => scrollSubCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={subcategoryScrollRef} onScroll={() => handleScroll(subcategoryScrollRef, setShowLeftSubCategoryArrow, setShowRightSubCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(stylesData[activeTab] ?? {}).map((sub) => (
-                  <button key={sub} type="button" id={sub} onClick={() => setActiveSubTab(sub)} className={`px-3 py-1.5 whitespace-nowrap text-sm rounded-full ${activeSubTab === sub ? 'bg-blue-500 text-white font-semibold' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                  <button key={sub} type="button" id={sub} onClick={() => setActiveSubTab(sub)} className={`px-3 py-1.5 whitespace-nowrap text-sm rounded-full ${activeSubTab === sub ? 'bg-brand-600 text-white font-semibold' : 'bg-cream-100 text-gray-600 hover:bg-cream-200'}`}>
                     {sub}
                   </button>
                 ))}
@@ -642,7 +642,7 @@ const NameArtGeneratorPage: NextPage = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
               {(stylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
-                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, activeSubTab || activeTab, item.allowCustomColors)}>
+                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-brand-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, activeSubTab || activeTab, item.allowCustomColors)}>
                     <Image
                       src={item.src.replace(/\.webp$/, "e.webp")}
                       alt={item.altText}
@@ -670,23 +670,44 @@ const NameArtGeneratorPage: NextPage = () => {
                 {/* AI Model */}
                 <div>
                   <h2 className="text-base font-semibold mb-3">AI Model</h2>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-4">
                     {[
-                      { name: "Standard", value: "flux-schnell" as AIModel, cost: 1, description: "Fast, 1 credit" },
-                      { name: "Optimized", value: "flux-dev" as AIModel, cost: 3, description: "Higher detail, 3 credits" },
+                      {
+                        name: "Standard",
+                        value: "flux-schnell" as AIModel,
+                        cost: 1,
+                        image: selectedStyleImage && selectedStyleImage.includes(".")
+                          ? selectedStyleImage
+                          : "/images/placeholder.png",
+                      },
+                      {
+                        name: "Optimized",
+                        value: "flux-dev" as AIModel,
+                        cost: 3,
+                        image: selectedStyleImage && selectedStyleImage.includes(".")
+                          ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
+                          : "/images/placeholder.png",
+                      },
                     ].map((model) => (
                       <button
                         key={model.value}
                         type="button"
                         onClick={() => setSelectedModel(model.value)}
-                        className={`rounded-lg border p-3 text-left transition ${
+                        className={`relative flex flex-col items-center justify-center rounded-lg border p-4 transition ${
                           selectedModel === model.value
-                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/30"
-                            : "border-gray-300 hover:border-gray-400 dark:border-gray-600"
+                            ? "border-brand-500 ring-2 ring-brand-500"
+                            : "border-cream-200 hover:border-brand-300"
                         }`}
                       >
-                        <span className="block text-sm font-semibold">{model.name}</span>
-                        <span className="block text-xs text-gray-500 mt-0.5">{model.description}</span>
+                        <div className="relative mb-2 w-full aspect-square overflow-hidden rounded">
+                          <img
+                            src={model.image}
+                            alt={model.name}
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                        </div>
+                        <span className="text-sm font-semibold">{model.name}</span>
+                        <span className="text-xs text-gray-500">Cost: {model.cost} credits</span>
                       </button>
                     ))}
                   </div>
@@ -695,22 +716,32 @@ const NameArtGeneratorPage: NextPage = () => {
                 {/* Aspect Ratio */}
                 <div>
                   <h2 className="text-base font-semibold mb-3">Image Size</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {aspectRatios.map((ratio) => (
-                      <button
-                        key={ratio.value}
-                        type="button"
-                        onClick={() => setSelectedAspectRatio(ratio.value)}
-                        className={`rounded-lg border p-3 text-center transition ${
-                          selectedAspectRatio === ratio.value
-                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/30"
-                            : "border-gray-300 hover:border-gray-400 dark:border-gray-600"
-                        }`}
-                      >
-                        <span className="block text-sm font-semibold">{ratio.label}</span>
-                        <span className="block text-xs text-gray-500 mt-0.5 leading-tight">{ratio.description}</span>
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {aspectRatios.map((ratio) => {
+                      const aspectClass = aspectVisualMap[ratio.value];
+                      return (
+                        <button
+                          key={ratio.value}
+                          type="button"
+                          onClick={() => setSelectedAspectRatio(ratio.value)}
+                          className={`relative flex items-center justify-center rounded-lg border p-4 transition ${
+                            selectedAspectRatio === ratio.value
+                              ? "border-brand-500 ring-2 ring-brand-500"
+                              : "border-cream-200 hover:border-brand-300"
+                          }`}
+                        >
+                          <div
+                            className={`w-full rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`}
+                            style={{ backgroundColor: "#ddd" }}
+                          >
+                            <div className="text-center">
+                              <div className="font-semibold">{ratio.label}</div>
+                              <div className="mt-1 text-xs text-gray-500">{ratio.description}</div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -753,7 +784,7 @@ const NameArtGeneratorPage: NextPage = () => {
                   : `${creditsQuery.data} credit${creditsQuery.data === 1 ? "" : "s"} remaining · this design costs ${getRequiredGenerateCredits()} credit${getRequiredGenerateCredits() === 1 ? "" : "s"}`}
               </span>
               {(creditsQuery.data ?? 0) <= 2 && (
-                <Link href="/buy-credits" className="ml-3 whitespace-nowrap font-semibold text-blue-600 hover:underline dark:text-blue-400">
+                <Link href="/buy-credits" className="ml-3 whitespace-nowrap font-semibold text-brand-700 hover:underline">
                   Get credits
                 </Link>
               )}
@@ -784,8 +815,8 @@ const NameArtGeneratorPage: NextPage = () => {
           )}
 
           {isSubmittingGeneration && (
-            <div className="flex items-center justify-center gap-3 rounded-lg border border-blue-200 bg-blue-50 py-4 text-sm font-medium text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            <div className="flex items-center justify-center gap-3 rounded-lg border border-brand-200 bg-brand-50 py-4 text-sm font-medium text-brand-800">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
               Generating your design — this takes about 10 seconds…
             </div>
           )}
@@ -881,7 +912,7 @@ const NameArtGeneratorPage: NextPage = () => {
         
 
         <section className="mt-10">
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+          <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
             ✨ Your design is ready! Imagine this on your favorite mug, shirt, or framed on your wall.
           </div>
           <h3 className="text-2xl font-semibold mb-6 text-center">
@@ -918,7 +949,7 @@ const NameArtGeneratorPage: NextPage = () => {
                     </div>
                   )}
                   <button 
-                    className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                    className="inline-block px-8 py-4 text-l font-bold bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition"
                     disabled={previewCooldown !== null}
                     onClick={() => {
                       // Hide 16:9 for Poster & Mug

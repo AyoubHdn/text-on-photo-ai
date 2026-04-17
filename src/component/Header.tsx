@@ -62,18 +62,23 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         : "container mx-auto flex h-16 items-center justify-center px-4 dark:bg-gray-800"
                 }
             >
-                <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex items-center gap-2">
+                <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-2">
                     <Image
                         src="/logo.webp"
-                        alt="Name Design AI Logo"
-                        width={50}
-                        height={50}
-                        className="rounded"
-                        unoptimized={true}
+                        alt="Name Design AI Icon"
+                        width={36}
+                        height={36}
+                        className="h-8 w-8 shrink-0 rounded sm:h-9 sm:w-9"
+                        unoptimized
                     />
-                    <span className={`text-sm font-semibold sm:text-base ${forceLight ? "text-white" : "text-slate-900 dark:text-slate-100"}`}>
-                        Name Design AI
-                    </span>
+                    <Image
+                        src="/logo-full.webp"
+                        alt="Name Design AI"
+                        width={160}
+                        height={36}
+                        className="h-7 w-auto shrink-0 sm:h-8"
+                        unoptimized
+                    />
                 </PrimaryLink>
             </header>
         );
@@ -83,28 +88,31 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
         <header className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
             {/* --- LEFT NAVIGATION --- */}
             <ul className="flex gap-8 items-center">
-                <li>
-                    <PrimaryLink href="/">
+                <li className="shrink-0">
+                    <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-2">
                         <Image
                             src="/logo.webp"
-                            alt="Name Design AI Logo"
-                            width={50}
-                            height={50}
-                            className="rounded"
-                            unoptimized={true}
+                            alt="Name Design AI Icon"
+                            width={36}
+                            height={36}
+                            className="h-8 w-8 shrink-0 rounded sm:h-9 sm:w-9"
+                            unoptimized
                         />
-                    </PrimaryLink>
-                </li>
-                <li>
-                    <PrimaryLink href="/" className="inline-block md:hidden xl:inline-block">
-                        <strong>Name Design AI</strong>
+                        <Image
+                            src="/logo-full.webp"
+                            alt="Name Design AI"
+                            width={160}
+                            height={36}
+                            className="h-7 w-auto shrink-0 sm:h-8"
+                            unoptimized
+                        />
                     </PrimaryLink>
                 </li>
                 {/* --- START: NEW PRODUCTS DROPDOWN --- */}
                 <li ref={productsDropdownRef} className="relative hidden md:block">
                     <button
                         onClick={() => setIsProductsDropdownOpen(prev => !prev)}
-                        className={`flex items-center gap-1 font-medium hover:text-blue-500 ${forceLight ? "text-slate-800" : "text-slate-800 dark:text-slate-200"}`}
+                        className={`flex items-center gap-1 font-medium hover:text-brand-600 ${forceLight ? "text-slate-800" : "text-slate-800 dark:text-slate-200"}`}
                     >
                         Create <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
@@ -166,7 +174,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                 {isLoggedIn && (
                     <>
                         <li className="flex items-center gap-2">
-                            <div className="w-8 h-8 flex items-center justify-center bg-blue-500 text-white text-sm font-bold rounded-full">
+                            <div className="w-8 h-8 flex items-center justify-center bg-brand-500 text-white text-sm font-bold rounded-full">
                                 {credits.data ?? 0}
                             </div>
                             <span className="text-sm font-medium text-gray-500">Credits</span>

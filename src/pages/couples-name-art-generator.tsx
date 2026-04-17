@@ -573,7 +573,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                 {/* ... Category Scroller JSX (no changes) ... */}
                 <div ref={categoryScrollRef} onScroll={handleCategoryScroll} className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1">
                     {Object.keys(coupleStylesData ?? {}).map((catKey) => (
-                        <button key={catKey} type="button" onClick={() => setActiveTab(catKey)} className={`px-4 py-2 ${activeTab === catKey ? "font-semibold border-b-2 border-blue-500 text-blue-500" : "font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"}`}>{catKey}</button>
+                        <button key={catKey} type="button" onClick={() => setActiveTab(catKey)} className={`px-4 py-2 ${activeTab === catKey ? "font-semibold border-b-2 border-brand-500 text-brand-600" : "font-semibold text-gray-500 hover:text-gray-900"}`}>{catKey}</button>
                     ))}
                 </div>
             </div>
@@ -581,7 +581,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                 {/* ... Subcategory Scroller JSX (no changes) ... */}
                 <div ref={subcategoryScrollRef} onScroll={handleSubCategoryScroll} className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1">
                     {Object.keys(coupleStylesData[activeTab] ?? {}).map((sub) => (
-                        <button key={sub} type="button" onClick={() => setActiveSubTab(sub)} className={`px-4 py-2 ${activeSubTab === sub ? "text-sm border-b-2 border-blue-500 text-blue-500" : "text-sm text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"}`}>{sub}</button>
+                        <button key={sub} type="button" onClick={() => setActiveSubTab(sub)} className={`px-4 py-2 ${activeSubTab === sub ? "text-sm border-b-2 border-brand-500 text-brand-600" : "text-sm text-gray-500 hover:text-gray-900"}`}>{sub}</button>
                     ))}
                 </div>
             </div>
@@ -590,7 +590,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                 const allowColors = item.allowCustomColors !== false;
                 const styleImagePath = item.src.replace(/\.webp$/, "e.webp");
                 return (
-                  <div key={idx} className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${selectedImage === item.src ? "ring-4 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, activeSubTab || activeTab, allowColors)}>
+                  <div key={idx} className={`relative rounded shadow-md hover:shadow-lg transition cursor-pointer ${selectedImage === item.src ? "ring-4 ring-brand-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, activeSubTab || activeTab, allowColors)}>
                     <img
                       src={styleImagePath}
                       alt={item.altText}
@@ -636,8 +636,8 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                             onClick={() => setSelectedModel(model.value)}
                             className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
                               selectedModel === model.value
-                                ? "border-blue-500 ring-2 ring-blue-500"
-                                : "border-gray-300 hover:border-gray-500"
+                                ? "border-brand-500 ring-2 ring-brand-500"
+                                : "border-cream-200 hover:border-brand-300"
                             }`}
                           >
                             <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
@@ -672,8 +672,8 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                               onClick={() => setSelectedAspectRatio(ratio.value)}
                               className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                                 selectedAspectRatio === ratio.value
-                                  ? "border-blue-500 ring-2 ring-blue-500"
-                                  : "border-gray-300 hover:border-gray-500"
+                                  ? "border-brand-500 ring-2 ring-brand-500"
+                                  : "border-cream-200 hover:border-brand-300"
                               }`}
                             >
                               <div
@@ -816,7 +816,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
             </section>
 
             <section className="mt-10">
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+              <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
                 ✨ Your design is ready! Imagine this on your favorite mug, shirt, or framed on your wall.
               </div>
               <h3 className="text-2xl font-semibold mb-6 text-center">
@@ -852,7 +852,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                       )}
 
                       <button
-                        className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        className="inline-block px-8 py-4 text-l font-bold bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition"
                         disabled={previewCooldown !== null}
                         onClick={() => {
                           if (

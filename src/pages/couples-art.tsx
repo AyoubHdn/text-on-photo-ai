@@ -80,8 +80,8 @@ const CouplesArtLandingPage: NextPage = () => {
         ]}
       />
 
-      <main className="bg-white dark:bg-gray-900">
-        <section className="bg-gray-50 px-4 py-20 text-center dark:bg-gray-800 lg:py-32">
+      <main className="bg-white">
+        <section className="bg-cream-50 px-4 py-20 text-center lg:py-32">
           <div className="container mx-auto">
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
               Where two names become one artwork
@@ -96,7 +96,7 @@ const CouplesArtLandingPage: NextPage = () => {
             </p>
             <div className="mt-10">
               <Link href="/couples-name-art-generator">
-                <button className="inline-block rounded-lg bg-blue-500 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-600">
+                <button className="inline-block rounded-lg bg-brand-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-brand-700">
                   Design Your Couples Art
                 </button>
               </Link>
@@ -138,7 +138,7 @@ const CouplesArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section className="bg-cream-50 py-24">
           <div className="container mx-auto px-4 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               A style for every love story
@@ -155,7 +155,7 @@ const CouplesArtLandingPage: NextPage = () => {
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
                     activeTab === tab.key
                       ? "bg-pink-500 text-white shadow"
-                      : "bg-white text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      : "bg-white text-gray-600 hover:bg-pink-50 border border-gray-200"
                   }`}
                 >
                   {tab.name}
@@ -193,7 +193,7 @@ const CouplesArtLandingPage: NextPage = () => {
             <div className="mt-10">
               <Link
                 href="/couples-art/styles"
-                className="inline-flex rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-pink-400 hover:text-pink-600 dark:border-slate-600 dark:text-slate-200"
+                className="inline-flex rounded-full border border-cream-200 px-6 py-3 font-semibold text-slate-700 transition hover:border-pink-400 hover:text-pink-600"
               >
                 Browse all couple styles
               </Link>
@@ -217,7 +217,7 @@ const CouplesArtLandingPage: NextPage = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-2xl border border-slate-200 p-6 transition hover:border-pink-400 hover:bg-pink-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                  className="rounded-2xl border border-cream-200 p-6 transition hover:border-pink-400 hover:bg-pink-50"
                 >
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {link.label}
@@ -237,7 +237,7 @@ const CouplesArtLandingPage: NextPage = () => {
               Cherished by couples everywhere
             </h2>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="rounded-lg bg-gray-50 p-8 text-left dark:bg-gray-800">
+              <div className="rounded-lg bg-cream-50 p-8 text-left border border-cream-200">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   "I created a piece with our names and wedding date for our
@@ -253,7 +253,7 @@ const CouplesArtLandingPage: NextPage = () => {
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Sarah and Liam</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-8 text-left dark:bg-gray-800">
+              <div className="rounded-lg bg-cream-50 p-8 text-left border border-cream-200">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   "It gave me a personal gift idea that felt much more thoughtful
@@ -265,7 +265,7 @@ const CouplesArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-pink-600 text-white">
+        <section className="bg-gradient-to-r from-brand-950 via-pink-900 to-brand-950 text-white">
           <div className="container mx-auto px-6 py-20 text-center">
             <h2 className="text-3xl font-bold md:text-4xl">
               Ready to create your love story in art?
@@ -275,7 +275,7 @@ const CouplesArtLandingPage: NextPage = () => {
             </p>
             <div className="mt-8">
               <Link href="/couples-name-art-generator">
-                <button className="inline-block rounded-lg bg-blue-500 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-600">
+                <button className="inline-block rounded-lg bg-white px-8 py-4 text-lg font-bold text-brand-900 transition hover:bg-brand-50">
                   Start Designing Now
                 </button>
               </Link>

@@ -157,7 +157,7 @@ export default function FreeCreditUnlock() {
               <button
                 onClick={unlock}
                 disabled={unlocking}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#0ea5e9] py-4 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:brightness-110 disabled:opacity-60"
+                className="w-full rounded-2xl bg-brand-600 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-brand-700 disabled:opacity-60"
               >
                 {unlocking ? "Opening survey..." : `Get ${CPX_DAILY_REWARD_CREDITS} Extra Credits`}
               </button>
@@ -166,7 +166,7 @@ export default function FreeCreditUnlock() {
               {error === "login_required" && (
                 <p className="text-sm text-gray-700 dark:text-slate-200">
                   Please{" "}
-                  <Link href="/api/auth/signin" className="text-blue-700 underline dark:text-sky-300">
+                  <Link href="/api/auth/signin" className="text-brand-700 underline">
                     sign in
                   </Link>{" "}
                   to earn {CPX_DAILY_REWARD_CREDITS} extra credits.

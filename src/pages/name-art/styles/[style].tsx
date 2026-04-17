@@ -68,7 +68,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
         <section className="bg-gradient-to-b from-slate-50 to-white px-4 py-20 dark:from-gray-800 dark:to-gray-900">
           <div className="container mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.95fr,1.05fr]">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
                 {groupTitle}
               </p>
               <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-5xl">
@@ -80,13 +80,13 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
                   href="/name-art-generator"
-                  className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+                  className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"
                 >
                   Create this style
                 </Link>
                 <Link
                   href="/name-art/styles"
-                  className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
+                  className="rounded-lg border border-cream-200 px-6 py-3 font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-700"
                 >
                   Browse all styles
                 </Link>
@@ -114,7 +114,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
                 <Link
                   key={src}
                   href="/name-art-generator"
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <Image
@@ -149,7 +149,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
                 <Link
                   key={item.path}
                   href={item.path}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  className="rounded-2xl border border-cream-200 bg-white p-5 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
                 >
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {item.name} name art

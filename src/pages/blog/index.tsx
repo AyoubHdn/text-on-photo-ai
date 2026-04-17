@@ -60,19 +60,19 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
           </div>
 
           <div className="mb-12 grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:grid-cols-3">
-            <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700">
+            <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
               <h2 className="text-lg font-semibold">Personalized Gifts</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Move from editorial inspiration into category pages built for gift intent.
               </p>
             </Link>
-            <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700">
+            <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
               <h2 className="text-lg font-semibold">Name Art Generator</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Start the core creation flow if you already know the style direction you want.
               </p>
             </Link>
-            <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700">
+            <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
               <h2 className="text-lg font-semibold">Couple Gifts</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Browse pages that connect couple art themes with stronger gifting intent.
@@ -87,8 +87,8 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
                   <img src={frontmatter.featuredImage} alt={frontmatter.title} className="w-full h-56 object-cover" />
                 </div>
                 <div className="p-6">
-                  <p className="text-sm text-blue-500 font-semibold mb-2">{frontmatter.category}</p>
-                  <h2 className="text-xl font-bold mb-3 group-hover:text-blue-500 transition-colors">{frontmatter.title}</h2>
+                  <p className="text-sm text-brand-600 font-semibold mb-2">{frontmatter.category}</p>
+                  <h2 className="text-xl font-bold mb-3 group-hover:text-brand-600 transition-colors">{frontmatter.title}</h2>
                   <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">{frontmatter.description}</p>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(frontmatter.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}

@@ -112,7 +112,7 @@ export function ProductNudgeBlock({ productType }: ProductNudgeBlockProps) {
     <ul className="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
       {points.map((point) => (
         <li key={point} className="flex items-start gap-2">
-          <span className="text-blue-500">✔</span>
+          <span className="text-brand-600">✔</span>
           <span>{point}</span>
         </li>
       ))}

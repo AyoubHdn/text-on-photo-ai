@@ -117,7 +117,7 @@ export function ExitIntentModal() {
             </p>
             <button
               onClick={handleDismiss}
-              className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700"
+              className="mt-6 w-full rounded-lg bg-brand-600 px-4 py-3 font-semibold text-white transition hover:bg-brand-700"
             >
               Continue browsing
             </button>
@@ -145,7 +145,7 @@ export function ExitIntentModal() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={status === "loading"}
-                className="mb-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                className="mb-3 w-full rounded-lg border border-cream-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-60"
               />
 
               {status === "error" && (
@@ -155,7 +155,7 @@ export function ExitIntentModal() {
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                className="w-full rounded-lg bg-brand-600 px-4 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
               >
                 {status === "loading" ? "Saving…" : "Send me design ideas"}
               </button>

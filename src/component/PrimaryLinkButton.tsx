@@ -8,7 +8,7 @@ export function PrimaryLinkButton(
     const {className, ...propsWithoutClassname} = props;
     return (
         <Link 
-            className={clsx("rounded bg-blue-400 px-4 py-2 hover:text-blue-500",props.className ?? "")}
+            className={clsx("rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700",props.className ?? "")}
             {...propsWithoutClassname}>
             {props.children}
         </Link>

@@ -34,7 +34,7 @@ function VisibilityToggle({
 
   return (
     <div className="flex items-center justify-between gap-2" title={!isEnabled ? "This feature is for subscribers only." : ""}>
-      <span className={`text-xs font-medium ${initialIsPublic ? "text-gray-900 dark:text-gray-300" : "text-gray-500"}`}>
+      <span className={`text-xs font-medium ${initialIsPublic ? "text-gray-900" : "text-gray-500"}`}>
         {initialIsPublic ? "Public" : "Private"}
       </span>
       <label htmlFor={toggleId} className={`relative inline-flex items-center ${!isEnabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
@@ -46,7 +46,7 @@ function VisibilityToggle({
           disabled={!isEnabled || isLoading}
           onChange={handleChange}
         />
-        <div className="h-6 w-11 rounded-full bg-gray-200 transition peer-focus:ring-2 peer-focus:ring-blue-300 dark:bg-gray-700 peer-checked:bg-blue-600 peer-checked:after:translate-x-full after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all dark:border-gray-600" />
+        <div className="h-6 w-11 rounded-full bg-gray-200 transition peer-focus:ring-2 peer-focus:ring-brand-300 peer-checked:bg-brand-600 peer-checked:after:translate-x-full after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-cream-200 after:bg-white after:transition-all" />
       </label>
     </div>
   );
@@ -123,9 +123,9 @@ const CollectionPage: NextPage = () => {
       <main className="container mx-auto mt-24 flex min-h-screen flex-col gap-4 px-4 md:px-8">
         <h1 className="text-3xl md:text-4xl">Your Generated Images</h1>
 
-        {isLoading && <div className="text-sm text-gray-600 dark:text-gray-300">Loading designs...</div>}
+        {isLoading && <div className="text-sm text-gray-600">Loading designs...</div>}
         {!isLoading && icons.length === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+          <div className="rounded-lg border border-cream-200 bg-white p-4 text-sm text-gray-700">
             No designs yet. Generate your first design to see it here.
           </div>
         )}
@@ -136,7 +136,7 @@ const CollectionPage: NextPage = () => {
             return (
               <li
                 key={icon.id}
-                className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900"
+                className="overflow-hidden rounded-lg border border-cream-200 bg-white shadow-sm"
               >
                 <div className="relative">
                   <Image
@@ -178,10 +178,10 @@ const CollectionPage: NextPage = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 p-2 dark:border-gray-700">
+                <div className="border-t border-cream-200 p-2">
                   <Link
                     href="/products"
-                    className="mb-2 block rounded-md bg-blue-600 px-3 py-2 text-center text-xs font-semibold text-white transition hover:bg-blue-700"
+                    className="mb-2 block rounded-md bg-brand-600 px-3 py-2 text-center text-xs font-semibold text-white transition hover:bg-brand-700"
                   >
                     Print on Products
                   </Link>

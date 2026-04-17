@@ -62,21 +62,21 @@ export default function OrderCancel() {
           {checkoutHref ? (
             <Link
               href={checkoutHref}
-              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
+              className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-3 text-white font-semibold hover:bg-brand-700 transition"
             >
               Return to checkout
             </Link>
           ) : (
             <Link
               href={getGeneratorHref(sourcePage)}
-              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-secondary-foreground font-semibold hover:bg-blue-700 transition"
+              className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-3 text-white font-semibold hover:bg-brand-700 transition"
             >
               Return to your design
             </Link>
           )}
           <a
             href="mailto:support@namedesignai.com"
-            className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 font-semibold text-foreground hover:border-gray-400 transition"
+            className="inline-flex items-center justify-center rounded-lg border border-cream-200 px-6 py-3 font-semibold text-slate-800 hover:border-brand-300 hover:bg-cream-50 transition"
           >
             Contact support
           </a>

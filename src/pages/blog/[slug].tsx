@@ -30,7 +30,7 @@ interface PostPageProps {
 // Custom components to be used within your MDX files
 // Ensure this component exists if you plan to use it in MDX
 const CTA = ({ title, description, href, buttonText }: { title: string, description: string, href: string, buttonText: string }) => (
-    <div className="my-12 p-8 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-r-lg">
+    <div className="my-12 p-8 bg-brand-50 border-l-4 border-brand-500 rounded-r-lg">
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h3>
         <p className="mt-2 mb-6 text-lg text-gray-700 dark:text-gray-300">{description}</p>
         <Link href={href}>
@@ -81,11 +81,11 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
       <main className="bg-white dark:bg-gray-900 py-16">
         <article className="container mx-auto px-6 max-w-3xl">
           <nav className="mb-8 text-sm text-gray-500 dark:text-gray-400">
-            <Link href="/" className="hover:text-blue-500">
+            <Link href="/" className="hover:text-brand-600">
               Home
             </Link>{" "}
             /{" "}
-            <Link href="/blog" className="hover:text-blue-500">
+            <Link href="/blog" className="hover:text-brand-600">
               Blog
             </Link>{" "}
             / <span>{frontmatter.title}</span>
@@ -109,19 +109,19 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
               Continue exploring
             </h2>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-white dark:hover:bg-slate-900">
+              <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
                 <h3 className="text-lg font-semibold">Name Art</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Start with the core name art page and generator.
                 </p>
               </Link>
-              <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-white dark:hover:bg-slate-900">
+              <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
                 <h3 className="text-lg font-semibold">Personalized Gifts</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Move from inspiration into category pages built around gift intent.
                 </p>
               </Link>
-              <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-blue-400 hover:bg-white dark:hover:bg-slate-900">
+              <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
                 <h3 className="text-lg font-semibold">Couple Gifts</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Explore romantic and occasion-based product ideas linked to couple art.

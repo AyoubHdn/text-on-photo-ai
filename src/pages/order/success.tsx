@@ -276,7 +276,7 @@ export default function OrderSuccess() {
         We are preparing your product and will notify you when it ships.
       </p>
 
-      <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+      <div className="mb-6 rounded-lg border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
         <div className="font-semibold">Your personalized product is now being prepared.</div>
         <div className="mt-1">Want another design? Create one now while your inspiration is fresh.</div>
       </div>
@@ -365,13 +365,13 @@ export default function OrderSuccess() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-900"
+                className="flex items-center justify-between rounded-lg border border-cream-200 bg-cream-50 px-4 py-3 text-sm transition hover:border-brand-300 hover:bg-brand-50"
               >
                 <div>
                   <div className="font-semibold text-foreground">{item.label}</div>
                   <div className="text-xs text-muted-foreground">{item.detail}</div>
                 </div>
-                <span className="ml-3 text-blue-600 dark:text-blue-400">→</span>
+                <span className="ml-3 text-brand-600">→</span>
               </Link>
             ))}
           </div>
@@ -381,7 +381,7 @@ export default function OrderSuccess() {
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link
           href={nextGeneratorHref}
-          className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+          className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"
         >
           Create Another Design
         </Link>

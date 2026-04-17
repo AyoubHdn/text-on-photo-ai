@@ -247,14 +247,14 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
       />
 
       <main className="bg-white dark:bg-gray-900">
-        <section className="overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-16 dark:from-gray-900 dark:via-gray-900 dark:to-slate-900">
+        <section className="overflow-hidden bg-gradient-to-br from-cream-50 via-white to-cream-100 px-4 py-16">
           <div className="container mx-auto max-w-6xl">
             <nav className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-              <Link href="/" className="hover:text-blue-500">
+              <Link href="/" className="hover:text-brand-600">
                 Home
               </Link>{" "}
               /{" "}
-              <Link href="/name-art" className="hover:text-blue-500">
+              <Link href="/name-art" className="hover:text-brand-600">
                 Name Art
               </Link>{" "}
               / <span>{name}</span>
@@ -278,13 +278,13 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link href={generatorHref}>
-                    <button className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700">
+                    <button className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">
                       Create Art for {name}
                     </button>
                   </Link>
                   <Link
                     href="/name-art"
-                    className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
+                    className="rounded-lg border border-cream-200 px-6 py-3 font-semibold text-amber-900 transition hover:border-brand-400 hover:text-brand-700"
                   >
                     Browse More Name Art Ideas
                   </Link>
@@ -312,7 +312,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                           unoptimized={true}
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent p-5">
-                          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-200">
+                          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">
                             {example.niche}
                           </p>
                           <p className="mt-2 text-lg font-semibold text-white">
@@ -345,7 +345,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                   key={`${example.title}-detail`}
                   id={`example-${index + 1}`}
                   href={generatorHref}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <Image
@@ -357,13 +357,13 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                     />
                   </div>
                   <div className="p-5">
-                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
                       {example.niche}
                     </p>
                     <h3 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-100">
                       {example.title}
                     </h3>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       Open generator
                     </span>
                   </div>
@@ -389,7 +389,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                 <Link
                   key={style.title}
                   href={style.href}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -407,7 +407,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                     <p className="mt-3 text-slate-600 dark:text-slate-300">
                       {style.description}
                     </p>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       {style.ctaLabel}
                     </span>
                   </div>
@@ -433,7 +433,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                 <Link
                   key={mockup.title}
                   href={mockup.href}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -450,7 +450,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                     <p className="mt-3 text-slate-600 dark:text-slate-300">
                       {mockup.description}
                     </p>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       {mockup.ctaLabel}
                     </span>
                   </div>
@@ -478,7 +478,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                   <Link
                     key={style.href}
                     href={style.href}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                    className="rounded-2xl border border-cream-200 bg-white p-5 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
                   >
                     <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                       {style.title}
@@ -486,7 +486,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                     <p className="mt-3 text-slate-600 dark:text-slate-300">
                       {style.description}
                     </p>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       {style.ctaLabel}
                     </span>
                   </Link>
@@ -520,7 +520,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
 
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="rounded-2xl border border-slate-200 bg-gray-50 p-6 shadow-sm dark:border-slate-700 dark:bg-gray-800">
-                  <FiEdit3 className="text-2xl text-blue-500" />
+                  <FiEdit3 className="text-2xl text-brand-600" />
                   <h3 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
                     Start with the name
                   </h3>
@@ -530,7 +530,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-gray-50 p-6 shadow-sm dark:border-slate-700 dark:bg-gray-800">
-                  <FiGift className="text-2xl text-blue-500" />
+                  <FiGift className="text-2xl text-brand-600" />
                   <h3 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
                     Match the use case
                   </h3>
@@ -540,7 +540,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-gray-50 p-6 shadow-sm dark:border-slate-700 dark:bg-gray-800">
-                  <FiDownload className="text-2xl text-blue-500" />
+                  <FiDownload className="text-2xl text-brand-600" />
                   <h3 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
                     Download or print
                   </h3>
@@ -593,7 +593,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                 <Link
                   key={related.path}
                   href={related.path}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <Image
@@ -611,7 +611,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                       Featured styles: {related.niches.slice(0, 3).join(", ")}
                     </p>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       Open {related.name} page
                     </span>
                   </div>
@@ -632,7 +632,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
             </p>
             <div className="mt-8">
               <Link href={generatorHref}>
-                <button className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-700">
+                <button className="rounded-lg bg-brand-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-brand-700">
                   Generate Art for {name}
                 </button>
               </Link>

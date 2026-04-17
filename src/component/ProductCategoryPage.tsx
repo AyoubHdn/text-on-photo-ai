@@ -128,8 +128,8 @@ export function ProductCategoryPage({
         ]}
       />
 
-      <main className="bg-white dark:bg-gray-900">
-        <section className="overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 px-4 py-16 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 lg:py-20">
+      <main className="bg-white">
+        <section className="overflow-hidden bg-gradient-to-b from-cream-50 via-white to-cream-100 px-4 py-16 lg:py-20">
           <div className="container mx-auto max-w-6xl">
             <div className="grid items-center gap-12 lg:grid-cols-[1.05fr,0.95fr]">
               <div>
@@ -137,13 +137,13 @@ export function ProductCategoryPage({
                   {breadcrumbs.map((crumb, index) => (
                     <span key={crumb.path}>
                       {index > 0 ? " / " : ""}
-                      <Link href={crumb.path} className="hover:text-blue-500">
+                      <Link href={crumb.path} className="hover:text-brand-600">
                         {crumb.name}
                       </Link>
                     </span>
                   ))}
                 </nav>
-                <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-800">
                   {eyebrow}
                 </span>
                 <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl">
@@ -160,7 +160,7 @@ export function ProductCategoryPage({
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+                      className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"
                     >
                       {link.label}
                     </Link>
@@ -175,7 +175,7 @@ export function ProductCategoryPage({
                     href={tile.href}
                     className={index === 0 ? "sm:row-span-2" : ""}
                   >
-                    <article className="group h-full overflow-hidden rounded-3xl border border-white/70 bg-white shadow-xl shadow-slate-200/60 transition hover:-translate-y-1 hover:shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/20">
+                    <article className="group h-full overflow-hidden rounded-3xl border border-cream-100 bg-white shadow-xl shadow-amber-100/60 transition hover:-translate-y-1 hover:shadow-2xl">
                       <div
                         className={`relative ${
                           index === 0 ? "aspect-[4/5] h-full min-h-[260px]" : "aspect-[4/3]"
@@ -206,9 +206,9 @@ export function ProductCategoryPage({
             {highlights.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm"
               >
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
                   Highlight
                 </p>
                 <h3 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -222,7 +222,7 @@ export function ProductCategoryPage({
           </div>
         </section>
 
-        <section className="bg-gray-50 px-4 py-16 dark:bg-gray-800">
+        <section className="bg-cream-50 px-4 py-16">
           <div className="container mx-auto max-w-6xl">
             <div className="max-w-3xl">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
@@ -238,7 +238,7 @@ export function ProductCategoryPage({
                 <Link
                   key={card.href}
                   href={card.href}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -255,7 +255,7 @@ export function ProductCategoryPage({
                     <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
                       {card.description}
                     </p>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       View category
                     </span>
                   </div>
@@ -281,7 +281,7 @@ export function ProductCategoryPage({
                 <Link
                   key={example.href}
                   href={example.href}
-                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <Image
@@ -298,7 +298,7 @@ export function ProductCategoryPage({
                     <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
                       {example.description}
                     </p>
-                    <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    <span className="mt-4 inline-flex text-sm font-semibold text-brand-700">
                       Open name art page
                     </span>
                   </div>
@@ -308,7 +308,7 @@ export function ProductCategoryPage({
           </div>
         </section>
 
-        <section className="bg-gray-50 px-4 py-16 dark:bg-gray-800">
+        <section className="bg-cream-50 px-4 py-16">
           <div className="container mx-auto max-w-6xl">
             <div className="grid items-end gap-4 md:flex md:items-end md:justify-between max-w-6xl">
               <div className="max-w-3xl">
@@ -321,16 +321,16 @@ export function ProductCategoryPage({
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 md:text-right">
-                <span className="rounded-full bg-white px-3 py-1.5 shadow-sm dark:bg-slate-800">Free worldwide shipping</span>
-                <span className="rounded-full bg-white px-3 py-1.5 shadow-sm dark:bg-slate-800">Printed per order</span>
-                <span className="rounded-full bg-white px-3 py-1.5 shadow-sm dark:bg-slate-800">Pricing shown at checkout</span>
+                <span className="rounded-full border border-cream-200 bg-cream-50 px-3 py-1.5">Free worldwide shipping</span>
+                <span className="rounded-full border border-cream-200 bg-cream-50 px-3 py-1.5">Printed per order</span>
+                <span className="rounded-full border border-cream-200 bg-cream-50 px-3 py-1.5">Pricing shown at checkout</span>
               </div>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
               {productMockups.map((mockup) => (
                 <article
                   key={`${mockup.href}-${mockup.title}`}
-                  className="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                  className="flex flex-col overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm"
                 >
                   <div className="relative aspect-[4/3]">
                     <Image
@@ -350,7 +350,7 @@ export function ProductCategoryPage({
                     <div className="mt-5 flex items-center gap-3">
                       <Link
                         href={mockup.href}
-                        className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                        className="inline-flex rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
                       >
                         {mockup.ctaLabel}
                       </Link>
@@ -377,7 +377,7 @@ export function ProductCategoryPage({
             {useCases.map((useCase) => (
               <div
                 key={useCase.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm"
               >
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                   {useCase.title}
@@ -401,7 +401,7 @@ export function ProductCategoryPage({
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="block rounded-2xl border border-slate-200 p-5 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    className="block rounded-2xl border border-slate-200 p-5 transition hover:border-brand-400 hover:bg-brand-50"
                   >
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                       {link.label}
@@ -423,7 +423,7 @@ export function ProductCategoryPage({
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="block rounded-2xl border border-slate-200 p-5 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    className="block rounded-2xl border border-slate-200 p-5 transition hover:border-brand-400 hover:bg-brand-50"
                   >
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                       {link.label}
@@ -438,7 +438,7 @@ export function ProductCategoryPage({
           </div>
         </section>
 
-        <section className="bg-gray-50 px-4 py-16 dark:bg-gray-800">
+        <section className="bg-cream-50 px-4 py-16">
           <div className="container mx-auto max-w-4xl">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
               Frequently asked questions
@@ -447,7 +447,7 @@ export function ProductCategoryPage({
               {faqItems.map((faq) => (
                 <details
                   key={faq.question}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm"
                 >
                   <summary className="cursor-pointer text-lg font-semibold text-slate-900 dark:text-slate-100">
                     {faq.question}

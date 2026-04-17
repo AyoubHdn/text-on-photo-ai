@@ -88,7 +88,7 @@ const PREVIEW_PROGRESS_SEQUENCE = [12, 18, 26, 35, 46, 58, 69, 79, 88, 94, 98] a
 const SURFACE_CARD_CLASS = "rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm";
 const WHITE_CARD_CLASS = "rounded-2xl border border-gray-200 bg-white p-4 shadow-sm";
 const PRIMARY_BUTTON_CLASS =
-  "inline-flex w-full items-center justify-center rounded-xl bg-[#2563EB] px-4 py-4 text-base font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex w-full items-center justify-center rounded-xl bg-brand-600 px-4 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 const SECONDARY_BUTTON_CLASS =
   "inline-flex w-full items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -886,7 +886,7 @@ const ArabicNameMugV1Page: NextPage = () => {
           <div className="mx-auto flex w-full max-w-md items-center justify-center gap-3 px-4 py-4 sm:max-w-lg">
             <img src="/logo.webp" alt="Name Design AI" className="h-10 w-10 rounded-xl" />
             <div className="text-left">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
                 Name Design AI
               </div>
               <div className="text-sm font-semibold text-slate-900">Personalized Arabic Mug</div>
@@ -900,13 +900,13 @@ const ArabicNameMugV1Page: NextPage = () => {
               <span className="font-semibold text-slate-900">
                 Step {step}: {STEP_TITLES[step]}
               </span>
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                 {step}/7
               </span>
             </div>
             <div className="mt-3 h-2 rounded-full bg-gray-200">
               <div
-                className="h-2 rounded-full bg-[#2563EB] transition-all duration-300"
+                className="h-2 rounded-full bg-brand-600 transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -927,7 +927,7 @@ const ArabicNameMugV1Page: NextPage = () => {
             <section className="space-y-4">
               <div className={`${SURFACE_CARD_CLASS} overflow-hidden`}>
                 <div className="text-center">
-                  <div className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+                  <div className="inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-800">
                     Personalized Arabic Mug
                   </div>
                   <h1 className="mt-4 text-4xl font-bold leading-tight text-slate-950">
@@ -937,13 +937,13 @@ const ArabicNameMugV1Page: NextPage = () => {
                     Create a personalized Arabic name design and see it printed on a mug in
                     seconds.
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-[#2563EB]">
+                  <p className="mt-2 text-sm font-semibold text-brand-700">
                     1 free premium design included
                   </p>
                 </div>
 
                 {!hasSavedDesign && (
-                  <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-4 text-sm text-blue-900">
+                  <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-4 text-sm text-brand-900">
                     <div>Personalized Arabic calligraphy design</div>
                     <div>Gift-ready mug preview in a few guided steps</div>
                     <div>No login required to generate 1 free design</div>
@@ -952,7 +952,7 @@ const ArabicNameMugV1Page: NextPage = () => {
 
                 {hasSavedDesign ? (
                   <div className={`${WHITE_CARD_CLASS} mt-4 text-left`}>
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                       Saved design
                     </p>
                     <div className="mt-3 overflow-hidden rounded-xl bg-[#F8F8F8] p-3">
@@ -1013,14 +1013,14 @@ const ArabicNameMugV1Page: NextPage = () => {
                       onClick={() => selectGiftIntent(option)}
                       className={`rounded-2xl border px-4 py-4 text-left transition ${
                         giftIntent === option
-                          ? "border-[#2563EB] bg-[#2563EB] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]"
+                          ? "border-brand-500 bg-brand-600 text-white shadow-lg"
                           : "border-gray-200 bg-white text-slate-900 hover:border-gray-300"
                       }`}
                     >
                       <div className="text-base font-semibold">{option}</div>
                       <div
                         className={`mt-1 text-sm ${
-                          giftIntent === option ? "text-blue-100" : "text-gray-500"
+                          giftIntent === option ? "text-brand-100" : "text-gray-500"
                         }`}
                       >
                         {GIFT_INTENT_COPY[option]}
@@ -1051,7 +1051,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                 </p>
 
                 <div className={`${WHITE_CARD_CLASS} mt-4`}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                     Gift angle
                   </div>
                   <div className="mt-2 text-base font-semibold text-slate-900">{intentCopy}</div>
@@ -1109,7 +1109,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">{intentCopy}</p>
                   </div>
-                  <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                  <div className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-800">
                     {ARABIC_NAME_MUG_V1_STYLES.length} styles
                   </div>
                 </div>
@@ -1139,7 +1139,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                       }}
                       className={`overflow-hidden rounded-2xl border bg-white text-left transition ${
                         styleId === item.id
-                          ? "border-[#2563EB] shadow-[0_12px_24px_rgba(37,99,235,0.16)]"
+                          ? "border-brand-500 shadow-md"
                           : guestFreeDesignLocked
                           ? "border-gray-200 opacity-70"
                           : "border-gray-200 hover:border-gray-300"
@@ -1166,7 +1166,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                 <div className="space-y-3">
                   {guestFreeDesignLocked && (
                     <>
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-900">
+                      <div className="rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-3 text-sm text-brand-900">
                         Sign in to generate more styles. Your current free design is already
                         saved and ready for preview.
                       </div>
@@ -1244,7 +1244,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                           isDone
                             ? "border-emerald-200 bg-emerald-50"
                             : isActive
-                            ? "border-[#2563EB] bg-white"
+                            ? "border-brand-500 bg-white"
                             : "border-gray-200 bg-white/70"
                         }`}
                       >
@@ -1255,7 +1255,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                               isDone
                                 ? "text-emerald-600"
                                 : isActive
-                                ? "text-[#2563EB]"
+                                ? "text-brand-700"
                                 : "text-gray-400"
                             }`}
                           >
@@ -1265,7 +1265,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                         <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
                           <div
                             className={`h-full rounded-full transition-all duration-700 ${
-                              isDone ? "bg-emerald-500" : "bg-[#2563EB]"
+                              isDone ? "bg-emerald-500" : "bg-brand-600"
                             }`}
                             style={{ width: `${stepProgress}%` }}
                           />
@@ -1296,7 +1296,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                       onClick={() => setUseTransparentDesign(false)}
                       className={`overflow-hidden rounded-2xl border bg-white p-3 text-left transition ${
                         !useTransparentDesign
-                          ? "border-[#2563EB] shadow-[0_12px_24px_rgba(37,99,235,0.16)]"
+                          ? "border-brand-500 shadow-md"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
@@ -1308,7 +1308,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                           </div>
                         </div>
                         {!useTransparentDesign && (
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                          <span className="rounded-full bg-brand-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-800">
                             Selected
                           </span>
                         )}
@@ -1333,7 +1333,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                         onClick={() => setUseTransparentDesign(true)}
                         className={`overflow-hidden rounded-2xl border bg-white p-3 text-left transition ${
                           useTransparentDesign
-                            ? "border-[#2563EB] shadow-[0_12px_24px_rgba(37,99,235,0.16)]"
+                            ? "border-brand-500 shadow-md"
                             : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
@@ -1347,7 +1347,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                             </div>
                           </div>
                           {useTransparentDesign && (
-                            <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                            <span className="rounded-full bg-brand-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-800">
                               Selected
                             </span>
                           )}
@@ -1396,7 +1396,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                 </p>
                 <div className="mt-6 h-3 rounded-full bg-gray-200">
                   <div
-                    className="h-3 rounded-full bg-[#2563EB] transition-all duration-700"
+                    className="h-3 rounded-full bg-brand-600 transition-all duration-700"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -1480,7 +1480,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                   )}
                 </div>
 
-                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-4 text-sm text-blue-900">
+                <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-4 text-sm text-brand-900">
                   <div className="font-semibold text-slate-900">{intentCopy}</div>
                   <div className="mt-3 space-y-2">
                     <p>Personalized Arabic calligraphy design</p>

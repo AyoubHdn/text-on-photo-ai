@@ -62,7 +62,7 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
 
   return (
     <footer
-      className={`border-t border-gray-200 bg-gray-100 ${
+      className={`border-t border-cream-200 bg-cream-50 ${
         forceLight ? "" : "dark:border-gray-700 dark:bg-gray-900"
       }`}
     >
@@ -93,8 +93,8 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`text-gray-500 transition-colors hover:text-blue-500 ${
-                      forceLight ? "" : "dark:hover:text-blue-400"
+                    className={`text-gray-500 transition-colors hover:text-brand-600 ${
+                      forceLight ? "" : "dark:hover:text-brand-400"
                     }`}
                     aria-label={social.name}
                     title={social.name}

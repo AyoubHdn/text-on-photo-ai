@@ -86,12 +86,12 @@ const NameArtLandingPage: NextPage = () => {
         ]}
       />
 
-      <main className="bg-white dark:bg-gray-900">
-        <section className="overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-16 dark:from-gray-900 dark:via-gray-900 dark:to-slate-900 lg:py-24">
+      <main className="bg-white">
+        <section className="overflow-hidden bg-gradient-to-br from-cream-50 via-white to-cream-100 px-4 py-16 lg:py-24">
           <div className="container mx-auto">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div>
-                <span className="inline-flex rounded-full bg-blue-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                <span className="inline-flex rounded-full bg-brand-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-800">
                   AI name art generator
                 </span>
                 <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
@@ -105,21 +105,21 @@ const NameArtLandingPage: NextPage = () => {
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link
                     href="/name-art-generator"
-                    className="inline-block rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-700"
+                    className="inline-block rounded-lg bg-brand-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-brand-700"
                   >
                     Start Creating Name Art
                   </Link>
                   <Link
                     href="#gallery"
-                    className="inline-block rounded-lg border border-slate-300 px-6 py-4 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
+                    className="inline-block rounded-lg border border-cream-200 px-6 py-4 font-semibold text-amber-900 transition hover:border-brand-400 hover:text-brand-700"
                   >
                     Browse Styles
                   </Link>
                 </div>
                 <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-                  <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">Free to start</span>
-                  <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">High-res downloads</span>
-                  <span className="rounded-full bg-white px-4 py-2 shadow-sm dark:bg-slate-800">Print-ready products</span>
+                  <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">Free to start</span>
+                  <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">High-res downloads</span>
+                  <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">Print-ready products</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -158,21 +158,21 @@ const NameArtLandingPage: NextPage = () => {
             </p>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 text-center md:grid-cols-3">
               <div className="flex flex-col items-center p-6">
-                <FiEdit3 className="mb-4 text-5xl text-blue-500" />
+                <FiEdit3 className="mb-4 text-5xl text-brand-500" />
                 <h3 className="mb-2 text-xl font-semibold">1. Enter Your Text</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Type any name, word, or initials you want to transform.
                 </p>
               </div>
               <div className="flex flex-col items-center border-y border-gray-200 p-6 md:border-x md:border-y-0 dark:border-gray-700">
-                <FiHeart className="mb-4 text-5xl text-blue-500" />
+                <FiHeart className="mb-4 text-5xl text-brand-500" />
                 <h3 className="mb-2 text-xl font-semibold">2. Pick a Style</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Choose from elegant, bold, playful, modern, and gift-ready visual directions.
                 </p>
               </div>
               <div className="flex flex-col items-center p-6">
-                <FiDownload className="mb-4 text-5xl text-blue-500" />
+                <FiDownload className="mb-4 text-5xl text-brand-500" />
                 <h3 className="mb-2 text-xl font-semibold">3. Generate and Use</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Download the artwork or move it into print-focused categories when you are ready.
@@ -182,7 +182,7 @@ const NameArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section id="gallery" className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section id="gallery" className="bg-cream-50 py-24 dark:bg-gray-800">
           <div className="container mx-auto px-4 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               Explore a world of creative styles
@@ -199,8 +199,8 @@ const NameArtLandingPage: NextPage = () => {
                   onClick={() => setActiveTab(tab.key)}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
                     activeTab === tab.key
-                      ? "bg-blue-500 text-white shadow"
-                      : "bg-white text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      ? "bg-brand-600 text-white shadow"
+                      : "bg-white text-gray-600 hover:bg-cream-100 border border-cream-200"
                   }`}
                 >
                   {tab.name}
@@ -238,7 +238,7 @@ const NameArtLandingPage: NextPage = () => {
             <div className="mt-10">
               <Link
                 href="/name-art/styles"
-                className="inline-flex rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-200"
+                className="inline-flex rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-700"
               >
                 Browse all name art styles
               </Link>
@@ -262,7 +262,7 @@ const NameArtLandingPage: NextPage = () => {
                 <Link
                   key={item.path}
                   href={item.path}
-                  className="rounded-2xl border border-slate-200 p-5 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                  className="rounded-2xl border border-slate-200 p-5 transition hover:border-brand-400 hover:bg-brand-50"
                 >
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {item.name} name art
@@ -276,7 +276,7 @@ const NameArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gray-50 py-24 dark:bg-gray-800">
+        <section className="bg-cream-50 py-24 dark:bg-gray-800">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">
               <h2 className="text-3xl font-bold md:text-4xl">
@@ -292,7 +292,7 @@ const NameArtLandingPage: NextPage = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
                 >
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {link.label}
@@ -312,24 +312,24 @@ const NameArtLandingPage: NextPage = () => {
               See what our users are creating
             </h2>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="rounded-lg bg-gray-50 p-8 text-left dark:bg-gray-800">
-                <FaQuoteLeft className="mb-4 text-3xl text-blue-400" />
+              <div className="rounded-lg bg-cream-50 p-8 text-left dark:bg-gray-800">
+                <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   "I designed a new logo direction for my Etsy shop in a few
                   minutes and then used the same art style for a print."
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Maria S.</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-8 text-left shadow-xl dark:bg-gray-800">
-                <FaQuoteLeft className="mb-4 text-3xl text-blue-400" />
+              <div className="rounded-lg bg-cream-50 p-8 text-left shadow-xl dark:bg-gray-800">
+                <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   "It helped me test a lot of styles quickly. I ended up using
                   one version for my profile and another for a custom mug."
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- David L.</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-8 text-left dark:bg-gray-800">
-                <FaQuoteLeft className="mb-4 text-3xl text-blue-400" />
+              <div className="rounded-lg bg-cream-50 p-8 text-left dark:bg-gray-800">
+                <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   "We made art with our kids&apos; names for their playroom and
                   then used one of the designs as a framed gift."
@@ -340,7 +340,7 @@ const NameArtLandingPage: NextPage = () => {
           </div>
         </section>
 
-        <section className="bg-gray-50 py-24 text-gray-800 dark:bg-gray-800 dark:text-white">
+        <section className="bg-cream-50 py-24 text-gray-800 dark:bg-gray-800 dark:text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold md:text-4xl">
               Ready to see your name in a new light?
@@ -352,7 +352,7 @@ const NameArtLandingPage: NextPage = () => {
             <div className="mt-8">
               <Link
                 href="/name-art-generator"
-                className="inline-block rounded-lg bg-blue-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-blue-700"
+                className="inline-block rounded-lg bg-brand-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-brand-700"
               >
                 Start Name Art Generator
               </Link>

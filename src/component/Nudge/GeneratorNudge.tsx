@@ -31,7 +31,7 @@ export function GeneratorNudge({
     <p
       className={
         section === "hero"
-          ? "mt-3 text-sm text-blue-700 dark:text-blue-300"
+          ? "mt-3 text-sm text-brand-800"
           : "mt-3 text-center text-xs text-gray-600 dark:text-gray-300"
       }
     >

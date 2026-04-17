@@ -30,8 +30,8 @@ const NameArtStylesIndexPage: NextPage = () => {
           }),
         ]}
       />
-      <main className="bg-white dark:bg-gray-900">
-        <section className="bg-gradient-to-b from-slate-50 to-white px-4 py-20 dark:from-gray-800 dark:to-gray-900">
+      <main className="bg-white">
+        <section className="bg-gradient-to-b from-cream-50 to-white px-4 py-20">
           <div className="container mx-auto max-w-6xl">
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-5xl">
               Browse name art styles
@@ -61,7 +61,7 @@ const NameArtStylesIndexPage: NextPage = () => {
                     <Link
                       key={item.slug}
                       href={`/name-art/styles/${item.slug}`}
-                      className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                      className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                     >
                       <div className="relative aspect-[4/3] overflow-hidden">
                         <Image
@@ -72,7 +72,7 @@ const NameArtStylesIndexPage: NextPage = () => {
                         />
                       </div>
                       <div className="p-5">
-                        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">
+                        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
                           {group.title}
                         </p>
                         <h3 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-100">

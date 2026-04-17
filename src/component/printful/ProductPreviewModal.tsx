@@ -1958,7 +1958,7 @@ export function ProductPreviewModal({
                 <span className="relative inline-flex items-center group/info">
                   <button
                     type="button"
-                    className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:text-gray-300 dark:hover:text-white"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-cream-200 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     aria-label="Product info"
                   >
                     i
@@ -2042,7 +2042,7 @@ export function ProductPreviewModal({
                       className={`px-4 py-2 rounded-md border text-sm transition
                         ${
                           variantId === v.id
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }
                       `}
@@ -2078,7 +2078,7 @@ export function ProductPreviewModal({
                           onClick={() => setSelectedColor(resolvedColor)}
                           className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
                             selectedColor === resolvedColor
-                              ? "bg-blue-500 border-blue-500 text-white"
+                              ? "bg-brand-600 border-brand-600 text-white"
                               : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                           }`}
                         >
@@ -2108,7 +2108,7 @@ export function ProductPreviewModal({
                           onClick={() => setSelectedSize(normalizedSizeKey)}
                           className={`px-4 py-2 rounded-md border text-sm transition ${
                             selectedSize === normalizedSizeKey
-                              ? "bg-blue-500 border-blue-500 text-white"
+                              ? "bg-brand-600 border-brand-600 text-white"
                               : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                           }`}
                         >
@@ -2142,7 +2142,7 @@ export function ProductPreviewModal({
                         }}
                         className={`px-4 py-2 rounded-md border text-sm transition ${
                           variantId === v.id
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }`}
                       >
@@ -2179,7 +2179,7 @@ export function ProductPreviewModal({
                         }}
                         className={`px-4 py-2 rounded-md border text-sm transition ${
                           selectedSize === normalizedSizeKey
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }`}
                       >
@@ -2207,7 +2207,7 @@ export function ProductPreviewModal({
                         onClick={() => setSelectedColor(resolvedColor)}
                         className={`rounded-md border px-3 py-2 text-sm transition ${
                           selectedColor === resolvedColor
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }`}
                       >
@@ -2244,7 +2244,7 @@ export function ProductPreviewModal({
                         }}
                         className={`px-4 py-2 rounded-md border text-sm transition ${
                           selectedSize === normalizedSizeKey
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }`}
                       >
@@ -2275,7 +2275,7 @@ export function ProductPreviewModal({
                           onClick={() => setSelectedColor(resolvedColor)}
                           className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
                             selectedColor === resolvedColor
-                              ? "bg-blue-500 border-blue-500 text-white"
+                              ? "bg-brand-600 border-brand-600 text-white"
                               : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                           }`}
                         >
@@ -2323,7 +2323,7 @@ export function ProductPreviewModal({
                         }}
                         className={`px-4 py-2 rounded-md border text-sm transition ${
                           isActive
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }`}
                       >
@@ -2346,7 +2346,7 @@ export function ProductPreviewModal({
                       className={`px-4 py-2 rounded-md border text-sm transition capitalize
                         ${
                           mugPreviewMode === mode
-                            ? "bg-blue-500 border-blue-500 text-white"
+                            ? "bg-brand-600 border-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                         }
                       `}
@@ -2381,7 +2381,7 @@ export function ProductPreviewModal({
                           className={`w-8 h-8 rounded-full border-2 transition
                             ${
                               selectedColor === color
-                                ? "border-blue-500 ring-2 ring-blue-500"
+                                ? "border-brand-500 ring-2 ring-brand-500"
                                 : "border-gray-400 dark:border-gray-600"
                             }
                           `}
@@ -2411,7 +2411,7 @@ export function ProductPreviewModal({
                         className={`px-4 py-2 border rounded-md text-sm transition
                           ${
                             selectedSize === size
-                              ? "border-blue-500 bg-blue-500 text-white"
+                              ? "border-brand-600 bg-brand-600 text-white"
                             : "border-gray-300 text-gray-900 hover:border-gray-400 dark:border-gray-600 dark:text-white dark:hover:border-gray-400"
                           }
                         `}

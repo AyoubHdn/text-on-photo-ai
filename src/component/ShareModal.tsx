@@ -44,7 +44,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUr
           {/* Facebook Button */}
           <button
             onClick={() => handleShareClick(shareUrls.facebook)}
-            className="flex flex-col items-center justify-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="flex flex-col items-center justify-center gap-2 text-gray-700 hover:text-brand-600 transition-colors"
             title="Share on Facebook"
           >
             <FaFacebook size={40} />

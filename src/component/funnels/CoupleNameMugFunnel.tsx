@@ -110,7 +110,7 @@ const PREVIEW_PROGRESS_SEQUENCE = [12, 18, 26, 35, 47, 60, 74, 86, 95, 99] as co
 const SURFACE_CARD_CLASS = "rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm";
 const WHITE_CARD_CLASS = "rounded-2xl border border-gray-200 bg-white p-4 shadow-sm";
 const PRIMARY_BUTTON_CLASS =
-  "inline-flex w-full items-center justify-center rounded-xl bg-[#2563EB] px-4 py-4 text-base font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex w-full items-center justify-center rounded-xl bg-brand-600 px-4 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 const SECONDARY_BUTTON_CLASS =
   "inline-flex w-full items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-4 text-base font-semibold text-gray-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -1012,7 +1012,7 @@ export function CoupleNameMugFunnel({
         </div>
 
         <div className="mt-5 text-center">
-          <div className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+          <div className="inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-800">
             Personalized Couple Mug
           </div>
           <h1 className="mt-4 text-4xl font-bold leading-tight text-slate-950">
@@ -1024,13 +1024,13 @@ export function CoupleNameMugFunnel({
           <p className="mt-2 text-sm text-gray-500">
             Both sides are now designed together in one matching mug wrap.
           </p>
-          <p className="mt-2 text-sm font-semibold text-[#2563EB]">
+          <p className="mt-2 text-sm font-semibold text-brand-700">
             1 free design pair included
           </p>
         </div>
 
         {!hasSavedDesign && (
-          <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-4 text-sm text-blue-900">
+          <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-4 text-sm text-brand-900">
             {heroHighlights.map((highlight) => (
               <div key={highlight}>{highlight}</div>
             ))}
@@ -1039,7 +1039,7 @@ export function CoupleNameMugFunnel({
 
         {hasSavedDesign ? (
           <div className={`${WHITE_CARD_CLASS} mt-4`}>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
               Saved design
             </p>
             <div className="mt-4 overflow-hidden rounded-xl bg-[#F8F8F8] p-3">
@@ -1109,9 +1109,9 @@ export function CoupleNameMugFunnel({
               setErr("");
               setStep(3);
             }}
-            className="rounded-2xl border border-gray-200 bg-white p-4 text-left transition hover:border-[#2563EB] hover:shadow-sm"
+            className="rounded-2xl border border-gray-200 bg-white p-4 text-left transition hover:border-brand-500 hover:shadow-sm"
           >
-            <div className="text-sm font-semibold text-[#2563EB]">Names Only</div>
+            <div className="text-sm font-semibold text-brand-700">Names Only</div>
             <div className="mt-1 text-xl font-semibold text-slate-950">
               Side 1: her name, Side 2: his name
             </div>
@@ -1131,9 +1131,9 @@ export function CoupleNameMugFunnel({
               setErr("");
               setStep(3);
             }}
-            className="rounded-2xl border border-gray-200 bg-white p-4 text-left transition hover:border-[#2563EB] hover:shadow-sm"
+            className="rounded-2xl border border-gray-200 bg-white p-4 text-left transition hover:border-brand-500 hover:shadow-sm"
           >
-            <div className="text-sm font-semibold text-[#2563EB]">Avatar + Name</div>
+            <div className="text-sm font-semibold text-brand-700">Avatar + Name</div>
             <div className="mt-1 text-xl font-semibold text-slate-950">
               Side 1: her avatar + name, Side 2: his avatar + name
             </div>
@@ -1184,10 +1184,10 @@ export function CoupleNameMugFunnel({
                 }}
                 className={`overflow-hidden rounded-2xl border bg-white text-left transition ${
                   isSelected
-                    ? "border-[#2563EB] shadow-[0_12px_24px_rgba(37,99,235,0.16)]"
+                    ? "border-brand-500 shadow-md"
                     : guestFreeDesignLocked
                     ? "border-gray-200 opacity-70"
-                    : "border-gray-200 hover:border-[#2563EB] hover:shadow-sm"
+                    : "border-gray-200 hover:border-brand-500 hover:shadow-sm"
                 } ${guestFreeDesignLocked ? "cursor-not-allowed" : ""}`}
               >
                 <div className="relative">
@@ -1203,7 +1203,7 @@ export function CoupleNameMugFunnel({
                   />
                 </div>
                 <div className="p-4">
-                  <div className="text-sm font-semibold text-[#2563EB]">{styleOption.name}</div>
+                  <div className="text-sm font-semibold text-brand-700">{styleOption.name}</div>
                   <div className="mt-1 text-sm text-gray-600">{styleOption.blurb}</div>
                 </div>
               </button>
@@ -1214,7 +1214,7 @@ export function CoupleNameMugFunnel({
         <div className="mt-5 space-y-3">
           {guestFreeDesignLocked && (
             <>
-              <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-900">
+              <div className="rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-3 text-sm text-brand-900">
                 Sign in to generate more styles. Your current free design is already saved and
                 ready for preview.
               </div>
@@ -1289,7 +1289,7 @@ export function CoupleNameMugFunnel({
                 : "Add both names for the final full-wrap mug design."}
             </p>
           </div>
-          <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+          <div className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-800">
             {mode === "avatar_name" ? "Avatar + Name" : "Names Only"}
           </div>
         </div>
@@ -1322,7 +1322,7 @@ export function CoupleNameMugFunnel({
               }}
               readOnly={guestFreeDesignLocked}
               placeholder="Sara"
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-[#2563EB]"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-brand-500"
             />
           </div>
 
@@ -1342,7 +1342,7 @@ export function CoupleNameMugFunnel({
               }}
               readOnly={guestFreeDesignLocked}
               placeholder="Adam"
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-[#2563EB]"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-brand-500"
             />
           </div>
 
@@ -1366,7 +1366,7 @@ export function CoupleNameMugFunnel({
               readOnly={guestFreeDesignLocked}
               maxLength={50}
               placeholder="Forever & Always • 12.06.2024"
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-[#2563EB]"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-brand-500"
             />
             <p className="mt-2 text-xs text-gray-500">
               This text will be placed in the center below both names.
@@ -1487,7 +1487,7 @@ export function CoupleNameMugFunnel({
   const renderStep4 = () => (
     <section className="space-y-4">
       <div className={`${SURFACE_CARD_CLASS} text-center`}>
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-[#2563EB]">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 text-brand-700">
           <div className="h-7 w-7 animate-spin rounded-full border-4 border-current border-t-transparent" />
         </div>
         <h2 className="mt-4 text-3xl font-bold text-slate-950">Creating your mug design</h2>
@@ -1497,7 +1497,7 @@ export function CoupleNameMugFunnel({
 
         <div className="mt-5 h-2 rounded-full bg-gray-200">
           <div
-            className="h-2 rounded-full bg-[#2563EB] transition-all duration-300"
+            className="h-2 rounded-full bg-brand-600 transition-all duration-300"
             style={{ width: `${designProgress}%` }}
           />
         </div>
@@ -1510,13 +1510,13 @@ export function CoupleNameMugFunnel({
               <div key={label} className="rounded-xl border border-gray-200 bg-white p-3">
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-semibold text-slate-900">{label}</span>
-                  <span className={relativeProgress > 0 ? "text-[#2563EB]" : "text-gray-400"}>
+                  <span className={relativeProgress > 0 ? "text-brand-700" : "text-gray-400"}>
                     {Math.max(0, Math.min(100, Math.round(relativeProgress)))}%
                   </span>
                 </div>
                 <div className="mt-2 h-1.5 rounded-full bg-gray-100">
                   <div
-                    className="h-1.5 rounded-full bg-[#2563EB] transition-all duration-300"
+                    className="h-1.5 rounded-full bg-brand-600 transition-all duration-300"
                     style={{ width: `${Math.max(0, Math.min(100, relativeProgress))}%` }}
                   />
                 </div>
@@ -1543,7 +1543,7 @@ export function CoupleNameMugFunnel({
               onClick={() => setUseTransparentDesign(false)}
               className={`overflow-hidden rounded-2xl border bg-white p-3 text-left transition ${
                 !useTransparentDesign
-                  ? "border-[#2563EB] shadow-[0_12px_24px_rgba(37,99,235,0.16)]"
+                  ? "border-brand-500 shadow-md"
                   : "border-gray-200 hover:border-gray-300"
               }`}
             >
@@ -1555,7 +1555,7 @@ export function CoupleNameMugFunnel({
                   </div>
                 </div>
                 {!useTransparentDesign && (
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                  <span className="rounded-full bg-brand-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-800">
                     Selected
                   </span>
                 )}
@@ -1580,7 +1580,7 @@ export function CoupleNameMugFunnel({
                 onClick={() => setUseTransparentDesign(true)}
                 className={`overflow-hidden rounded-2xl border bg-white p-3 text-left transition ${
                   useTransparentDesign
-                    ? "border-[#2563EB] shadow-[0_12px_24px_rgba(37,99,235,0.16)]"
+                    ? "border-brand-500 shadow-md"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -1594,7 +1594,7 @@ export function CoupleNameMugFunnel({
                     </div>
                   </div>
                   {useTransparentDesign && (
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+                    <span className="rounded-full bg-brand-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-800">
                       Selected
                     </span>
                   )}
@@ -1655,7 +1655,7 @@ export function CoupleNameMugFunnel({
               <div className="text-sm font-semibold text-slate-900">Generating preview</div>
               <div className="mt-3 h-2 rounded-full bg-gray-200">
                 <div
-                  className="h-2 rounded-full bg-[#2563EB] transition-all duration-300"
+                  className="h-2 rounded-full bg-brand-600 transition-all duration-300"
                   style={{ width: `${previewProgress}%` }}
                 />
               </div>
@@ -1763,7 +1763,7 @@ export function CoupleNameMugFunnel({
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
-              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-[#2563EB]"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-brand-500"
             />
             <p className="mt-2 text-xs text-gray-500">
               We&apos;ll use this for checkout access and order updates.
@@ -1797,7 +1797,7 @@ export function CoupleNameMugFunnel({
           <div className="mx-auto flex w-full max-w-md items-center justify-center gap-3 px-4 py-4 sm:max-w-lg">
             <img src="/logo.webp" alt="Name Design AI" className="h-10 w-10 rounded-xl" />
             <div className="text-left">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-700">
               Name Design AI
             </div>
             <div className="text-sm font-semibold text-slate-900">{headerTitle}</div>
@@ -1811,13 +1811,13 @@ export function CoupleNameMugFunnel({
             <span className="font-semibold text-slate-900">
                 Step {displayStep}: {displayStepTitle}
             </span>
-            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                 {displayStep}/{totalSteps}
             </span>
           </div>
             <div className="mt-3 h-2 rounded-full bg-gray-200">
               <div
-                className="h-2 rounded-full bg-[#2563EB] transition-all duration-300"
+                className="h-2 rounded-full bg-brand-600 transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>

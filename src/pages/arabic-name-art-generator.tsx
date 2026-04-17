@@ -537,7 +537,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         {/* Language Switcher - Made more visible */}
         <div className="flex justify-end mb-4">
             <Link href="/ar/arabic-name-art-generator">
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 border border-gray-300 rounded-full shadow-sm hover:border-blue-700 hover:text-white transition-all">
+                <button className="flex items-center gap-2 px-4 py-2 bg-brand-600 border border-brand-500 text-white rounded-full shadow-sm hover:bg-brand-700 transition-all">
                     <FiGlobe className="text-lg" /> 
                     <span className="font-medium">العربية</span>
                 </button>
@@ -569,7 +569,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(typedArabicStylesData).map((catKey) => (
-                  <button key={catKey} type="button" onClick={() => { setActiveTab(catKey); setActiveSubTab(Object.keys(typedArabicStylesData[catKey]!)[0]!); }} className={`px-4 py-2 whitespace-nowrap font-semibold ${activeTab === catKey ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}`}>
+                  <button key={catKey} type="button" onClick={() => { setActiveTab(catKey); setActiveSubTab(Object.keys(typedArabicStylesData[catKey]!)[0]!); }} className={`px-4 py-2 whitespace-nowrap font-semibold ${activeTab === catKey ? 'border-b-2 border-brand-500 text-brand-600' : 'text-gray-500 hover:text-gray-900'}`}>
                     {catKey}
                   </button>
                 ))}
@@ -581,7 +581,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               {showLeftSubCategoryArrow && <button type="button" onClick={() => scrollSubCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={subcategoryScrollRef} onScroll={() => handleScroll(subcategoryScrollRef, setShowLeftSubCategoryArrow, setShowRightSubCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(typedArabicStylesData[activeTab] ?? {}).map((sub) => (
-                  <button key={sub} type="button" id={sub} onClick={() => setActiveSubTab(sub)} className={`px-3 py-1.5 whitespace-nowrap text-sm rounded-full ${activeSubTab === sub ? 'bg-blue-500 text-white font-semibold' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                  <button key={sub} type="button" id={sub} onClick={() => setActiveSubTab(sub)} className={`px-3 py-1.5 whitespace-nowrap text-sm rounded-full ${activeSubTab === sub ? 'bg-brand-600 text-white font-semibold' : 'bg-cream-100 text-gray-600 hover:bg-cream-200'}`}>
                     {sub}
                   </button>
                 ))}
@@ -591,7 +591,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
               {(typedArabicStylesData[activeTab]?.[activeSubTab] ?? []).map((item, idx) => (
-                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-blue-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, item.name)}>
+                  <div key={idx} className={`relative group cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200 hover:shadow-xl ${selectedImage === item.src ? "ring-4 ring-offset-2 ring-brand-500" : ""}`} onClick={() => handleImageSelect(item.basePrompt, item.src, item.altText, item.name)}>
                     <Image
                       src={item.src}
                       alt={item.altText}
@@ -616,8 +616,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                   onClick={() => setSelectedModel(tier.model)}
                   className={`rounded-xl border p-4 text-left transition ${
                     selectedModel === tier.model
-                      ? "border-blue-500 ring-2 ring-blue-500"
-                      : "border-gray-300 hover:border-gray-500"
+                      ? "border-brand-500 ring-2 ring-brand-500"
+                      : "border-cream-200 hover:border-brand-300"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-4">
@@ -631,7 +631,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       </span>
                     )}
                   </div>
-                  <div className="mt-3 text-sm font-medium text-blue-600">
+                  <div className="mt-3 text-sm font-medium text-brand-700">
                     {tier.credits} credits
                   </div>
                 </button>
@@ -651,7 +651,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                     type="button"
                     onClick={() => setSelectedAspectRatio(ratio.value)}
                     className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
-                      selectedAspectRatio === ratio.value ? "border-blue-500 ring-2 ring-blue-500" : "border-gray-300 hover:border-gray-500"
+                      selectedAspectRatio === ratio.value ? "border-brand-500 ring-2 ring-brand-500" : "border-cream-200 hover:border-brand-300"
                     }`}
                   >
                     <div className={`w-full h-21 rounded-lg ${aspectClass} overflow-hidden flex items-center justify-center`} style={{ backgroundColor: "#ddd" }}>
@@ -780,7 +780,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             )}
 
             <section className="mt-10">
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+              <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
                 ✨ Your design is ready! Imagine this on your favorite mug, shirt, or framed on your wall.
               </div>
               <h3 className="text-2xl font-semibold mb-6 text-center">
@@ -816,7 +816,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       )}
 
                       <button
-                        className="inline-block px-8 py-4 text-l font-bold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        className="inline-block px-8 py-4 text-l font-bold bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition"
                         disabled={previewCooldown !== null}
                         onClick={() => {
                           if (

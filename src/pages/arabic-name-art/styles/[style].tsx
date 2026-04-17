@@ -46,7 +46,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
           }),
         ]}
       />
-      <main className="bg-white dark:bg-gray-900">
+      <main className="bg-white">
         <section className="bg-gradient-to-b from-amber-50 to-white px-4 py-20 dark:from-gray-800 dark:to-gray-900">
           <div className="container mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.95fr,1.05fr]">
             <div className="max-w-3xl">
@@ -65,7 +65,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
                 </Link>
                 <Link
                   href="/arabic-name-gifts"
-                  className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+                  className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"
                 >
                   See gift ideas
                 </Link>

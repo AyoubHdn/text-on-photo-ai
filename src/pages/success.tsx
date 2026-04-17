@@ -143,7 +143,7 @@ const SuccessPage: React.FC = () => {
             </p>
             <Link
               href={generatorHref}
-              className="mt-6 inline-block w-full rounded-lg bg-blue-600 px-6 py-3 text-base font-bold text-white transition hover:bg-blue-700"
+              className="mt-6 inline-block w-full rounded-lg bg-brand-600 px-6 py-3 text-base font-bold text-white transition hover:bg-brand-700"
             >
               Continue creating
             </Link>
@@ -163,7 +163,7 @@ const SuccessPage: React.FC = () => {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-700 dark:hover:bg-blue-950/20"
+                  className="flex flex-col items-center rounded-xl border border-cream-200 bg-white p-4 text-center transition hover:border-brand-300 hover:bg-brand-50"
                 >
                   <span className="text-2xl">{item.emoji}</span>
                   <span className="mt-2 text-xs font-semibold text-gray-700 dark:text-gray-300">

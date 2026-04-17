@@ -116,7 +116,7 @@ const BuyCredits: React.FC = () => {
 
       <main className="container mx-auto mt-20 min-h-screen px-4 pb-16 sm:px-8">
         <div className="mx-auto w-full max-w-6xl">
-          <section className="mb-6 rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50 to-white p-6 text-center dark:border-blue-900 dark:from-blue-950/30 dark:to-gray-950">
+          <section className="mb-6 rounded-2xl border border-brand-200 bg-gradient-to-b from-brand-50 to-white p-6 text-center">
             <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
               Unlock More Designs Instantly
             </h1>
@@ -144,12 +144,12 @@ const BuyCredits: React.FC = () => {
                   key={index}
                   className={`relative flex h-full flex-col rounded-xl border p-6 shadow-lg ${
                     offer.popular
-                      ? "border-blue-500 bg-blue-50/50 ring-1 ring-blue-300 dark:bg-blue-950/20 dark:ring-blue-800"
-                      : "border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-900"
+                      ? "border-brand-500 bg-brand-50/50 ring-1 ring-brand-300"
+                      : "border-cream-200 bg-white"
                   }`}
                 >
                   {badgeLabel && (
-                    <span className={`mb-4 inline-block self-start rounded-full px-3 py-1 text-xs font-bold uppercase text-white ${offer.plan === "elite" ? "bg-emerald-600" : "bg-blue-500"}`}>
+                    <span className={`mb-4 inline-block self-start rounded-full px-3 py-1 text-xs font-bold uppercase text-white ${offer.plan === "elite" ? "bg-emerald-600" : "bg-brand-600"}`}>
                       {badgeLabel}
                     </span>
                   )}
@@ -164,7 +164,7 @@ const BuyCredits: React.FC = () => {
                   <p className="mb-1 text-gray-700 dark:text-gray-200">
                     {offer.images} AI designs included
                   </p>
-                  <p className="mb-5 text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  <p className="mb-5 text-sm font-semibold text-brand-700">
                     ${offer.pricePerImage} per design
                   </p>
 
@@ -173,8 +173,8 @@ const BuyCredits: React.FC = () => {
                     onClick={() => { void handleBuy(offer.plan); }}
                     className={`mt-auto w-full rounded-lg px-4 py-3 font-semibold text-white transition ${
                       offer.popular
-                        ? "bg-blue-600 hover:bg-blue-700"
-                        : "bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                        ? "bg-brand-600 hover:bg-brand-700"
+                        : "bg-slate-800 hover:bg-slate-700"
                     }`}
                     disabled={loadingPlan === offer.plan}
                   >
@@ -193,7 +193,7 @@ const BuyCredits: React.FC = () => {
             before buying credits.
           </p>
 
-          <section className="mb-5 rounded-xl border border-blue-200 bg-blue-50/60 p-5 dark:border-blue-900 dark:bg-blue-950/30">
+          <section className="mb-5 rounded-xl border border-brand-200 bg-brand-50/60 p-5">
             <h2 className="mb-4 text-lg font-semibold">What you can do with credits</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
@@ -214,14 +214,14 @@ const BuyCredits: React.FC = () => {
           </section>
 
           <section className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-5 dark:border-blue-900 dark:bg-blue-950/30">
+            <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
               <h2 className="mb-2 text-lg font-semibold">From Idea to Product</h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 Use credits to preview your design on real mugs, t-shirts, and posters before ordering.
               </p>
             </div>
 
-            <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-5 dark:border-blue-900 dark:bg-blue-950/30">
+            <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
               <h2 className="mb-2 text-lg font-semibold">Typical Session Usage</h2>
               <div className="grid gap-1 text-sm text-gray-700 dark:text-gray-300">
                 <div>Cost per design: about 1 credit</div>

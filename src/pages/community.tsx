@@ -29,7 +29,7 @@ const CommunityPage: NextPage = () => {
     <main className="flex min-h-screen mt-24 flex-col container mx-auto gap-8 px-8 mb-24">
         <div className="text-center">
             <h1 className="text-4xl font-bold">Community Gallery</h1>
-            <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">Get inspired by personalized name art, Arabic calligraphy, and couple designs created by the community.</p>
+            <p className="mt-2 text-lg text-gray-600">Get inspired by personalized name art, Arabic calligraphy, and couple designs created by the community.</p>
         </div>
 
         {isLoading && <p className="text-center">Loading designs...</p>}
@@ -51,7 +51,7 @@ const CommunityPage: NextPage = () => {
                         onClick={() => openPopup(imageUrl, imagePresentation.alt)}
                     >
                         {/* This wrapper div enforces a square aspect ratio for a uniform grid */}
-                        <div className="aspect-square w-full bg-gray-200 dark:bg-gray-800">
+                        <div className="aspect-square w-full bg-cream-100">
                             <Image 
                                 src={imageUrl}
                                 alt={imagePresentation.alt}
