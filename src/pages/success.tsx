@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { SeoHead } from "~/component/SeoHead";
@@ -13,8 +14,43 @@ function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>
   }
 }
 
+function mapSourceToGenerator(sourcePage: string): string {
+  const p = sourcePage.toLowerCase();
+  if (p.includes("arabic")) return "/arabic-name-art-generator";
+  if (p.includes("couple")) return "/couples-name-art-generator";
+  return "/name-art-generator";
+}
+
+type PurchaseData = {
+  plan?: "starter" | "pro" | "elite";
+  context?: string;
+  source_page?: string;
+  funnel?: string;
+  product_type?: string;
+  niche?: string | null;
+  traffic_type?: "paid" | "organic";
+  country?: string | null;
+  credits?: number;
+  value?: number;
+};
+
 const SuccessPage: React.FC = () => {
   const router = useRouter();
+
+  // Read purchase data synchronously before any useEffect can clear it
+  const [purchaseData] = useState<PurchaseData | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.sessionStorage.getItem("last_credit_purchase");
+      if (!raw) return null;
+      return JSON.parse(raw) as PurchaseData;
+    } catch {
+      return null;
+    }
+  });
+
+  const creditsCount = purchaseData?.credits ?? null;
+  const generatorHref = mapSourceToGenerator(purchaseData?.source_page ?? "");
 
   useEffect(() => {
     const gtagEvent = () => {
@@ -22,7 +58,7 @@ const SuccessPage: React.FC = () => {
         window.gtag("event", "conversion", {
           send_to: "AW-794176708/x-pvCNj1_IMaEMTZ2PoC",
           value: 1.0,
-          currency: "MAD",
+          currency: "USD",
           transaction_id: "",
         });
       }
@@ -36,18 +72,7 @@ const SuccessPage: React.FC = () => {
         const raw = window.sessionStorage.getItem("last_credit_purchase");
         if (raw) {
           try {
-            const parsed = JSON.parse(raw) as {
-              plan?: "starter" | "pro" | "elite";
-              context?: string;
-              source_page?: string;
-              funnel?: string;
-              product_type?: string;
-              niche?: string | null;
-              traffic_type?: "paid" | "organic";
-              country?: string | null;
-              credits?: number;
-              value?: number;
-            };
+            const parsed = JSON.parse(raw) as PurchaseData;
             if (typeof parsed?.credits === "number" && typeof parsed?.value === "number") {
               const funnelContext = getFunnelContext({
                 route: router.pathname,
@@ -102,22 +127,55 @@ const SuccessPage: React.FC = () => {
         path="/success"
         noindex
       />
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-gray-50 shadow-lg rounded-lg p-8 text-center">
-          <h1 className="text-4xl font-bold text-green-500 mb-4">Payment Successful!</h1>
-          <p className="text-gray-600 mb-6">
-            Thank you for your purchase. Your credits have been added to your account.
-          </p>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-            onClick={() => {
-              void router.push("/");
-            }}
-          >
-            Start Generating Designs
-          </button>
+      <main className="min-h-screen bg-white dark:bg-gray-950">
+        <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-16">
+
+          {/* Confirmation card */}
+          <div className="w-full rounded-2xl border border-green-200 bg-green-50 p-8 text-center dark:border-green-900 dark:bg-green-950/30">
+            <div className="mb-4 text-5xl">🎉</div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {creditsCount
+                ? `${creditsCount} credits added to your account`
+                : "Credits added to your account"}
+            </h1>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+              Jump back in and keep creating. Preview your design on a mug, shirt, or wall art — free from inside the generator.
+            </p>
+            <Link
+              href={generatorHref}
+              className="mt-6 inline-block w-full rounded-lg bg-blue-600 px-6 py-3 text-base font-bold text-white transition hover:bg-blue-700"
+            >
+              Continue creating
+            </Link>
+          </div>
+
+          {/* Product quick-links */}
+          <div className="mt-8 w-full">
+            <p className="mb-4 text-center text-sm text-gray-500 dark:text-gray-400">
+              Explore gift product ideas
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Mugs", href: "/personalized-name-mugs", emoji: "☕" },
+                { label: "Wall art", href: "/personalized-name-wall-art", emoji: "🖼️" },
+                { label: "Shirts", href: "/custom-name-shirts", emoji: "👕" },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-700 dark:hover:bg-blue-950/20"
+                >
+                  <span className="text-2xl">{item.emoji}</span>
+                  <span className="mt-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
         </div>
-      </div>
+      </main>
     </>
   );
 };

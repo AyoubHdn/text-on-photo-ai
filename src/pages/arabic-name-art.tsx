@@ -62,10 +62,10 @@ const ArabicArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Arabic Name Art Generator | AI Arabic Calligraphy Styles | NameDesignAI"
-        description="Create Arabic name art with AI-powered calligraphy styles. Explore Thuluth, Diwani, Kufic, and modern Arabic lettering for gifts, wall art, branding, and decor."
+        title="Arabic Name Art for Gifts | Custom Calligraphy Designs | NameDesignAI"
+        description="Turn an Arabic name into a personalized gift. Create custom Arabic name art in calligraphy-inspired styles for wall art, mugs, framed prints, and meaningful keepsakes."
         path="/arabic-name-art"
-        keywords="arabic name art, arabic calligraphy generator, arabic name design, thuluth calligraphy, diwani calligraphy, kufic calligraphy, custom arabic wall art"
+        keywords="arabic name art, arabic name gift, personalized arabic name, custom arabic calligraphy, arabic calligraphy gift, arabic name wall art"
         jsonLd={[buildFAQSchema(arabicFaqs)]}
       />
 
@@ -75,15 +75,15 @@ const ArabicArtLandingPage: NextPage = () => {
 
           <div className="container relative z-10 mx-auto">
             <span className="mb-6 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
-              AI Arabic calligraphy tool
+              Arabic Name Gifts
             </span>
             <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-6xl lg:text-7xl">
-              Create Arabic name art in calligraphy-inspired styles
+              Turn an Arabic name into a personalized gift
             </h1>
             <h2 className="mx-auto mb-10 max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300 md:text-2xl">
-              Blend the feel of traditional calligraphy with modern AI to create
-              Arabic name art for gifts, decor, branding, and identity-rich
-              visuals without losing the focus on Arabic lettering.
+              Create custom Arabic name art in calligraphy-inspired styles, then
+              put it on a framed print, mug, or wall art piece — a gift that
+              carries the name in a way a generic product never could.
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link href="/arabic-name-art-generator">
@@ -212,31 +212,31 @@ const ArabicArtLandingPage: NextPage = () => {
         <section className="bg-white py-24 dark:bg-gray-900">
           <div className="container mx-auto px-4">
             <div className="mb-16 text-center">
-              <h2 className="text-3xl font-bold md:text-4xl">More than just a name</h2>
+              <h2 className="text-3xl font-bold md:text-4xl">Gift ideas built around the name</h2>
               <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                Arabic calligraphy can support identity-focused use cases far beyond a single image.
+                Arabic name art works across multiple gift formats — each one carrying the name in a different way.
               </p>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
                 <FiStar className="mb-4 text-4xl text-amber-500" />
-                <h3 className="mb-3 text-2xl font-bold">Logos and Branding</h3>
+                <h3 className="mb-3 text-2xl font-bold">Eid and occasion gifts</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Build an identity-rich starting point for brands, personal marks, and signature visuals.
+                  A name in calligraphy-inspired style makes a distinctive gift for Eid, birthdays, and family milestones.
                 </p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
                 <FiGlobe className="mb-4 text-4xl text-blue-500" />
-                <h3 className="mb-3 text-2xl font-bold">Social and Profile Art</h3>
+                <h3 className="mb-3 text-2xl font-bold">Framed wall art</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Give your profile visuals a culturally distinctive direction that still feels contemporary.
+                  Print the design as a framed keepsake for a home, office, or shared space — a gift that stays visible.
                 </p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
                 <FiCpu className="mb-4 text-4xl text-purple-500" />
-                <h3 className="mb-3 text-2xl font-bold">Decor and Gifts</h3>
+                <h3 className="mb-3 text-2xl font-bold">Mugs and daily-use gifts</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Adapt the same artwork for framed decor, mugs, gift bundles, and special-occasion keepsakes.
+                  Put the artwork on a mug or coaster — a practical gift that keeps the name in view every day.
                 </p>
               </div>
             </div>

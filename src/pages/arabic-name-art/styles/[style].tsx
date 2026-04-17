@@ -64,10 +64,16 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
                   Create this style
                 </Link>
                 <Link
+                  href="/arabic-name-gifts"
+                  className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+                >
+                  See gift ideas
+                </Link>
+                <Link
                   href="/arabic-name-art/styles"
                   className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-600 dark:border-slate-600 dark:text-slate-200"
                 >
-                  Browse all Arabic styles
+                  Browse all styles
                 </Link>
               </div>
             </div>

@@ -36,11 +36,12 @@ const getPriority = (rawPage: string) => {
     "/personalized-name-mugs",
     "/custom-name-shirts",
     "/personalized-name-wall-art",
-    "/arabic-name-gifts",
     "/couple-gifts",
   ]);
 
   if (primaryLandingPages.has(page)) return "0.9";
+  // Arabic gifts page is secondary — lower priority to avoid crowding out main product hubs
+  if (page === "/arabic-name-gifts") return "0.7";
   if (
     page === "/community" ||
     page === "/name-art/styles" ||
@@ -52,11 +53,12 @@ const getPriority = (rawPage: string) => {
   if (/^\/name-art\/[^/]+$/.test(page)) return "0.7";
   if (
     /^\/name-art\/styles\/[^/]+$/.test(page) ||
-    /^\/couples-art\/styles\/[^/]+$/.test(page) ||
-    /^\/arabic-name-art\/styles\/[^/]+$/.test(page)
+    /^\/couples-art\/styles\/[^/]+$/.test(page)
   ) {
     return "0.7";
   }
+  // Arabic style detail pages attract calligraphy-tool searchers who don't convert — reduce priority
+  if (/^\/arabic-name-art\/styles\/[^/]+$/.test(page)) return "0.3";
   if (page === "/blog") return "0.6";
   if (/^\/blog\/[^/]+$/.test(page)) return "0.5";
 

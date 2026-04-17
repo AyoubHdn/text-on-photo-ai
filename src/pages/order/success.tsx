@@ -342,10 +342,46 @@ export default function OrderSuccess() {
         </ol>
       </div>
 
+      {/* Cross-sell: suggest a complementary product */}
+      {order?.productKey && (
+        <div className="mb-6 rounded-lg border bg-background p-4 text-left">
+          <div className="text-sm font-semibold mb-3 text-foreground">Make it a set</div>
+          <div className="flex flex-col gap-2">
+            {(order.productKey.includes("mug") || order.productKey === "coaster"
+              ? [
+                  { href: "/personalized-name-wall-art", label: "Wall art print", detail: "Frame the same design for home decor" },
+                  { href: "/custom-name-shirts", label: "Custom shirt", detail: "Wear the artwork as a matching gift" },
+                ]
+              : order.productKey === "tshirt"
+              ? [
+                  { href: "/personalized-name-mugs", label: "Matching mug", detail: "A great companion to the shirt" },
+                  { href: "/personalized-name-wall-art", label: "Wall art print", detail: "Display the same design at home" },
+                ]
+              : [
+                  { href: "/personalized-name-mugs", label: "Personalized mug", detail: "A practical gift for daily use" },
+                  { href: "/custom-name-shirts", label: "Custom shirt", detail: "Take the design off the wall" },
+                ]
+            ).map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-900"
+              >
+                <div>
+                  <div className="font-semibold text-foreground">{item.label}</div>
+                  <div className="text-xs text-muted-foreground">{item.detail}</div>
+                </div>
+                <span className="ml-3 text-blue-600 dark:text-blue-400">→</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link
           href={nextGeneratorHref}
-          className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 font-semibold text-foreground hover:border-gray-400 transition"
+          className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
         >
           Create Another Design
         </Link>
