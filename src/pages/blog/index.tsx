@@ -66,8 +66,8 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
                 Move from editorial inspiration into category pages built for gift intent.
               </p>
             </Link>
-            <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
-              <h2 className="text-lg font-semibold">Name Art Generator</h2>
+            <Link href="/name-art-generator" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+              <h2 className="text-lg font-semibold">Create Name Art</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Start the core creation flow if you already know the style direction you want.
               </p>

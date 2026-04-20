@@ -60,12 +60,12 @@ const homepageFaqs = [
 
 const generatorCards: VisualCard[] = [
   {
-    href: "/name-art",
-    title: "Name Art Generator",
+    href: "/name-art-generator",
+    title: "Create Name Art",
     description:
       "Turn any name into visual art for decor, gifts, profile images, and printable keepsakes.",
     imageSrc: "/name-art.webp",
-    imageAlt: "Emma style personalized name art example from the Name Art Generator",
+    imageAlt: "Emma personalized name art example",
     eyebrow: "Visual generator",
     ctaLabel: "Explore generator",
   },
@@ -252,7 +252,7 @@ const HomePage: NextPage = () => {
         title="Name Design AI | Personalized Name Art, Gifts, and Arabic Calligraphy"
         description="Create personalized name art, Arabic calligraphy, and couple designs with AI. Turn names into meaningful art and product-ready gifts for home decor, keepsakes, and special occasions."
         path="/"
-        keywords="name art generator, personalized name art, arabic name art, couple name art, custom name gifts"
+        keywords="personalized name art, custom name art, arabic name art, couple name art, custom name gifts"
         imageAlt="Name Design AI homepage showing personalized name art examples and gift mockups"
         jsonLd={[
           buildOrganizationSchema(),

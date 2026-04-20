@@ -15,8 +15,8 @@ type Result =
 
 const NAME_DESIGN_TOOLS = [
   {
-    href: "/name-art",
-    title: "Name Art Generator",
+    href: "/name-art-generator",
+    title: "Create Name Art",
     description: "Turn any name into beautiful personalized artwork.",
   },
   {

@@ -58,8 +58,8 @@ const PersonalizedGiftsPage: NextPage = () => {
       ]}
       generatorLinks={[
         {
-          href: "/name-art",
-          label: "Name Art Generator",
+          href: "/name-art-generator",
+          label: "Create Name Art",
           description:
             "Best when the gift begins with one name, initials, or a custom phrase.",
         },
