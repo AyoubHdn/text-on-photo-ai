@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \" import json with open\\('C:/Users/ULTRAPC/.claude/projects/c--Users-ULTRAPC-Documents-GitHub-SaaS-text-on-photo-ai/24700e85-9d27-48ef-a1b9-80cb8612b3ae.jsonl', 'r', encoding='utf-8'\\) as f: for line in f: try: obj = json.loads\\(line\\) msg = obj.get\\('message', {}\\) if msg.get\\('role'\\) == 'assistant': for block in msg.get\\('content', []\\): if block.get\\('type'\\) == 'text': text = block.get\\('text', ''\\) if '|---' in text and len\\(text\\) > 500: print\\('=== TABLE FOUND ==='\\) print\\(text[:5000]\\) print\\('---END---'\\) print\\(\\) except: pass \")"
     ]
   }
 }
