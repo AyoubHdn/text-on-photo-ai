@@ -64,14 +64,14 @@ const NameArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="AI Name Art Generator | Create Custom Name Designs Online"
-        description="Bring your name to life with AI name art. Explore custom styles for decor, gifts, wall art, mugs, shirts, and social-ready designs while keeping the focus on personalized name art."
+        title="Personalized Name Art | Styles, Ideas, and Custom Name Designs"
+        description="Explore personalized name art styles, visual ideas, and inspiration for decor, gifts, wall art, mugs, and shirts. Find the perfect direction for your name."
         path="/name-art"
         jsonLd={[
           buildCollectionPageSchema({
-            name: "AI Name Art Generator",
+            name: "Personalized Name Art",
             description:
-              "Browse personalized name art styles and entry points into product-ready use cases.",
+              "Browse personalized name art styles and inspiration for gifts, decor, and printable formats.",
             path: "/name-art",
             itemPaths: [
               "/name-art/styles",
@@ -92,15 +92,15 @@ const NameArtLandingPage: NextPage = () => {
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div>
                 <span className="inline-flex rounded-full bg-brand-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-800">
-                  AI name art generator
+                  Personalized name art
                 </span>
                 <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
                   Transform your name into a work of art
                 </h1>
                 <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-slate-300">
-                  The AI name art generator for custom decor, keepsakes, gifts, and
-                  product-ready designs. Explore personalized styles for your name,
-                  initials, or phrase, then move that artwork into wall art, mugs, and shirts.
+                  Explore personalized name art for custom decor, keepsakes, gifts, and
+                  product-ready designs. Browse styles for your name, initials, or phrase,
+                  then move that artwork into wall art, mugs, and shirts.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link
@@ -188,8 +188,8 @@ const NameArtLandingPage: NextPage = () => {
               Explore a world of creative styles
             </h2>
             <p className="mx-auto mb-12 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-              Find a direction that fits your name, then refine it inside the
-              generator.
+              Find a direction that fits your name, then refine it in the
+              creation flow.
             </p>
 
             <div className="mb-12 flex flex-wrap justify-center gap-2">
@@ -346,15 +346,15 @@ const NameArtLandingPage: NextPage = () => {
               Ready to see your name in a new light?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-gray-700 dark:text-gray-300">
-              Start with the name art generator, then expand into prints and
-              personalized products when the design is ready.
+              Start with personalized name art ideas, then expand into prints and
+              products once the direction is clear.
             </p>
             <div className="mt-8">
               <Link
                 href="/name-art-generator"
                 className="inline-block rounded-lg bg-brand-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-brand-700"
               >
-                Start Name Art Generator
+                Create Custom Name Art
               </Link>
             </div>
           </div>

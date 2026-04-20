@@ -29,7 +29,7 @@ const arabicFaqs = [
   {
     question: "Do I need an Arabic keyboard?",
     answer:
-      "No. You can start with an English spelling of the name or use Arabic text directly, then test visual directions inside the generator.",
+      "No. You can start with an English spelling of the name or use Arabic text directly, then test visual directions inside the Arabic name art experience.",
   },
   {
     question: "Can I use the artwork for logos or branding?",
@@ -158,7 +158,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 Styles that balance tradition and modern identity
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400">
-                Explore a curated set of Arabic art directions before starting the generator.
+                Explore a curated set of Arabic art directions before creating your Arabic name art.
               </p>
             </div>
 
