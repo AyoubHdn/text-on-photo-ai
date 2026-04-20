@@ -26,6 +26,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
+import { buildCollectionPageSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -539,10 +540,17 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Arabic Name Art Generator | AI Calligraphy"
-        description="Generate Arabic calligraphy-inspired name art using the interactive creator."
+        title="Arabic Name Art Generator | AI Calligraphy for Your Name"
+        description="Create personalized Arabic name art with our AI calligraphy generator. Choose traditional or modern styles, then turn your design into a gift, mug, or wall art."
         path="/arabic-name-art-generator"
-        noindex
+        jsonLd={[
+          buildCollectionPageSchema({
+            name: "Arabic Name Art Generator",
+            description:
+              "Create personalized Arabic name art and calligraphy designs online. Multiple styles for gifts, decor, and keepsakes.",
+            path: "/arabic-name-art-generator",
+          }),
+        ]}
       />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
         
@@ -555,8 +563,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                 </button>
             </Link>
         </div>
-
         <h1 className="text-3xl font-bold text-center sm:text-4xl">Arabic Name Art Generator</h1>
+        <h2 className="mt-4 text-center text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+          AI Calligraphy for Personalized Gifts and Decor
+        </h2>
         <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">Transform your name into an Arabic calligraphy masterpiece.</p>
         <GeneratorNudge generatorType="arabic" />
         

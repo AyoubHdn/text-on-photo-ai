@@ -22,6 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
+import { buildCollectionPageSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -552,13 +553,23 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Couples Name Art Generator | Name Design AI"
-        description="Create romantic artwork with two names inside the interactive couples generator."
+        title="Couples Name Art Generator | Create Romantic Name Designs"
+        description="Create personalized couples name art with our free generator. Design romantic artwork for anniversaries, weddings, and gifts — then turn it into a mug or print."
         path="/couples-name-art-generator"
-        noindex
+        jsonLd={[
+          buildCollectionPageSchema({
+            name: "Couples Name Art Generator",
+            description:
+              "Create romantic couples name art online. Designs for anniversaries, weddings, and personalized gifts.",
+            path: "/couples-name-art-generator",
+          }),
+        ]}
       />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
         <h1 className="text-3xl font-bold sm:text-4xl">Couples Name Art Generator</h1>
+        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+          Romantic Designs for Anniversaries, Weddings, and Gifts
+        </h2>
         <p className="mt-4 text-base text-gray-700 dark:text-gray-300 sm:text-lg">
           Celebrate your connection by turning both of your names into a single, beautiful work of art. Perfect for anniversaries, wedding gifts, or a special surprise for your partner.
         </p>

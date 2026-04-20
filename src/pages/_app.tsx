@@ -37,10 +37,6 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
 };
 
 const GLOBAL_NOINDEX_PATHS = new Set([
-  "/name-art-generator",
-  "/arabic-name-art-generator",
-  "/couples-name-art-generator",
-  "/ar/arabic-name-art-generator",
   "/products",
   "/collection",
   "/buy-credits",

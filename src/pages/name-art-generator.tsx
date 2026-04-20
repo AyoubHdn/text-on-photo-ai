@@ -22,6 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackGA, trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
+import { buildCollectionPageSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -610,13 +611,23 @@ const NameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Name Art Generator | Name Design AI"
-        description="Create personalized name art inside the interactive generator."
+        title="Name Art Generator | Create Custom Name Art Online"
+        description="Create custom name art in seconds with our free AI name art generator. Choose from 30+ styles, then turn your design into a mug, poster, or t-shirt."
         path="/name-art-generator"
-        noindex
+        jsonLd={[
+          buildCollectionPageSchema({
+            name: "Name Art Generator",
+            description:
+              "Create custom name art online with interactive styles and personalized outputs for decor, gifts, and downloads.",
+            path: "/name-art-generator",
+          }),
+        ]}
       />
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
-        <h1 className="text-4xl font-bold">Name Art Generator: Create Personalized Designs</h1>
+        <h1 className="text-4xl font-bold">Free AI Name Art Generator</h1>
+        <h2 className="mt-4 text-2xl font-semibold text-gray-900 dark:text-white">
+          Create Custom Name Art Online — Decor, Gifts, and Downloads
+        </h2>
         <p className="text-lg mt-4">Unleash your creativity with our Name Art Generator! ...</p>
         <GeneratorNudge generatorType="default" />
         
