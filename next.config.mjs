@@ -39,6 +39,11 @@ const config = {
         permanent: true,
       },
       {
+        source: "/ar/arabic-name-art-generator",
+        destination: "/arabic-name-art-generator",
+        permanent: true,
+      },
+      {
         source: "/couples-art-generator",
         destination: "/couples-name-art-generator",
         permanent: true,

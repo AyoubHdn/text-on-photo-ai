@@ -21,7 +21,6 @@ import {
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
-import { FiGlobe } from "react-icons/fi";
 import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
@@ -554,15 +553,6 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
         
-        {/* Language Switcher - Made more visible */}
-        <div className="flex justify-end mb-4">
-            <Link href="/ar/arabic-name-art-generator">
-                <button className="flex items-center gap-2 px-4 py-2 bg-brand-600 border border-brand-500 text-white rounded-full shadow-sm hover:bg-brand-700 transition-all">
-                    <FiGlobe className="text-lg" /> 
-                    <span className="font-medium">العربية</span>
-                </button>
-            </Link>
-        </div>
         <h1 className="text-3xl font-bold text-center sm:text-4xl">Arabic Name Art Generator</h1>
         <h2 className="mt-4 text-center text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
           AI Calligraphy for Personalized Gifts and Decor

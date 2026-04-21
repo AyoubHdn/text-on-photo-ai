@@ -60,7 +60,6 @@ const DIGITAL_ART_INTEREST_PATH_MAP: Record<string, DigitalArtInterest> = {
   "/arabic-name-art": "arabic_name_art",
   "/arabic-name-art-generator": "arabic_name_art",
   "/ar/arabic-name-art": "arabic_name_art",
-  "/ar/arabic-name-art-generator": "arabic_name_art",
   "/couples-art": "couples_art",
   "/couples-name-art-generator": "couples_art",
 };
