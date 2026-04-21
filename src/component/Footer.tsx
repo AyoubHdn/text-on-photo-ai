@@ -27,9 +27,9 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
   }
 
   const createLinks = [
-    { href: "/name-art", name: "Name Art" },
-    { href: "/arabic-name-art", name: "Arabic Name Art" },
-    { href: "/couples-art", name: "Couples Art" },
+    { href: "/name-art-generator", name: "Name Art" },
+    { href: "/arabic-name-art-generator", name: "Arabic Name Art" },
+    { href: "/couples-name-art-generator", name: "Couples Art" },
   ];
 
   const giftLinks = [

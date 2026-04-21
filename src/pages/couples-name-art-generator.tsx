@@ -41,6 +41,21 @@ const MODEL_CREDITS: Record<AIModel, number> = {
   "flux-dev": 3,
   "ideogram-ai/ideogram-v2-turbo": 5,
 };
+const MODEL_OPTIONS: [
+  { name: string; value: AIModel; cost: number },
+  { name: string; value: AIModel; cost: number },
+] = [
+  {
+    name: "Standard",
+    value: "flux-schnell",
+    cost: MODEL_CREDITS["flux-schnell"],
+  },
+  {
+    name: "Optimized",
+    value: "flux-dev",
+    cost: MODEL_CREDITS["flux-dev"],
+  },
+];
 
 type SavedDesign = {
   imageUrl: string;
@@ -49,9 +64,33 @@ type SavedDesign = {
   createdAt: string;
   hasBackgroundRemoved: boolean;
 };
+type GeneratorDraft = {
+  form: {
+    name1: string;
+    name2: string;
+    basePrompt: string;
+    numberofImages: string;
+  };
+  selectedImage: string | null;
+  selectedModel: AIModel;
+  selectedAspectRatio: AspectRatio;
+  selectedStyleImage: string | null;
+  selectedStyleAltText: string | null;
+  selectedStyleLabel: string | null;
+  activeTab: string;
+  activeSubTab: string;
+  allowCustomColors: boolean;
+  createdAt: number;
+};
 
 const LAST_DESIGN_STORAGE_KEY = "couples-name-art:last-design:v1";
+const GENERATOR_DRAFT_STORAGE_KEY = "couples-name-art:auth-draft:v1";
 const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
+const GENERATOR_DRAFT_TTL_MS = 1000 * 60 * 60 * 24;
+const isAIModel = (value: unknown): value is AIModel =>
+  typeof value === "string" && value in MODEL_CREDITS;
+const isAspectRatio = (value: unknown): value is AspectRatio =>
+  value === "1:1" || value === "4:5" || value === "3:2" || value === "16:9";
 
 const CouplesNameArtGeneratorPage: NextPage = () => {
   const SOURCE_PAGE = "couples-art-generator";
@@ -101,6 +140,8 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const productsSectionRef = useRef<HTMLElement>(null);
   const hasScrolledToProducts = useRef(false);
+  const hasRestoredDraftRef = useRef(false);
+  const restoredAuthDraftRef = useRef(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
@@ -112,8 +153,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     },
   });
   const intentSyncStartedRef = useRef(false);
-  const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
-  const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
+  const currentCredits = creditsQuery.data ?? 0;
+  const hasKnownCreditBalance = isLoggedIn && creditsQuery.data !== undefined;
+  const hasBackgroundCredits = currentCredits >= 1;
+  const isCreditLocked = isLoggedIn && currentCredits <= 0 && imagesUrl.length > 0;
   const generatedImagesGridClass =
     imagesUrl.length === 1
       ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
@@ -124,6 +167,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     const perImage = MODEL_CREDITS[selectedModel] ?? 1;
     return perImage * count;
   };
+  const isModelCreditLocked = (credits: number) =>
+    hasKnownCreditBalance && currentCredits < credits;
+  const getModelCreditShortfall = (credits: number) =>
+    Math.max(0, credits - currentCredits);
   const openCreditUpgrade = (
     context: "generate" | "preview" | "remove_background",
     requiredCredits: number,
@@ -139,6 +186,34 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     sourcePage: SOURCE_PAGE,
     query: router.query as Record<string, unknown>,
   });
+  const getSignInCallbackUrl = () => {
+    if (typeof window === "undefined") return "/couples-name-art-generator";
+    return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  };
+  const saveAuthDraft = () => {
+    const draft: GeneratorDraft = {
+      form,
+      selectedImage,
+      selectedModel,
+      selectedAspectRatio,
+      selectedStyleImage,
+      selectedStyleAltText,
+      selectedStyleLabel,
+      activeTab,
+      activeSubTab,
+      allowCustomColors,
+      createdAt: Date.now(),
+    };
+
+    try {
+      window.localStorage.setItem(
+        GENERATOR_DRAFT_STORAGE_KEY,
+        JSON.stringify(draft),
+      );
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({
     isOpen: false,
@@ -208,6 +283,12 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   useEffect(() => {
     if (imagesUrl.length > 0) return;
     try {
+      if (
+        restoredAuthDraftRef.current ||
+        window.localStorage.getItem(GENERATOR_DRAFT_STORAGE_KEY)
+      ) {
+        return;
+      }
       const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as SavedDesign;
@@ -228,13 +309,86 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   useEffect(() => {
     if (!activeTab) return;
     const subKeys = Object.keys(coupleStylesData[activeTab] ?? {});
+    if (activeSubTab && subKeys.includes(activeSubTab)) return;
     if (subKeys.length > 0) setActiveSubTab(subKeys[0] ?? "");
-  }, [activeTab]);
+  }, [activeSubTab, activeTab]);
 
   useLayoutEffect(() => {
     handleCategoryScroll();
     handleSubCategoryScroll();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !router.isReady || hasRestoredDraftRef.current) return;
+    hasRestoredDraftRef.current = true;
+
+    try {
+      const raw = window.localStorage.getItem(GENERATOR_DRAFT_STORAGE_KEY);
+      if (!raw) return;
+
+      const draft = JSON.parse(raw) as Partial<GeneratorDraft>;
+      if (
+        typeof draft.createdAt !== "number" ||
+        Date.now() - draft.createdAt > GENERATOR_DRAFT_TTL_MS
+      ) {
+        window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+        return;
+      }
+
+      restoredAuthDraftRef.current = true;
+      setForm((prev) => ({
+        ...prev,
+        name1:
+          typeof draft.form?.name1 === "string" ? draft.form.name1 : prev.name1,
+        name2:
+          typeof draft.form?.name2 === "string" ? draft.form.name2 : prev.name2,
+        basePrompt:
+          typeof draft.form?.basePrompt === "string"
+            ? draft.form.basePrompt
+            : prev.basePrompt,
+        numberofImages:
+          typeof draft.form?.numberofImages === "string"
+            ? draft.form.numberofImages
+            : prev.numberofImages,
+      }));
+      setSelectedImage(
+        typeof draft.selectedImage === "string" ? draft.selectedImage : null,
+      );
+      if (isAIModel(draft.selectedModel)) setSelectedModel(draft.selectedModel);
+      if (isAspectRatio(draft.selectedAspectRatio)) {
+        setSelectedAspectRatio(draft.selectedAspectRatio);
+      }
+      setSelectedStyleImage(
+        typeof draft.selectedStyleImage === "string"
+          ? draft.selectedStyleImage
+          : null,
+      );
+      setSelectedStyleAltText(
+        typeof draft.selectedStyleAltText === "string"
+          ? draft.selectedStyleAltText
+          : null,
+      );
+      setSelectedStyleLabel(
+        typeof draft.selectedStyleLabel === "string"
+          ? draft.selectedStyleLabel
+          : null,
+      );
+      if (typeof draft.activeTab === "string") setActiveTab(draft.activeTab);
+      if (typeof draft.activeSubTab === "string") {
+        setActiveSubTab(draft.activeSubTab);
+      }
+      if (typeof draft.allowCustomColors === "boolean") {
+        setAllowCustomColors(draft.allowCustomColors);
+      }
+      window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+    } catch {
+      try {
+        window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [isLoggedIn, router.isReady]);
 
   useEffect(() => {
     if (previewCooldown === null) return;
@@ -260,6 +414,19 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       return () => clearTimeout(timer);
     }
   }, [imagesUrl.length]);
+
+  useEffect(() => {
+    if (!hasKnownCreditBalance) return;
+    const selectedModelCredits = MODEL_CREDITS[selectedModel] ?? 1;
+    if (currentCredits >= selectedModelCredits) return;
+
+    const fallbackModel =
+      MODEL_OPTIONS.find((model) => currentCredits >= model.cost) ??
+      MODEL_OPTIONS[0];
+    if (fallbackModel.value !== selectedModel) {
+      setSelectedModel(fallbackModel.value);
+    }
+  }, [currentCredits, hasKnownCreditBalance, selectedModel]);
 
   const openShareModal = (imageUrl: string) => setShareModalData({ isOpen: true, imageUrl });
   const closeShareModal = () => setShareModalData({ isOpen: false, imageUrl: null });
@@ -290,12 +457,13 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   };
 
   const startGeneratorSignIn = () => {
+    saveAuthDraft();
     try {
       window.localStorage.setItem(DIGITAL_ART_INTENT_STORAGE_KEY, SOURCE_PAGE);
     } catch {
       // ignore storage errors
     }
-    signIn(undefined, { callbackUrl: router.asPath }).catch(console.error);
+    signIn(undefined, { callbackUrl: getSignInCallbackUrl() }).catch(console.error);
   };
 
   const generateIcon = api.generate.generateIcon.useMutation({
@@ -630,57 +798,59 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                     <h2 className="text-xl">3. Select AI Model</h2>
                     <FormGroup className="mb-12">
                       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
-                        {[
-                          {
-                            name: "Standard",
-                            value: "flux-schnell" as AIModel,
-                            cost: 1,
-                            image:
-                              selectedStyleImage && selectedStyleImage.includes(".")
-                                ? selectedStyleImage
-                                : "/images/placeholder.png",
-                            label: undefined, // No extra label
-                          },
-                          {
-                            name: "Optimized",
-                            value: "flux-dev" as AIModel,
-                            cost: 3,
-                            image:
-                              selectedStyleImage && selectedStyleImage.includes(".")
+                        {MODEL_OPTIONS.map((model) => {
+                          const modelLocked = isModelCreditLocked(model.cost);
+                          const modelImage =
+                            selectedStyleImage && selectedStyleImage.includes(".")
+                              ? model.value === "flux-dev"
                                 ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
-                                : "/images/placeholder.png",
-                            label: undefined,
-                          },
-                          
-                        ].map((model) => (
-                          <button
-                            key={model.value}
-                            type="button"
-                            onClick={() => setSelectedModel(model.value)}
-                            className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
-                              selectedModel === model.value
-                                ? "border-brand-500 ring-2 ring-brand-500"
-                                : "border-cream-200 hover:border-brand-300"
-                            }`}
-                          >
-                            <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
-                              <img
-                                src={model.image}
-                                alt={model.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {/* Render label if present (e.g. "Top Tier") */}
-                              {model.label && (
-                                <span className="absolute top-1 right-1 bg-red-300 text-black px-2 text-xs rounded">
-                                  {model.label}
+                                : selectedStyleImage
+                              : "/images/placeholder.png";
+
+                          return (
+                            <button
+                              key={model.value}
+                              type="button"
+                              onClick={() => {
+                                if (modelLocked) return;
+                                setSelectedModel(model.value);
+                              }}
+                              disabled={modelLocked}
+                              className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
+                                modelLocked
+                                  ? "cursor-not-allowed border-amber-200 bg-amber-50/60 opacity-75"
+                                  : selectedModel === model.value
+                                    ? "border-brand-500 ring-2 ring-brand-500"
+                                    : "border-cream-200 hover:border-brand-300"
+                              }`}
+                            >
+                              <div className="relative w-22 h-22 mb-2 overflow-hidden rounded">
+                                <img
+                                  src={modelImage}
+                                  alt={model.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className="text-sm font-semibold">{model.name}</span>
+                              <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
+                              {modelLocked && (
+                                <span className="mt-2 rounded bg-white/80 px-2 py-1 text-center text-xs font-medium text-amber-800">
+                                  Need {getModelCreditShortfall(model.cost)} more credit{getModelCreditShortfall(model.cost) === 1 ? "" : "s"}
                                 </span>
                               )}
-                            </div>
-                            <span className="text-sm font-semibold">{model.name}</span>
-                            <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
-                          </button>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
+                      {hasKnownCreditBalance &&
+                        MODEL_OPTIONS.some((model) => isModelCreditLocked(model.cost)) && (
+                          <p className="mt-3 text-xs text-amber-800">
+                            Advanced models require more credits.{" "}
+                            <Link href="/buy-credits" className="font-semibold underline">
+                              Get credits
+                            </Link>
+                          </p>
+                        )}
                     </FormGroup>
           {/* 4. Aspect Ratio */}
                     <h2 className="text-xl">4. Select Image Size</h2>

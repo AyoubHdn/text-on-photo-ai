@@ -42,15 +42,53 @@ type SavedDesign = {
   createdAt: string;
   hasBackgroundRemoved: boolean;
 };
+type GeneratorDraft = {
+  form: {
+    name: string;
+    basePrompt: string;
+    numberofImages: string;
+  };
+  selectedImage: string | null;
+  selectedModel: AIModel;
+  selectedAspectRatio: AspectRatio;
+  selectedStyleImage: string | null;
+  selectedStyleAltText: string | null;
+  selectedStyleLabel: string | null;
+  activeTab: string;
+  activeSubTab: string;
+  allowCustomColors: boolean;
+  createdAt: number;
+};
 
 const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
+const GENERATOR_DRAFT_STORAGE_KEY = "name-art:auth-draft:v1";
 const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
+const GENERATOR_DRAFT_TTL_MS = 1000 * 60 * 60 * 24;
 const MAX_GENERATION_IMAGES = 4;
 const MODEL_CREDITS: Record<AIModel, number> = {
   "flux-schnell": 1,
   "flux-dev": 3,
   "ideogram-ai/ideogram-v2-turbo": 5,
 };
+const MODEL_OPTIONS: [
+  { name: string; value: AIModel; cost: number },
+  { name: string; value: AIModel; cost: number },
+] = [
+  {
+    name: "Standard",
+    value: "flux-schnell",
+    cost: MODEL_CREDITS["flux-schnell"],
+  },
+  {
+    name: "Optimized",
+    value: "flux-dev",
+    cost: MODEL_CREDITS["flux-dev"],
+  },
+];
+const isAIModel = (value: unknown): value is AIModel =>
+  typeof value === "string" && value in MODEL_CREDITS;
+const isAspectRatio = (value: unknown): value is AspectRatio =>
+  value === "1:1" || value === "4:5" || value === "3:2" || value === "16:9";
 
 const NameArtGeneratorPage: NextPage = () => {
   const SOURCE_PAGE = "name-art-generator";
@@ -87,7 +125,6 @@ const NameArtGeneratorPage: NextPage = () => {
   const [useTransparentMap, setUseTransparentMap] = useState<Record<string, boolean>>({});
   const [removingBackgroundMap, setRemovingBackgroundMap] = useState<Record<string, boolean>>({});
   const [removeBgCreditAlertMap, setRemoveBgCreditAlertMap] = useState<Record<string, boolean>>({});
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [creditUpgradeOpen, setCreditUpgradeOpen] = useState(false);
   const [creditUpgradeContext, setCreditUpgradeContext] = useState<"generate" | "preview" | "remove_background">("generate");
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
@@ -95,6 +132,8 @@ const NameArtGeneratorPage: NextPage = () => {
   const generationSubmitLockRef = useRef(false);
   const productsSectionRef = useRef<HTMLElement>(null);
   const hasScrolledToProducts = useRef(false);
+  const hasRestoredDraftRef = useRef(false);
+  const restoredAuthDraftRef = useRef(false);
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
@@ -107,8 +146,10 @@ const NameArtGeneratorPage: NextPage = () => {
     },
   });
   const intentSyncStartedRef = useRef(false);
-  const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
-  const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
+  const currentCredits = creditsQuery.data ?? 0;
+  const hasKnownCreditBalance = isLoggedIn && creditsQuery.data !== undefined;
+  const hasBackgroundCredits = currentCredits >= 1;
+  const isCreditLocked = isLoggedIn && currentCredits <= 0 && imagesUrl.length > 0;
   const isIdeogramModel = selectedModel === "ideogram-ai/ideogram-v2-turbo";
   const generatedImagesGridClass =
     imagesUrl.length === 1
@@ -125,6 +166,10 @@ const NameArtGeneratorPage: NextPage = () => {
     const perImage = MODEL_CREDITS[selectedModel] ?? 1;
     return perImage * numberOfImages;
   };
+  const isModelCreditLocked = (credits: number) =>
+    hasKnownCreditBalance && currentCredits < credits;
+  const getModelCreditShortfall = (credits: number) =>
+    Math.max(0, credits - currentCredits);
   const openCreditUpgrade = (
     context: "generate" | "preview" | "remove_background",
     requiredCredits: number,
@@ -140,6 +185,34 @@ const NameArtGeneratorPage: NextPage = () => {
     sourcePage: SOURCE_PAGE,
     query: router.query as Record<string, unknown>,
   });
+  const getSignInCallbackUrl = () => {
+    if (typeof window === "undefined") return "/name-art-generator";
+    return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  };
+  const saveAuthDraft = () => {
+    const draft: GeneratorDraft = {
+      form,
+      selectedImage,
+      selectedModel,
+      selectedAspectRatio,
+      selectedStyleImage,
+      selectedStyleAltText,
+      selectedStyleLabel,
+      activeTab,
+      activeSubTab,
+      allowCustomColors,
+      createdAt: Date.now(),
+    };
+
+    try {
+      window.localStorage.setItem(
+        GENERATOR_DRAFT_STORAGE_KEY,
+        JSON.stringify(draft),
+      );
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   // --- START: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
   useEffect(() => {
@@ -228,8 +301,83 @@ const NameArtGeneratorPage: NextPage = () => {
   // --- END: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
 
   useEffect(() => {
+    if (!isLoggedIn || !router.isReady || hasRestoredDraftRef.current) return;
+    hasRestoredDraftRef.current = true;
+
+    try {
+      const raw = window.localStorage.getItem(GENERATOR_DRAFT_STORAGE_KEY);
+      if (!raw) return;
+
+      const draft = JSON.parse(raw) as Partial<GeneratorDraft>;
+      if (
+        typeof draft.createdAt !== "number" ||
+        Date.now() - draft.createdAt > GENERATOR_DRAFT_TTL_MS
+      ) {
+        window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+        return;
+      }
+
+      restoredAuthDraftRef.current = true;
+      setForm((prev) => ({
+        ...prev,
+        name: typeof draft.form?.name === "string" ? draft.form.name : prev.name,
+        basePrompt:
+          typeof draft.form?.basePrompt === "string"
+            ? draft.form.basePrompt
+            : prev.basePrompt,
+        numberofImages:
+          typeof draft.form?.numberofImages === "string"
+            ? draft.form.numberofImages
+            : prev.numberofImages,
+      }));
+      setSelectedImage(
+        typeof draft.selectedImage === "string" ? draft.selectedImage : null,
+      );
+      if (isAIModel(draft.selectedModel)) setSelectedModel(draft.selectedModel);
+      if (isAspectRatio(draft.selectedAspectRatio)) {
+        setSelectedAspectRatio(draft.selectedAspectRatio);
+      }
+      setSelectedStyleImage(
+        typeof draft.selectedStyleImage === "string"
+          ? draft.selectedStyleImage
+          : null,
+      );
+      setSelectedStyleAltText(
+        typeof draft.selectedStyleAltText === "string"
+          ? draft.selectedStyleAltText
+          : null,
+      );
+      setSelectedStyleLabel(
+        typeof draft.selectedStyleLabel === "string"
+          ? draft.selectedStyleLabel
+          : null,
+      );
+      if (typeof draft.activeTab === "string") setActiveTab(draft.activeTab);
+      if (typeof draft.activeSubTab === "string") {
+        setActiveSubTab(draft.activeSubTab);
+      }
+      if (typeof draft.allowCustomColors === "boolean") {
+        setAllowCustomColors(draft.allowCustomColors);
+      }
+      window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+    } catch {
+      try {
+        window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [isLoggedIn, router.isReady]);
+
+  useEffect(() => {
     if (imagesUrl.length > 0) return;
     try {
+      if (
+        restoredAuthDraftRef.current ||
+        window.localStorage.getItem(GENERATOR_DRAFT_STORAGE_KEY)
+      ) {
+        return;
+      }
       const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as SavedDesign;
@@ -281,6 +429,19 @@ const NameArtGeneratorPage: NextPage = () => {
     }
   }, [imagesUrl.length]);
 
+  useEffect(() => {
+    if (!hasKnownCreditBalance) return;
+    const selectedModelCredits = MODEL_CREDITS[selectedModel] ?? 1;
+    if (currentCredits >= selectedModelCredits) return;
+
+    const fallbackModel =
+      MODEL_OPTIONS.find((model) => currentCredits >= model.cost) ??
+      MODEL_OPTIONS[0];
+    if (fallbackModel.value !== selectedModel) {
+      setSelectedModel(fallbackModel.value);
+    }
+  }, [currentCredits, hasKnownCreditBalance, selectedModel]);
+
   const handleScroll = (ref: React.RefObject<HTMLDivElement>, setLeft: (val: boolean) => void, setRight: (val: boolean) => void) => {
       if(ref.current) {
           const { scrollLeft, scrollWidth, clientWidth } = ref.current;
@@ -295,12 +456,13 @@ const NameArtGeneratorPage: NextPage = () => {
   }, [activeTab, activeSubTab]);
 
   const startGeneratorSignIn = () => {
+    saveAuthDraft();
     try {
       window.localStorage.setItem(DIGITAL_ART_INTENT_STORAGE_KEY, SOURCE_PAGE);
     } catch {
       // ignore storage errors
     }
-    void signIn(undefined, { callbackUrl: router.asPath });
+    void signIn(undefined, { callbackUrl: getSignInCallbackUrl() });
   };
 
   const generateIcon = api.generate.generateIcon.useMutation({
@@ -677,68 +839,66 @@ const NameArtGeneratorPage: NextPage = () => {
               ))}
             </div>
           </div>
-          {/* Advanced Options accordion */}
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={() => setShowAdvancedOptions((v) => !v)}
-              className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              <span>Advanced options (model, size, count)</span>
-              <span className={`text-lg transition-transform duration-200 ${showAdvancedOptions ? "rotate-45" : ""}`}>+</span>
-            </button>
-
-            {showAdvancedOptions && (
-              <div className="border-t border-gray-200 px-4 pb-4 pt-4 dark:border-gray-700 space-y-6">
-                {/* AI Model */}
-                <div>
-                  <h2 className="text-base font-semibold mb-3">AI Model</h2>
+          <div>
+            <h2 className="text-xl font-semibold mb-4">3. Select AI Model</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    {[
-                      {
-                        name: "Standard",
-                        value: "flux-schnell" as AIModel,
-                        cost: 1,
-                        image: selectedStyleImage && selectedStyleImage.includes(".")
-                          ? selectedStyleImage
-                          : "/images/placeholder.png",
-                      },
-                      {
-                        name: "Optimized",
-                        value: "flux-dev" as AIModel,
-                        cost: 3,
-                        image: selectedStyleImage && selectedStyleImage.includes(".")
-                          ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
-                          : "/images/placeholder.png",
-                      },
-                    ].map((model) => (
-                      <button
-                        key={model.value}
-                        type="button"
-                        onClick={() => setSelectedModel(model.value)}
-                        className={`relative flex flex-col items-center justify-center rounded-lg border p-4 transition ${
-                          selectedModel === model.value
-                            ? "border-brand-500 ring-2 ring-brand-500"
-                            : "border-cream-200 hover:border-brand-300"
-                        }`}
-                      >
-                        <div className="relative mb-2 w-full aspect-square overflow-hidden rounded">
-                          <img
-                            src={model.image}
-                            alt={model.name}
-                            className="absolute inset-0 h-full w-full object-cover"
-                          />
-                        </div>
-                        <span className="text-sm font-semibold">{model.name}</span>
-                        <span className="text-xs text-gray-500">Cost: {model.cost} credits</span>
-                      </button>
-                    ))}
+                    {MODEL_OPTIONS.map((model) => {
+                      const modelLocked = isModelCreditLocked(model.cost);
+                      const modelImage =
+                        selectedStyleImage && selectedStyleImage.includes(".")
+                          ? model.value === "flux-dev"
+                            ? selectedStyleImage.replace(/(\.[^.]+)$/, "e$1")
+                            : selectedStyleImage
+                          : "/images/placeholder.png";
+
+                      return (
+                        <button
+                          key={model.value}
+                          type="button"
+                          onClick={() => {
+                            if (modelLocked) return;
+                            setSelectedModel(model.value);
+                          }}
+                          disabled={modelLocked}
+                          className={`relative flex flex-col items-center justify-center rounded-lg border p-4 transition ${
+                            modelLocked
+                              ? "cursor-not-allowed border-amber-200 bg-amber-50/60 opacity-75"
+                              : selectedModel === model.value
+                                ? "border-brand-500 ring-2 ring-brand-500"
+                                : "border-cream-200 hover:border-brand-300"
+                          }`}
+                        >
+                          <div className="relative mb-2 w-full aspect-square overflow-hidden rounded">
+                            <img
+                              src={modelImage}
+                              alt={model.name}
+                              className="absolute inset-0 h-full w-full object-cover"
+                            />
+                          </div>
+                          <span className="text-sm font-semibold">{model.name}</span>
+                          <span className="text-xs text-gray-500">Cost: {model.cost} credits</span>
+                          {modelLocked && (
+                            <span className="mt-2 rounded bg-white/80 px-2 py-1 text-center text-xs font-medium text-amber-800">
+                              Need {getModelCreditShortfall(model.cost)} more credit{getModelCreditShortfall(model.cost) === 1 ? "" : "s"}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                  {hasKnownCreditBalance &&
+                    MODEL_OPTIONS.some((model) => isModelCreditLocked(model.cost)) && (
+                      <p className="mt-3 text-xs text-amber-800">
+                        Advanced models require more credits.{" "}
+                        <Link href="/buy-credits" className="font-semibold underline">
+                          Get credits
+                        </Link>
+                      </p>
+                    )}
                 </div>
 
-                {/* Aspect Ratio */}
-                <div>
-                  <h2 className="text-base font-semibold mb-3">Image Size</h2>
+          <div>
+            <h2 className="text-xl font-semibold mb-4">4. Select Image Size</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {aspectRatios.map((ratio) => {
                       const aspectClass = aspectVisualMap[ratio.value];
@@ -768,9 +928,10 @@ const NameArtGeneratorPage: NextPage = () => {
                   </div>
                 </div>
 
-                {/* Number of images */}
-                <div>
-                  <h2 className="text-base font-semibold mb-3">Number of designs</h2>
+          <FormGroup className="mb-12">
+            <label htmlFor="numberofImages" className="text-xl font-semibold mb-2">
+              5. Number of designs
+            </label>
                   <Input
                     id="numberofImages"
                     type="number"
@@ -789,10 +950,7 @@ const NameArtGeneratorPage: NextPage = () => {
                     disabled={isIdeogramModel}
                     placeholder={isIdeogramModel ? "1 (Fixed)" : `1–${MAX_GENERATION_IMAGES}`}
                   />
-                </div>
-              </div>
-            )}
-          </div>
+          </FormGroup>
 
           {/* Credit balance indicator */}
           {isLoggedIn && creditsQuery.data !== undefined && (

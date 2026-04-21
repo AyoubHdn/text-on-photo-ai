@@ -67,6 +67,10 @@ const MODEL_CREDITS: Record<AIModel, number> = {
   "google/nano-banana-2": 3,
   "google/nano-banana-pro": 6,
 };
+const isAIModel = (value: unknown): value is AIModel =>
+  typeof value === "string" && value in MODEL_CREDITS;
+const isAspectRatio = (value: unknown): value is AspectRatio =>
+  value === "1:1" || value === "4:5" || value === "3:2" || value === "16:9";
 
 type SavedDesign = {
   imageUrl: string;
@@ -75,9 +79,25 @@ type SavedDesign = {
   createdAt: string;
   hasBackgroundRemoved: boolean;
 };
+type GeneratorDraft = {
+  form: {
+    name: string;
+    basePrompt: string;
+  };
+  selectedImage: string | null;
+  selectedModel: AIModel;
+  selectedAspectRatio: AspectRatio;
+  selectedStyleAltText: string | null;
+  selectedStyleLabel: string | null;
+  activeTab: string;
+  activeSubTab: string;
+  createdAt: number;
+};
 
 const LAST_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
+const GENERATOR_DRAFT_STORAGE_KEY = "arabic-name-art:auth-draft:v1";
 const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
+const GENERATOR_DRAFT_TTL_MS = 1000 * 60 * 60 * 24;
 
 const ArabicNameArtGeneratorPage: NextPage = () => {
   const SOURCE_PAGE = "arabic-name-art-generator";
@@ -122,6 +142,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const productsSectionRef = useRef<HTMLElement>(null);
   const hasScrolledToProducts = useRef(false);
+  const hasRestoredDraftRef = useRef(false);
+  const restoredAuthDraftRef = useRef(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
@@ -133,8 +155,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     },
   });
   const intentSyncStartedRef = useRef(false);
-  const hasBackgroundCredits = (creditsQuery.data ?? 0) >= 1;
-  const isCreditLocked = isLoggedIn && (creditsQuery.data ?? 0) <= 0 && imagesUrl.length > 0;
+  const currentCredits = creditsQuery.data ?? 0;
+  const hasKnownCreditBalance = isLoggedIn && creditsQuery.data !== undefined;
+  const hasBackgroundCredits = currentCredits >= 1;
+  const isCreditLocked = isLoggedIn && currentCredits <= 0 && imagesUrl.length > 0;
   const generatedImagesGridClass =
     imagesUrl.length === 1
       ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"
@@ -143,6 +167,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     ARABIC_GENERATOR_TIERS.find((tier) => tier.model === selectedModel) ??
     ARABIC_GENERATOR_TIERS[0];
   const getRequiredGenerateCredits = () => MODEL_CREDITS[selectedModel];
+  const isModelCreditLocked = (credits: number) =>
+    hasKnownCreditBalance && currentCredits < credits;
+  const getModelCreditShortfall = (credits: number) =>
+    Math.max(0, credits - currentCredits);
   const openCreditUpgrade = (
     context: "generate" | "preview" | "remove_background",
     requiredCredits: number,
@@ -158,6 +186,32 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     sourcePage: SOURCE_PAGE,
     query: router.query as Record<string, unknown>,
   });
+  const getSignInCallbackUrl = () => {
+    if (typeof window === "undefined") return "/arabic-name-art-generator";
+    return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  };
+  const saveAuthDraft = () => {
+    const draft: GeneratorDraft = {
+      form,
+      selectedImage,
+      selectedModel,
+      selectedAspectRatio,
+      selectedStyleAltText,
+      selectedStyleLabel,
+      activeTab,
+      activeSubTab,
+      createdAt: Date.now(),
+    };
+
+    try {
+      window.localStorage.setItem(
+        GENERATOR_DRAFT_STORAGE_KEY,
+        JSON.stringify(draft),
+      );
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   useEffect(() => {
     if (hasTrackedViewRef.current) return;
@@ -209,6 +263,12 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   useEffect(() => {
     if (imagesUrl.length > 0) return;
     try {
+      if (
+        restoredAuthDraftRef.current ||
+        window.localStorage.getItem(GENERATOR_DRAFT_STORAGE_KEY)
+      ) {
+        return;
+      }
       const raw = window.localStorage.getItem(LAST_DESIGN_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as SavedDesign;
@@ -233,6 +293,63 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       if (firstSubCategory) setActiveSubTab(firstSubCategory);
     }
   }, [router.isReady, router.query]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !router.isReady || hasRestoredDraftRef.current) return;
+    hasRestoredDraftRef.current = true;
+
+    try {
+      const raw = window.localStorage.getItem(GENERATOR_DRAFT_STORAGE_KEY);
+      if (!raw) return;
+
+      const draft = JSON.parse(raw) as Partial<GeneratorDraft>;
+      if (
+        typeof draft.createdAt !== "number" ||
+        Date.now() - draft.createdAt > GENERATOR_DRAFT_TTL_MS
+      ) {
+        window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+        return;
+      }
+
+      restoredAuthDraftRef.current = true;
+      setForm((prev) => ({
+        ...prev,
+        name: typeof draft.form?.name === "string" ? draft.form.name : prev.name,
+        basePrompt:
+          typeof draft.form?.basePrompt === "string"
+            ? draft.form.basePrompt
+            : prev.basePrompt,
+      }));
+      setSelectedImage(
+        typeof draft.selectedImage === "string" ? draft.selectedImage : null,
+      );
+      if (isAIModel(draft.selectedModel)) setSelectedModel(draft.selectedModel);
+      if (isAspectRatio(draft.selectedAspectRatio)) {
+        setSelectedAspectRatio(draft.selectedAspectRatio);
+      }
+      setSelectedStyleAltText(
+        typeof draft.selectedStyleAltText === "string"
+          ? draft.selectedStyleAltText
+          : null,
+      );
+      setSelectedStyleLabel(
+        typeof draft.selectedStyleLabel === "string"
+          ? draft.selectedStyleLabel
+          : null,
+      );
+      if (typeof draft.activeTab === "string") setActiveTab(draft.activeTab);
+      if (typeof draft.activeSubTab === "string") {
+        setActiveSubTab(draft.activeSubTab);
+      }
+      window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+    } catch {
+      try {
+        window.localStorage.removeItem(GENERATOR_DRAFT_STORAGE_KEY);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [isLoggedIn, router.isReady]);
 
   const handleScroll = (ref: React.RefObject<HTMLDivElement>, setLeft: (val: boolean) => void, setRight: (val: boolean) => void) => {
       if(ref.current) {
@@ -272,13 +389,27 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     }
   }, [imagesUrl.length]);
 
+  useEffect(() => {
+    if (!hasKnownCreditBalance) return;
+    const selectedModelCredits = MODEL_CREDITS[selectedModel] ?? 1;
+    if (currentCredits >= selectedModelCredits) return;
+
+    const fallbackTier =
+      ARABIC_GENERATOR_TIERS.find((tier) => currentCredits >= tier.credits) ??
+      ARABIC_GENERATOR_TIERS[0];
+    if (fallbackTier.model !== selectedModel) {
+      setSelectedModel(fallbackTier.model);
+    }
+  }, [currentCredits, hasKnownCreditBalance, selectedModel]);
+
   const startGeneratorSignIn = () => {
+    saveAuthDraft();
     try {
       window.localStorage.setItem(DIGITAL_ART_INTENT_STORAGE_KEY, SOURCE_PAGE);
     } catch {
       // ignore storage errors
     }
-    void signIn(undefined, { callbackUrl: router.asPath });
+    void signIn(undefined, { callbackUrl: getSignInCallbackUrl() });
   };
 
   const scrollCategories = (direction: 'left' | 'right') => {
@@ -621,34 +752,58 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           <div>
             <h2 className="text-xl font-semibold mb-4">3. Choose Arabic Quality</h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              {ARABIC_GENERATOR_TIERS.map((tier) => (
-                <button
-                  key={tier.model}
-                  type="button"
-                  onClick={() => setSelectedModel(tier.model)}
-                  className={`rounded-xl border p-4 text-left transition ${
-                    selectedModel === tier.model
-                      ? "border-brand-500 ring-2 ring-brand-500"
-                      : "border-cream-200 hover:border-brand-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-base font-semibold">{tier.label}</div>
-                      <div className="mt-1 text-sm text-gray-500">{tier.description}</div>
+              {ARABIC_GENERATOR_TIERS.map((tier) => {
+                const tierLocked = isModelCreditLocked(tier.credits);
+
+                return (
+                  <button
+                    key={tier.model}
+                    type="button"
+                    onClick={() => {
+                      if (tierLocked) return;
+                      setSelectedModel(tier.model);
+                    }}
+                    disabled={tierLocked}
+                    className={`rounded-xl border p-4 text-left transition ${
+                      tierLocked
+                        ? "cursor-not-allowed border-amber-200 bg-amber-50/60 opacity-75"
+                        : selectedModel === tier.model
+                          ? "border-brand-500 ring-2 ring-brand-500"
+                          : "border-cream-200 hover:border-brand-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-base font-semibold">{tier.label}</div>
+                        <div className="mt-1 text-sm text-gray-500">{tier.description}</div>
+                      </div>
+                      {tier.premium && (
+                        <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">
+                          Better quality
+                        </span>
+                      )}
                     </div>
-                    {tier.premium && (
-                      <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">
-                        Better quality
-                      </span>
+                    <div className="mt-3 text-sm font-medium text-brand-700">
+                      {tier.credits} credits
+                    </div>
+                    {tierLocked && (
+                      <div className="mt-2 rounded bg-white/80 px-2 py-1 text-xs font-medium text-amber-800">
+                        Need {getModelCreditShortfall(tier.credits)} more credit{getModelCreditShortfall(tier.credits) === 1 ? "" : "s"}
+                      </div>
                     )}
-                  </div>
-                  <div className="mt-3 text-sm font-medium text-brand-700">
-                    {tier.credits} credits
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
+            {hasKnownCreditBalance &&
+              ARABIC_GENERATOR_TIERS.some((tier) => isModelCreditLocked(tier.credits)) && (
+                <p className="mt-3 text-xs text-amber-800">
+                  Premium Arabic needs more credits.{" "}
+                  <Link href="/buy-credits" className="font-semibold underline">
+                    Get credits
+                  </Link>
+                </p>
+              )}
           </div>
 
           {/* 3. Select Image Size (New Visual Style) */}
