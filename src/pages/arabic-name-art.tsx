@@ -27,19 +27,39 @@ const galleryItems = [
 
 const arabicFaqs = [
   {
-    question: "Do I need an Arabic keyboard?",
+    question: "What is Arabic name art?",
     answer:
-      "No. You can start with an English spelling of the name or use Arabic text directly, then test visual directions inside the Arabic name art experience.",
+      "Arabic name art is a personalized design where an Arabic name is written in a calligraphy or decorative typography style. It's often used for gifts, wall decor, and keepsakes with cultural and spiritual meaning. Arabic name calligraphy can be traditional (thuluth, diwani, kufic) or modern.",
   },
   {
-    question: "Can I use the artwork for logos or branding?",
+    question: "Can I write my name in Arabic calligraphy online for free?",
     answer:
-      "Yes. Many users explore Arabic calligraphy styles for branding, profile artwork, decor, and personalized gifts.",
+      "You can preview your name in Arabic calligraphy for free. Generating a high-resolution, downloadable design uses credits from our pricing plans - and you can unlock free credits through promotions.",
   },
   {
-    question: "Can this artwork be used on gifts and decor?",
+    question: "What's the difference between traditional and modern Arabic calligraphy?",
     answer:
-      "Yes. Arabic name art can be adapted for framed wall art, mugs, shirts, and other personalized product formats after the design is finalized.",
+      "Traditional Arabic calligraphy (thuluth, diwani, kufic) follows centuries-old proportional rules used in Islamic calligraphy and manuscripts. Modern Arabic calligraphy takes those roots and simplifies them - cleaner lines, contemporary color palettes, and decorative elements like geometric patterns or gold leaf.",
+  },
+  {
+    question: "Can I order Arabic name art on products?",
+    answer:
+      "Yes. Every Arabic name design can be printed on mugs, framed wall art, posters, and shirts. Arabic name gifts are especially popular for weddings, Ramadan, Eid, and family keepsakes.",
+  },
+  {
+    question: "Do I need to know Arabic to use the tool?",
+    answer:
+      "No. Type a name in English letters (transliteration) and the generator will render it in Arabic script using your chosen calligraphy style.",
+  },
+  {
+    question: "What Arabic calligraphy styles do you offer?",
+    answer:
+      "Our styles include thuluth in gold, diwani ink, kufic geometric patterns, smoke art, sand desert, diamond, 3D gold, and wireframe modern. Each style has a different visual character - browse the full Arabic calligraphy style gallery.",
+  },
+  {
+    question: "Is Arabic name art suitable as an Islamic gift?",
+    answer:
+      "Yes. Arabic name art is widely gifted for Islamic occasions - weddings, Ramadan, Eid al-Fitr, Eid al-Adha, and family celebrations. Many customers use it for nursery decor with a child's name, or as a wedding gift featuring both spouses' names.",
   },
 ];
 
