@@ -9,6 +9,7 @@ import { SeoHead } from "~/component/SeoHead";
 import { FEATURED_NAME_PAGES } from "~/lib/nameArtSeo";
 import {
   buildCollectionPageSchema,
+  buildFAQSchema,
   buildItemListSchema,
 } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
@@ -53,6 +54,44 @@ const productLinks = [
   },
 ];
 
+const nameArtFaqs = [
+  {
+    question: "What is name art?",
+    answer:
+      "Name art is a visual design built around a name - using typography, illustration, or decorative effects to turn the name itself into artwork. It's used for gifts, decor, profile images, and personalized keepsakes. Modern name art is often created with AI tools, which let you generate a design quickly and explore different styles before committing to one.",
+  },
+  {
+    question: "How do I design my name online?",
+    answer:
+      "You can design your name using our AI name art generator. Type the name, pick a style (elegant, graffiti, neon, floral, and more), and generate a finished artwork in seconds. No design skill needed.",
+  },
+  {
+    question: "What's the difference between a name art generator and a name design maker?",
+    answer:
+      "They describe the same thing - a tool that turns a name into a designed visual. 'Name art generator,' 'name design maker,' and 'name artwork creator' are used interchangeably by different audiences.",
+  },
+  {
+    question: "Can I get name art on a mug, shirt, or poster?",
+    answer:
+      "Yes. Every design you create can be ordered on a personalized mug, custom name shirt, or wall art print.",
+  },
+  {
+    question: "What styles of name art are available?",
+    answer:
+      "Styles range from elegant cursive and calligraphy to bold graffiti, neon lights, watercolor florals, gold typography, and cute 3D characters. Browse our full name art styles gallery to explore each direction.",
+  },
+  {
+    question: "Is stylish name art free?",
+    answer:
+      "You can preview and explore styles for free. Generating high-resolution, print-ready designs uses credits from our pricing plans, starting at $1.99.",
+  },
+  {
+    question: "What makes a good name art design?",
+    answer:
+      "A good name art design balances readability with style. The name should be the hero - easy to recognize, with decorative elements supporting (not overwhelming) it. If you plan to print it on a product, pick a style with clear edges and high contrast.",
+  },
+];
+
 const NameArtLandingPage: NextPage = () => {
   const [activeTab, setActiveTab] = useState("all");
 
@@ -83,6 +122,7 @@ const NameArtLandingPage: NextPage = () => {
             name: "Popular name art pages",
             itemPaths: FEATURED_NAME_PAGES.map((item) => item.path),
           }),
+          buildFAQSchema(nameArtFaqs),
         ]}
       />
 
@@ -350,6 +390,23 @@ const NameArtLandingPage: NextPage = () => {
                 <p className="font-semibold text-gray-900 dark:text-white">- Carol P.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
+            Frequently asked questions about name art
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-gray-600">
+            Everything you need to know about creating personalized name art and name designs.
+          </p>
+          <div className="mt-10 space-y-6">
+            {nameArtFaqs.map((faq) => (
+              <div key={faq.question} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                <p className="mt-2 text-gray-700">{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </section>
 
