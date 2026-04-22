@@ -39,6 +39,10 @@ import {
   ARABIC_GENERATOR_TIERS,
   type ArabicGeneratorModel,
 } from "~/config/arabicGenerator";
+import {
+  findGeneratorStyleSelection,
+  getStringQueryValue,
+} from "~/lib/generatorStyleSelection";
 
 // --- TYPESCRIPT FIX START ---
 interface StyleItem {
@@ -282,17 +286,54 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
   useEffect(() => {
     if (!router.isReady) return;
-    const { name } = router.query;
-    if (typeof name === 'string' && name) {
-      setForm(prev => ({ ...prev, name }));
+
+    const name = getStringQueryValue(router.query.name);
+    const style = getStringQueryValue(router.query.style);
+    const styleImage = getStringQueryValue(router.query.styleImage);
+
+    if (name) {
+      setForm((prev) => ({ ...prev, name }));
     }
+
+    const styleSelection = findGeneratorStyleSelection(typedArabicStylesData, {
+      style,
+      styleImage,
+    });
+
+    if (styleSelection) {
+      const { category, subcategory, item } = styleSelection;
+      setActiveTab(category);
+      setActiveSubTab(subcategory);
+      setSelectedImage(item.src);
+      setForm((prev) => ({ ...prev, basePrompt: item.basePrompt }));
+      setSelectedStyleAltText(item.altText);
+      setSelectedStyleLabel(item.name || subcategory || category);
+      setError("");
+
+      setTimeout(() => {
+        const element = document.getElementById(subcategory);
+        element?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+      }, 150);
+
+      return;
+    }
+
     const firstCategory = Object.keys(typedArabicStylesData)[0];
     if (firstCategory) {
       setActiveTab(firstCategory);
       const firstSubCategory = Object.keys(typedArabicStylesData[firstCategory]!)?.[0];
       if (firstSubCategory) setActiveSubTab(firstSubCategory);
     }
-  }, [router.isReady, router.query]);
+  }, [
+    router.isReady,
+    router.query.name,
+    router.query.style,
+    router.query.styleImage,
+  ]);
 
   useEffect(() => {
     if (!isLoggedIn || !router.isReady || hasRestoredDraftRef.current) return;

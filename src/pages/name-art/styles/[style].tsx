@@ -33,6 +33,10 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
   relatedNames,
 }) => {
   const pagePath = `/name-art/styles/${styleSlug}`;
+  const getGeneratorHref = (styleImage = imageSrc) =>
+    `/name-art-generator?style=${encodeURIComponent(
+      styleSlug,
+    )}&styleImage=${encodeURIComponent(styleImage)}`;
 
   return (
     <>
@@ -79,7 +83,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
-                  href="/name-art-generator"
+                  href={getGeneratorHref()}
                   className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"
                 >
                   Create this style
@@ -113,7 +117,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
               {sampleImages.map((src) => (
                 <Link
                   key={src}
-                  href="/name-art-generator"
+                  href={getGeneratorHref(src)}
                   className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl"
                 >
                   <div className="relative aspect-square overflow-hidden">
@@ -141,7 +145,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
                 Names that fit this style
               </h2>
               <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
-                Explore pSEO name pages that already feature this visual direction.
+                Explore name pages that already feature this visual direction.
               </p>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -167,12 +171,12 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
   );
 };
 
-export const getStaticPaths: GetStaticPaths = async () => ({
+export const getStaticPaths: GetStaticPaths = () => ({
   paths: NAME_ART_STYLE_ITEMS.map((item) => ({ params: { style: item.slug } })),
   fallback: false,
 });
 
-export const getStaticProps: GetStaticProps<NameArtStylePageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<NameArtStylePageProps> = (context) => {
   const styleSlug = context.params?.style;
   if (typeof styleSlug !== "string") {
     return { notFound: true };

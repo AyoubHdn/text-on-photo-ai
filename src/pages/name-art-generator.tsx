@@ -32,6 +32,10 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
+import {
+  findGeneratorStyleSelection,
+  getStringQueryValue,
+} from "~/lib/generatorStyleSelection";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
@@ -253,51 +257,60 @@ const NameArtGeneratorPage: NextPage = () => {
   }, [SOURCE_PAGE, digitalArtInterestIntent, isLoggedIn]);
 
   useEffect(() => {
-    if (!router.isReady) return; // Wait until the router is fully initialized
+    if (!router.isReady) return;
 
-    const { name } = router.query;
-    const hash = window.location.hash.substring(1); // e.g., "Vintage"
+    const name = getStringQueryValue(router.query.name);
+    const style = getStringQueryValue(router.query.style);
+    const styleImage = getStringQueryValue(router.query.styleImage);
+    const legacyHash = window.location.hash.substring(1);
 
-    // 1. Pre-fill the name field if it exists in the URL
-    if (typeof name === 'string' && name) {
-      setForm(prev => ({ ...prev, name }));
+    if (name) {
+      setForm((prev) => ({ ...prev, name }));
     }
 
-    let hashFoundAndSet = false;
+    const styleSelection = findGeneratorStyleSelection(stylesData, {
+      style: style ?? legacyHash,
+      styleImage,
+    });
 
-    // 2. Handle the jump link if a hash exists
-    if (hash) {
-      // Loop through each main category (e.g., "Themes", "Artistic")
-      for (const mainCategory in stylesData) {
-        const subcategories = stylesData[mainCategory];
-        if (subcategories && Object.keys(subcategories).includes(hash)) {
-          console.log(`[DEBUG] Jump link found! Setting tabs to: ${mainCategory} -> ${hash}`);
-          setActiveTab(mainCategory);
-          setActiveSubTab(hash);
-          hashFoundAndSet = true;
-          
-          setTimeout(() => {
-            const element = document.getElementById(hash);
-            element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-          }, 150);
+    if (styleSelection) {
+      const { category, subcategory, item } = styleSelection;
+      setActiveTab(category);
+      setActiveSubTab(subcategory);
+      setSelectedImage(item.src);
+      setSelectedStyleImage(item.src);
+      setSelectedStyleAltText(item.altText);
+      setSelectedStyleLabel(subcategory || category);
+      setAllowCustomColors(item.allowCustomColors);
+      setForm((prev) => ({ ...prev, basePrompt: item.basePrompt }));
+      setError("");
 
-          break; // Exit the loop once we've found the match
-        }
+      setTimeout(() => {
+        const element = document.getElementById(subcategory);
+        element?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+      }, 150);
+
+      return;
+    }
+
+    const firstCategory = Object.keys(stylesData)[0];
+    if (firstCategory) {
+      setActiveTab(firstCategory);
+      const firstSubCategory = Object.keys(stylesData[firstCategory]!)?.[0];
+      if (firstSubCategory) {
+        setActiveSubTab(firstSubCategory);
       }
     }
-
-    // 3. If no hash was found or provided, set the default state
-    if (!hashFoundAndSet) {
-      const firstCategory = Object.keys(stylesData)[0];
-      if (firstCategory) {
-        setActiveTab(firstCategory);
-        const firstSubCategory = Object.keys(stylesData[firstCategory]!)?.[0];
-        if (firstSubCategory) {
-          setActiveSubTab(firstSubCategory);
-        }
-      }
-    }
-  }, [router.isReady, router.query]);
+  }, [
+    router.isReady,
+    router.query.name,
+    router.query.style,
+    router.query.styleImage,
+  ]);
   // --- END: THE FINAL, DEFINITIVE INITIALIZATION LOGIC ---
 
   useEffect(() => {

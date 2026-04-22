@@ -32,6 +32,10 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
+import {
+  findGeneratorStyleSelection,
+  getStringQueryValue,
+} from "~/lib/generatorStyleSelection";
 
 type AIModel = "flux-schnell" | "flux-dev" | "ideogram-ai/ideogram-v2-turbo";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
@@ -302,9 +306,32 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   }, [imagesUrl.length]);
 
   useEffect(() => {
+    if (!router.isReady) return;
+
+    const style = getStringQueryValue(router.query.style);
+    const styleImage = getStringQueryValue(router.query.styleImage);
+    const styleSelection = findGeneratorStyleSelection(coupleStylesData, {
+      style,
+      styleImage,
+    });
+
+    if (styleSelection) {
+      const { category, subcategory, item } = styleSelection;
+      setActiveTab(category);
+      setActiveSubTab(subcategory);
+      setSelectedImage(item.src);
+      setSelectedStyleImage(item.src);
+      setSelectedStyleAltText(item.altText);
+      setSelectedStyleLabel(subcategory || category);
+      setForm((prev) => ({ ...prev, basePrompt: item.basePrompt }));
+      setError("");
+      setAllowCustomColors(item.allowCustomColors ?? true);
+      return;
+    }
+
     const categoryKeys = Object.keys(coupleStylesData);
     if (categoryKeys.length > 0) setActiveTab(categoryKeys[0] ?? "");
-  }, []);
+  }, [router.isReady, router.query.style, router.query.styleImage]);
 
   useEffect(() => {
     if (!activeTab) return;

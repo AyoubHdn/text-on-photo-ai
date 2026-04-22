@@ -22,6 +22,9 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
   imageAlt,
 }) => {
   const pagePath = `/arabic-name-art/styles/${styleSlug}`;
+  const generatorHref = `/arabic-name-art-generator?style=${encodeURIComponent(
+    styleSlug,
+  )}&styleImage=${encodeURIComponent(imageSrc)}`;
 
   return (
     <>
@@ -58,7 +61,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
-                  href="/arabic-name-art-generator"
+                  href={generatorHref}
                   className="rounded-lg bg-amber-600 px-6 py-3 font-semibold text-white transition hover:bg-amber-700"
                 >
                   Create this style
@@ -87,12 +90,12 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
   );
 };
 
-export const getStaticPaths: GetStaticPaths = async () => ({
+export const getStaticPaths: GetStaticPaths = () => ({
   paths: ARABIC_STYLE_ITEMS.map((item) => ({ params: { style: item.slug } })),
   fallback: false,
 });
 
-export const getStaticProps: GetStaticProps<ArabicStylePageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<ArabicStylePageProps> = (context) => {
   const styleSlug = context.params?.style;
   if (typeof styleSlug !== "string") {
     return { notFound: true };
@@ -115,4 +118,3 @@ export const getStaticProps: GetStaticProps<ArabicStylePageProps> = async (conte
 };
 
 export default ArabicStylePage;
-
