@@ -5,7 +5,7 @@ import { FaQuoteLeft } from "react-icons/fa";
 import { FiEdit3, FiGift, FiHeart } from "react-icons/fi";
 
 import { SeoHead } from "~/component/SeoHead";
-import { buildCollectionPageSchema } from "~/lib/seo";
+import { buildCollectionPageSchema, buildFAQSchema } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
 
 const galleryItems = [
@@ -61,6 +61,44 @@ const relatedLinks = [
   },
 ];
 
+const couplesArtFaqs = [
+  {
+    question: "What is couple name art?",
+    answer:
+      "Couple name art is a design that combines two partners' names into a single artwork. It can be used as a romantic gift, anniversary keepsake, wedding decor, or shared profile picture ('DP' - display picture). Our couple name generator supports multiple styles - floral, modern, calligraphy, and more.",
+  },
+  {
+    question: "How does a couple name generator work?",
+    answer:
+      "Enter two names, pick a style, and the couple name creator generates a personalized design combining both names. You can preview multiple styles before downloading or ordering it on a product.",
+  },
+  {
+    question: "What's the difference between a couple name generator and a love name generator?",
+    answer:
+      "They're similar tools. 'Couple name generator' focuses on visually combining two real names into one design. 'Love name generator' sometimes refers to romantic compatibility tools or portmanteau generators (combining two names into one). Our tool does the first - creating visual couple name art.",
+  },
+  {
+    question: "Can I make a couple name DP (display picture)?",
+    answer:
+      "Yes. Many users create couple name art specifically for social media DPs, WhatsApp profile pictures, and Instagram. Choose a square format style, download in high resolution, and it's ready to use as a shared couple profile image.",
+  },
+  {
+    question: "What styles work best for couple name art?",
+    answer:
+      "Romantic styles like floral, watercolor hearts, cursive calligraphy, and gold foil are popular for anniversaries and weddings. Modern styles like neon and geometric work well for younger couples or casual use. Browse all couple name styles to find the right match.",
+  },
+  {
+    question: "Can I order couple name art as a gift?",
+    answer:
+      "Yes. Couple name designs can be printed on mugs (one name on each side or both together), framed prints for the home, shirts, and wall art. Our anniversary and wedding gift categories feature mockups you can order directly.",
+  },
+  {
+    question: "What occasions is couple name art best for?",
+    answer:
+      "The most popular occasions are anniversaries, wedding gifts, engagements, Valentine's Day, and couple moving-in / first-home gifts. It's also used by parents gifting to newlywed children.",
+  },
+];
+
 const CouplesArtLandingPage: NextPage = () => {
   const [activeTab, setActiveTab] = useState("all");
 
@@ -86,6 +124,7 @@ const CouplesArtLandingPage: NextPage = () => {
               ...relatedLinks.map((item) => item.href),
             ],
           }),
+          buildFAQSchema(couplesArtFaqs),
         ]}
       />
 
@@ -271,6 +310,23 @@ const CouplesArtLandingPage: NextPage = () => {
                 <p className="font-semibold text-gray-900 dark:text-white">- Chloe J.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
+            Frequently asked questions about couple name art
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-gray-600">
+            Everything you need to know about creating couple name designs for gifts, anniversaries, and shared keepsakes.
+          </p>
+          <div className="mt-10 space-y-6">
+            {couplesArtFaqs.map((faq) => (
+              <div key={faq.question} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                <p className="mt-2 text-gray-700">{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </section>
 
