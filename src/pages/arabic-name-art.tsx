@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 
 import { SeoHead } from "~/component/SeoHead";
-import { buildFAQSchema } from "~/lib/seo";
+import { buildCollectionPageSchema, buildFAQSchema } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
 
 const galleryItems = [
@@ -63,10 +63,18 @@ const ArabicArtLandingPage: NextPage = () => {
     <>
       <SeoHead
         title="Arabic Name Art for Gifts | Custom Calligraphy Designs | NameDesignAI"
-        description="Turn an Arabic name into a personalized gift. Create custom Arabic name art in calligraphy-inspired styles for wall art, mugs, framed prints, and meaningful keepsakes."
+        description="Create custom Arabic name art and calligraphy designs. Personalized styles for wall art, mugs, framed prints, and meaningful Islamic gifts."
         path="/arabic-name-art"
         keywords="arabic name art, arabic name gift, personalized arabic name, custom arabic calligraphy, arabic calligraphy gift, arabic name wall art"
-        jsonLd={[buildFAQSchema(arabicFaqs)]}
+        jsonLd={[
+          buildCollectionPageSchema({
+            name: "Arabic Name Art",
+            description:
+              "Explore Arabic name art and calligraphy styles for gifts, wall decor, and personalized keepsakes.",
+            path: "/arabic-name-art",
+          }),
+          buildFAQSchema(arabicFaqs),
+        ]}
       />
 
       <main className="bg-white">

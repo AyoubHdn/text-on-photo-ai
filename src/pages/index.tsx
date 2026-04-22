@@ -250,7 +250,7 @@ const HomePage: NextPage = () => {
     <>
       <SeoHead
         title="Name Design AI | Personalized Name Art, Gifts, and Arabic Calligraphy"
-        description="Create personalized name art, Arabic calligraphy, and couple designs with AI. Turn names into meaningful art and product-ready gifts for home decor, keepsakes, and special occasions."
+        description="Create personalized name art, Arabic calligraphy, and couple designs with AI. Turn names into meaningful art and product-ready gifts."
         path="/"
         keywords="personalized name art, custom name art, arabic name art, couple name art, custom name gifts"
         imageAlt="Name Design AI homepage showing personalized name art examples and gift mockups"

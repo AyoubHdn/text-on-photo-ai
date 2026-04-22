@@ -49,6 +49,16 @@ const relatedLinks = [
     description:
       "Read the supporting blog content for gift intent, decor use cases, and keepsake ideas.",
   },
+  {
+    href: "/personalized-name-mugs",
+    label: "Name Mugs",
+    description: "Turn couple name art into daily-use mugs.",
+  },
+  {
+    href: "/personalized-name-wall-art",
+    label: "Name Wall Art",
+    description: "Make couple name art the centerpiece of your home.",
+  },
 ];
 
 const CouplesArtLandingPage: NextPage = () => {

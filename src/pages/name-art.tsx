@@ -303,6 +303,19 @@ const NameArtLandingPage: NextPage = () => {
                 </Link>
               ))}
             </div>
+            <div className="mt-8 text-center text-sm text-gray-600">
+              <p>
+                Looking for ideas beyond name art styles? Browse all{" "}
+                <Link href="/personalized-gifts" className="font-medium text-indigo-600 hover:underline">
+                  personalized gifts
+                </Link>{" "}
+                or explore our full{" "}
+                <Link href="/products" className="font-medium text-indigo-600 hover:underline">
+                  product catalog
+                </Link>
+                .
+              </p>
+            </div>
           </div>
         </section>
 
