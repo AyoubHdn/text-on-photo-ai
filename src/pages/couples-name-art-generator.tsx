@@ -787,7 +787,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     <>
       <SeoHead
         title="Free Couple Name Generator & Stylish Couple Name Maker"
-        description="Free couple name generator with stylish designs for anniversaries, weddings, and gifts. Enter two names, pick a romantic style, and create a beautiful couple name design."
+        description="Free couple name generator and stylish couple name maker. Enter two names, pick a romantic style, and create beautiful couple name designs for gifts."
         path="/couples-name-art-generator"
         jsonLd={[
           buildWebApplicationSchema({
