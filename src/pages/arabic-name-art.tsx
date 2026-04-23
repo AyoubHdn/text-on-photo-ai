@@ -34,12 +34,12 @@ const arabicFaqs = [
   {
     question: "Can I write my name in Arabic calligraphy online for free?",
     answer:
-      "You can preview your name in Arabic calligraphy for free. Generating a high-resolution, downloadable design uses credits from our pricing plans - and you can unlock free credits through promotions.",
+      "You can preview your name in Arabic calligraphy for free. Generating a high-resolution, downloadable design uses credits from our pricing plans — and you can unlock free credits through promotions.",
   },
   {
     question: "What's the difference between traditional and modern Arabic calligraphy?",
     answer:
-      "Traditional Arabic calligraphy (thuluth, diwani, kufic) follows centuries-old proportional rules used in Islamic calligraphy and manuscripts. Modern Arabic calligraphy takes those roots and simplifies them - cleaner lines, contemporary color palettes, and decorative elements like geometric patterns or gold leaf.",
+      "Traditional Arabic calligraphy (thuluth, diwani, kufic) follows centuries-old proportional rules used in Islamic calligraphy and manuscripts. Modern Arabic calligraphy takes those roots and simplifies them — cleaner lines, contemporary color palettes, and decorative elements like geometric patterns or gold leaf.",
   },
   {
     question: "Can I order Arabic name art on products?",
@@ -54,16 +54,22 @@ const arabicFaqs = [
   {
     question: "What Arabic calligraphy styles do you offer?",
     answer:
-      "Our styles include thuluth in gold, diwani ink, kufic geometric patterns, smoke art, sand desert, diamond, 3D gold, and wireframe modern. Each style has a different visual character - browse the full Arabic calligraphy style gallery.",
+      "Our styles include thuluth in gold, diwani ink, kufic geometric patterns, smoke art, sand desert, diamond, 3D gold, and wireframe modern. Each style has a different visual character — browse the full Arabic calligraphy style gallery.",
   },
   {
     question: "Is Arabic name art suitable as an Islamic gift?",
     answer:
-      "Yes. Arabic name art is widely gifted for Islamic occasions - weddings, Ramadan, Eid al-Fitr, Eid al-Adha, and family celebrations. Many customers use it for nursery decor with a child's name, or as a wedding gift featuring both spouses' names.",
+      "Yes. Arabic name art is widely gifted for Islamic occasions — weddings, Ramadan, Eid al-Fitr, Eid al-Adha, and family celebrations. Many customers use it for nursery decor with a child's name, or as a wedding gift featuring both spouses' names.",
   },
 ];
 
 const productLinks = [
+  {
+    href: "/arabic-name-art/products",
+    title: "Arabic Name Art Products",
+    description:
+      "Compare Arabic calligraphy mugs, shirts, and wall art before choosing the final product format.",
+  },
   {
     href: "/arabic-name-gifts",
     title: "Arabic Name Gifts",
@@ -71,8 +77,8 @@ const productLinks = [
       "Use Arabic calligraphy artwork as the starting point for gift-ready products and keepsakes.",
   },
   {
-    href: "/personalized-name-wall-art",
-    title: "Personalized Name Wall Art",
+    href: "/arabic-name-art/products/wall-art",
+    title: "Arabic Name Art Wall Art",
     description:
       "Frame a calligraphy-inspired design as decor for homes, offices, celebrations, and memorial keepsakes.",
   },
@@ -109,9 +115,7 @@ const ArabicArtLandingPage: NextPage = () => {
               Turn an Arabic name into a personalized gift
             </h1>
             <h2 className="mx-auto mb-10 max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300 md:text-2xl">
-              Create custom Arabic name art in calligraphy-inspired styles, then
-              put it on a framed print, mug, or wall art piece — a gift that
-              carries the name in a way a generic product never could.
+              Create custom Arabic name art and Arabic calligraphy in minutes
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link href="/arabic-name-art-generator">
@@ -282,7 +286,7 @@ const ArabicArtLandingPage: NextPage = () => {
                 format that fits it best.
               </p>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
               {productLinks.map((link) => (
                 <Link
                   key={link.href}

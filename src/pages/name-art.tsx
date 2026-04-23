@@ -38,19 +38,22 @@ const galleryTabs = [
 
 const productLinks = [
   {
-    href: "/personalized-name-wall-art",
-    label: "Personalized Name Wall Art",
-    description: "Turn a design into printable decor for bedrooms, nurseries, offices, and gifts.",
+    href: "/name-art/products/wall-art",
+    label: "Name Art Wall Art",
+    description:
+      "Turn personalized name art into decor-ready prints for bedrooms, nurseries, offices, and gifts.",
   },
   {
-    href: "/personalized-name-mugs",
-    label: "Personalized Name Mugs",
-    description: "Create daily-use gifts built from the same personalized artwork.",
+    href: "/name-art/products/mugs",
+    label: "Name Art Mugs",
+    description:
+      "Create daily-use mug gifts built from the same personalized name artwork.",
   },
   {
-    href: "/custom-name-shirts",
-    label: "Custom Name Shirts",
-    description: "Use bold or playful styles on wearable products without losing the name-first intent.",
+    href: "/name-art/products/shirts",
+    label: "Name Art Shirts",
+    description:
+      "Use bold or playful name art styles on wearable products without losing the name-first intent.",
   },
 ];
 
@@ -58,7 +61,12 @@ const nameArtFaqs = [
   {
     question: "What is name art?",
     answer:
-      "Name art is a visual design built around a name - using typography, illustration, or decorative effects to turn the name itself into artwork. It's used for gifts, decor, profile images, and personalized keepsakes. Modern name art is often created with AI tools, which let you generate a design quickly and explore different styles before committing to one.",
+      "Name art is a visual design built around a name — using typography, illustration, or decorative effects to turn the name itself into artwork. It's used for gifts, decor, profile images, and personalized keepsakes. Modern name art is often created with AI tools, which let you generate a design quickly and explore different styles before committing to one.",
+  },
+  {
+    question: "What's the difference between name art and name design?",
+    answer:
+      "They largely describe the same thing — turning a name into a visual design. 'Name art' tends to emphasize artistic and decorative styles (calligraphy, floral, neon, 3D). 'Name design' is broader and includes text-based designs, typography, and logo-adjacent visuals. Our tool covers both.",
   },
   {
     question: "How do I design my name online?",
@@ -66,9 +74,9 @@ const nameArtFaqs = [
       "You can design your name using our AI name art generator. Type the name, pick a style (elegant, graffiti, neon, floral, and more), and generate a finished artwork in seconds. No design skill needed.",
   },
   {
-    question: "What's the difference between a name art generator and a name design maker?",
+    question: "Can I create a custom name design or edit text into art?",
     answer:
-      "They describe the same thing - a tool that turns a name into a designed visual. 'Name art generator,' 'name design maker,' and 'name artwork creator' are used interchangeably by different audiences.",
+      "Yes. You can create a custom name design by entering any name, word, or short phrase, picking a style, and generating the artwork. The tool handles name edits, initials, and text-based designs across dozens of style directions.",
   },
   {
     question: "Can I get name art on a mug, shirt, or poster?",
@@ -85,11 +93,6 @@ const nameArtFaqs = [
     answer:
       "You can preview and explore styles for free. Generating high-resolution, print-ready designs uses credits from our pricing plans, starting at $1.99.",
   },
-  {
-    question: "What makes a good name art design?",
-    answer:
-      "A good name art design balances readability with style. The name should be the hero - easy to recognize, with decorative elements supporting (not overwhelming) it. If you plan to print it on a product, pick a style with clear edges and high contrast.",
-  },
 ];
 
 const NameArtLandingPage: NextPage = () => {
@@ -103,14 +106,14 @@ const NameArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Personalized Name Art | Styles, Ideas, and Custom Name Designs"
-        description="Explore personalized name art styles, visual ideas, and inspiration for decor, gifts, wall art, mugs, and shirts. Find the perfect direction for your name."
+        title="Name Art & Name Design | Personalized Styles and Custom Designs"
+        description="Explore personalized name art and name design styles for decor, gifts, and keepsakes. Browse custom name designs, text styles, and creative ideas."
         path="/name-art"
         jsonLd={[
           buildCollectionPageSchema({
-            name: "Personalized Name Art",
+            name: "Name Art and Name Design",
             description:
-              "Browse personalized name art styles and inspiration for gifts, decor, and printable formats.",
+              "Browse personalized name art and name design styles for gifts, decor, and printable formats.",
             path: "/name-art",
             itemPaths: [
               "/name-art/styles",
@@ -138,9 +141,11 @@ const NameArtLandingPage: NextPage = () => {
                   Transform your name into a work of art
                 </h1>
                 <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-slate-300">
-                  Explore personalized name art for custom decor, keepsakes, gifts, and
-                  product-ready designs. Browse styles for your name, initials, or phrase,
-                  then move that artwork into wall art, mugs, and shirts.
+                  Explore personalized name art and name design styles for custom
+                  decor, keepsakes, gifts, and product-ready designs. Browse text
+                  styles, artistic directions, and design ideas for your name,
+                  initials, or phrase — then move that artwork into wall art,
+                  mugs, and shirts.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link
@@ -225,7 +230,7 @@ const NameArtLandingPage: NextPage = () => {
         <section id="gallery" className="bg-cream-50 py-24 dark:bg-gray-800">
           <div className="container mx-auto px-4 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Explore a world of creative styles
+              Explore name art and name design styles
             </h2>
             <p className="mx-auto mb-12 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
               Find a direction that fits your name, then refine it in the
@@ -368,24 +373,24 @@ const NameArtLandingPage: NextPage = () => {
               <div className="rounded-lg bg-cream-50 p-8 text-left dark:bg-gray-800">
                 <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  "I designed a new logo direction for my Etsy shop in a few
-                  minutes and then used the same art style for a print."
+                  &quot;I designed a new logo direction for my Etsy shop in a few
+                  minutes and then used the same art style for a print.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Maria S.</p>
               </div>
               <div className="rounded-lg bg-cream-50 p-8 text-left shadow-xl dark:bg-gray-800">
                 <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  "It helped me test a lot of styles quickly. I ended up using
-                  one version for my profile and another for a custom mug."
+                  &quot;It helped me test a lot of styles quickly. I ended up using
+                  one version for my profile and another for a custom mug.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- David L.</p>
               </div>
               <div className="rounded-lg bg-cream-50 p-8 text-left dark:bg-gray-800">
                 <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  "We made art with our kids&apos; names for their playroom and
-                  then used one of the designs as a framed gift."
+                  &quot;We made art with our kids&apos; names for their playroom and
+                  then used one of the designs as a framed gift.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Carol P.</p>
               </div>

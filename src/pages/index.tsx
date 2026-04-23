@@ -28,6 +28,8 @@ type VisualCard = {
   imageAlt: string;
   eyebrow?: string;
   ctaLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
 };
 
 const homepageFaqs = [
@@ -68,6 +70,8 @@ const generatorCards: VisualCard[] = [
     imageAlt: "Emma personalized name art example",
     eyebrow: "Visual generator",
     ctaLabel: "Explore generator",
+    secondaryHref: "/name-art/styles",
+    secondaryLabel: "Browse all name art styles",
   },
   {
     href: "/arabic-name-art",
@@ -78,6 +82,8 @@ const generatorCards: VisualCard[] = [
     imageAlt: "Arabic calligraphy name art example in a black thuluth style",
     eyebrow: "Calligraphy styles",
     ctaLabel: "Browse Arabic styles",
+    secondaryHref: "/arabic-name-art/styles",
+    secondaryLabel: "Browse Arabic calligraphy styles",
   },
   {
     href: "/couples-art",
@@ -88,6 +94,8 @@ const generatorCards: VisualCard[] = [
     imageAlt: "Couple name art example for wedding and anniversary gifts",
     eyebrow: "Relationship art",
     ctaLabel: "See couple designs",
+    secondaryHref: "/couples-art/styles",
+    secondaryLabel: "Browse couple name styles",
   },
 ];
 
@@ -250,7 +258,7 @@ const HomePage: NextPage = () => {
     <>
       <SeoHead
         title="Name Design AI | Personalized Name Art, Gifts, and Arabic Calligraphy"
-        description="Create personalized name art, Arabic calligraphy, and couple designs with AI. Turn names into meaningful art and product-ready gifts."
+        description="Create personalized name art, name design, Arabic calligraphy, and couple designs with AI. Turn names into meaningful art and product-ready gifts."
         path="/"
         keywords="personalized name art, custom name art, arabic name art, couple name art, custom name gifts"
         imageAlt="Name Design AI homepage showing personalized name art examples and gift mockups"
@@ -335,7 +343,7 @@ function HeroBanner() {
       <div className="container mx-auto grid gap-14 px-6 py-16 lg:grid-cols-[1.05fr,0.95fr] lg:px-8 lg:py-20">
         <div className="flex flex-col justify-center">
           <span className="inline-flex w-fit rounded-full bg-brand-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
-            AI name art and personalized gifts
+            AI name art, name design, and personalized gifts
           </span>
           <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
             Turn identity into visual art, gift mockups, and keepsake-ready products
@@ -806,35 +814,46 @@ function FAQSection() {
 
 function VisualMarketplaceCard({ card }: { card: VisualCard }) {
   return (
-    <Link
-      href={card.href}
+    <article
       className="group overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <Image
-          src={card.imageSrc}
-          alt={card.imageAlt}
-          fill
-          className="object-cover transition duration-500 group-hover:scale-105"
-        />
-      </div>
-      <div className="p-5">
-        {card.eyebrow ? (
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-300">
-            {card.eyebrow}
+      <Link href={card.href} className="block">
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <Image
+            src={card.imageSrc}
+            alt={card.imageAlt}
+            fill
+            className="object-cover transition duration-500 group-hover:scale-105"
+          />
+        </div>
+        <div className={card.secondaryHref ? "p-5 pb-3" : "p-5"}>
+          {card.eyebrow ? (
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-300">
+              {card.eyebrow}
+            </p>
+          ) : null}
+          <h3 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-100">
+            {card.title}
+          </h3>
+          <p className="mt-3 text-slate-600 dark:text-slate-300">
+            {card.description}
           </p>
-        ) : null}
-        <h3 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-100">
-          {card.title}
-        </h3>
-        <p className="mt-3 text-slate-600 dark:text-slate-300">
-          {card.description}
-        </p>
-        <span className="mt-4 inline-flex text-sm font-semibold text-brand-700 dark:text-brand-300">
-          {card.ctaLabel ?? "Explore page"}
-        </span>
-      </div>
-    </Link>
+          <span className="mt-4 inline-flex text-sm font-semibold text-brand-700 dark:text-brand-300">
+            {card.ctaLabel ?? "Explore page"}
+          </span>
+        </div>
+      </Link>
+      {card.secondaryHref && card.secondaryLabel ? (
+        <div className="px-5 pb-5">
+          <Link
+            href={card.secondaryHref}
+            className="text-sm font-medium text-brand-700 transition hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
+          >
+            {card.secondaryLabel}
+          </Link>
+        </div>
+      ) : null}
+    </article>
   );
 }
 

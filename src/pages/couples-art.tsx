@@ -32,6 +32,12 @@ const galleryTabs = [
 
 const relatedLinks = [
   {
+    href: "/couples-art/products",
+    label: "Couples Art Products",
+    description:
+      "Compare romantic mugs, shirts, and wall art made specifically from couples art.",
+  },
+  {
     href: "/couple-gifts",
     label: "Couple Gifts",
     description:
@@ -44,12 +50,6 @@ const relatedLinks = [
       "Expand from couple art into gifts for anniversaries, weddings, and milestones.",
   },
   {
-    href: "/blog/why-couple-name-art-is-the-perfect-keepsake",
-    label: "Couple Name Art Guide",
-    description:
-      "Read the supporting blog content for gift intent, decor use cases, and keepsake ideas.",
-  },
-  {
     href: "/personalized-name-mugs",
     label: "Name Mugs",
     description: "Turn couple name art into daily-use mugs.",
@@ -59,23 +59,39 @@ const relatedLinks = [
     label: "Name Wall Art",
     description: "Make couple name art the centerpiece of your home.",
   },
+  {
+    href: "/blog/why-couple-name-art-is-the-perfect-keepsake",
+    label: "Couple Name Art Guide",
+    description:
+      "Read the supporting blog content for gift intent, decor use cases, and keepsake ideas.",
+  },
+  {
+    href: "/couples-art/products/mugs",
+    label: "Couples Art Mugs",
+    description: "Turn couple name art into daily-use romantic mugs.",
+  },
+  {
+    href: "/couples-art/products/wall-art",
+    label: "Couples Art Wall Art",
+    description: "Make couple name art the centerpiece of a shared space.",
+  },
 ];
 
 const couplesArtFaqs = [
   {
     question: "What is couple name art?",
     answer:
-      "Couple name art is a design that combines two partners' names into a single artwork. It can be used as a romantic gift, anniversary keepsake, wedding decor, or shared profile picture ('DP' - display picture). Our couple name generator supports multiple styles - floral, modern, calligraphy, and more.",
+      "Couple name art is a design that combines two partners' names into a single artwork. It's used as a romantic gift, anniversary keepsake, wedding decor, or shared profile picture. The design itself is meaningful — two names, one artwork, one story.",
   },
   {
-    question: "How does a couple name generator work?",
+    question: "How do I create couple name art online?",
     answer:
-      "Enter two names, pick a style, and the couple name creator generates a personalized design combining both names. You can preview multiple styles before downloading or ordering it on a product.",
+      "Visit our couple name art generator, enter both names, pick a style, and the tool generates a personalized design combining both names. You can preview multiple styles before downloading.",
   },
   {
-    question: "What's the difference between a couple name generator and a love name generator?",
+    question: "What styles work best for couple name art?",
     answer:
-      "They're similar tools. 'Couple name generator' focuses on visually combining two real names into one design. 'Love name generator' sometimes refers to romantic compatibility tools or portmanteau generators (combining two names into one). Our tool does the first - creating visual couple name art.",
+      "Romantic styles like floral, watercolor hearts, cursive calligraphy, and gold foil are popular for anniversaries and weddings. Modern styles like neon and geometric work well for younger couples or casual use.",
   },
   {
     question: "Can I make a couple name DP (display picture)?",
@@ -83,19 +99,19 @@ const couplesArtFaqs = [
       "Yes. Many users create couple name art specifically for social media DPs, WhatsApp profile pictures, and Instagram. Choose a square format style, download in high resolution, and it's ready to use as a shared couple profile image.",
   },
   {
-    question: "What styles work best for couple name art?",
-    answer:
-      "Romantic styles like floral, watercolor hearts, cursive calligraphy, and gold foil are popular for anniversaries and weddings. Modern styles like neon and geometric work well for younger couples or casual use. Browse all couple name styles to find the right match.",
-  },
-  {
     question: "Can I order couple name art as a gift?",
     answer:
-      "Yes. Couple name designs can be printed on mugs (one name on each side or both together), framed prints for the home, shirts, and wall art. Our anniversary and wedding gift categories feature mockups you can order directly.",
+      "Yes. Couple name designs can be printed on mugs, framed prints for the home, shirts, and wall art. Our anniversary and wedding gift categories feature mockups you can order directly.",
   },
   {
     question: "What occasions is couple name art best for?",
     answer:
       "The most popular occasions are anniversaries, wedding gifts, engagements, Valentine's Day, and couple moving-in / first-home gifts. It's also used by parents gifting to newlywed children.",
+  },
+  {
+    question: "Is couple name art free?",
+    answer:
+      "Previewing styles is free. Generating a final high-resolution design uses credits from our pricing plans. Check our pricing page for current rates.",
   },
 ];
 
@@ -288,24 +304,24 @@ const CouplesArtLandingPage: NextPage = () => {
               <div className="rounded-lg bg-cream-50 p-8 text-left border border-cream-200">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  "I created a piece with our names and wedding date for our
-                  anniversary. It ended up becoming the centerpiece of our living room."
+                  &quot;I created a piece with our names and wedding date for our
+                  anniversary. It ended up becoming the centerpiece of our living room.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Mark T.</p>
               </div>
               <div className="rounded-lg bg-gray-50 p-8 text-left shadow-xl dark:bg-gray-800">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  "We used a couple design as a wedding keepsake and then carried
-                  the same concept into our guest-book display."
+                  &quot;We used a couple design as a wedding keepsake and then carried
+                  the same concept into our guest-book display.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Sarah and Liam</p>
               </div>
               <div className="rounded-lg bg-cream-50 p-8 text-left border border-cream-200">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  "It gave me a personal gift idea that felt much more thoughtful
-                  than generic decor."
+                  &quot;It gave me a personal gift idea that felt much more thoughtful
+                  than generic decor.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Chloe J.</p>
               </div>
@@ -324,7 +340,24 @@ const CouplesArtLandingPage: NextPage = () => {
             {couplesArtFaqs.map((faq) => (
               <div key={faq.question} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
-                <p className="mt-2 text-gray-700">{faq.answer}</p>
+                <p className="mt-2 text-gray-700">
+                  {faq.question === "How do I create couple name art online?" ? (
+                    <>
+                      Visit our{" "}
+                      <Link
+                        href="/couples-name-art-generator"
+                        className="font-medium text-pink-600 hover:underline"
+                      >
+                        couple name art generator
+                      </Link>
+                      , enter both names, pick a style, and the tool generates a
+                      personalized design combining both names. You can preview
+                      multiple styles before downloading.
+                    </>
+                  ) : (
+                    faq.answer
+                  )}
+                </p>
               </div>
             ))}
           </div>
