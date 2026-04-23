@@ -38,6 +38,9 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
     { href: "/personalized-name-wall-art", name: "Name Wall Art" },
     { href: "/personalized-name-mugs", name: "Name Mugs" },
     { href: "/custom-name-shirts", name: "Name Shirts" },
+    { href: "/name-art/products", name: "Name Art Products" },
+    { href: "/arabic-name-art/products", name: "Arabic Products" },
+    { href: "/couples-art/products", name: "Couple Art Products" },
     { href: "/couple-gifts", name: "Couple Gifts" },
     { href: "/arabic-name-gifts", name: "Arabic Name Gifts" },
   ];

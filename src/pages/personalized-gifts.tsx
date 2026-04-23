@@ -107,6 +107,24 @@ const PersonalizedGiftsPage: NextPage = () => {
           description:
             "Relationship-focused gift page for anniversaries, weddings, and romantic keepsakes.",
         },
+        {
+          href: "/name-art/products",
+          label: "Name Art Products",
+          description:
+            "Style-specific product hub for personalized name art mugs, shirts, and wall art.",
+        },
+        {
+          href: "/arabic-name-art/products",
+          label: "Arabic Name Art Products",
+          description:
+            "Arabic calligraphy product hub for mugs, shirts, and decor-ready wall art.",
+        },
+        {
+          href: "/couples-art/products",
+          label: "Couples Art Products",
+          description:
+            "Couple-focused product hub for romantic mugs, shirts, and wall art keepsakes.",
+        },
       ]}
       categoryCardsHeading="Browse personalized gift categories"
       categoryCards={getCategoryCards([

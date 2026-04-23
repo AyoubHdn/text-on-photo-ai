@@ -8,6 +8,7 @@ import { type GetServerSideProps } from "next";
 
 import { SITEMAP_NAME_PAGES, getNameArtPath } from "~/lib/nameArtSeo";
 import { SITE_URL } from "~/lib/seo";
+import { STYLE_PRODUCT_SEO_PATHS } from "~/lib/styleProductSeo";
 import {
   ARABIC_STYLE_ITEMS,
   COUPLES_STYLE_ITEMS,
@@ -40,6 +41,16 @@ const getPriority = (rawPage: string) => {
   ]);
 
   if (primaryLandingPages.has(page)) return "0.9";
+  if (/^\/(name-art|arabic-name-art|couples-art)\/products$/.test(page)) {
+    return "0.8";
+  }
+  if (
+    /^\/(name-art|arabic-name-art|couples-art)\/products\/(mugs|shirts|wall-art)$/.test(
+      page,
+    )
+  ) {
+    return "0.7";
+  }
   // Arabic gifts page is secondary — lower priority to avoid crowding out main product hubs
   if (page === "/arabic-name-gifts") return "0.7";
   if (
@@ -136,6 +147,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/personalized-name-wall-art",
     "/arabic-name-gifts",
     "/couple-gifts",
+    ...STYLE_PRODUCT_SEO_PATHS,
     "/privacy-policy",
     "/terms-of-service",
     "/refund",

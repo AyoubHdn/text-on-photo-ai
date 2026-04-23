@@ -95,6 +95,24 @@ const PersonalizedNameMugsPage: NextPage = () => {
           description:
             "Better fit if the design should be framed or displayed rather than used daily.",
         },
+        {
+          href: "/name-art/products/mugs",
+          label: "Name Art Mugs",
+          description:
+            "Use this when the search intent is specifically personalized name art on mugs.",
+        },
+        {
+          href: "/arabic-name-art/products/mugs",
+          label: "Arabic Name Art Mugs",
+          description:
+            "Use this for Arabic calligraphy-inspired mugs and Arabic-name product intent.",
+        },
+        {
+          href: "/couples-art/products/mugs",
+          label: "Couples Art Mugs",
+          description:
+            "Use this for romantic two-name mugs, anniversary mugs, and couple keepsakes.",
+        },
       ]}
       categoryCards={getCategoryCards([
         "/personalized-name-mugs",

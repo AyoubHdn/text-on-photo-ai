@@ -146,7 +146,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "View wall art ideas",
   },
   arabicMug: {
-    href: "/personalized-name-mugs",
+    href: "/arabic-name-art/products/mugs",
     title: "Arabic mug mockups",
     description:
       "Check how Arabic calligraphy styling holds up on a compact mug layout.",
@@ -155,7 +155,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "See mug formats",
   },
   arabicShirt: {
-    href: "/custom-name-shirts",
+    href: "/arabic-name-art/products/shirts",
     title: "Arabic shirt mockups",
     description:
       "Preview Arabic lettering on apparel before choosing a printable product route.",
@@ -164,7 +164,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "See shirt formats",
   },
   arabicWallArt: {
-    href: "/personalized-name-wall-art",
+    href: "/arabic-name-art/products/wall-art",
     title: "Arabic wall art prints",
     description:
       "Compare calligraphy-led decor layouts for home, office, and premium gift use cases.",
@@ -173,7 +173,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "View decor ideas",
   },
   coupleMug: {
-    href: "/personalized-name-mugs",
+    href: "/couples-art/products/mugs",
     title: "Couple mug mockups",
     description:
       "Relationship-led designs can be turned into practical gifts without losing sentiment.",
@@ -182,7 +182,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "Explore couple mugs",
   },
   coupleShirt: {
-    href: "/custom-name-shirts",
+    href: "/couples-art/products/shirts",
     title: "Couple shirt mockups",
     description:
       "Use matching apparel previews for anniversaries, travel sets, or playful pair gifts.",
@@ -191,7 +191,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "Explore couple shirts",
   },
   coupleWallArt: {
-    href: "/personalized-name-wall-art",
+    href: "/couples-art/products/wall-art",
     title: "Couple wall art prints",
     description:
       "See how romantic name art works as a shared-home statement piece or framed keepsake.",

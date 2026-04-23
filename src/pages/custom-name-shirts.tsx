@@ -95,6 +95,24 @@ const CustomNameShirtsPage: NextPage = () => {
           description:
             "Use this when the apparel idea is part of a broader anniversary or relationship gift set.",
         },
+        {
+          href: "/name-art/products/shirts",
+          label: "Name Art Shirts",
+          description:
+            "Use this when the shirt is specifically built from a personalized name art design.",
+        },
+        {
+          href: "/arabic-name-art/products/shirts",
+          label: "Arabic Name Art Shirts",
+          description:
+            "Use this for Arabic calligraphy shirts and wearable Arabic-name artwork.",
+        },
+        {
+          href: "/couples-art/products/shirts",
+          label: "Couples Art Shirts",
+          description:
+            "Use this for matching couple shirts and romantic two-name apparel.",
+        },
       ]}
       categoryCards={getCategoryCards([
         "/custom-name-shirts",
