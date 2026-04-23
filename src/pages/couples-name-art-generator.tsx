@@ -22,7 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
-import { buildWebApplicationSchema } from "~/lib/seo";
+import { buildFAQSchema, buildWebApplicationSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -95,6 +95,44 @@ const isAIModel = (value: unknown): value is AIModel =>
   typeof value === "string" && value in MODEL_CREDITS;
 const isAspectRatio = (value: unknown): value is AspectRatio =>
   value === "1:1" || value === "4:5" || value === "3:2" || value === "16:9";
+
+const couplesGeneratorFaqs = [
+  {
+    question: "How does a couple name generator work?",
+    answer:
+      "Enter two names, pick a style (romantic, modern, calligraphy, or playful), and our couple name generator combines both names into a single stylish design. Preview multiple styles before downloading.",
+  },
+  {
+    question: "Is this couple name generator free?",
+    answer:
+      "Yes, previewing is free. Generating high-resolution, print-ready designs uses credits from our pricing plans, starting at $1.99.",
+  },
+  {
+    question: "What's the difference between a couple name generator and a couple name maker?",
+    answer:
+      "They describe the same thing — a tool that turns two names into a shared visual design. 'Couple name generator,' 'couple name maker,' and 'couple name creator' are interchangeable terms used by different audiences.",
+  },
+  {
+    question: "Can I make a couple name DP for WhatsApp or Instagram?",
+    answer:
+      "Yes. Choose a square format style and the stylish couple name maker generates a design ready for use as a DP, profile picture, or social media post in high resolution.",
+  },
+  {
+    question: "What styles work best for anniversaries and weddings?",
+    answer:
+      "Romantic styles — floral, watercolor hearts, cursive calligraphy, gold foil — are most popular for anniversaries and wedding gifts. Modern styles like neon and geometric suit younger couples or casual keepsakes.",
+  },
+  {
+    question: "Can I turn the couple name design into a mug or print?",
+    answer:
+      "Yes. Every couple name design can be ordered on a personalized mug, framed print, wall art, or shirt. Two-sided mugs featuring one name on each side are especially popular as anniversary gifts.",
+  },
+  {
+    question: "What names work best in a couple name design?",
+    answer:
+      "Any combination of names works — short, long, different lengths, or different languages. The stylish couple name maker handles balance and spacing automatically so both names feel visually equal in the design.",
+  },
+];
 
 const CouplesNameArtGeneratorPage: NextPage = () => {
   const SOURCE_PAGE = "couples-art-generator";
@@ -758,6 +796,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
               "Free couple name generator and stylish couple name maker. Combine two names into a single design for anniversaries, weddings, and gifts.",
             path: "/couples-name-art-generator",
           }),
+          buildFAQSchema(couplesGeneratorFaqs),
         ]}
       />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
@@ -1120,6 +1159,22 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
             </section>
           </>
         )}
+        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
+            Frequently asked questions
+          </h2>
+          <div className="mt-10 space-y-6">
+            {couplesGeneratorFaqs.map((faq) => (
+              <div
+                key={faq.question}
+                className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                <p className="mt-2 text-gray-700">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {popupImage && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center" onClick={closePopup}>
