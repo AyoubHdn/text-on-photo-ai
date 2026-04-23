@@ -711,8 +711,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Arabic Name Art Generator | AI Calligraphy for Your Name"
-        description="Create personalized Arabic name art with our AI calligraphy generator. Choose traditional or modern styles, then turn your design into a gift, mug, or wall art."
+        title="Free Arabic Name Generator — Calligraphy & AI Name Design"
+        description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles for gifts and decor."
         path="/arabic-name-art-generator"
         jsonLd={[
           buildCollectionPageSchema({
@@ -727,9 +727,16 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         
         <h1 className="text-3xl font-bold text-center sm:text-4xl">Arabic Name Art Generator</h1>
         <h2 className="mt-4 text-center text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-          AI Calligraphy for Personalized Gifts and Decor
+          Arabic Name Generator — Write Your Name in Arabic Calligraphy from English
         </h2>
-        <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">Transform your name into an Arabic calligraphy masterpiece.</p>
+        <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
+          Write your name in Arabic calligraphy in seconds. Our Arabic name
+          generator transliterates from English to Arabic script, then renders it
+          in your chosen calligraphy style — traditional thuluth and diwani,
+          modern geometric, or ornamental 3D gold. No Arabic knowledge needed.
+          Use the result as an Islamic gift, wedding keepsake, wall art, or mug
+          design.
+        </p>
         <GeneratorNudge generatorType="arabic" />
         
         <form className="flex flex-col gap-6 mt-8" onSubmit={handleFormSubmit}>

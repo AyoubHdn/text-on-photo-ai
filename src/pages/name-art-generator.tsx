@@ -786,8 +786,8 @@ const NameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Name Art Generator | Create Custom Name Art Online"
-        description="Create custom name art in seconds with our free AI name art generator. Choose from 30+ styles, then turn your design into a mug, poster, or t-shirt."
+        title="Free AI Name Art Generator & Name Design Maker — Create Online"
+        description="Free AI name art generator and name design maker. Create custom name designs in seconds — pick a style, generate, then turn it into a mug, poster, or shirt."
         path="/name-art-generator"
         jsonLd={[
           buildCollectionPageSchema({
@@ -801,9 +801,15 @@ const NameArtGeneratorPage: NextPage = () => {
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
         <h1 className="text-4xl font-bold">Free AI Name Art Generator</h1>
         <h2 className="mt-4 text-2xl font-semibold text-gray-900 dark:text-white">
-          Create Custom Name Art Online — Decor, Gifts, and Downloads
+          Name Art Generator & Name Design Maker — Create Custom Designs Online
         </h2>
-        <p className="text-lg mt-4">Unleash your creativity with our Name Art Generator! ...</p>
+        <p className="text-lg mt-4">
+          Create custom name art and name designs in seconds. Our free AI name art
+          generator doubles as a name design maker — type any name, pick a style,
+          and generate personalized artwork for decor, gifts, and downloads. No
+          sign-up required to preview, and you can turn any design into a mug,
+          poster, or t-shirt.
+        </p>
         <GeneratorNudge generatorType="default" />
         
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
