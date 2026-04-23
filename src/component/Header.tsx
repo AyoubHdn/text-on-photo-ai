@@ -145,16 +145,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         Gift Ideas
                     </PrimaryLink>
                 </li>
-                <li>
-                    <PrimaryLink href="/products" className="hidden md:block">
-                        Products
-                    </PrimaryLink>
-                </li>
-                <li>
-                    <PrimaryLink href="/blog" className="hidden md:block">
-                        Blog
-                    </PrimaryLink>
-                </li>
                 {isLoggedIn && (
                     <li>
                         <PrimaryLink id="collection-header-button" href="/collection" className="hidden md:block">
@@ -240,11 +230,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700"></div> 
                                 {/* --- END: Mobile Products Section --- */}
                                 <li>
-                                    <Link href="/products" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Products
-                                    </Link>
-                                </li>
-                                <li>
                                     <Link href="/personalized-gifts" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Gift Ideas
                                     </Link>
@@ -252,11 +237,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/blog" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Blog
                                     </Link>
                                 </li>
                                 <li>
@@ -289,11 +269,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700"></div> 
                                 {/* --- END: Mobile Products Section --- */}
                                 <li>
-                                    <Link href="/products" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Products
-                                    </Link>
-                                </li>
-                                <li>
                                     <Link href="/personalized-gifts" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Gift Ideas
                                     </Link>
@@ -301,11 +276,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
                                         Community
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/blog" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Blog
                                     </Link>
                                 </li>
                             </>
