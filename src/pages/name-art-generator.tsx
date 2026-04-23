@@ -22,7 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackGA, trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
-import { buildWebApplicationSchema } from "~/lib/seo";
+import { buildFAQSchema, buildWebApplicationSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -93,6 +93,44 @@ const isAIModel = (value: unknown): value is AIModel =>
   typeof value === "string" && value in MODEL_CREDITS;
 const isAspectRatio = (value: unknown): value is AspectRatio =>
   value === "1:1" || value === "4:5" || value === "3:2" || value === "16:9";
+
+const nameArtGeneratorFaqs = [
+  {
+    question: "Is this name art generator really free?",
+    answer:
+      "Yes. You can preview designs, browse styles, and see how your name looks in different directions completely free. Generating high-resolution, watermark-free, print-ready designs uses credits from our pricing plans, starting at $1.99.",
+  },
+  {
+    question: "What's the difference between a name art generator and a name design maker?",
+    answer:
+      "They describe the same thing — a tool that turns a name into a visual design. Our tool works as both a name art generator (artistic styles like calligraphy, neon, floral) and a name design maker (text-based designs, typography, logo-adjacent visuals).",
+  },
+  {
+    question: "How long does it take to generate name art?",
+    answer:
+      "A few seconds. You type your name, pick a style, and the AI generates your artwork. Most users go from idea to finished design in under a minute.",
+  },
+  {
+    question: "Can I use the generated name art commercially?",
+    answer:
+      "You own the designs you generate and can use them for personal projects, gifts, printing, and social media. For commercial resale at scale, check our terms of service.",
+  },
+  {
+    question: "What file formats can I download?",
+    answer:
+      "Generated designs download as high-resolution PNG images by default, suitable for printing on mugs, shirts, posters, wall art, or sharing online.",
+  },
+  {
+    question: "Can I put my name art on a mug or shirt?",
+    answer:
+      "Yes. Every design you generate can be ordered directly on a personalized mug, custom name shirt, or wall art print through our product catalog.",
+  },
+  {
+    question: "Do I need design skills to use this?",
+    answer:
+      "No. The generator does the visual work — you just pick a style and type the name. No design experience needed.",
+  },
+];
 
 const NameArtGeneratorPage: NextPage = () => {
   const SOURCE_PAGE = "name-art-generator";
@@ -796,6 +834,7 @@ const NameArtGeneratorPage: NextPage = () => {
               "Free AI name art generator and name design maker. Create custom name designs in multiple styles for decor, gifts, and downloads.",
             path: "/name-art-generator",
           }),
+          buildFAQSchema(nameArtGeneratorFaqs),
         ]}
       />
       <main className="container m-auto mb-24 flex flex-col px-8 py-8 max-w-screen-md">
@@ -1202,6 +1241,22 @@ const NameArtGeneratorPage: NextPage = () => {
         </section>
         </>
         )}
+        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
+            Frequently asked questions
+          </h2>
+          <div className="mt-10 space-y-6">
+            {nameArtGeneratorFaqs.map((faq) => (
+              <div
+                key={faq.question}
+                className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                <p className="mt-2 text-gray-700">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
