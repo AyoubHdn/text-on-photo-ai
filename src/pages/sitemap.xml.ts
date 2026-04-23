@@ -129,6 +129,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/couples-art",
     "/couples-name-art-generator",
     "/couples-art/styles",
+    "/products",
     "/personalized-gifts",
     "/personalized-name-mugs",
     "/custom-name-shirts",

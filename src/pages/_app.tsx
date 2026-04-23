@@ -37,7 +37,6 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
 };
 
 const GLOBAL_NOINDEX_PATHS = new Set([
-  "/products",
   "/collection",
   "/buy-credits",
   "/checkout",

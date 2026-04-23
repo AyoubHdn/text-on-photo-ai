@@ -104,7 +104,6 @@ const ProductsPage: NextPage = () => {
         title="Products | Name Design AI"
         description="Print your saved name art on premium physical products with product-to-design compatibility."
         path="/products"
-        noindex
       />
 
       <main className="container mx-auto min-h-screen px-4 py-8 mt-16 md:px-8">
