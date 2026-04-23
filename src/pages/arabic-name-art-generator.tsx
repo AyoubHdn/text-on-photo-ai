@@ -25,7 +25,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
-import { buildWebApplicationSchema } from "~/lib/seo";
+import { buildFAQSchema, buildWebApplicationSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -102,6 +102,44 @@ const LAST_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
 const GENERATOR_DRAFT_STORAGE_KEY = "arabic-name-art:auth-draft:v1";
 const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
 const GENERATOR_DRAFT_TTL_MS = 1000 * 60 * 60 * 24;
+
+const arabicGeneratorFaqs = [
+  {
+    question: "Can I write my name in Arabic calligraphy from English?",
+    answer:
+      "Yes. Type your name in English letters and the Arabic name generator transliterates and renders it in Arabic script using your chosen calligraphy style. No Arabic keyboard or knowledge required.",
+  },
+  {
+    question: "What Arabic calligraphy styles are available?",
+    answer:
+      "Styles include traditional thuluth in gold, diwani ink, kufic geometric, ornamental 3D gold, modern wireframe, smoke art, sand desert, and diamond. Each style has a distinct visual character suited to different gifts and decor.",
+  },
+  {
+    question: "Is the Arabic name generator free?",
+    answer:
+      "You can preview and explore styles free. Generating high-resolution, downloadable designs uses credits from our pricing plans, and we offer free credits through occasional promotions.",
+  },
+  {
+    question: "Can I make an Arabic name wallpaper or DP?",
+    answer:
+      "Yes. Choose a square or vertical aspect ratio, generate your name in your preferred calligraphy style, and download in high resolution. The result works for wallpapers, profile pictures, and social media.",
+  },
+  {
+    question: "Is Arabic name art a good Islamic gift?",
+    answer:
+      "Yes. Arabic name art is a popular Islamic gift for weddings, Ramadan, Eid, birthdays, and nursery decor. Many users create designs featuring the recipient's name or a couple's combined names as a keepsake.",
+  },
+  {
+    question: "What's the difference between thuluth, diwani, and kufic?",
+    answer:
+      "Thuluth features flowing, elongated strokes with dramatic curves — often used in mosque inscriptions. Diwani is ornate and highly decorative, historically used for Ottoman royal decrees. Kufic is angular and geometric, the oldest Arabic script style. Each suits a different mood and gift.",
+  },
+  {
+    question: "Can I print Arabic name art on a mug or wall art?",
+    answer:
+      "Yes. Any Arabic design you generate can be ordered on a mug, poster, framed wall art, or shirt through our product catalog. Arabic name gifts are particularly popular for weddings and family decor.",
+  },
+];
 
 const ArabicNameArtGeneratorPage: NextPage = () => {
   const SOURCE_PAGE = "arabic-name-art-generator";
@@ -721,6 +759,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               "Free Arabic name generator and calligraphy maker. Transliterate names from English to Arabic and render in traditional or modern calligraphy styles.",
             path: "/arabic-name-art-generator",
           }),
+          buildFAQSchema(arabicGeneratorFaqs),
         ]}
       />
       <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
@@ -1075,6 +1114,22 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             </section>
           </>
         )}
+        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
+            Frequently asked questions
+          </h2>
+          <div className="mt-10 space-y-6">
+            {arabicGeneratorFaqs.map((faq) => (
+              <div
+                key={faq.question}
+                className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                <p className="mt-2 text-gray-700">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {popupImage && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
