@@ -25,7 +25,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
-import { buildCollectionPageSchema } from "~/lib/seo";
+import { buildWebApplicationSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -715,10 +715,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles for gifts and decor."
         path="/arabic-name-art-generator"
         jsonLd={[
-          buildCollectionPageSchema({
+          buildWebApplicationSchema({
             name: "Arabic Name Art Generator",
             description:
-              "Create personalized Arabic name art and calligraphy designs online. Multiple styles for gifts, decor, and keepsakes.",
+              "Free Arabic name generator and calligraphy maker. Transliterate names from English to Arabic and render in traditional or modern calligraphy styles.",
             path: "/arabic-name-art-generator",
           }),
         ]}

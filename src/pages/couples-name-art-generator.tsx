@@ -22,7 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
-import { buildCollectionPageSchema } from "~/lib/seo";
+import { buildWebApplicationSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -752,10 +752,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
         description="Free couple name generator with stylish designs for anniversaries, weddings, and gifts. Enter two names, pick a romantic style, and create a beautiful couple name design."
         path="/couples-name-art-generator"
         jsonLd={[
-          buildCollectionPageSchema({
-            name: "Couples Name Art Generator",
+          buildWebApplicationSchema({
+            name: "Couple Name Generator",
             description:
-              "Create romantic couples name art online. Designs for anniversaries, weddings, and personalized gifts.",
+              "Free couple name generator and stylish couple name maker. Combine two names into a single design for anniversaries, weddings, and gifts.",
             path: "/couples-name-art-generator",
           }),
         ]}

@@ -25,6 +25,13 @@ type CollectionPageSchemaOptions = {
   itemPaths?: string[];
 };
 
+type WebApplicationSchemaOptions = {
+  name: string;
+  description: string;
+  path: string;
+  applicationCategory?: string;
+};
+
 type ItemListSchemaOptions = {
   name: string;
   itemPaths: string[];
@@ -162,6 +169,28 @@ export function buildCollectionPageSchema({
       "@type": "WebPage",
       url: toAbsoluteUrl(itemPath),
     })),
+  };
+}
+
+export function buildWebApplicationSchema({
+  name,
+  description,
+  path,
+  applicationCategory = "DesignApplication",
+}: WebApplicationSchemaOptions) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name,
+    description,
+    url: toAbsoluteUrl(path),
+    applicationCategory,
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
   };
 }
 

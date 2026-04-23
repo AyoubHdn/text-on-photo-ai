@@ -22,7 +22,7 @@ import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackGA, trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
-import { buildCollectionPageSchema } from "~/lib/seo";
+import { buildWebApplicationSchema } from "~/lib/seo";
 import {
   buildCommunityAltFromStyle,
   buildCommunityTitleFromStyle,
@@ -790,10 +790,10 @@ const NameArtGeneratorPage: NextPage = () => {
         description="Free AI name art generator and name design maker. Create custom name designs in seconds — pick a style, generate, then turn it into a mug, poster, or shirt."
         path="/name-art-generator"
         jsonLd={[
-          buildCollectionPageSchema({
+          buildWebApplicationSchema({
             name: "Name Art Generator",
             description:
-              "Create custom name art online with interactive styles and personalized outputs for decor, gifts, and downloads.",
+              "Free AI name art generator and name design maker. Create custom name designs in multiple styles for decor, gifts, and downloads.",
             path: "/name-art-generator",
           }),
         ]}
