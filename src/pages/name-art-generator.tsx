@@ -1212,15 +1212,15 @@ const NameArtGeneratorPage: NextPage = () => {
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="font-semibold text-slate-900">More Products</h4>
-              <Link href="/products" className="text-sm font-medium text-brand-700 hover:underline">
-                View all →
+              <Link href="/name-art/products" className="text-sm font-medium text-brand-700 hover:underline">
+                View all name art products →
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {GENERATOR_PRODUCT_THUMBNAILS.default.filter((p) => p.key !== "mug").map((p) => (
                 <Link
                   key={p.key}
-                  href="/products"
+                  href="/name-art/products"
                   className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
                 >
                   <div className="aspect-video overflow-hidden">
