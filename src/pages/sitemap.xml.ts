@@ -31,7 +31,7 @@ const getPriority = (rawPage: string) => {
 
   const primaryLandingPages = new Set([
     "/name-art",
-    "/arabic-name-art",
+    "/arabic-calligraphy",
     "/couples-art",
     "/personalized-gifts",
     "/personalized-name-mugs",
@@ -41,11 +41,11 @@ const getPriority = (rawPage: string) => {
   ]);
 
   if (primaryLandingPages.has(page)) return "0.9";
-  if (/^\/(name-art|arabic-name-art|couples-art)\/products$/.test(page)) {
+  if (/^\/(name-art|arabic-calligraphy|couples-art)\/products$/.test(page)) {
     return "0.8";
   }
   if (
-    /^\/(name-art|arabic-name-art|couples-art)\/products\/(mugs|shirts|wall-art)$/.test(
+    /^\/(name-art|arabic-calligraphy|couples-art)\/products\/(mugs|shirts|wall-art)$/.test(
       page,
     )
   ) {
@@ -57,7 +57,7 @@ const getPriority = (rawPage: string) => {
     page === "/community" ||
     page === "/name-art/styles" ||
     page === "/couples-art/styles" ||
-    page === "/arabic-name-art/styles"
+    page === "/arabic-calligraphy/styles"
   ) {
     return "0.8";
   }
@@ -69,7 +69,7 @@ const getPriority = (rawPage: string) => {
     return "0.7";
   }
   // Arabic style detail pages attract calligraphy-tool searchers who don't convert — reduce priority
-  if (/^\/arabic-name-art\/styles\/[^/]+$/.test(page)) return "0.3";
+  if (/^\/arabic-calligraphy\/styles\/[^/]+$/.test(page)) return "0.3";
   if (page === "/blog") return "0.6";
   if (/^\/blog\/[^/]+$/.test(page)) return "0.5";
 
@@ -93,7 +93,8 @@ const isDynamicPage = (page: string) =>
   /^\/name-art\/[^/]+$/.test(page) ||
   /^\/name-art\/styles\/[^/]+$/.test(page) ||
   /^\/couples-art\/styles\/[^/]+$/.test(page) ||
-  /^\/arabic-name-art\/styles\/[^/]+$/.test(page);
+  /^\/arabic-calligraphy(\/|$)/.test(page) ||
+  page === "/arabic-calligraphy-generator";
 
 const getChangefreq = (page: string) => {
   if (page === "/") return "daily";
@@ -134,9 +135,9 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/name-art",
     "/name-art-generator",
     "/name-art/styles",
-    "/arabic-name-art",
-    "/arabic-name-art-generator",
-    "/arabic-name-art/styles",
+    "/arabic-calligraphy",
+    "/arabic-calligraphy-generator",
+    "/arabic-calligraphy/styles",
     "/couples-art",
     "/couples-name-art-generator",
     "/couples-art/styles",
@@ -157,7 +158,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const nameArtPages = SITEMAP_NAME_PAGES.map((item) => getNameArtPath(item.name));
   const nameArtStylePages = NAME_ART_STYLE_ITEMS.map((item) => `/name-art/styles/${item.slug}`);
   const couplesStylePages = COUPLES_STYLE_ITEMS.map((item) => `/couples-art/styles/${item.slug}`);
-  const arabicStylePages = ARABIC_STYLE_ITEMS.map((item) => `/arabic-name-art/styles/${item.slug}`);
+  const arabicStylePages = ARABIC_STYLE_ITEMS.map((item) => `/arabic-calligraphy/styles/${item.slug}`);
   const allPages = Array.from(new Set([
     ...staticPages,
     ...blogPages,
