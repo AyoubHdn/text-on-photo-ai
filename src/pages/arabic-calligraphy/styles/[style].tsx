@@ -21,8 +21,8 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
   imageSrc,
   imageAlt,
 }) => {
-  const pagePath = `/arabic-name-art/styles/${styleSlug}`;
-  const generatorHref = `/arabic-name-art-generator?style=${encodeURIComponent(
+  const pagePath = `/arabic-calligraphy/styles/${styleSlug}`;
+  const generatorHref = `/arabic-calligraphy-generator?style=${encodeURIComponent(
     styleSlug,
   )}&styleImage=${encodeURIComponent(imageSrc)}`;
 
@@ -37,15 +37,15 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
         jsonLd={[
           buildBreadcrumbSchema([
             { name: "Home", path: "/" },
-            { name: "Arabic Name Art", path: "/arabic-name-art" },
-            { name: "Styles", path: "/arabic-name-art/styles" },
+            { name: "Arabic Name Art", path: "/arabic-calligraphy" },
+            { name: "Styles", path: "/arabic-calligraphy/styles" },
             { name: title, path: pagePath },
           ]),
           buildCollectionPageSchema({
             name: `${title} Arabic style`,
             description,
             path: pagePath,
-            itemPaths: ["/arabic-name-art-generator", "/arabic-name-gifts"],
+            itemPaths: ["/arabic-calligraphy-generator", "/arabic-name-gifts"],
           }),
         ]}
       />
@@ -73,7 +73,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
                   See gift ideas
                 </Link>
                 <Link
-                  href="/arabic-name-art/styles"
+                  href="/arabic-calligraphy/styles"
                   className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-600 dark:border-slate-600 dark:text-slate-200"
                 >
                   Browse all styles

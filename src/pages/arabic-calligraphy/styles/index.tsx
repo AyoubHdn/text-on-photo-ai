@@ -8,7 +8,7 @@ import { ARABIC_STYLE_GROUPS } from "~/lib/styleTaxonomy";
 
 const ArabicStylesIndexPage: NextPage = () => {
   const itemPaths = ARABIC_STYLE_GROUPS.flatMap((group) =>
-    group.items.map((item) => `/arabic-name-art/styles/${item.slug}`),
+    group.items.map((item) => `/arabic-calligraphy/styles/${item.slug}`),
   );
 
   return (
@@ -16,12 +16,12 @@ const ArabicStylesIndexPage: NextPage = () => {
       <SeoHead
         title="Arabic Name Art Styles | Calligraphy and Decorative Directions"
         description="Browse Arabic name art styles including calligraphy-led, luxury, modern, and decorative visual directions."
-        path="/arabic-name-art/styles"
+        path="/arabic-calligraphy/styles"
         jsonLd={[
           buildCollectionPageSchema({
             name: "Arabic name art styles",
             description: "Browse Arabic name art styles and sub-styles.",
-            path: "/arabic-name-art/styles",
+            path: "/arabic-calligraphy/styles",
             itemPaths,
           }),
           buildItemListSchema({
@@ -60,7 +60,7 @@ const ArabicStylesIndexPage: NextPage = () => {
                   {group.items.map((item) => (
                     <Link
                       key={item.slug}
-                      href={`/arabic-name-art/styles/${item.slug}`}
+                      href={`/arabic-calligraphy/styles/${item.slug}`}
                       className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900"
                     >
                       <div className="relative aspect-[4/3] overflow-hidden">

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-// src/pages/arabic-name-art-generator.tsx
+// src/pages/arabic-calligraphy-generator.tsx
 
 import { type NextPage } from "next";
 import Image from "next/image";
@@ -229,7 +229,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     query: router.query as Record<string, unknown>,
   });
   const getSignInCallbackUrl = () => {
-    if (typeof window === "undefined") return "/arabic-name-art-generator";
+    if (typeof window === "undefined") return "/arabic-calligraphy-generator";
     return `${window.location.pathname}${window.location.search}${window.location.hash}`;
   };
   const saveAuthDraft = () => {
@@ -751,13 +751,13 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       <SeoHead
         title="Free Arabic Name Generator — Calligraphy & AI Name Design"
         description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles for gifts and decor."
-        path="/arabic-name-art-generator"
+        path="/arabic-calligraphy-generator"
         jsonLd={[
           buildWebApplicationSchema({
             name: "Arabic Name Art Generator",
             description:
               "Free Arabic name generator and calligraphy maker. Transliterate names from English to Arabic and render in traditional or modern calligraphy styles.",
-            path: "/arabic-name-art-generator",
+            path: "/arabic-calligraphy-generator",
           }),
           buildFAQSchema(arabicGeneratorFaqs),
         ]}
@@ -1091,13 +1091,13 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               <div className="mt-6">
                 <div className="mb-3 flex items-center justify-between">
                   <h4 className="font-semibold text-slate-900">More Products</h4>
-                  <Link href="/arabic-name-art/products" className="text-sm font-medium text-brand-700 hover:underline">View all Arabic name products →</Link>
+                  <Link href="/arabic-calligraphy/products" className="text-sm font-medium text-brand-700 hover:underline">View all Arabic name products →</Link>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {GENERATOR_PRODUCT_THUMBNAILS.arabic.filter((p) => p.key !== "mug").map((p) => (
                     <Link
                       key={p.key}
-                      href="/arabic-name-art/products"
+                      href="/arabic-calligraphy/products"
                       className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
                     >
                       <div className="aspect-video overflow-hidden">

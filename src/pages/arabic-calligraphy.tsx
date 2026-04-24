@@ -15,14 +15,14 @@ import { buildCollectionPageSchema, buildFAQSchema } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
 
 const galleryItems = [
-  { src: "/styles/arabic/thuluth-gold.webp", title: "Golden Thuluth", href: "/arabic-name-art/styles/golden-thuluth" },
-  { src: "/styles/arabic/wireframe.webp", title: "Wireframe", href: "/arabic-name-art/styles/wireframe" },
-  { src: "/styles/arabic/diwani-ink.webp", title: "Royal Diwani", href: "/arabic-name-art/styles/royal-diwani" },
-  { src: "/styles/arabic/gold-3d.webp", title: "3D Gold Luxury", href: "/arabic-name-art/styles/3d-gold-luxury" },
-  { src: "/styles/arabic/smoke-art.webp", title: "Mystical Smoke", href: "/arabic-name-art/styles/mystical-smoke" },
-  { src: "/styles/arabic/sand-desert.webp", title: "Desert Sand", href: "/arabic-name-art/styles/desert-sand" },
-  { src: "/styles/arabic/diamond.webp", title: "Diamond Encrusted", href: "/arabic-name-art/styles/diamond-encrusted" },
-  { src: "/styles/arabic/kufic-geo.webp", title: "Geometric Kufic", href: "/arabic-name-art/styles/geometric-kufic" },
+  { src: "/styles/arabic/thuluth-gold.webp", title: "Golden Thuluth", href: "/arabic-calligraphy/styles/golden-thuluth" },
+  { src: "/styles/arabic/wireframe.webp", title: "Wireframe", href: "/arabic-calligraphy/styles/wireframe" },
+  { src: "/styles/arabic/diwani-ink.webp", title: "Royal Diwani", href: "/arabic-calligraphy/styles/royal-diwani" },
+  { src: "/styles/arabic/gold-3d.webp", title: "3D Gold Luxury", href: "/arabic-calligraphy/styles/3d-gold-luxury" },
+  { src: "/styles/arabic/smoke-art.webp", title: "Mystical Smoke", href: "/arabic-calligraphy/styles/mystical-smoke" },
+  { src: "/styles/arabic/sand-desert.webp", title: "Desert Sand", href: "/arabic-calligraphy/styles/desert-sand" },
+  { src: "/styles/arabic/diamond.webp", title: "Diamond Encrusted", href: "/arabic-calligraphy/styles/diamond-encrusted" },
+  { src: "/styles/arabic/kufic-geo.webp", title: "Geometric Kufic", href: "/arabic-calligraphy/styles/geometric-kufic" },
 ];
 
 const arabicFaqs = [
@@ -65,7 +65,7 @@ const arabicFaqs = [
 
 const productLinks = [
   {
-    href: "/arabic-name-art/products",
+    href: "/arabic-calligraphy/products",
     title: "Arabic Name Art Products",
     description:
       "Compare Arabic calligraphy mugs, shirts, and wall art before choosing the final product format.",
@@ -77,7 +77,7 @@ const productLinks = [
       "Use Arabic calligraphy artwork as the starting point for gift-ready products and keepsakes.",
   },
   {
-    href: "/arabic-name-art/products/wall-art",
+    href: "/arabic-calligraphy/products/wall-art",
     title: "Arabic Name Art Wall Art",
     description:
       "Frame a calligraphy-inspired design as decor for homes, offices, celebrations, and memorial keepsakes.",
@@ -90,14 +90,14 @@ const ArabicArtLandingPage: NextPage = () => {
       <SeoHead
         title="Arabic Name Art for Gifts | Custom Calligraphy Designs | NameDesignAI"
         description="Create custom Arabic name art and calligraphy designs. Personalized styles for wall art, mugs, framed prints, and meaningful Islamic gifts."
-        path="/arabic-name-art"
+        path="/arabic-calligraphy"
         keywords="arabic name art, arabic name gift, personalized arabic name, custom arabic calligraphy, arabic calligraphy gift, arabic name wall art"
         jsonLd={[
           buildCollectionPageSchema({
             name: "Arabic Name Art",
             description:
               "Explore Arabic name art and calligraphy styles for gifts, wall decor, and personalized keepsakes.",
-            path: "/arabic-name-art",
+            path: "/arabic-calligraphy",
           }),
           buildFAQSchema(arabicFaqs),
         ]}
@@ -118,7 +118,7 @@ const ArabicArtLandingPage: NextPage = () => {
               Create custom Arabic name art and Arabic calligraphy in minutes
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Link href="/arabic-name-art-generator">
+              <Link href="/arabic-calligraphy-generator">
                 <button className="w-full rounded-xl bg-brand-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition hover:-translate-y-1 hover:bg-brand-700 hover:shadow-2xl sm:w-auto">
                   Create Arabic Art Now
                 </button>
@@ -226,13 +226,13 @@ const ArabicArtLandingPage: NextPage = () => {
             <div className="mt-12 text-center">
               <div className="mb-4">
                 <Link
-                  href="/arabic-name-art/styles"
+                  href="/arabic-calligraphy/styles"
                   className="inline-flex rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-600 dark:border-slate-600 dark:text-slate-200"
                 >
                   Browse all Arabic styles
                 </Link>
               </div>
-              <Link href="/arabic-name-art-generator">
+              <Link href="/arabic-calligraphy-generator">
                 <button className="inline-block rounded-full bg-brand-600 px-10 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-brand-700 hover:shadow-xl">
                   Try These Styles Now
                 </button>
@@ -335,7 +335,7 @@ const ArabicArtLandingPage: NextPage = () => {
             <p className="mx-auto mb-10 max-w-2xl text-xl text-brand-100">
               Join users creating Arabic name art for identity, decor, branding, and gifts.
             </p>
-            <Link href="/arabic-name-art-generator">
+            <Link href="/arabic-calligraphy-generator">
               <button className="transform rounded-full bg-white px-10 py-5 text-lg font-bold text-brand-800 shadow-2xl transition hover:-translate-y-1 hover:bg-brand-50">
                 Generate Arabic Art Now
               </button>
