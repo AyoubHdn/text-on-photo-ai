@@ -1,4 +1,4 @@
-export const ARABIC_GENERATOR_SOURCE_PAGE = "arabic-name-art-generator";
+export const ARABIC_GENERATOR_SOURCE_PAGE = "arabic-calligraphy-generator";
 export const ARABIC_GENERATOR_SOURCE_PAGES = [
   ARABIC_GENERATOR_SOURCE_PAGE,
   "arabic-name-mug-v1",

@@ -98,8 +98,8 @@ type GeneratorDraft = {
   createdAt: number;
 };
 
-const LAST_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
-const GENERATOR_DRAFT_STORAGE_KEY = "arabic-name-art:auth-draft:v1";
+const LAST_DESIGN_STORAGE_KEY = "arabic-calligraphy:last-design:v1";
+const GENERATOR_DRAFT_STORAGE_KEY = "arabic-calligraphy:auth-draft:v1";
 const DIGITAL_ART_INTENT_STORAGE_KEY = "digital-art-interest:intent";
 const GENERATOR_DRAFT_TTL_MS = 1000 * 60 * 60 * 24;
 
@@ -142,7 +142,7 @@ const arabicGeneratorFaqs = [
 ];
 
 const ArabicNameArtGeneratorPage: NextPage = () => {
-  const SOURCE_PAGE = "arabic-name-art-generator";
+  const SOURCE_PAGE = "arabic-calligraphy-generator";
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
@@ -627,7 +627,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           const blobUrl = window.URL.createObjectURL(pngBlob);
           const link = document.createElement("a");
           link.href = blobUrl;
-          link.download = "arabic-name-art.png";
+          link.download = "arabic-calligraphy.png";
           link.click();
           window.URL.revokeObjectURL(blobUrl);
         }

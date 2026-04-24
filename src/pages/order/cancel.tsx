@@ -11,7 +11,7 @@ const GENERATOR_HREFS: Record<string, string> = {
   "couple-avatar-name-mug-v1": "/couple-avatar-name-mug-v1",
   "couple-names-only-mug-v1": "/couple-names-only-mug-v1",
   arabic: "/arabic-calligraphy-generator",
-  "arabic-name-art-generator": "/arabic-calligraphy-generator",
+  "arabic-calligraphy-generator": "/arabic-calligraphy-generator",
   couples: "/couples-name-art-generator",
   "couples-art-generator": "/couples-name-art-generator",
   "couples-name-art-generator": "/couples-name-art-generator",

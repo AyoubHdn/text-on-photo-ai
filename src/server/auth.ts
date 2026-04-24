@@ -57,9 +57,9 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
 const DIGITAL_ART_INTEREST_PATH_MAP: Record<string, DigitalArtInterest> = {
   "/name-art": "name_art",
   "/name-art-generator": "name_art",
-  "/arabic-name-art": "arabic_name_art",
-  "/arabic-name-art-generator": "arabic_name_art",
-  "/ar/arabic-name-art": "arabic_name_art",
+  "/arabic-calligraphy": "arabic_name_art",
+  "/arabic-calligraphy-generator": "arabic_name_art",
+  "/ar/arabic-calligraphy": "arabic_name_art",
   "/couples-art": "couples_art",
   "/couples-name-art-generator": "couples_art",
 };

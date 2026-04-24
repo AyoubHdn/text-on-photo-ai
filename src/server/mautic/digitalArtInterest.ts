@@ -16,7 +16,7 @@ export const MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS =
 
 const DIGITAL_ART_INTEREST_BY_SOURCE_PAGE: Record<string, DigitalArtInterest> = {
   "name-art-generator": "name_art",
-  "arabic-name-art-generator": "arabic_name_art",
+  "arabic-calligraphy-generator": "arabic_name_art",
   "couples-art-generator": "couples_art",
 };
 

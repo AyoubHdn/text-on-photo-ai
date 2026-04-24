@@ -42,7 +42,7 @@ export const userRouter = createTRPCRouter({
       z.object({
         sourcePage: z.enum([
           "name-art-generator",
-          "arabic-name-art-generator",
+          "arabic-calligraphy-generator",
           "couples-art-generator",
         ]),
       }),

@@ -140,7 +140,7 @@ export function ProductPreviewModal({
     if (pathname.includes("ramadan-mug-v2")) return "ramadan-mug-v2";
     if (pathname.includes("ramadan-mug-men")) return "ramadan-mug-men";
     if (pathname.includes("ramadan-mug")) return "ramadan-mug";
-    if (pathname.includes("arabic-name-art-generator")) return "arabic-name-art-generator";
+    if (pathname.includes("arabic-calligraphy-generator")) return "arabic-calligraphy-generator";
     if (pathname.includes("couples-name-art-generator") || pathname.includes("couples-art-generator")) {
       return "couples-art-generator";
     }
@@ -2667,4 +2667,3 @@ export function ProductPreviewModal({
     </div>
   );
 }
-

@@ -19,7 +19,7 @@ import { SHIPPING_COUNTRY_OPTIONS } from "~/config/shippingCountries";
 import { PRODUCT_PRESENTATION, isMugProductKey } from "~/config/physicalProducts";
 
 const KNOWN_SOURCE_PAGES = new Set([
-  "arabic-name-art-generator",
+  "arabic-calligraphy-generator",
   "arabic-name-mug-v1",
   "couple-name-mug-v1",
   "couple-avatar-name-mug-v1",
@@ -258,7 +258,7 @@ function getCheckoutSourcePage(options?: {
   const generatorKey = window.localStorage.getItem("last-generator");
   const sourcePage =
     generatorKey === "arabic"
-    ? "arabic-name-art-generator"
+    ? "arabic-calligraphy-generator"
     : generatorKey === "arabic-name-mug-v1"
     ? "arabic-name-mug-v1"
     : generatorKey === "couple-name-mug-v1"

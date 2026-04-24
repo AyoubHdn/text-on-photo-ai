@@ -103,7 +103,7 @@ function inferFunnel(sourcePage: string, query: FunnelContextOptions["query"]): 
     }
     return "ramadan_mug_women";
   }
-  if (page.includes("arabic-name-art-generator")) return "arabic_generator";
+  if (page.includes("arabic-calligraphy-generator")) return "arabic_generator";
   if (page.includes("couples-name-art-generator") || page.includes("couples-art-generator")) {
     return "couples_generator";
   }

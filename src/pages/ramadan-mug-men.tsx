@@ -65,7 +65,7 @@ type SavedDesign = {
 };
 
 const LAST_DESIGN_STORAGE_KEY = "ramadan-mug-men:last-design:v1";
-const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-name-art:last-design:v1";
+const LEGACY_ARABIC_DESIGN_STORAGE_KEY = "arabic-calligraphy:last-design:v1";
 const PAID_TRAFFIC_USER_SESSION_KEY = "isPaidTrafficUser";
 
 const RamadanMugMenPage: NextPage = () => {

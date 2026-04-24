@@ -73,7 +73,7 @@ function isArabicSurveyEligible(params: {
 }) {
   return (
     params.context === "generate" &&
-    (params.sourcePage ?? "").trim().toLowerCase() === "arabic-name-art-generator"
+    (params.sourcePage ?? "").trim().toLowerCase() === "arabic-calligraphy-generator"
   );
 }
 

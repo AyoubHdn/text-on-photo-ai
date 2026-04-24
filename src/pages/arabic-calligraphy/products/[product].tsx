@@ -16,7 +16,7 @@ const ArabicNameArtProductPage: NextPage<ArabicNameArtProductPageProps> = ({
   productSlug,
 }) => (
   <StyleProductDetailPage
-    config={getStyleProductDetailConfig("arabic-name-art", productSlug)}
+    config={getStyleProductDetailConfig("arabic-calligraphy", productSlug)}
   />
 );
 

@@ -155,7 +155,7 @@ export default function OrderSuccess() {
       if (value === "ramadan-mug-men") return "/ramadan-mug-men";
       if (value === "ramadan-mug-v2") return "/ramadan-mug-v2";
       if (value === "ramadan-mug") return "/ramadan-mug";
-      if (value === "arabic-name-art-generator") return "/arabic-calligraphy-generator";
+      if (value === "arabic-calligraphy-generator") return "/arabic-calligraphy-generator";
       if (value === "arabic") return "/arabic-calligraphy-generator";
       if (value === "couples-art-generator") return "/couples-name-art-generator";
       if (value === "couples") return "/couples-name-art-generator";

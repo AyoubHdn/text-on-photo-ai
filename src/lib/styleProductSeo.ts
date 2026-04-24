@@ -1,6 +1,6 @@
 import type { BreadcrumbItem } from "~/lib/seo";
 
-export type StyleProductHubSlug = "name-art" | "arabic-name-art" | "couples-art";
+export type StyleProductHubSlug = "name-art" | "arabic-calligraphy" | "couples-art";
 export type StyleProductSlug = "mugs" | "shirts" | "wall-art";
 
 export type StyleProductLink = {
@@ -140,7 +140,7 @@ export const STYLE_PRODUCT_SLUGS: StyleProductSlug[] = [
 
 export const STYLE_PRODUCT_HUB_SLUGS: StyleProductHubSlug[] = [
   "name-art",
-  "arabic-name-art",
+  "arabic-calligraphy",
   "couples-art",
 ];
 
@@ -509,8 +509,8 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
       },
     },
   },
-  "arabic-name-art": {
-    slug: "arabic-name-art",
+  "arabic-calligraphy": {
+    slug: "arabic-calligraphy",
     label: "Arabic Name Art",
     baseHref: "/arabic-calligraphy",
     productsHref: "/arabic-calligraphy/products",
@@ -1152,7 +1152,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
 const getProductImage = (styleSlug: StyleProductHubSlug, productSlug: StyleProductSlug) => {
   const product = PRODUCT_CONFIGS[productSlug];
 
-  if (styleSlug === "arabic-name-art" && product.arabicImage) {
+  if (styleSlug === "arabic-calligraphy" && product.arabicImage) {
     return {
       imageSrc: product.arabicImage,
       imageAlt: product.arabicImageAlt ?? product.defaultImageAlt,
