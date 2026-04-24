@@ -33,14 +33,45 @@ const config = {
 
   async redirects() {
     return [
+      // Arabic section rename - 301 redirects
+      {
+        source: "/arabic-name-art",
+        destination: "/arabic-calligraphy",
+        permanent: true,
+      },
+      {
+        source: "/arabic-name-art-generator",
+        destination: "/arabic-calligraphy-generator",
+        permanent: true,
+      },
       {
         source: "/ar/arabic-name-art",
-        destination: "/arabic-name-art",
+        destination: "/arabic-calligraphy",
         permanent: true,
       },
       {
         source: "/ar/arabic-name-art-generator",
-        destination: "/arabic-name-art-generator",
+        destination: "/ar/arabic-calligraphy-generator",
+        permanent: true,
+      },
+      {
+        source: "/arabic-name-art/styles",
+        destination: "/arabic-calligraphy/styles",
+        permanent: true,
+      },
+      {
+        source: "/arabic-name-art/styles/:style",
+        destination: "/arabic-calligraphy/styles/:style",
+        permanent: true,
+      },
+      {
+        source: "/arabic-name-art/products",
+        destination: "/arabic-calligraphy/products",
+        permanent: true,
+      },
+      {
+        source: "/arabic-name-art/products/:product",
+        destination: "/arabic-calligraphy/products/:product",
         permanent: true,
       },
       {
