@@ -64,7 +64,7 @@ const PersonalizedNameMugsPage: NextPage = () => {
             "Use this when the mug should feature one name, initials, or a short word.",
         },
         {
-          href: "/arabic-name-art",
+          href: "/arabic-calligraphy",
           label: "Start with Arabic Name Art",
           description:
             "Use this when the mug should feature Arabic lettering or calligraphy-inspired styling.",
@@ -102,7 +102,7 @@ const PersonalizedNameMugsPage: NextPage = () => {
             "Use this when the search intent is specifically personalized name art on mugs.",
         },
         {
-          href: "/arabic-name-art/products/mugs",
+          href: "/arabic-calligraphy/products/mugs",
           label: "Arabic Name Art Mugs",
           description:
             "Use this for Arabic calligraphy-inspired mugs and Arabic-name product intent.",

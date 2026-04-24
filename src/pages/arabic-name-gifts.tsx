@@ -58,7 +58,7 @@ const ArabicNameGiftsPage: NextPage = () => {
       ]}
       generatorLinks={[
         {
-          href: "/arabic-name-art",
+          href: "/arabic-calligraphy",
           label: "Arabic Name Art",
           description:
             "The best starting point when Arabic calligraphy is the central visual requirement.",
@@ -96,19 +96,19 @@ const ArabicNameGiftsPage: NextPage = () => {
             "Useful when the buyer wants a gift that is both personal and practical.",
         },
         {
-          href: "/arabic-name-art/products",
+          href: "/arabic-calligraphy/products",
           label: "Arabic Name Art Products",
           description:
             "Compare Arabic calligraphy mugs, shirts, and wall art by product surface.",
         },
         {
-          href: "/arabic-name-art/products/wall-art",
+          href: "/arabic-calligraphy/products/wall-art",
           label: "Arabic Name Art Wall Art",
           description:
             "Best when the Arabic name design should become a decor-ready print.",
         },
         {
-          href: "/arabic-name-art/products/mugs",
+          href: "/arabic-calligraphy/products/mugs",
           label: "Arabic Name Art Mugs",
           description:
             "Best when the Arabic calligraphy gift should be practical and used daily.",

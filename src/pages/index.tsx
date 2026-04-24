@@ -74,7 +74,7 @@ const generatorCards: VisualCard[] = [
     secondaryLabel: "Browse all name art styles",
   },
   {
-    href: "/arabic-name-art",
+    href: "/arabic-calligraphy",
     title: "Arabic Name Art",
     description:
       "Create Arabic calligraphy-inspired artwork for identity-rich gifts, decor, and premium visuals.",
@@ -82,7 +82,7 @@ const generatorCards: VisualCard[] = [
     imageAlt: "Arabic calligraphy name art example in a black thuluth style",
     eyebrow: "Calligraphy styles",
     ctaLabel: "Browse Arabic styles",
-    secondaryHref: "/arabic-name-art/styles",
+    secondaryHref: "/arabic-calligraphy/styles",
     secondaryLabel: "Browse Arabic calligraphy styles",
   },
   {

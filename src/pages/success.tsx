@@ -16,7 +16,7 @@ function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>
 
 function mapSourceToGenerator(sourcePage: string): string {
   const p = sourcePage.toLowerCase();
-  if (p.includes("arabic")) return "/arabic-name-art-generator";
+  if (p.includes("arabic")) return "/arabic-calligraphy-generator";
   if (p.includes("couple")) return "/couples-name-art-generator";
   return "/name-art-generator";
 }

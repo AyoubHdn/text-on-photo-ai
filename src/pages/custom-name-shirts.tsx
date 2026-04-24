@@ -102,7 +102,7 @@ const CustomNameShirtsPage: NextPage = () => {
             "Use this when the shirt is specifically built from a personalized name art design.",
         },
         {
-          href: "/arabic-name-art/products/shirts",
+          href: "/arabic-calligraphy/products/shirts",
           label: "Arabic Name Art Shirts",
           description:
             "Use this for Arabic calligraphy shirts and wearable Arabic-name artwork.",

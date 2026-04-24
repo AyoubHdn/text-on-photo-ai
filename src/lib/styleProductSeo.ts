@@ -512,11 +512,11 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
   "arabic-name-art": {
     slug: "arabic-name-art",
     label: "Arabic Name Art",
-    baseHref: "/arabic-name-art",
-    productsHref: "/arabic-name-art/products",
-    generatorHref: "/arabic-name-art-generator",
+    baseHref: "/arabic-calligraphy",
+    productsHref: "/arabic-calligraphy/products",
+    generatorHref: "/arabic-calligraphy-generator",
     generatorLabel: "Create Arabic name art",
-    styleGalleryHref: "/arabic-name-art/styles",
+    styleGalleryHref: "/arabic-calligraphy/styles",
     styleGalleryLabel: "Browse Arabic styles",
     giftHubHref: "/arabic-name-gifts",
     giftHubLabel: "Arabic Name Gifts",
@@ -555,7 +555,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A premium calligraphy direction for display pieces, keepsakes, and refined gifts.",
         imageSrc: "/styles/arabic/thuluth-gold.webp",
         imageAlt: "Golden Thuluth Arabic calligraphy style example",
-        href: "/arabic-name-art/styles/golden-thuluth",
+        href: "/arabic-calligraphy/styles/golden-thuluth",
       },
       {
         title: "Royal Diwani",
@@ -563,7 +563,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A flowing calligraphy style that suits framed decor and meaningful gift pages.",
         imageSrc: "/styles/arabic/diwani-ink.webp",
         imageAlt: "Royal Diwani Arabic calligraphy style example",
-        href: "/arabic-name-art/styles/royal-diwani",
+        href: "/arabic-calligraphy/styles/royal-diwani",
       },
       {
         title: "Geometric Kufic",
@@ -571,7 +571,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A structured Arabic style that can work especially well for modern products.",
         imageSrc: "/styles/arabic/kufic-geo.webp",
         imageAlt: "Geometric Kufic Arabic style example",
-        href: "/arabic-name-art/styles/geometric-kufic",
+        href: "/arabic-calligraphy/styles/geometric-kufic",
       },
     ],
     hubFaqItems: [

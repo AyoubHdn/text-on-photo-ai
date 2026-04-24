@@ -64,7 +64,7 @@ const PersonalizedGiftsPage: NextPage = () => {
             "Best when the gift begins with one name, initials, or a custom phrase.",
         },
         {
-          href: "/arabic-name-art",
+          href: "/arabic-calligraphy",
           label: "Arabic Name Art",
           description:
             "Best for calligraphy-driven gifts, Arabic names, and culturally specific visual direction.",
@@ -114,7 +114,7 @@ const PersonalizedGiftsPage: NextPage = () => {
             "Style-specific product hub for personalized name art mugs, shirts, and wall art.",
         },
         {
-          href: "/arabic-name-art/products",
+          href: "/arabic-calligraphy/products",
           label: "Arabic Name Art Products",
           description:
             "Arabic calligraphy product hub for mugs, shirts, and decor-ready wall art.",

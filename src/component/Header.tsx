@@ -26,7 +26,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
 
     const productLinks = [
         { href: "/name-art", name: "Name Art" },
-        { href: "/arabic-name-art", name: "Arabic Name Art" },
+        { href: "/arabic-calligraphy", name: "Arabic Name Art" },
         { href: "/couples-art", name: "Couples Art" },
     ];
 

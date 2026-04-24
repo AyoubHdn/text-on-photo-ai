@@ -20,7 +20,7 @@ const NAME_DESIGN_TOOLS = [
     description: "Turn any name into beautiful personalized artwork.",
   },
   {
-    href: "/arabic-name-art",
+    href: "/arabic-calligraphy",
     title: "Arabic Name Art",
     description: "Create authentic Arabic calligraphy designs.",
   },

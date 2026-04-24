@@ -64,7 +64,7 @@ const PersonalizedNameWallArtPage: NextPage = () => {
             "Best for one-name decor, initials, and custom phrase artwork.",
         },
         {
-          href: "/arabic-name-art",
+          href: "/arabic-calligraphy",
           label: "Start with Arabic Name Art",
           description:
             "Best when calligraphy is the main design feature and the artwork should be displayed prominently.",
@@ -102,7 +102,7 @@ const PersonalizedNameWallArtPage: NextPage = () => {
             "Use this when the wall art is specifically built from personalized name art.",
         },
         {
-          href: "/arabic-name-art/products/wall-art",
+          href: "/arabic-calligraphy/products/wall-art",
           label: "Arabic Name Art Wall Art",
           description:
             "Use this for Arabic calligraphy prints and Arabic-name decor intent.",

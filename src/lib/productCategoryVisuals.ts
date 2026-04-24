@@ -146,7 +146,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "View wall art ideas",
   },
   arabicMug: {
-    href: "/arabic-name-art/products/mugs",
+    href: "/arabic-calligraphy/products/mugs",
     title: "Arabic mug mockups",
     description:
       "Check how Arabic calligraphy styling holds up on a compact mug layout.",
@@ -155,7 +155,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "See mug formats",
   },
   arabicShirt: {
-    href: "/arabic-name-art/products/shirts",
+    href: "/arabic-calligraphy/products/shirts",
     title: "Arabic shirt mockups",
     description:
       "Preview Arabic lettering on apparel before choosing a printable product route.",
@@ -164,7 +164,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "See shirt formats",
   },
   arabicWallArt: {
-    href: "/arabic-name-art/products/wall-art",
+    href: "/arabic-calligraphy/products/wall-art",
     title: "Arabic wall art prints",
     description:
       "Compare calligraphy-led decor layouts for home, office, and premium gift use cases.",

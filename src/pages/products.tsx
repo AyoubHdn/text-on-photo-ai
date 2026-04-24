@@ -227,7 +227,7 @@ const ProductsPage: NextPage = () => {
                       <Link href="/name-art-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">
                         + Name Art
                       </Link>
-                      <Link href="/arabic-name-art-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">
+                      <Link href="/arabic-calligraphy-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">
                         + Arabic Name Art
                       </Link>
                       <Link href="/couples-name-art-generator" className="rounded-lg border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-400 hover:bg-brand-50">

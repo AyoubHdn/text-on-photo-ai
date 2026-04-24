@@ -28,7 +28,7 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
 
   const createLinks = [
     { href: "/name-art-generator", name: "Name Art" },
-    { href: "/arabic-name-art-generator", name: "Arabic Name Art" },
+    { href: "/arabic-calligraphy-generator", name: "Arabic Name Art" },
     { href: "/couples-name-art-generator", name: "Couples Art" },
   ];
 
@@ -39,7 +39,7 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
     { href: "/personalized-name-mugs", name: "Name Mugs" },
     { href: "/custom-name-shirts", name: "Name Shirts" },
     { href: "/name-art/products", name: "Name Art Products" },
-    { href: "/arabic-name-art/products", name: "Arabic Products" },
+    { href: "/arabic-calligraphy/products", name: "Arabic Products" },
     { href: "/couples-art/products", name: "Couple Art Products" },
     { href: "/couple-gifts", name: "Couple Gifts" },
     { href: "/arabic-name-gifts", name: "Arabic Name Gifts" },
