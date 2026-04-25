@@ -85,6 +85,31 @@ const config = {
         permanent: true,
       },
       {
+        source: "/personalized-name-mugs",
+        destination: "/personalized-gifts",
+        permanent: true,
+      },
+      {
+        source: "/custom-name-shirts",
+        destination: "/personalized-gifts",
+        permanent: true,
+      },
+      {
+        source: "/personalized-name-wall-art",
+        destination: "/personalized-gifts",
+        permanent: true,
+      },
+      {
+        source: "/arabic-name-gifts",
+        destination: "/personalized-gifts",
+        permanent: true,
+      },
+      {
+        source: "/couple-gifts",
+        destination: "/personalized-gifts",
+        permanent: true,
+      },
+      {
         source: "/ramadan-mug",
         destination: "/ramadan-mug-v2",
         permanent: true,
