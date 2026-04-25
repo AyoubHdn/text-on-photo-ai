@@ -32,17 +32,18 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
     { href: "/couples-name-art-generator", name: "Couples Art" },
   ];
 
+  const styleLinks = [
+    { href: "/name-art/styles", name: "Name Art Styles" },
+    { href: "/arabic-calligraphy/styles", name: "Arabic Calligraphy Styles" },
+    { href: "/couples-art/styles", name: "Couple Art Styles" },
+  ];
+
   const giftLinks = [
     { href: "/products", name: "All Products" },
     { href: "/personalized-gifts", name: "Personalized Gifts" },
-    { href: "/personalized-gifts", name: "Name Wall Art" },
-    { href: "/personalized-gifts", name: "Name Mugs" },
-    { href: "/personalized-gifts", name: "Name Shirts" },
     { href: "/name-art/products", name: "Name Art Products" },
-    { href: "/arabic-calligraphy/products", name: "Arabic Products" },
+    { href: "/arabic-calligraphy/products", name: "Arabic Calligraphy Products" },
     { href: "/couples-art/products", name: "Couple Art Products" },
-    { href: "/personalized-gifts", name: "Couple Gifts" },
-    { href: "/personalized-gifts", name: "Arabic Name Gifts" },
   ];
 
   const socialLinks = [
@@ -113,6 +114,16 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
             <h3 className="mb-4 text-lg font-semibold">Create</h3>
             <ul className="flex flex-col gap-3">
               {createLinks.map((link) => (
+                <li key={link.href}>
+                  <PrimaryLink href={link.href} className="text-sm">
+                    {link.name}
+                  </PrimaryLink>
+                </li>
+              ))}
+            </ul>
+            <h3 className="mb-4 mt-6 text-lg font-semibold">Styles</h3>
+            <ul className="flex flex-col gap-3">
+              {styleLinks.map((link) => (
                 <li key={link.href}>
                   <PrimaryLink href={link.href} className="text-sm">
                     {link.name}
