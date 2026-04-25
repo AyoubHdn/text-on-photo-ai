@@ -33,7 +33,7 @@ const categoryCardLibrary: Record<string, VisualCategoryCard> = {
     imageAlt: "Personalized name art products arranged as gift-ready options",
   },
   nameMugs: {
-    href: "/personalized-gifts",
+    href: "/name-art/products/mugs",
     title: "Personalized Name Mugs",
     description:
       "Gift-ready mug designs that turn a name or phrase into a daily-use keepsake.",
@@ -41,7 +41,7 @@ const categoryCardLibrary: Record<string, VisualCategoryCard> = {
     imageAlt: "Personalized name mug mockup featuring custom artwork",
   },
   nameShirts: {
-    href: "/personalized-gifts",
+    href: "/name-art/products/shirts",
     title: "Custom Name Shirts",
     description:
       "Wearable name art for bold apparel, matching outfits, and playful gift ideas.",
@@ -49,7 +49,7 @@ const categoryCardLibrary: Record<string, VisualCategoryCard> = {
     imageAlt: "Custom name shirt mockup with bold graphic lettering",
   },
   nameWallArt: {
-    href: "/personalized-gifts",
+    href: "/name-art/products/wall-art",
     title: "Personalized Name Wall Art",
     description:
       "Display-focused posters and framed print ideas built from personalized artwork.",
@@ -57,7 +57,7 @@ const categoryCardLibrary: Record<string, VisualCategoryCard> = {
     imageAlt: "Personalized name wall art poster mockup for home decor",
   },
   arabicGifts: {
-    href: "/personalized-gifts",
+    href: "/arabic-calligraphy/products",
     title: "Arabic Name Gifts",
     description:
       "Arabic calligraphy-inspired gift ideas for mugs, prints, and premium keepsakes.",
@@ -65,7 +65,7 @@ const categoryCardLibrary: Record<string, VisualCategoryCard> = {
     imageAlt: "Arabic name art poster mockup for personalized gifts",
   },
   coupleGifts: {
-    href: "/personalized-gifts",
+    href: "/couples-art/products",
     title: "Couple Gifts",
     description:
       "Romantic keepsakes and shared decor ideas built from relationship-first artwork.",
@@ -127,7 +127,7 @@ const nameArtExampleLibrary: Record<string, NameArtExample> = {
 
 const productMockupLibrary: Record<string, ProductMockup> = {
   mug: {
-    href: "/personalized-gifts",
+    href: "/name-art/products/mugs",
     title: "Mug mockups",
     description:
       "Preview how a personalized name design reads on a giftable daily-use mug.",
@@ -136,7 +136,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "Explore mug ideas",
   },
   shirt: {
-    href: "/personalized-gifts",
+    href: "/name-art/products/shirts",
     title: "Shirt mockups",
     description:
       "See how bold lettering and clean layouts translate into wearable custom apparel.",
@@ -145,7 +145,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "Browse shirt ideas",
   },
   wallArt: {
-    href: "/personalized-gifts",
+    href: "/name-art/products/wall-art",
     title: "Wall art prints",
     description:
       "Use larger-format mockups to compare decor-ready posters and framed print concepts.",

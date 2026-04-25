@@ -11,12 +11,12 @@ const PersonalizedGiftsPage: NextPage = () => {
   return (
     <ProductCategoryPage
       title="Personalized Gifts | Name Design AI"
-      description="Explore personalized gifts built from custom name art, Arabic calligraphy, and couple designs. Find a clear path into mugs, shirts, wall art, and occasion-ready keepsakes."
+      description="Explore personalized gifts from name art: mugs, shirts, wall art, Arabic calligraphy gifts, and couples keepsakes with clear product paths."
       path="/personalized-gifts"
       h1="Personalized gifts made from identity-driven artwork"
       eyebrow="Gift Hub"
       intro="NameDesignAI starts with a name, phrase, or relationship and turns that identity cue into artwork that can be adapted for gifts. This page is the safest public entry point for visitors who already know they want a personalized gift, but have not decided on the exact product format."
-      secondaryIntro="Use the pages below to narrow by product type, recipient, or visual style. The goal is to keep the creative workflow centered on the person or relationship first, then choose the mug, shirt, wall art, or gift format that best fits the occasion."
+      secondaryIntro="Use the pages below to narrow by product type, audience, or visual style. The goal is to keep the creative workflow centered on the person, Arabic name, or couple first, then choose the mug, shirt, wall art, or gift format that best fits the occasion."
       highlights={[
         {
           title: "Identity-first creation",
@@ -78,61 +78,67 @@ const PersonalizedGiftsPage: NextPage = () => {
       ]}
       relatedLinks={[
         {
-          href: "/personalized-gifts",
-          label: "Personalized Name Mugs",
+          href: "/name-art/products/mugs",
+          label: "Name Art Mugs",
           description:
-            "Daily-use gift format with room for playful, sentimental, or celebratory artwork.",
+            "Daily-use mug gifts built from personalized name art and readable artwork.",
         },
         {
-          href: "/personalized-gifts",
-          label: "Custom Name Shirts",
+          href: "/name-art/products/shirts",
+          label: "Name Art Shirts",
           description:
-            "Apparel-focused page for wearable name art and stronger graphic styles.",
+            "Wearable name art for bolder typography, nicknames, and event-ready gifts.",
         },
         {
-          href: "/personalized-gifts",
-          label: "Personalized Name Wall Art",
+          href: "/name-art/products/wall-art",
+          label: "Name Art Wall Art",
           description:
-            "Decor-first route for framed prints, posters, and display-ready artwork.",
+            "Decor-ready prints and posters made from personalized name designs.",
         },
         {
-          href: "/personalized-gifts",
-          label: "Arabic Name Gifts",
+          href: "/arabic-calligraphy/products/mugs",
+          label: "Arabic Name Art Mugs",
           description:
-            "Gift page built around Arabic calligraphy and Arabic name design.",
+            "Practical mug gifts using Arabic calligraphy-inspired name artwork.",
         },
         {
-          href: "/personalized-gifts",
-          label: "Couple Gifts",
+          href: "/arabic-calligraphy/products/shirts",
+          label: "Arabic Name Art Shirts",
           description:
-            "Relationship-focused gift page for anniversaries, weddings, and romantic keepsakes.",
+            "Wearable Arabic lettering and calligraphy-led custom apparel.",
         },
         {
-          href: "/name-art/products",
-          label: "Name Art Products",
+          href: "/arabic-calligraphy/products/wall-art",
+          label: "Arabic Name Art Wall Art",
           description:
-            "Style-specific product hub for personalized name art mugs, shirts, and wall art.",
+            "Framed prints and posters for Arabic name art, decor, and keepsakes.",
         },
         {
-          href: "/arabic-calligraphy/products",
-          label: "Arabic Name Art Products",
+          href: "/couples-art/products/mugs",
+          label: "Couples Art Mugs",
           description:
-            "Arabic calligraphy product hub for mugs, shirts, and decor-ready wall art.",
+            "Romantic daily-use mugs made from two-name couple artwork.",
         },
         {
-          href: "/couples-art/products",
-          label: "Couples Art Products",
+          href: "/couples-art/products/shirts",
+          label: "Couples Art Shirts",
           description:
-            "Couple-focused product hub for romantic mugs, shirts, and wall art keepsakes.",
+            "Matching and romantic apparel for couples, anniversaries, and events.",
+        },
+        {
+          href: "/couples-art/products/wall-art",
+          label: "Couples Art Wall Art",
+          description:
+            "Shared-home decor, anniversary prints, and wedding keepsakes from couple art.",
         },
       ]}
       categoryCardsHeading="Browse personalized gift categories"
       categoryCards={getCategoryCards([
-        "/personalized-gifts",
-        "/personalized-gifts",
-        "/personalized-gifts",
-        "/personalized-gifts",
-        "/personalized-gifts",
+        "nameMugs",
+        "nameShirts",
+        "nameWallArt",
+        "arabicGifts",
+        "coupleGifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "emma",
