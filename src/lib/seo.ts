@@ -37,6 +37,15 @@ type ItemListSchemaOptions = {
   itemPaths: string[];
 };
 
+type ProductSchemaOptions = {
+  name: string;
+  description?: string;
+  path: string;
+  imagePath: string;
+  price?: string;
+  priceCurrency?: string;
+};
+
 export function toAbsoluteUrl(path: string) {
   if (!path) return SITE_URL;
   if (/^https?:\/\//i.test(path)) return path;
@@ -208,4 +217,37 @@ export function buildItemListSchema({
       url: toAbsoluteUrl(itemPath),
     })),
   };
+}
+
+export function buildProductSchema({
+  name,
+  description,
+  path,
+  imagePath,
+  price,
+  priceCurrency = "USD",
+}: ProductSchemaOptions) {
+  const productSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name,
+    image: toAbsoluteUrl(imagePath),
+    url: toAbsoluteUrl(path),
+  };
+
+  if (description) {
+    productSchema.description = description;
+  }
+
+  if (price) {
+    productSchema.offers = {
+      "@type": "Offer",
+      price,
+      priceCurrency,
+      availability: "https://schema.org/InStock",
+      url: toAbsoluteUrl(path),
+    };
+  }
+
+  return productSchema;
 }

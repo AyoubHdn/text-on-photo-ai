@@ -1,5 +1,6 @@
 import type { GetStaticPaths, GetStaticProps, NextPage } from "next";
 
+import { getProductPageContent } from "~/data/productPageContent";
 import { StyleProductDetailPage } from "~/component/StyleProductSeoPage";
 import {
   getStyleProductDetailConfig,
@@ -17,6 +18,7 @@ const ArabicNameArtProductPage: NextPage<ArabicNameArtProductPageProps> = ({
 }) => (
   <StyleProductDetailPage
     config={getStyleProductDetailConfig("arabic-calligraphy", productSlug)}
+    content={getProductPageContent("arabic-calligraphy", productSlug)}
   />
 );
 

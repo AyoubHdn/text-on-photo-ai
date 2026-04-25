@@ -1,5 +1,6 @@
 import type { GetStaticPaths, GetStaticProps, NextPage } from "next";
 
+import { getProductPageContent } from "~/data/productPageContent";
 import { StyleProductDetailPage } from "~/component/StyleProductSeoPage";
 import {
   getStyleProductDetailConfig,
@@ -17,6 +18,7 @@ const NameArtProductPage: NextPage<NameArtProductPageProps> = ({
 }) => (
   <StyleProductDetailPage
     config={getStyleProductDetailConfig("name-art", productSlug)}
+    content={getProductPageContent("name-art", productSlug)}
   />
 );
 

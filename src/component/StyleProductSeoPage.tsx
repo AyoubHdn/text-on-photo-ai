@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import type { ProductPageContent } from "~/data/productPageContent";
 import { SeoHead } from "~/component/SeoHead";
 import {
   buildBreadcrumbSchema,
   buildCollectionPageSchema,
   buildFAQSchema,
   buildItemListSchema,
+  buildProductSchema,
   type BreadcrumbItem,
 } from "~/lib/seo";
 import type {
@@ -265,7 +267,18 @@ export function StyleProductHubPage({ config }: { config: StyleProductHubConfig 
         </section>
 
         <section className="container mx-auto max-w-6xl px-4 py-14">
-          <ContentCards items={config.highlights} eyebrow="Strategy" />
+          <div className="max-w-3xl">
+            <h2 className="text-3xl font-bold text-slate-900">
+              What these product pages help you compare
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">
+              These highlights explain why this niche hub exists before visitors
+              drill into mugs, shirts, or wall art.
+            </p>
+          </div>
+          <div className="mt-10">
+            <ContentCards items={config.highlights} eyebrow="Strategy" />
+          </div>
         </section>
 
         <section className="bg-cream-50 px-4 py-16">
@@ -325,9 +338,14 @@ export function StyleProductHubPage({ config }: { config: StyleProductHubConfig 
 
 export function StyleProductDetailPage({
   config,
+  content = {},
 }: {
   config: StyleProductDetailConfig;
+  content?: ProductPageContent;
 }) {
+  const faqItems = content.faqs ?? config.faqItems;
+  const hasFaqItems = faqItems.length > 0;
+  const primaryLabel = content.ctaPrimary?.trim() || config.generatorLabel;
   const itemPaths = [
     config.hubHref,
     config.broadProductHref,
@@ -335,6 +353,36 @@ export function StyleProductDetailPage({
     ...config.crossStyleLinks.map((link) => link.href),
     ...config.inspiration.map((item) => item.href),
   ];
+  const jsonLd: Array<Record<string, unknown>> = [
+    buildBreadcrumbSchema(config.breadcrumbs),
+    buildCollectionPageSchema({
+      name: config.h1,
+      description: config.description,
+      path: config.path,
+      itemPaths,
+    }),
+    buildItemListSchema({
+      name: `${config.h1} related product pages`,
+      itemPaths,
+    }),
+  ];
+
+  if (hasFaqItems) {
+    jsonLd.push(buildFAQSchema(faqItems));
+  }
+
+  if (content.productSchemaName) {
+    jsonLd.push(
+      buildProductSchema({
+        name: content.productSchemaName,
+        description: content.productSchemaDescription ?? config.description,
+        path: config.path,
+        imagePath: config.heroImage,
+        price: content.priceFrom,
+        priceCurrency: content.priceCurrency,
+      }),
+    );
+  }
 
   return (
     <>
@@ -344,20 +392,7 @@ export function StyleProductDetailPage({
         path={config.path}
         image={config.heroImage}
         imageAlt={config.heroImageAlt}
-        jsonLd={[
-          buildBreadcrumbSchema(config.breadcrumbs),
-          buildCollectionPageSchema({
-            name: config.h1,
-            description: config.description,
-            path: config.path,
-            itemPaths,
-          }),
-          buildItemListSchema({
-            name: `${config.h1} related product pages`,
-            itemPaths,
-          }),
-          buildFAQSchema(config.faqItems),
-        ]}
+        jsonLd={jsonLd}
       />
 
       <main className="bg-white">
@@ -379,7 +414,7 @@ export function StyleProductDetailPage({
               </p>
               <PrimaryActions
                 primaryHref={config.generatorHref}
-                primaryLabel={config.generatorLabel}
+                primaryLabel={primaryLabel}
                 secondaryHref={config.hubHref}
                 secondaryLabel={`Browse ${config.hubLabel}`}
               />
@@ -397,8 +432,32 @@ export function StyleProductDetailPage({
           </div>
         </section>
 
+        {content.introBody ? (
+          <section className="container mx-auto max-w-6xl px-4 py-14">
+            <div className="max-w-3xl">
+              <h2 className="text-3xl font-bold text-slate-900">
+                {content.introHeading ?? "Why this page exists"}
+              </h2>
+              <p className="mt-4 text-lg leading-8 text-slate-600">
+                {content.introBody}
+              </p>
+            </div>
+          </section>
+        ) : null}
+
         <section className="container mx-auto max-w-6xl px-4 py-14">
-          <ContentCards items={config.highlights} eyebrow="Why it works" />
+          <div className="max-w-3xl">
+            <h2 className="text-3xl font-bold text-slate-900">
+              What you can create on this product
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">
+              These highlights frame the strongest reasons to use this surface
+              before you compare design notes and gift-fit examples.
+            </p>
+          </div>
+          <div className="mt-10">
+            <ContentCards items={config.highlights} eyebrow="Why it works" />
+          </div>
         </section>
 
         <section className="bg-cream-50 px-4 py-16">
@@ -494,7 +553,7 @@ export function StyleProductDetailPage({
           </div>
         </section>
 
-        <FAQSection items={config.faqItems} />
+        {hasFaqItems ? <FAQSection items={faqItems} /> : null}
       </main>
     </>
   );
