@@ -17,15 +17,15 @@ export const popularNames = [
         Classic: ["s169e.webp", "s38e.webp", "s163e.webp"],
         Vintage: ["s171e.webp", "s170e.webp", "s173e.webp"]
       },
-      otherStyles: ["Gaming", "Seasonal", "Fantasy", "Gifts"]
+      otherStyles: ["Gaming", "Seasonal", "Fantasy", "Birthday"]
     },
     {
       name: "Amelia",
-      niches: ["Festive", "Celebrations", "Gifts"],
+      niches: ["Festive", "Celebrations", "Birthday"],
       images: {
         Festive: ["s31e.webp", "s33e.webp", "s69e.webp"],
         Celebrations: ["s120e.webp", "s126e.webp", "s43e.webp"],
-        Gifts: ["s3e.webp", "s68e.webp", "s86e.webp"]
+        Birthday: ["s40e.webp", "s91e.webp", "s100e.webp"]
       },
       otherStyles: ["Anime", "Logos", "Graffiti", "Abstract"]
     },
@@ -47,7 +47,7 @@ export const popularNames = [
         Landscapes: ["s257e.webp", "s251e.webp", "s253e.webp"],
         Seasonal: ["s105e.webp", "s191e.webp", "s193e.webp"]
       },
-      otherStyles: ["Logos", "Gaming", "Abstract", "Christian", "Gifts", "Hobbies"]
+      otherStyles: ["Logos", "Gaming", "Abstract", "Christian", "Birthday", "Hobbies"]
     },
     {
       name: "Sophia",
@@ -57,7 +57,7 @@ export const popularNames = [
         Anime: ["s226e.webp", "s222e.webp", "s76e.webp"],
         "Movies & TV Shows": ["s84e.webp", "s236e.webp", "s231e.webp"]
       },
-      otherStyles: ["Gifts", "Christian", "Hobbies", "Typography", "3D"]
+      otherStyles: ["Birthday", "Christian", "Hobbies", "Typography", "3D"]
     },
     {
       name: "Isabella",
@@ -67,7 +67,7 @@ export const popularNames = [
         "3D": ["s129e.webp", "s63e.webp", "s44e.webp"],
         Typography: ["s13e.webp", "s15e.webp", "s103e.webp"]
       },
-      otherStyles: ["Gifts", "Buddhist", "Seasonal", "Floral"]
+      otherStyles: ["Birthday", "Buddhist", "Seasonal", "Floral"]
     },
     {
       name: "Evelyn",
@@ -86,7 +86,7 @@ export const popularNames = [
         Graffiti: ["s117e.webp", "s93e.webp", "s107e.webp"],
         Logos: ["s269e.webp", "s273e.webp", "s264e.webp"]
       },
-      otherStyles: ["Vintage", "Movies & TV Shows", "Anime", "Gifts", "Fantasy", "Seasonal"]
+      otherStyles: ["Vintage", "Movies & TV Shows", "Anime", "Birthday", "Fantasy", "Seasonal"]
     },
     {
       name: "Sofia",
@@ -95,7 +95,7 @@ export const popularNames = [
         Christian: ["s281e.webp", "s275e.webp", "s282e.webp"],
         Graffiti: ["s117e.webp", "s93e.webp", "s25e.webp"]
       },
-      otherStyles: ["Gifts", "Illustration", "Animals", "Anime", "Buddhist"]
+      otherStyles: ["Birthday", "Illustration", "Animals", "Anime", "Buddhist"]
     },
     {
       name: "Camila",
@@ -115,7 +115,7 @@ export const popularNames = [
         Logos: ["s267e.webp", "s266e.webp", "s268e.webp"],
         Floral: ["s24e.webp", "s53e.webp", "s114e.webp"]
       },
-      otherStyles: ["Seasonal", "Buddhist", "Gifts", "Hobbies"]
+      otherStyles: ["Seasonal", "Buddhist", "Birthday", "Hobbies"]
     },
     {
       name: "Luna",
@@ -147,7 +147,7 @@ export const popularNames = [
         Food: ["s208e.webp", "s212e.webp", "s217e.webp"],
         Floral: ["s127e.webp", "s116e.webp", "s2e.webp"]
       },
-      otherStyles: ["Classic", "Gaming", "Typography", "Illustration", "Gifts"]
+      otherStyles: ["Classic", "Gaming", "Typography", "Illustration", "Birthday"]
     },
     {
       name: "Aurora",
@@ -247,7 +247,7 @@ export const popularNames = [
         "3D": ["s63e.webp", "s50e.webp", "s129e.webp"],
         Logos: ["s273e.webp", "s272e.webp", "s263e.webp"]
       },
-      otherStyles: ["Festive", "Illustration", "Graffiti", "Gifts", "Hobbies"]
+      otherStyles: ["Festive", "Illustration", "Graffiti", "Birthday", "Hobbies"]
     },
     {
       name: "Aria",
@@ -300,7 +300,7 @@ export const popularNames = [
         Animals: ["s245e.webp", "s261e.webp", "s61e.webp"],
         Fantasy: ["s96e.webp", "s123e.webp", "s60e.webp"]
       },
-      otherStyles: ["Landscapes", "Seasonal", "Gifts", "Food", "Abstract"]
+      otherStyles: ["Landscapes", "Seasonal", "Birthday", "Food", "Abstract"]
     },
     {
       name: "Avery",
@@ -372,10 +372,10 @@ export const popularNames = [
     },
     {
       name: "Lainey",
-      niches: ["Celebrations", "Gifts", "Classic", "Gaming"],
+      niches: ["Celebrations", "Birthday", "Classic", "Gaming"],
       images: {
         Celebrations: ["s43e.webp", "s94e.webp", "s91e.webp"],
-        Gifts: ["s83e.webp", "s68e.webp", "s36e.webp"],
+        Birthday: ["s77e.webp", "s91e.webp", "s43e.webp"],
         Classic: ["s162e.webp", "s167e.webp", "s89e.webp"],
         Gaming: ["s156e.webp", "s147e.webp", "s145e.webp"]
       },
@@ -383,9 +383,9 @@ export const popularNames = [
     },
     {
       name: "Nova",
-      niches: ["Gifts", "Movies & TV Shows"],
+      niches: ["Birthday", "Movies & TV Shows"],
       images: {
-        Gifts: ["s3e.webp", "s66e.webp", "s86e.webp"],
+        Birthday: ["s40e.webp", "s94e.webp", "s100e.webp"],
         "Movies & TV Shows": ["s235e.webp", "s237e.webp", "s236e.webp"]
       },
       otherStyles: ["Vintage", "Cute", "Gaming", "Celebrations"]
@@ -407,7 +407,7 @@ export const popularNames = [
         Floral: ["s2e.webp", "s108e.webp", "s24e.webp"],
         Anime: ["s226e.webp", "s222e.webp", "s225e.webp"]
       },
-      otherStyles: ["3D", "Gifts", "Seasonal", "Celebrations", "Gaming", "Illustration"]
+      otherStyles: ["3D", "Birthday", "Seasonal", "Celebrations", "Gaming", "Illustration"]
     },
     {
       name: "Riley",
@@ -488,7 +488,7 @@ export const popularNames = [
         Graffiti: ["s107e.webp", "s39e.webp", "s93e.webp"],
         Cute: ["s73e.webp", "s55e.webp", "s51e.webp"]
       },
-      otherStyles: ["Seasonal", "Animals", "Logos", "Gifts", "Illustration", "Fantasy"]
+      otherStyles: ["Seasonal", "Animals", "Logos", "Birthday", "Illustration", "Fantasy"]
     },
     {
       name: "Delilah",
@@ -543,12 +543,12 @@ export const popularNames = [
     },
     {
       name: "Genesis",
-      niches: ["Buddhist", "Festive", "Seasonal", "Gifts"],
+      niches: ["Buddhist", "Festive", "Seasonal", "Birthday"],
       images: {
         Buddhist: ["s299e.webp", "s296e.webp", "s300e.webp"],
         Festive: ["s65e.webp", "s31e.webp", "s88e.webp"],
         Seasonal: ["s194e.webp", "s195e.webp", "s197e.webp"],
-        Gifts: ["s66e.webp", "s3e.webp", "s86e.webp"]
+        Birthday: ["s94e.webp", "s40e.webp", "s100e.webp"]
       },
       otherStyles: ["Cute", "Landscapes", "Islamic"]
     },
@@ -571,7 +571,7 @@ export const popularNames = [
         Animals: ["s17e.webp", "s245e.webp", "s261e.webp"],
         Anime: ["s26e.webp", "s224e.webp", "s227e.webp"]
       },
-      otherStyles: ["Gifts", "Vintage", "Seasonal", "Typography", "Islamic", "Classic"]
+      otherStyles: ["Birthday", "Vintage", "Seasonal", "Typography", "Islamic", "Classic"]
     },
     {
       name: "Adeline",
@@ -666,7 +666,7 @@ export const popularNames = [
         Islamic: ["s286e.webp", "s291e.webp", "s284e.webp"],
         "Movies & TV Shows": ["s233e.webp", "s236e.webp", "s235e.webp"]
       },
-      otherStyles: ["Typography", "Anime", "Festive", "Graffiti", "Landscapes", "Gifts"]
+      otherStyles: ["Typography", "Anime", "Festive", "Graffiti", "Landscapes", "Birthday"]
     },
     {
       name: "Claire",
@@ -677,7 +677,7 @@ export const popularNames = [
         Anime: ["s225e.webp", "s12e.webp", "s219e.webp"],
         Celebrations: ["s126e.webp", "s43e.webp", "s120e.webp"]
       },
-      otherStyles: ["Vintage", "Fantasy", "Floral", "Gifts", "Food", "Graffiti"]
+      otherStyles: ["Vintage", "Fantasy", "Floral", "Birthday", "Food", "Graffiti"]
     },
     {
       name: "Addison",
@@ -687,7 +687,7 @@ export const popularNames = [
         Food: ["s99e.webp", "s1e.webp", "s209e.webp"],
         Vintage: ["s259e.webp", "s170e.webp", "s174e.webp"]
       },
-      otherStyles: ["Celebrations", "Cute", "Gifts", "Islamic", "Abstract"]
+      otherStyles: ["Celebrations", "Cute", "Birthday", "Islamic", "Abstract"]
     },
     {
       name: "Ayla",
@@ -696,7 +696,7 @@ export const popularNames = [
         Celebrations: ["s43e.webp", "s120e.webp", "s40e.webp"],
         Fantasy: ["s72e.webp", "s60e.webp", "s123e.webp"]
       },
-      otherStyles: ["Christian", "Gifts", "Islamic", "Vintage"]
+      otherStyles: ["Christian", "Birthday", "Islamic", "Vintage"]
     },
     {
       name: "Emery",
@@ -740,11 +740,11 @@ export const popularNames = [
     },
     {
       name: "Maria",
-      niches: ["Food", "Floral", "Gifts", "Landscapes"],
+      niches: ["Food", "Floral", "Birthday", "Landscapes"],
       images: {
         Food: ["s99e.webp", "s1e.webp", "s209e.webp"],
         Floral: ["s114e.webp", "s5e.webp", "s2e.webp"],
-        Gifts: ["s83e.webp", "s36e.webp", "s3e.webp"],
+        Birthday: ["s77e.webp", "s43e.webp", "s40e.webp"],
         Landscapes: ["s252e.webp", "s257e.webp", "s28e.webp"]
       },
       otherStyles: ["Hobbies", "Festive", "3D"]
@@ -762,11 +762,11 @@ export const popularNames = [
     },
     {
       name: "Daisy",
-      niches: ["3D", "Floral", "Gifts"],
+      niches: ["3D", "Floral", "Birthday"],
       images: {
         "3D": ["s44e.webp", "s49e.webp", "s52e.webp"],
         Floral: ["s24e.webp", "s114e.webp", "s116e.webp"],
-        Gifts: ["s86e.webp", "s68e.webp", "s36e.webp"]
+        Birthday: ["s100e.webp", "s91e.webp", "s43e.webp"]
       },
       otherStyles: ["Illustration", "Buddhist", "Vintage", "Classic", "Typography", "Islamic"]
     },
@@ -783,11 +783,11 @@ export const popularNames = [
     },
     {
       name: "Clara",
-      niches: ["Seasonal", "Classic", "Gifts", "Anime"],
+      niches: ["Seasonal", "Classic", "Birthday", "Anime"],
       images: {
         Seasonal: ["s188e.webp", "s71e.webp", "s194e.webp"],
         Classic: ["s167e.webp", "s160e.webp", "s124e.webp"],
-        Gifts: ["s66e.webp", "s36e.webp", "s86e.webp"],
+        Birthday: ["s94e.webp", "s43e.webp", "s100e.webp"],
         Anime: ["s26e.webp", "s224e.webp", "s76e.webp"]
       },
       otherStyles: ["Illustration", "Graffiti", "Animals", "Vintage"]
@@ -840,9 +840,9 @@ export const popularNames = [
     },
     {
       name: "Jade",
-      niches: ["Gifts", "Abstract", "Gaming", "Food"],
+      niches: ["Birthday", "Abstract", "Gaming", "Food"],
       images: {
-        Gifts: ["s66e.webp", "s83e.webp", "s68e.webp"],
+        Birthday: ["s94e.webp", "s77e.webp", "s91e.webp"],
         Abstract: ["s183e.webp", "s178e.webp", "s181e.webp"],
         Gaming: ["s6e.webp", "s18e.webp", "s158e.webp"],
         Food: ["s210e.webp", "s97e.webp", "s215e.webp"]
@@ -867,7 +867,7 @@ export const popularNames = [
         Buddhist: ["s300e.webp", "s294e.webp", "s298e.webp"],
         Fantasy: ["s96e.webp", "s260e.webp", "s123e.webp"]
       },
-      otherStyles: ["Seasonal", "Gifts", "3D", "Christian"]
+      otherStyles: ["Seasonal", "Birthday", "3D", "Christian"]
     },
     {
       name: "Madeline",
@@ -934,7 +934,7 @@ export const popularNames = [
         Animals: ["s54e.webp", "s17e.webp", "s23e.webp"],
         Islamic: ["s285e.webp", "s284e.webp", "s290e.webp"]
       },
-      otherStyles: ["Gifts", "Logos", "Celebrations", "3D", "Christian"]
+      otherStyles: ["Birthday", "Logos", "Celebrations", "3D", "Christian"]
     },
     {
       name: "Anna",
@@ -1036,7 +1036,7 @@ export const popularNames = [
         Classic: ["s165e.webp", "s169e.webp", "s160e.webp"],
         Fantasy: ["s96e.webp", "s60e.webp", "s82e.webp"]
       },
-      otherStyles: ["Illustration", "Hobbies", "Gifts", "3D"]
+      otherStyles: ["Illustration", "Hobbies", "Birthday", "3D"]
     },
     {
       name: "Parker",
@@ -1066,15 +1066,15 @@ export const popularNames = [
         Cute: ["s77e.webp", "s87e.webp", "s57e.webp"],
         Gaming: ["s148e.webp", "s138e.webp", "s147e.webp"]
       },
-      otherStyles: ["Christian", "Seasonal", "Gifts", "Fantasy", "Food", "Abstract"]
+      otherStyles: ["Christian", "Seasonal", "Birthday", "Fantasy", "Food", "Abstract"]
     },
     {
       name: "Savannah",
-      niches: ["Logos", "Food", "Gifts"],
+      niches: ["Logos", "Food", "Birthday"],
       images: {
         Logos: ["s268e.webp", "s270e.webp", "s267e.webp"],
         Food: ["s213e.webp", "s210e.webp", "s1e.webp"],
-        Gifts: ["s36e.webp", "s68e.webp", "s66e.webp"]
+        Birthday: ["s43e.webp", "s91e.webp", "s94e.webp"]
       },
       otherStyles: ["Cute", "Christian", "Islamic"]
     },
@@ -1087,7 +1087,7 @@ export const popularNames = [
         Logos: ["s268e.webp", "s267e.webp", "s273e.webp"],
         Islamic: ["s285e.webp", "s290e.webp", "s288e.webp"]
       },
-      otherStyles: ["Fantasy", "Gifts", "Festive", "Vintage", "Christian", "Abstract"]
+      otherStyles: ["Fantasy", "Birthday", "Festive", "Vintage", "Christian", "Abstract"]
     },
     {
       name: "Bella",
@@ -1097,7 +1097,7 @@ export const popularNames = [
         Islamic: ["s286e.webp", "s292e.webp", "s288e.webp"],
         Seasonal: ["s189e.webp", "s105e.webp", "s71e.webp"]
       },
-      otherStyles: ["Celebrations", "Gifts", "Christian", "Vintage", "3D", "Festive"]
+      otherStyles: ["Celebrations", "Birthday", "Christian", "Vintage", "3D", "Festive"]
     },
     {
       name: "Georgia",
@@ -1122,11 +1122,11 @@ export const popularNames = [
     },
     {
       name: "Alaia",
-      niches: ["Abstract", "Fantasy", "Gifts", "Graffiti"],
+      niches: ["Abstract", "Fantasy", "Birthday", "Graffiti"],
       images: {
         Abstract: ["s184e.webp", "s186e.webp", "s187e.webp"],
         Fantasy: ["s82e.webp", "s96e.webp", "s60e.webp"],
-        Gifts: ["s68e.webp", "s86e.webp", "s36e.webp"],
+        Birthday: ["s91e.webp", "s100e.webp", "s43e.webp"],
         Graffiti: ["s93e.webp", "s118e.webp", "s107e.webp"]
       },
       otherStyles: ["Seasonal", "Festive", "Gaming", "Food"]
@@ -1157,14 +1157,14 @@ export const popularNames = [
         Floral: ["s108e.webp", "s127e.webp", "s9e.webp"],
         Anime: ["s224e.webp", "s220e.webp", "s226e.webp"]
       },
-      otherStyles: ["Seasonal", "Gifts", "Typography", "Logos", "Cute"]
+      otherStyles: ["Seasonal", "Birthday", "Typography", "Logos", "Cute"]
     },
     {
       name: "Julia",
-      niches: ["Abstract", "Gifts", "Seasonal", "Christian"],
+      niches: ["Abstract", "Birthday", "Seasonal", "Christian"],
       images: {
         Abstract: ["s179e.webp", "s187e.webp", "s119e.webp"],
-        Gifts: ["s36e.webp", "s66e.webp", "s68e.webp"],
+        Birthday: ["s43e.webp", "s94e.webp", "s91e.webp"],
         Seasonal: ["s71e.webp", "s195e.webp", "s189e.webp"],
         Christian: ["s275e.webp", "s278e.webp", "s274e.webp"]
       },
@@ -1192,19 +1192,19 @@ export const popularNames = [
     },
     {
       name: "Margaret",
-      niches: ["Hobbies", "Gaming", "Gifts"],
+      niches: ["Hobbies", "Gaming", "Birthday"],
       images: {
         Hobbies: ["s198e.webp", "s206e.webp", "s200e.webp"],
         Gaming: ["s132e.webp", "s158e.webp", "s138e.webp"],
-        Gifts: ["s86e.webp", "s83e.webp", "s3e.webp"]
+        Birthday: ["s100e.webp", "s77e.webp", "s40e.webp"]
       },
       otherStyles: ["Illustration", "Buddhist", "Logos", "Fantasy", "Cute", "Celebrations"]
     },
     {
       name: "Eva",
-      niches: ["Gifts", "Hobbies"],
+      niches: ["Birthday", "Hobbies"],
       images: {
-        Gifts: ["s66e.webp", "s86e.webp", "s36e.webp"],
+        Birthday: ["s94e.webp", "s100e.webp", "s43e.webp"],
         Hobbies: ["s198e.webp", "s21e.webp", "s200e.webp"]
       },
       otherStyles: ["Graffiti", "Typography", "Logos", "Illustration", "Gaming"]
@@ -1216,7 +1216,7 @@ export const popularNames = [
         Food: ["s210e.webp", "s45e.webp", "s1e.webp"],
         "3D": ["s129e.webp", "s50e.webp", "s27e.webp"]
       },
-      otherStyles: ["Gifts", "Graffiti", "Logos", "Festive"]
+      otherStyles: ["Birthday", "Graffiti", "Logos", "Festive"]
     },
     {
       name: "Melanie",
@@ -1226,25 +1226,25 @@ export const popularNames = [
         Buddhist: ["s298e.webp", "s299e.webp", "s300e.webp"],
         Floral: ["s5e.webp", "s24e.webp", "s116e.webp"]
       },
-      otherStyles: ["Hobbies", "Christian", "Vintage", "Animals", "Gifts", "Gaming"]
+      otherStyles: ["Hobbies", "Christian", "Vintage", "Animals", "Birthday", "Gaming"]
     },
     {
       name: "Cecilia",
-      niches: ["Gaming", "Islamic", "Logos", "Gifts"],
+      niches: ["Gaming", "Islamic", "Logos", "Birthday"],
       images: {
         Gaming: ["s153e.webp", "s141e.webp", "s150e.webp"],
         Islamic: ["s289e.webp", "s291e.webp", "s286e.webp"],
         Logos: ["s265e.webp", "s271e.webp", "s272e.webp"],
-        Gifts: ["s83e.webp", "s66e.webp", "s68e.webp"]
+        Birthday: ["s77e.webp", "s94e.webp", "s91e.webp"]
       },
       otherStyles: ["Landscapes", "Typography", "Food", "Anime", "Animals"]
     },
     {
       name: "Ashley",
-      niches: ["Floral", "Gifts", "Vintage"],
+      niches: ["Floral", "Birthday", "Vintage"],
       images: {
         Floral: ["s116e.webp", "s114e.webp", "s24e.webp"],
-        Gifts: ["s83e.webp", "s3e.webp", "s36e.webp"],
+        Birthday: ["s77e.webp", "s40e.webp", "s43e.webp"],
         Vintage: ["s170e.webp", "s177e.webp", "s172e.webp"]
       },
       otherStyles: ["Logos", "Graffiti", "Landscapes"]
@@ -1257,7 +1257,7 @@ export const popularNames = [
         Anime: ["s223e.webp", "s26e.webp", "s226e.webp"],
         Logos: ["s265e.webp", "s273e.webp", "s267e.webp"]
       },
-      otherStyles: ["3D", "Abstract", "Food", "Animals", "Gifts", "Fantasy"]
+      otherStyles: ["3D", "Abstract", "Food", "Animals", "Birthday", "Fantasy"]
     },
     {
       name: "Margot",
@@ -1268,7 +1268,7 @@ export const popularNames = [
         Fantasy: ["s96e.webp", "s125e.webp", "s123e.webp"],
         Illustration: ["s102e.webp", "s79e.webp", "s35e.webp"]
       },
-      otherStyles: ["Cute", "Buddhist", "Anime", "Gifts"]
+      otherStyles: ["Cute", "Buddhist", "Anime", "Birthday"]
     },
     {
       name: "Samantha",
@@ -1353,7 +1353,7 @@ export const popularNames = [
         Celebrations: ["s91e.webp", "s78e.webp", "s43e.webp"],
         Hobbies: ["s201e.webp", "s205e.webp", "s30e.webp"]
       },
-      otherStyles: ["Buddhist", "Landscapes", "Gaming", "Gifts"]
+      otherStyles: ["Buddhist", "Landscapes", "Gaming", "Birthday"]
     },
     {
       name: "Alina",
@@ -1461,7 +1461,7 @@ export const popularNames = [
         Fantasy: ["s82e.webp", "s67e.webp", "s46e.webp"],
         Classic: ["s160e.webp", "s89e.webp", "s38e.webp"]
       },
-      otherStyles: ["Islamic", "Illustration", "Logos", "Gifts"]
+      otherStyles: ["Islamic", "Illustration", "Logos", "Birthday"]
     },
     {
       name: "Sage",
@@ -1513,9 +1513,9 @@ export const popularNames = [
     },
     {
       name: "Emerson",
-      niches: ["Gifts", "Abstract", "3D", "Floral"],
+      niches: ["Birthday", "Abstract", "3D", "Floral"],
       images: {
-        Gifts: ["s68e.webp", "s36e.webp", "s3e.webp"],
+        Birthday: ["s91e.webp", "s43e.webp", "s40e.webp"],
         Abstract: ["s119e.webp", "s178e.webp", "s184e.webp"],
         "3D": ["s262e.webp", "s50e.webp", "s130e.webp"],
         Floral: ["s53e.webp", "s108e.webp", "s116e.webp"]
@@ -1524,9 +1524,9 @@ export const popularNames = [
     },
     {
       name: "June",
-      niches: ["Gifts", "Movies & TV Shows", "Classic", "Festive"],
+      niches: ["Birthday", "Movies & TV Shows", "Classic", "Festive"],
       images: {
-        Gifts: ["s68e.webp", "s3e.webp", "s86e.webp"],
+        Birthday: ["s91e.webp", "s40e.webp", "s100e.webp"],
         "Movies & TV Shows": ["s235e.webp", "s231e.webp", "s228e.webp"],
         Classic: ["s167e.webp", "s89e.webp", "s168e.webp"],
         Festive: ["s88e.webp", "s33e.webp", "s65e.webp"]
@@ -1540,7 +1540,7 @@ export const popularNames = [
         Animals: ["s242e.webp", "s244e.webp", "s56e.webp"],
         Floral: ["s24e.webp", "s131e.webp", "s5e.webp"]
       },
-      otherStyles: ["Logos", "Gifts", "Graffiti", "Cute", "Anime"]
+      otherStyles: ["Logos", "Birthday", "Graffiti", "Cute", "Anime"]
     },
     {
       name: "Emersyn",
@@ -1611,9 +1611,9 @@ export const popularNames = [
     },
     {
       name: "Valeria",
-      niches: ["Gifts", "Animals", "Anime", "Celebrations"],
+      niches: ["Birthday", "Animals", "Anime", "Celebrations"],
       images: {
-        Gifts: ["s66e.webp", "s36e.webp", "s3e.webp"],
+        Birthday: ["s94e.webp", "s43e.webp", "s40e.webp"],
         Animals: ["s106e.webp", "s121e.webp", "s244e.webp"],
         Anime: ["s218e.webp", "s76e.webp", "s225e.webp"],
         Celebrations: ["s78e.webp", "s120e.webp", "s43e.webp"]
@@ -1638,7 +1638,7 @@ export const popularNames = [
         Islamic: ["s293e.webp", "s292e.webp", "s291e.webp"],
         Floral: ["s5e.webp", "s127e.webp", "s53e.webp"]
       },
-      otherStyles: ["Illustration", "Gifts", "Movies & TV Shows", "Graffiti", "Festive"]
+      otherStyles: ["Illustration", "Birthday", "Movies & TV Shows", "Graffiti", "Festive"]
     },
     {
       name: "Everleigh",
@@ -1709,7 +1709,7 @@ export const popularNames = [
         Animals: ["s56e.webp", "s245e.webp", "s241e.webp"],
         Celebrations: ["s91e.webp", "s126e.webp", "s43e.webp"]
       },
-      otherStyles: ["Landscapes", "Typography", "Movies & TV Shows", "Gaming", "Gifts"]
+      otherStyles: ["Landscapes", "Typography", "Movies & TV Shows", "Gaming", "Birthday"]
     },
     {
       name: "Olive",
@@ -1724,10 +1724,10 @@ export const popularNames = [
     },
     {
       name: "Ruth",
-      niches: ["Festive", "Gifts", "Islamic", "Hobbies"],
+      niches: ["Festive", "Birthday", "Islamic", "Hobbies"],
       images: {
         Festive: ["s69e.webp", "s31e.webp", "s8e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s66e.webp"],
+        Birthday: ["s100e.webp", "s43e.webp", "s94e.webp"],
         Islamic: ["s288e.webp", "s286e.webp", "s285e.webp"],
         Hobbies: ["s202e.webp", "s201e.webp", "s199e.webp"]
       },
@@ -1775,11 +1775,11 @@ export const popularNames = [
     },
     {
       name: "Rosalie",
-      niches: ["Typography", "Anime", "Gifts"],
+      niches: ["Typography", "Anime", "Birthday"],
       images: {
         Typography: ["s111e.webp", "s13e.webp", "s122e.webp"],
         Anime: ["s227e.webp", "s221e.webp", "s12e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s68e.webp"]
+        Birthday: ["s100e.webp", "s43e.webp", "s91e.webp"]
       },
       otherStyles: ["Islamic", "Fantasy", "Festive"]
     },
@@ -1800,7 +1800,7 @@ export const popularNames = [
         "3D": ["s63e.webp", "s27e.webp", "s50e.webp"],
         Logos: ["s270e.webp", "s266e.webp", "s264e.webp"]
       },
-      otherStyles: ["Vintage", "Gifts", "Graffiti", "Christian", "Buddhist"]
+      otherStyles: ["Vintage", "Birthday", "Graffiti", "Christian", "Buddhist"]
     },
     {
       name: "Kaia",
@@ -1830,15 +1830,15 @@ export const popularNames = [
         "3D": ["s49e.webp", "s129e.webp", "s130e.webp"],
         Food: ["s1e.webp", "s210e.webp", "s213e.webp"]
       },
-      otherStyles: ["Buddhist", "Gifts", "Landscapes", "Typography"]
+      otherStyles: ["Buddhist", "Birthday", "Landscapes", "Typography"]
     },
     {
       name: "Phoebe",
-      niches: ["Graffiti", "Hobbies", "Gifts"],
+      niches: ["Graffiti", "Hobbies", "Birthday"],
       images: {
         Graffiti: ["s107e.webp", "s117e.webp", "s118e.webp"],
         Hobbies: ["s201e.webp", "s199e.webp", "s205e.webp"],
-        Gifts: ["s36e.webp", "s68e.webp", "s86e.webp"]
+        Birthday: ["s43e.webp", "s91e.webp", "s100e.webp"]
       },
       otherStyles: ["Islamic", "Movies & TV Shows", "3D", "Seasonal", "Abstract", "Floral"]
     },
@@ -1863,10 +1863,10 @@ export const popularNames = [
     },
     {
       name: "Myla",
-      niches: ["Food", "Gifts", "Landscapes"],
+      niches: ["Food", "Birthday", "Landscapes"],
       images: {
         Food: ["s210e.webp", "s211e.webp", "s212e.webp"],
-        Gifts: ["s68e.webp", "s83e.webp", "s3e.webp"],
+        Birthday: ["s91e.webp", "s77e.webp", "s40e.webp"],
         Landscapes: ["s251e.webp", "s252e.webp", "s253e.webp"]
       },
       otherStyles: ["Anime", "Hobbies", "Illustration", "Buddhist"]
@@ -1910,7 +1910,7 @@ export const popularNames = [
         Hobbies: ["s20e.webp", "s204e.webp", "s205e.webp"],
         Anime: ["s76e.webp", "s219e.webp", "s12e.webp"]
       },
-      otherStyles: ["Gifts", "Food", "Floral", "Typography", "Christian", "Classic"]
+      otherStyles: ["Birthday", "Food", "Floral", "Typography", "Christian", "Classic"]
     },
     {
       name: "Annie",
@@ -1932,7 +1932,7 @@ export const popularNames = [
         Logos: ["s273e.webp", "s272e.webp", "s269e.webp"],
         "3D": ["s63e.webp", "s27e.webp", "s44e.webp"]
       },
-      otherStyles: ["Buddhist", "Gaming", "Illustration", "Gifts", "Festive", "Graffiti"]
+      otherStyles: ["Buddhist", "Gaming", "Illustration", "Birthday", "Festive", "Graffiti"]
     },
     {
       name: "Ada",
@@ -2008,10 +2008,10 @@ export const popularNames = [
     },
     {
       name: "Mackenzie",
-      niches: ["Fantasy", "Gifts"],
+      niches: ["Fantasy", "Birthday"],
       images: {
         Fantasy: ["s96e.webp", "s72e.webp", "s60e.webp"],
-        Gifts: ["s36e.webp", "s83e.webp", "s66e.webp"]
+        Birthday: ["s43e.webp", "s77e.webp", "s94e.webp"]
       },
       otherStyles: ["Cute", "Illustration", "Movies & TV Shows", "3D", "Gaming"]
     },
@@ -2097,10 +2097,10 @@ export const popularNames = [
     },
     {
       name: "Stevie",
-      niches: ["Fantasy", "Gifts", "Festive", "Gaming"],
+      niches: ["Fantasy", "Birthday", "Festive", "Gaming"],
       images: {
         Fantasy: ["s125e.webp", "s96e.webp", "s46e.webp"],
-        Gifts: ["s36e.webp", "s86e.webp", "s66e.webp"],
+        Birthday: ["s43e.webp", "s100e.webp", "s94e.webp"],
         Festive: ["s8e.webp", "s65e.webp", "s69e.webp"],
         Gaming: ["s153e.webp", "s6e.webp", "s133e.webp"]
       },
@@ -2124,7 +2124,7 @@ export const popularNames = [
         Graffiti: ["s93e.webp", "s118e.webp", "s39e.webp"],
         "Movies & TV Shows": ["s233e.webp", "s228e.webp", "s234e.webp"]
       },
-      otherStyles: ["Christian", "Gifts", "Hobbies", "Islamic"]
+      otherStyles: ["Christian", "Birthday", "Hobbies", "Islamic"]
     },
     {
       name: "Alaina",
@@ -2133,7 +2133,7 @@ export const popularNames = [
         Christian: ["s281e.webp", "s277e.webp", "s282e.webp"],
         Logos: ["s264e.webp", "s271e.webp", "s270e.webp"]
       },
-      otherStyles: ["Gaming", "Gifts", "Seasonal"]
+      otherStyles: ["Gaming", "Birthday", "Seasonal"]
     },
     {
       name: "Wren",
@@ -2204,9 +2204,9 @@ export const popularNames = [
     },
     {
       name: "Kaylee",
-      niches: ["Gifts", "Logos"],
+      niches: ["Birthday", "Logos"],
       images: {
-        Gifts: ["s66e.webp", "s86e.webp", "s83e.webp"],
+        Birthday: ["s94e.webp", "s100e.webp", "s77e.webp"],
         Logos: ["s266e.webp", "s267e.webp", "s268e.webp"]
       },
       otherStyles: ["Hobbies", "Typography", "Graffiti"]
@@ -2233,12 +2233,12 @@ export const popularNames = [
     },
     {
       name: "Norah",
-      niches: ["Logos", "Vintage", "Fantasy", "Gifts"],
+      niches: ["Logos", "Vintage", "Fantasy", "Birthday"],
       images: {
         Logos: ["s267e.webp", "s270e.webp", "s269e.webp"],
         Vintage: ["s166e.webp", "s171e.webp", "s85e.webp"],
         Fantasy: ["s260e.webp", "s125e.webp", "s72e.webp"],
-        Gifts: ["s68e.webp", "s83e.webp", "s66e.webp"]
+        Birthday: ["s91e.webp", "s77e.webp", "s94e.webp"]
       },
       otherStyles: ["Food", "Anime", "3D"]
     },
@@ -2258,7 +2258,7 @@ export const popularNames = [
         Hobbies: ["s20e.webp", "s206e.webp", "s204e.webp"],
         Cute: ["s80e.webp", "s4e.webp", "s57e.webp"]
       },
-      otherStyles: ["Islamic", "Gifts", "Fantasy", "Typography"]
+      otherStyles: ["Islamic", "Birthday", "Fantasy", "Typography"]
     },
     {
       name: "Vera",
@@ -2278,7 +2278,7 @@ export const popularNames = [
         Gaming: ["s10e.webp", "s14e.webp", "s6e.webp"],
         Typography: ["s15e.webp", "s62e.webp", "s113e.webp"]
       },
-      otherStyles: ["Seasonal", "Animals", "Gifts", "Islamic", "Abstract"]
+      otherStyles: ["Seasonal", "Animals", "Birthday", "Islamic", "Abstract"]
     },
     {
       name: "Amy",
@@ -2288,7 +2288,7 @@ export const popularNames = [
         Illustration: ["s37e.webp", "s102e.webp", "s35e.webp"],
         Cute: ["s104e.webp", "s22e.webp", "s16e.webp"]
       },
-      otherStyles: ["Animals", "3D", "Typography", "Gifts"]
+      otherStyles: ["Animals", "3D", "Typography", "Birthday"]
     },
     {
       name: "Brynlee",
@@ -2312,9 +2312,9 @@ export const popularNames = [
     },
     {
       name: "Saylor",
-      niches: ["Gifts", "Christian"],
+      niches: ["Birthday", "Christian"],
       images: {
-        Gifts: ["s86e.webp", "s3e.webp", "s83e.webp"],
+        Birthday: ["s100e.webp", "s40e.webp", "s77e.webp"],
         Christian: ["s282e.webp", "s277e.webp", "s279e.webp"]
       },
       otherStyles: ["Islamic", "3D", "Cute"]
@@ -2391,7 +2391,7 @@ export const popularNames = [
         Buddhist: ["s298e.webp", "s295e.webp", "s302e.webp"],
         Festive: ["s8e.webp", "s65e.webp", "s33e.webp"]
       },
-      otherStyles: ["Gifts", "Landscapes", "Anime", "Movies & TV Shows", "3D"]
+      otherStyles: ["Birthday", "Landscapes", "Anime", "Movies & TV Shows", "3D"]
     },
     {
       name: "Camille",
@@ -2402,14 +2402,14 @@ export const popularNames = [
         Logos: ["s269e.webp", "s263e.webp", "s265e.webp"],
         Classic: ["s169e.webp", "s168e.webp", "s160e.webp"]
       },
-      otherStyles: ["Gifts", "Abstract", "Festive"]
+      otherStyles: ["Birthday", "Abstract", "Festive"]
     },
     {
       name: "Dahlia",
-      niches: ["Graffiti", "Gifts", "Floral", "Animals"],
+      niches: ["Graffiti", "Birthday", "Floral", "Animals"],
       images: {
         Graffiti: ["s93e.webp", "s118e.webp", "s107e.webp"],
-        Gifts: ["s83e.webp", "s86e.webp", "s3e.webp"],
+        Birthday: ["s77e.webp", "s100e.webp", "s40e.webp"],
         Floral: ["s2e.webp", "s24e.webp", "s116e.webp"],
         Animals: ["s245e.webp", "s121e.webp", "s110e.webp"]
       },
@@ -2428,9 +2428,9 @@ export const popularNames = [
     },
     {
       name: "Mariana",
-      niches: ["Gifts", "3D", "Graffiti"],
+      niches: ["Birthday", "3D", "Graffiti"],
       images: {
-        Gifts: ["s86e.webp", "s83e.webp", "s68e.webp"],
+        Birthday: ["s100e.webp", "s77e.webp", "s91e.webp"],
         "3D": ["s262e.webp", "s50e.webp", "s63e.webp"],
         Graffiti: ["s117e.webp", "s39e.webp", "s93e.webp"]
       },
@@ -2465,14 +2465,14 @@ export const popularNames = [
         Classic: ["s160e.webp", "s165e.webp", "s38e.webp"],
         Floral: ["s5e.webp", "s2e.webp", "s114e.webp"]
       },
-      otherStyles: ["Gifts", "Landscapes", "Typography", "Animals", "Movies & TV Shows"]
+      otherStyles: ["Birthday", "Landscapes", "Typography", "Animals", "Movies & TV Shows"]
     },
     {
       name: "Kimberly",
-      niches: ["Illustration", "Gifts", "Cute", "Christian"],
+      niches: ["Illustration", "Birthday", "Cute", "Christian"],
       images: {
         Illustration: ["s35e.webp", "s90e.webp", "s79e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s68e.webp"],
+        Birthday: ["s100e.webp", "s43e.webp", "s91e.webp"],
         Cute: ["s34e.webp", "s100e.webp", "s92e.webp"],
         Christian: ["s275e.webp", "s280e.webp", "s281e.webp"]
       },
@@ -2536,7 +2536,7 @@ export const popularNames = [
         Floral: ["s5e.webp", "s9e.webp", "s24e.webp"],
         Typography: ["s64e.webp", "s41e.webp", "s122e.webp"]
       },
-      otherStyles: ["Gifts", "Animals", "Festive", "Seasonal"]
+      otherStyles: ["Birthday", "Animals", "Festive", "Seasonal"]
     },
     {
       name: "Noa",
@@ -2566,7 +2566,7 @@ export const popularNames = [
         Logos: ["s271e.webp", "s268e.webp", "s269e.webp"],
         Illustration: ["s35e.webp", "s102e.webp", "s90e.webp"]
       },
-      otherStyles: ["Anime", "Gifts", "Landscapes"]
+      otherStyles: ["Anime", "Birthday", "Landscapes"]
     },
     {
       name: "Lilith",
@@ -2619,25 +2619,25 @@ export const popularNames = [
         Islamic: ["s287e.webp", "s285e.webp", "s290e.webp"],
         Floral: ["s24e.webp", "s5e.webp", "s108e.webp"]
       },
-      otherStyles: ["Seasonal", "Gifts", "Christian", "Classic", "Celebrations"]
+      otherStyles: ["Seasonal", "Birthday", "Christian", "Classic", "Celebrations"]
     },
     {
       name: "Ophelia",
-      niches: ["Buddhist", "Typography", "Festive", "Gifts"],
+      niches: ["Buddhist", "Typography", "Festive", "Birthday"],
       images: {
         Buddhist: ["s296e.webp", "s303e.webp", "s294e.webp"],
         Typography: ["s13e.webp", "s41e.webp", "s111e.webp"],
         Festive: ["s32e.webp", "s65e.webp", "s8e.webp"],
-        Gifts: ["s36e.webp", "s3e.webp", "s83e.webp"]
+        Birthday: ["s43e.webp", "s40e.webp", "s77e.webp"]
       },
       otherStyles: ["Anime", "Christian", "3D", "Vintage", "Gaming"]
     },
     {
       name: "Elianna",
-      niches: ["Movies & TV Shows", "Gifts"],
+      niches: ["Movies & TV Shows", "Birthday"],
       images: {
         "Movies & TV Shows": ["s229e.webp", "s237e.webp", "s47e.webp"],
-        Gifts: ["s83e.webp", "s86e.webp", "s36e.webp"]
+        Birthday: ["s77e.webp", "s100e.webp", "s43e.webp"]
       },
       otherStyles: ["Gaming", "Food", "Cute", "3D"]
     },
@@ -2734,10 +2734,10 @@ export const popularNames = [
     },
     {
       name: "Dakota",
-      niches: ["Fantasy", "Gifts"],
+      niches: ["Fantasy", "Birthday"],
       images: {
         Fantasy: ["s72e.webp", "s125e.webp", "s82e.webp"],
-        Gifts: ["s68e.webp", "s3e.webp", "s86e.webp"]
+        Birthday: ["s91e.webp", "s40e.webp", "s100e.webp"]
       },
       otherStyles: ["3D", "Animals", "Vintage", "Classic", "Illustration"]
     },
@@ -2763,10 +2763,10 @@ export const popularNames = [
     },
     {
       name: "Kailani",
-      niches: ["Islamic", "Gifts", "Logos"],
+      niches: ["Islamic", "Birthday", "Logos"],
       images: {
         Islamic: ["s286e.webp", "s285e.webp", "s291e.webp"],
-        Gifts: ["s86e.webp", "s3e.webp", "s83e.webp"],
+        Birthday: ["s100e.webp", "s40e.webp", "s77e.webp"],
         Logos: ["s266e.webp", "s272e.webp", "s263e.webp"]
       },
       otherStyles: ["Christian", "Movies & TV Shows", "Typography", "Vintage"]
@@ -2873,20 +2873,20 @@ export const popularNames = [
     },
     {
       name: "Rory",
-      niches: ["Anime", "Movies & TV Shows", "Gifts"],
+      niches: ["Anime", "Movies & TV Shows", "Birthday"],
       images: {
         Anime: ["s26e.webp", "s218e.webp", "s220e.webp"],
         "Movies & TV Shows": ["s47e.webp", "s229e.webp", "s228e.webp"],
-        Gifts: ["s68e.webp", "s36e.webp", "s3e.webp"]
+        Birthday: ["s91e.webp", "s43e.webp", "s40e.webp"]
       },
       otherStyles: ["Cute", "Vintage", "Celebrations", "3D", "Landscapes"]
     },
     {
       name: "Marley",
-      niches: ["Animals", "Gifts", "Abstract"],
+      niches: ["Animals", "Birthday", "Abstract"],
       images: {
         Animals: ["s261e.webp", "s244e.webp", "s238e.webp"],
-        Gifts: ["s3e.webp", "s66e.webp", "s36e.webp"],
+        Birthday: ["s40e.webp", "s94e.webp", "s43e.webp"],
         Abstract: ["s179e.webp", "s187e.webp", "s181e.webp"]
       },
       otherStyles: ["Floral", "Celebrations", "Illustration", "Seasonal", "Cute"]
@@ -2899,14 +2899,14 @@ export const popularNames = [
         Hobbies: ["s203e.webp", "s201e.webp", "s202e.webp"],
         "3D": ["s130e.webp", "s44e.webp", "s27e.webp"]
       },
-      otherStyles: ["Islamic", "Celebrations", "Fantasy", "Seasonal", "Vintage", "Gifts"]
+      otherStyles: ["Islamic", "Celebrations", "Fantasy", "Seasonal", "Vintage", "Birthday"]
     },
     {
       name: "Alanna",
-      niches: ["Islamic", "Gifts", "3D", "Food"],
+      niches: ["Islamic", "Birthday", "3D", "Food"],
       images: {
         Islamic: ["s285e.webp", "s293e.webp", "s289e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s68e.webp"],
+        Birthday: ["s100e.webp", "s43e.webp", "s91e.webp"],
         "3D": ["s49e.webp", "s44e.webp", "s130e.webp"],
         Food: ["s99e.webp", "s97e.webp", "s213e.webp"]
       },
@@ -2931,7 +2931,7 @@ export const popularNames = [
         Vintage: ["s177e.webp", "s172e.webp", "s175e.webp"],
         Floral: ["s5e.webp", "s9e.webp", "s2e.webp"]
       },
-      otherStyles: ["3D", "Logos", "Gifts", "Celebrations"]
+      otherStyles: ["3D", "Logos", "Birthday", "Celebrations"]
     },
     {
       name: "Kamila",
@@ -2944,10 +2944,10 @@ export const popularNames = [
     },
     {
       name: "Harlow",
-      niches: ["Vintage", "Gifts", "Anime"],
+      niches: ["Vintage", "Birthday", "Anime"],
       images: {
         Vintage: ["s172e.webp", "s171e.webp", "s170e.webp"],
-        Gifts: ["s83e.webp", "s86e.webp", "s3e.webp"],
+        Birthday: ["s77e.webp", "s100e.webp", "s40e.webp"],
         Anime: ["s227e.webp", "s222e.webp", "s12e.webp"]
       },
       otherStyles: ["Illustration", "Islamic", "Animals", "Gaming", "3D", "Abstract"]
@@ -2963,11 +2963,11 @@ export const popularNames = [
     },
     {
       name: "Octavia",
-      niches: ["Landscapes", "Gaming", "Gifts"],
+      niches: ["Landscapes", "Gaming", "Birthday"],
       images: {
         Landscapes: ["s253e.webp", "s256e.webp", "s249e.webp"],
         Gaming: ["s141e.webp", "s145e.webp", "s153e.webp"],
-        Gifts: ["s83e.webp", "s68e.webp", "s66e.webp"]
+        Birthday: ["s77e.webp", "s91e.webp", "s94e.webp"]
       },
       otherStyles: ["Illustration", "Cute", "Seasonal", "Vintage"]
     },
@@ -3004,9 +3004,9 @@ export const popularNames = [
     },
     {
       name: "Ariel",
-      niches: ["Gifts", "Buddhist"],
+      niches: ["Birthday", "Buddhist"],
       images: {
-        Gifts: ["s36e.webp", "s83e.webp", "s86e.webp"],
+        Birthday: ["s43e.webp", "s77e.webp", "s100e.webp"],
         Buddhist: ["s294e.webp", "s297e.webp", "s300e.webp"]
       },
       otherStyles: ["Typography", "Christian", "Islamic", "Food", "Classic"]
@@ -3032,9 +3032,9 @@ export const popularNames = [
     },
     {
       name: "Ryleigh",
-      niches: ["Gifts", "Abstract", "Animals", "Gaming"],
+      niches: ["Birthday", "Abstract", "Animals", "Gaming"],
       images: {
-        Gifts: ["s66e.webp", "s3e.webp", "s68e.webp"],
+        Birthday: ["s94e.webp", "s40e.webp", "s91e.webp"],
         Abstract: ["s186e.webp", "s187e.webp", "s182e.webp"],
         Animals: ["s244e.webp", "s245e.webp", "s23e.webp"],
         Gaming: ["s151e.webp", "s11e.webp", "s145e.webp"]
@@ -3048,7 +3048,7 @@ export const popularNames = [
         Christian: ["s274e.webp", "s275e.webp", "s283e.webp"],
         Fantasy: ["s260e.webp", "s123e.webp", "s60e.webp"]
       },
-      otherStyles: ["Festive", "Celebrations", "Food", "Gifts", "Vintage"]
+      otherStyles: ["Festive", "Celebrations", "Food", "Birthday", "Vintage"]
     },
     {
       name: "Evelynn",
@@ -3180,11 +3180,11 @@ export const popularNames = [
     },
     {
       name: "Hope",
-      niches: ["Classic", "Typography", "Gifts"],
+      niches: ["Classic", "Typography", "Birthday"],
       images: {
         Classic: ["s165e.webp", "s38e.webp", "s161e.webp"],
         Typography: ["s48e.webp", "s113e.webp", "s115e.webp"],
-        Gifts: ["s36e.webp", "s66e.webp", "s68e.webp"]
+        Birthday: ["s43e.webp", "s94e.webp", "s91e.webp"]
       },
       otherStyles: ["Seasonal", "Logos", "Hobbies"]
     },
@@ -3230,9 +3230,9 @@ export const popularNames = [
     },
     {
       name: "Journey",
-      niches: ["Gifts", "Food"],
+      niches: ["Birthday", "Food"],
       images: {
-        Gifts: ["s66e.webp", "s83e.webp", "s3e.webp"],
+        Birthday: ["s94e.webp", "s77e.webp", "s40e.webp"],
         Food: ["s213e.webp", "s212e.webp", "s99e.webp"]
       },
       otherStyles: ["Cute", "Christian", "Fantasy", "Vintage"]
@@ -3245,7 +3245,7 @@ export const popularNames = [
         Vintage: ["s170e.webp", "s176e.webp", "s177e.webp"],
         Typography: ["s64e.webp", "s41e.webp", "s48e.webp"]
       },
-      otherStyles: ["Floral", "Buddhist", "Logos", "Gifts"]
+      otherStyles: ["Floral", "Buddhist", "Logos", "Birthday"]
     },
     {
       name: "Camilla",
@@ -3283,7 +3283,7 @@ export const popularNames = [
         Abstract: ["s183e.webp", "s180e.webp", "s119e.webp"],
         Floral: ["s53e.webp", "s108e.webp", "s131e.webp"]
       },
-      otherStyles: ["Celebrations", "Christian", "Anime", "Gifts", "Buddhist"]
+      otherStyles: ["Celebrations", "Christian", "Anime", "Birthday", "Buddhist"]
     },
     {
       name: "Jordyn",
@@ -3353,7 +3353,7 @@ export const popularNames = [
         Celebrations: ["s94e.webp", "s78e.webp", "s40e.webp"],
         Floral: ["s5e.webp", "s24e.webp", "s127e.webp"]
       },
-      otherStyles: ["Festive", "Landscapes", "3D", "Gifts"]
+      otherStyles: ["Festive", "Landscapes", "3D", "Birthday"]
     },
     {
       name: "Vanessa",
@@ -3372,7 +3372,7 @@ export const popularNames = [
         Classic: ["s165e.webp", "s168e.webp", "s124e.webp"],
         Illustration: ["s90e.webp", "s74e.webp", "s35e.webp"]
       },
-      otherStyles: ["Gifts", "Gaming", "Floral"]
+      otherStyles: ["Birthday", "Gaming", "Floral"]
     },
     {
       name: "Navy",
@@ -3444,7 +3444,7 @@ export const popularNames = [
         Illustration: ["s102e.webp", "s35e.webp", "s59e.webp"],
         Landscapes: ["s58e.webp", "s253e.webp", "s257e.webp"]
       },
-      otherStyles: ["3D", "Gifts", "Classic"]
+      otherStyles: ["3D", "Birthday", "Classic"]
     },
     {
       name: "Esme",
@@ -3522,7 +3522,7 @@ export const popularNames = [
         Anime: ["s218e.webp", "s109e.webp", "s224e.webp"],
         Classic: ["s161e.webp", "s162e.webp", "s169e.webp"]
       },
-      otherStyles: ["Cute", "Buddhist", "Celebrations", "Gifts"]
+      otherStyles: ["Cute", "Buddhist", "Celebrations", "Birthday"]
     },
     {
       name: "Julianna",
@@ -3579,10 +3579,10 @@ export const popularNames = [
     },
     {
       name: "Sabrina",
-      niches: ["Illustration", "Gifts"],
+      niches: ["Illustration", "Birthday"],
       images: {
         Illustration: ["s79e.webp", "s102e.webp", "s37e.webp"],
-        Gifts: ["s66e.webp", "s86e.webp", "s68e.webp"]
+        Birthday: ["s94e.webp", "s100e.webp", "s91e.webp"]
       },
       otherStyles: ["Abstract", "Food", "Landscapes", "Seasonal"]
     },
@@ -3609,10 +3609,10 @@ export const popularNames = [
     },
     {
       name: "Sylvie",
-      niches: ["Christian", "Gifts", "Anime", "Classic"],
+      niches: ["Christian", "Birthday", "Anime", "Classic"],
       images: {
         Christian: ["s278e.webp", "s282e.webp", "s275e.webp"],
-        Gifts: ["s68e.webp", "s36e.webp", "s66e.webp"],
+        Birthday: ["s91e.webp", "s43e.webp", "s94e.webp"],
         Anime: ["s218e.webp", "s224e.webp", "s227e.webp"],
         Classic: ["s162e.webp", "s89e.webp", "s161e.webp"]
       },
@@ -3646,7 +3646,7 @@ export const popularNames = [
         Vintage: ["s174e.webp", "s173e.webp", "s172e.webp"],
         Islamic: ["s289e.webp", "s291e.webp", "s284e.webp"]
       },
-      otherStyles: ["Gifts", "Christian", "Logos", "Floral", "Hobbies"]
+      otherStyles: ["Birthday", "Christian", "Logos", "Floral", "Hobbies"]
     },
     {
       name: "Elora",
@@ -3704,7 +3704,7 @@ export const popularNames = [
         Food: ["s1e.webp", "s211e.webp", "s209e.webp"],
         Illustration: ["s102e.webp", "s37e.webp", "s74e.webp"]
       },
-      otherStyles: ["Gifts", "Animals", "Celebrations", "Movies & TV Shows"]
+      otherStyles: ["Birthday", "Animals", "Celebrations", "Movies & TV Shows"]
     },
     {
       name: "Elodie",
@@ -3929,7 +3929,7 @@ export const popularNames = [
         Classic: ["s165e.webp", "s124e.webp", "s169e.webp"],
         "3D": ["s52e.webp", "s262e.webp", "s49e.webp"]
       },
-      otherStyles: ["Christian", "Vintage", "Anime", "Seasonal", "Celebrations", "Gifts"]
+      otherStyles: ["Christian", "Vintage", "Anime", "Seasonal", "Celebrations", "Birthday"]
     },
     {
       name: "Veronica",
@@ -3970,7 +3970,7 @@ export const popularNames = [
         Food: ["s215e.webp", "s1e.webp", "s214e.webp"],
         Christian: ["s274e.webp", "s281e.webp", "s277e.webp"]
       },
-      otherStyles: ["Gifts", "Illustration", "Festive"]
+      otherStyles: ["Birthday", "Illustration", "Festive"]
     },
     {
       name: "Alivia",
@@ -4032,10 +4032,10 @@ export const popularNames = [
     },
     {
       name: "Lorelai",
-      niches: ["Hobbies", "Gifts"],
+      niches: ["Hobbies", "Birthday"],
       images: {
         Hobbies: ["s206e.webp", "s200e.webp", "s30e.webp"],
-        Gifts: ["s66e.webp", "s36e.webp", "s86e.webp"]
+        Birthday: ["s94e.webp", "s43e.webp", "s100e.webp"]
       },
       otherStyles: ["Movies & TV Shows", "Celebrations", "Illustration"]
     },
@@ -4056,7 +4056,7 @@ export const popularNames = [
         Food: ["s210e.webp", "s217e.webp", "s99e.webp"],
         Festive: ["s31e.webp", "s33e.webp", "s8e.webp"]
       },
-      otherStyles: ["Fantasy", "Celebrations", "Gifts", "Typography"]
+      otherStyles: ["Fantasy", "Celebrations", "Birthday", "Typography"]
     },
     {
       name: "Anaya",
@@ -4076,7 +4076,7 @@ export const popularNames = [
         Logos: ["s263e.webp", "s264e.webp", "s266e.webp"],
         Festive: ["s31e.webp", "s69e.webp", "s8e.webp"]
       },
-      otherStyles: ["Animals", "Hobbies", "Landscapes", "Gifts", "Anime", "3D"]
+      otherStyles: ["Animals", "Hobbies", "Landscapes", "Birthday", "Anime", "3D"]
     },
     {
       name: "Trinity",
@@ -4114,7 +4114,7 @@ export const popularNames = [
         Seasonal: ["s196e.webp", "s190e.webp", "s195e.webp"],
         Abstract: ["s183e.webp", "s184e.webp", "s180e.webp"]
       },
-      otherStyles: ["Hobbies", "Logos", "Gifts", "Illustration", "Celebrations", "Cute"]
+      otherStyles: ["Hobbies", "Logos", "Birthday", "Illustration", "Celebrations", "Cute"]
     },
     {
       name: "Lilliana",
@@ -4134,7 +4134,7 @@ export const popularNames = [
         Floral: ["s108e.webp", "s116e.webp", "s5e.webp"],
         Illustration: ["s102e.webp", "s35e.webp", "s90e.webp"]
       },
-      otherStyles: ["Fantasy", "Gifts", "Landscapes", "Movies & TV Shows"]
+      otherStyles: ["Fantasy", "Birthday", "Landscapes", "Movies & TV Shows"]
     },
     {
       name: "Mariah",
@@ -4207,10 +4207,10 @@ export const popularNames = [
     },
     {
       name: "Madilyn",
-      niches: ["Food", "Gifts", "Animals"],
+      niches: ["Food", "Birthday", "Animals"],
       images: {
         Food: ["s99e.webp", "s210e.webp", "s215e.webp"],
-        Gifts: ["s3e.webp", "s83e.webp", "s68e.webp"],
+        Birthday: ["s40e.webp", "s77e.webp", "s91e.webp"],
         Animals: ["s121e.webp", "s243e.webp", "s239e.webp"]
       },
       otherStyles: ["Seasonal", "Celebrations", "Buddhist", "Festive", "Abstract", "Vintage"]
@@ -4224,13 +4224,13 @@ export const popularNames = [
         Islamic: ["s288e.webp", "s285e.webp", "s291e.webp"],
         Festive: ["s33e.webp", "s65e.webp", "s32e.webp"]
       },
-      otherStyles: ["Vintage", "Gifts", "Christian", "Typography", "Gaming", "Seasonal"]
+      otherStyles: ["Vintage", "Birthday", "Christian", "Typography", "Gaming", "Seasonal"]
     },
     {
       name: "Raelyn",
-      niches: ["Gifts", "Hobbies"],
+      niches: ["Birthday", "Hobbies"],
       images: {
-        Gifts: ["s3e.webp", "s83e.webp", "s66e.webp"],
+        Birthday: ["s40e.webp", "s77e.webp", "s94e.webp"],
         Hobbies: ["s207e.webp", "s198e.webp", "s20e.webp"]
       },
       otherStyles: ["Typography", "Abstract", "Vintage", "Christian", "Islamic", "Food"]
@@ -4243,7 +4243,7 @@ export const popularNames = [
         Landscapes: ["s250e.webp", "s28e.webp", "s253e.webp"],
         Celebrations: ["s78e.webp", "s126e.webp", "s43e.webp"]
       },
-      otherStyles: ["Animals", "Gifts", "Hobbies"]
+      otherStyles: ["Animals", "Birthday", "Hobbies"]
     },
     {
       name: "Helen",
@@ -4262,7 +4262,7 @@ export const popularNames = [
         Logos: ["s266e.webp", "s269e.webp", "s268e.webp"],
         Landscapes: ["s128e.webp", "s28e.webp", "s252e.webp"]
       },
-      otherStyles: ["Graffiti", "3D", "Floral", "Gifts", "Illustration"]
+      otherStyles: ["Graffiti", "3D", "Floral", "Birthday", "Illustration"]
     },
     {
       name: "Alessandra",
@@ -4284,7 +4284,7 @@ export const popularNames = [
         Fantasy: ["s72e.webp", "s60e.webp", "s46e.webp"],
         Seasonal: ["s191e.webp", "s197e.webp", "s71e.webp"]
       },
-      otherStyles: ["Gifts", "3D", "Logos", "Animals", "Celebrations", "Illustration"]
+      otherStyles: ["Birthday", "3D", "Logos", "Animals", "Celebrations", "Illustration"]
     },
     {
       name: "Carolina",
@@ -4346,12 +4346,12 @@ export const popularNames = [
     },
     {
       name: "Reign",
-      niches: ["3D", "Movies & TV Shows", "Festive", "Gifts"],
+      niches: ["3D", "Movies & TV Shows", "Festive", "Birthday"],
       images: {
         "3D": ["s63e.webp", "s52e.webp", "s130e.webp"],
         "Movies & TV Shows": ["s229e.webp", "s234e.webp", "s237e.webp"],
         Festive: ["s88e.webp", "s69e.webp", "s32e.webp"],
-        Gifts: ["s3e.webp", "s86e.webp", "s36e.webp"]
+        Birthday: ["s40e.webp", "s100e.webp", "s43e.webp"]
       },
       otherStyles: ["Seasonal", "Islamic", "Cute"]
     },
@@ -4362,7 +4362,7 @@ export const popularNames = [
         "3D": ["s44e.webp", "s27e.webp", "s50e.webp"],
         Christian: ["s274e.webp", "s282e.webp", "s279e.webp"]
       },
-      otherStyles: ["Floral", "Seasonal", "Anime", "Hobbies", "Gifts", "Gaming"]
+      otherStyles: ["Floral", "Seasonal", "Anime", "Hobbies", "Birthday", "Gaming"]
     },
     {
       name: "Alicia",
@@ -4371,7 +4371,7 @@ export const popularNames = [
         Islamic: ["s285e.webp", "s290e.webp", "s287e.webp"],
         Gaming: ["s146e.webp", "s10e.webp", "s155e.webp"]
       },
-      otherStyles: ["Fantasy", "Festive", "Animals", "Logos", "Gifts", "Buddhist"]
+      otherStyles: ["Fantasy", "Festive", "Animals", "Logos", "Birthday", "Buddhist"]
     },
     {
       name: "Madeleine",
@@ -4416,11 +4416,11 @@ export const popularNames = [
     },
     {
       name: "Bonnie",
-      niches: ["Movies & TV Shows", "Typography", "Gifts", "Hobbies"],
+      niches: ["Movies & TV Shows", "Typography", "Birthday", "Hobbies"],
       images: {
         "Movies & TV Shows": ["s237e.webp", "s236e.webp", "s231e.webp"],
         Typography: ["s115e.webp", "s15e.webp", "s62e.webp"],
-        Gifts: ["s86e.webp", "s83e.webp", "s3e.webp"],
+        Birthday: ["s100e.webp", "s77e.webp", "s40e.webp"],
         Hobbies: ["s199e.webp", "s30e.webp", "s20e.webp"]
       },
       otherStyles: ["Buddhist", "Illustration", "Celebrations"]
@@ -4469,10 +4469,10 @@ export const popularNames = [
     },
     {
       name: "Blaire",
-      niches: ["Seasonal", "Gifts"],
+      niches: ["Seasonal", "Birthday"],
       images: {
         Seasonal: ["s192e.webp", "s197e.webp", "s194e.webp"],
-        Gifts: ["s66e.webp", "s83e.webp", "s68e.webp"]
+        Birthday: ["s94e.webp", "s77e.webp", "s91e.webp"]
       },
       otherStyles: ["Gaming", "Classic", "Illustration", "Christian", "Fantasy"]
     },
@@ -4485,7 +4485,7 @@ export const popularNames = [
         Abstract: ["s119e.webp", "s179e.webp", "s182e.webp"],
         Gaming: ["s150e.webp", "s134e.webp", "s14e.webp"]
       },
-      otherStyles: ["Landscapes", "Gifts", "Graffiti", "Islamic", "Christian", "Seasonal"]
+      otherStyles: ["Landscapes", "Birthday", "Graffiti", "Islamic", "Christian", "Seasonal"]
     },
     {
       name: "Saige",
@@ -4495,7 +4495,7 @@ export const popularNames = [
         Vintage: ["s173e.webp", "s177e.webp", "s175e.webp"],
         "Movies & TV Shows": ["s230e.webp", "s234e.webp", "s47e.webp"]
       },
-      otherStyles: ["Islamic", "Logos", "Festive", "Illustration", "Gifts"]
+      otherStyles: ["Islamic", "Logos", "Festive", "Illustration", "Birthday"]
     },
     {
       name: "Adelynn",
@@ -4560,10 +4560,10 @@ export const popularNames = [
     },
     {
       name: "Kira",
-      niches: ["Illustration", "Gifts", "Landscapes", "Movies & TV Shows"],
+      niches: ["Illustration", "Birthday", "Landscapes", "Movies & TV Shows"],
       images: {
         Illustration: ["s90e.webp", "s37e.webp", "s102e.webp"],
-        Gifts: ["s66e.webp", "s3e.webp", "s83e.webp"],
+        Birthday: ["s94e.webp", "s40e.webp", "s77e.webp"],
         Landscapes: ["s29e.webp", "s128e.webp", "s252e.webp"],
         "Movies & TV Shows": ["s84e.webp", "s230e.webp", "s47e.webp"]
       },
@@ -4585,7 +4585,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s47e.webp", "s234e.webp", "s235e.webp"],
         Cute: ["s51e.webp", "s34e.webp", "s98e.webp"]
       },
-      otherStyles: ["Abstract", "Animals", "Celebrations", "Gifts", "Illustration"]
+      otherStyles: ["Abstract", "Animals", "Celebrations", "Birthday", "Illustration"]
     },
     {
       name: "Raegan",
@@ -4624,7 +4624,7 @@ export const popularNames = [
         Graffiti: ["s117e.webp", "s118e.webp", "s107e.webp"],
         Celebrations: ["s126e.webp", "s43e.webp", "s91e.webp"]
       },
-      otherStyles: ["Gaming", "Landscapes", "Islamic", "Hobbies", "Movies & TV Shows", "Gifts"]
+      otherStyles: ["Gaming", "Landscapes", "Islamic", "Hobbies", "Movies & TV Shows", "Birthday"]
     },
     {
       name: "Annalise",
@@ -4648,9 +4648,9 @@ export const popularNames = [
     },
     {
       name: "Amirah",
-      niches: ["Gifts", "Christian", "3D", "Buddhist"],
+      niches: ["Birthday", "Christian", "3D", "Buddhist"],
       images: {
-        Gifts: ["s83e.webp", "s86e.webp", "s3e.webp"],
+        Birthday: ["s77e.webp", "s100e.webp", "s40e.webp"],
         Christian: ["s282e.webp", "s277e.webp", "s280e.webp"],
         "3D": ["s262e.webp", "s49e.webp", "s129e.webp"],
         Buddhist: ["s302e.webp", "s294e.webp", "s301e.webp"]
@@ -4775,7 +4775,7 @@ export const popularNames = [
         Vintage: ["s173e.webp", "s166e.webp", "s176e.webp"],
         Abstract: ["s183e.webp", "s179e.webp", "s184e.webp"]
       },
-      otherStyles: ["Classic", "Gifts", "Illustration", "Logos", "Islamic"]
+      otherStyles: ["Classic", "Birthday", "Illustration", "Logos", "Islamic"]
     },
     {
       name: "Clementine",
@@ -4846,7 +4846,7 @@ export const popularNames = [
         Fantasy: ["s82e.webp", "s67e.webp", "s123e.webp"],
         Cute: ["s55e.webp", "s4e.webp", "s51e.webp"]
       },
-      otherStyles: ["Gaming", "Hobbies", "Gifts", "Floral"]
+      otherStyles: ["Gaming", "Hobbies", "Birthday", "Floral"]
     },
     {
       name: "Paris",
@@ -4866,7 +4866,7 @@ export const popularNames = [
         Buddhist: ["s296e.webp", "s303e.webp", "s295e.webp"],
         Hobbies: ["s207e.webp", "s21e.webp", "s204e.webp"]
       },
-      otherStyles: ["Food", "Illustration", "Gifts"]
+      otherStyles: ["Food", "Illustration", "Birthday"]
     },
     {
       name: "Felicity",
@@ -4928,11 +4928,11 @@ export const popularNames = [
     },
     {
       name: "Meredith",
-      niches: ["Hobbies", "Landscapes", "Gifts", "Celebrations"],
+      niches: ["Hobbies", "Landscapes", "Birthday", "Celebrations"],
       images: {
         Hobbies: ["s207e.webp", "s203e.webp", "s204e.webp"],
         Landscapes: ["s249e.webp", "s28e.webp", "s253e.webp"],
-        Gifts: ["s68e.webp", "s83e.webp", "s66e.webp"],
+        Birthday: ["s91e.webp", "s77e.webp", "s94e.webp"],
         Celebrations: ["s43e.webp", "s120e.webp", "s126e.webp"]
       },
       otherStyles: ["Floral", "Islamic", "Buddhist", "3D", "Fantasy"]
@@ -4964,7 +4964,7 @@ export const popularNames = [
         Landscapes: ["s58e.webp", "s254e.webp", "s28e.webp"],
         Graffiti: ["s25e.webp", "s93e.webp", "s117e.webp"]
       },
-      otherStyles: ["Movies & TV Shows", "Food", "Gifts", "Fantasy", "Islamic", "Cute"]
+      otherStyles: ["Movies & TV Shows", "Food", "Birthday", "Fantasy", "Islamic", "Cute"]
     },
     {
       name: "Amanda",
@@ -4979,9 +4979,9 @@ export const popularNames = [
     },
     {
       name: "Arielle",
-      niches: ["Gifts", "Movies & TV Shows", "Islamic"],
+      niches: ["Birthday", "Movies & TV Shows", "Islamic"],
       images: {
-        Gifts: ["s68e.webp", "s83e.webp", "s86e.webp"],
+        Birthday: ["s91e.webp", "s77e.webp", "s100e.webp"],
         "Movies & TV Shows": ["s234e.webp", "s237e.webp", "s232e.webp"],
         Islamic: ["s293e.webp", "s292e.webp", "s288e.webp"]
       },
@@ -4998,9 +4998,9 @@ export const popularNames = [
     },
     {
       name: "Calliope",
-      niches: ["Gifts", "Food"],
+      niches: ["Birthday", "Food"],
       images: {
-        Gifts: ["s3e.webp", "s83e.webp", "s86e.webp"],
+        Birthday: ["s40e.webp", "s77e.webp", "s100e.webp"],
         Food: ["s209e.webp", "s217e.webp", "s45e.webp"]
       },
       otherStyles: ["3D", "Abstract", "Christian", "Illustration", "Floral"]
@@ -5012,7 +5012,7 @@ export const popularNames = [
         Anime: ["s221e.webp", "s26e.webp", "s109e.webp"],
         Floral: ["s53e.webp", "s131e.webp", "s5e.webp"]
       },
-      otherStyles: ["Hobbies", "Fantasy", "Gifts", "Food", "Gaming"]
+      otherStyles: ["Hobbies", "Fantasy", "Birthday", "Food", "Gaming"]
     },
     {
       name: "Estella",
@@ -5071,14 +5071,14 @@ export const popularNames = [
         Logos: ["s272e.webp", "s264e.webp", "s268e.webp"],
         Gaming: ["s139e.webp", "s155e.webp", "s11e.webp"]
       },
-      otherStyles: ["Gifts", "Fantasy", "Cute", "Illustration", "Anime", "Landscapes"]
+      otherStyles: ["Birthday", "Fantasy", "Cute", "Illustration", "Anime", "Landscapes"]
     },
     {
       name: "Carter",
-      niches: ["Celebrations", "Gifts", "Typography"],
+      niches: ["Celebrations", "Birthday", "Typography"],
       images: {
         Celebrations: ["s94e.webp", "s91e.webp", "s120e.webp"],
-        Gifts: ["s3e.webp", "s36e.webp", "s83e.webp"],
+        Birthday: ["s40e.webp", "s43e.webp", "s77e.webp"],
         Typography: ["s258e.webp", "s15e.webp", "s122e.webp"]
       },
       otherStyles: ["Illustration", "Floral", "Festive"]
@@ -5101,7 +5101,7 @@ export const popularNames = [
         Illustration: ["s35e.webp", "s79e.webp", "s37e.webp"],
         Vintage: ["s164e.webp", "s170e.webp", "s166e.webp"]
       },
-      otherStyles: ["Landscapes", "Islamic", "Movies & TV Shows", "Gifts"]
+      otherStyles: ["Landscapes", "Islamic", "Movies & TV Shows", "Birthday"]
     },
     {
       name: "Virginia",
@@ -5122,7 +5122,7 @@ export const popularNames = [
         Landscapes: ["s257e.webp", "s28e.webp", "s58e.webp"],
         Illustration: ["s35e.webp", "s102e.webp", "s37e.webp"]
       },
-      otherStyles: ["Typography", "Fantasy", "Gifts"]
+      otherStyles: ["Typography", "Fantasy", "Birthday"]
     },
     {
       name: "Halo",
@@ -5169,7 +5169,7 @@ export const popularNames = [
         Christian: ["s275e.webp", "s278e.webp", "s276e.webp"],
         Cute: ["s70e.webp", "s75e.webp", "s104e.webp"]
       },
-      otherStyles: ["Abstract", "Illustration", "Classic", "Gifts", "3D"]
+      otherStyles: ["Abstract", "Illustration", "Classic", "Birthday", "3D"]
     },
     {
       name: "Renata",
@@ -5202,11 +5202,11 @@ export const popularNames = [
     },
     {
       name: "Maxine",
-      niches: ["Animals", "Seasonal", "Gifts"],
+      niches: ["Animals", "Seasonal", "Birthday"],
       images: {
         Animals: ["s261e.webp", "s241e.webp", "s238e.webp"],
         Seasonal: ["s71e.webp", "s197e.webp", "s191e.webp"],
-        Gifts: ["s83e.webp", "s86e.webp", "s68e.webp"]
+        Birthday: ["s77e.webp", "s100e.webp", "s91e.webp"]
       },
       otherStyles: ["Celebrations", "Christian", "Graffiti", "Buddhist"]
     },
@@ -5228,7 +5228,7 @@ export const popularNames = [
         Cute: ["s80e.webp", "s87e.webp", "s70e.webp"],
         Vintage: ["s259e.webp", "s164e.webp", "s170e.webp"]
       },
-      otherStyles: ["Illustration", "Buddhist", "Celebrations", "Gifts"]
+      otherStyles: ["Illustration", "Buddhist", "Celebrations", "Birthday"]
     },
     {
       name: "Danielle",
@@ -5264,9 +5264,9 @@ export const popularNames = [
     },
     {
       name: "Imani",
-      niches: ["Gifts", "Fantasy", "Festive"],
+      niches: ["Birthday", "Fantasy", "Festive"],
       images: {
-        Gifts: ["s68e.webp", "s36e.webp", "s3e.webp"],
+        Birthday: ["s91e.webp", "s43e.webp", "s40e.webp"],
         Fantasy: ["s72e.webp", "s46e.webp", "s260e.webp"],
         Festive: ["s32e.webp", "s8e.webp", "s65e.webp"]
       },
@@ -5364,15 +5364,15 @@ export const popularNames = [
         Islamic: ["s285e.webp", "s293e.webp", "s292e.webp"],
         "Movies & TV Shows": ["s232e.webp", "s234e.webp", "s233e.webp"]
       },
-      otherStyles: ["Animals", "Vintage", "Illustration", "Gifts"]
+      otherStyles: ["Animals", "Vintage", "Illustration", "Birthday"]
     },
     {
       name: "Jimena",
-      niches: ["Islamic", "Illustration", "Gifts"],
+      niches: ["Islamic", "Illustration", "Birthday"],
       images: {
         Islamic: ["s284e.webp", "s288e.webp", "s289e.webp"],
         Illustration: ["s79e.webp", "s102e.webp", "s59e.webp"],
-        Gifts: ["s83e.webp", "s66e.webp", "s68e.webp"]
+        Birthday: ["s77e.webp", "s94e.webp", "s91e.webp"]
       },
       otherStyles: ["3D", "Animals", "Anime", "Floral", "Fantasy", "Graffiti"]
     },
@@ -5403,7 +5403,7 @@ export const popularNames = [
         Abstract: ["s119e.webp", "s185e.webp", "s182e.webp"],
         Hobbies: ["s20e.webp", "s199e.webp", "s200e.webp"]
       },
-      otherStyles: ["Classic", "Celebrations", "Festive", "Fantasy", "Anime", "Gifts"]
+      otherStyles: ["Classic", "Celebrations", "Festive", "Fantasy", "Anime", "Birthday"]
     },
     {
       name: "Louise",
@@ -5461,7 +5461,7 @@ export const popularNames = [
         Gaming: ["s152e.webp", "s153e.webp", "s143e.webp"],
         Festive: ["s69e.webp", "s32e.webp", "s31e.webp"]
       },
-      otherStyles: ["Buddhist", "Graffiti", "Gifts", "Logos", "Illustration", "Celebrations"]
+      otherStyles: ["Buddhist", "Graffiti", "Birthday", "Logos", "Illustration", "Celebrations"]
     },
     {
       name: "Amoura",
@@ -5472,7 +5472,7 @@ export const popularNames = [
         Floral: ["s131e.webp", "s127e.webp", "s5e.webp"],
         Anime: ["s218e.webp", "s224e.webp", "s76e.webp"]
       },
-      otherStyles: ["Cute", "Animals", "Gifts", "Gaming", "Buddhist"]
+      otherStyles: ["Cute", "Animals", "Birthday", "Gaming", "Buddhist"]
     },
     {
       name: "Jennifer",
@@ -5491,7 +5491,7 @@ export const popularNames = [
         Graffiti: ["s93e.webp", "s117e.webp", "s25e.webp"],
         Classic: ["s165e.webp", "s167e.webp", "s124e.webp"]
       },
-      otherStyles: ["Gifts", "Cute", "Floral"]
+      otherStyles: ["Birthday", "Cute", "Floral"]
     },
     {
       name: "Mylah",
@@ -5505,10 +5505,10 @@ export const popularNames = [
     },
     {
       name: "Winnie",
-      niches: ["Fantasy", "Gifts"],
+      niches: ["Fantasy", "Birthday"],
       images: {
         Fantasy: ["s46e.webp", "s96e.webp", "s125e.webp"],
-        Gifts: ["s68e.webp", "s36e.webp", "s83e.webp"]
+        Birthday: ["s91e.webp", "s43e.webp", "s77e.webp"]
       },
       otherStyles: ["Graffiti", "Logos", "Floral"]
     },
@@ -5529,7 +5529,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s234e.webp", "s230e.webp", "s236e.webp"],
         Hobbies: ["s20e.webp", "s199e.webp", "s201e.webp"]
       },
-      otherStyles: ["Seasonal", "Classic", "Graffiti", "Fantasy", "Gifts", "Typography"]
+      otherStyles: ["Seasonal", "Classic", "Graffiti", "Fantasy", "Birthday", "Typography"]
     },
     {
       name: "Reina",
@@ -5574,9 +5574,9 @@ export const popularNames = [
     },
     {
       name: "Ariya",
-      niches: ["Gifts", "Seasonal"],
+      niches: ["Birthday", "Seasonal"],
       images: {
-        Gifts: ["s68e.webp", "s86e.webp", "s3e.webp"],
+        Birthday: ["s91e.webp", "s100e.webp", "s40e.webp"],
         Seasonal: ["s190e.webp", "s194e.webp", "s197e.webp"]
       },
       otherStyles: ["Logos", "Islamic", "Landscapes", "Fantasy"]
@@ -5626,7 +5626,7 @@ export const popularNames = [
         Floral: ["s2e.webp", "s9e.webp", "s108e.webp"],
         "Movies & TV Shows": ["s236e.webp", "s235e.webp", "s229e.webp"]
       },
-      otherStyles: ["Illustration", "Graffiti", "Classic", "Buddhist", "Gifts"]
+      otherStyles: ["Illustration", "Graffiti", "Classic", "Buddhist", "Birthday"]
     },
     {
       name: "Lexi",
@@ -5652,10 +5652,10 @@ export const popularNames = [
     },
     {
       name: "Iyla",
-      niches: ["Buddhist", "Gifts", "Celebrations"],
+      niches: ["Buddhist", "Birthday", "Celebrations"],
       images: {
         Buddhist: ["s294e.webp", "s300e.webp", "s299e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s3e.webp"],
+        Birthday: ["s100e.webp", "s43e.webp", "s40e.webp"],
         Celebrations: ["s40e.webp", "s94e.webp", "s78e.webp"]
       },
       otherStyles: ["Floral", "Abstract", "Anime", "3D", "Classic"]
@@ -5669,14 +5669,14 @@ export const popularNames = [
         Cute: ["s87e.webp", "s80e.webp", "s77e.webp"],
         Celebrations: ["s120e.webp", "s78e.webp", "s91e.webp"]
       },
-      otherStyles: ["Gifts", "Classic", "Vintage", "Typography", "Abstract", "Christian"]
+      otherStyles: ["Birthday", "Classic", "Vintage", "Typography", "Abstract", "Christian"]
     },
     {
       name: "Lina",
-      niches: ["Floral", "Gifts", "Anime", "Typography"],
+      niches: ["Floral", "Birthday", "Anime", "Typography"],
       images: {
         Floral: ["s5e.webp", "s114e.webp", "s131e.webp"],
-        Gifts: ["s83e.webp", "s66e.webp", "s36e.webp"],
+        Birthday: ["s77e.webp", "s94e.webp", "s43e.webp"],
         Anime: ["s226e.webp", "s218e.webp", "s12e.webp"],
         Typography: ["s103e.webp", "s122e.webp", "s41e.webp"]
       },
@@ -5693,9 +5693,9 @@ export const popularNames = [
     },
     {
       name: "Eve",
-      niches: ["Gifts", "Gaming", "Vintage", "Islamic"],
+      niches: ["Birthday", "Gaming", "Vintage", "Islamic"],
       images: {
-        Gifts: ["s36e.webp", "s3e.webp", "s66e.webp"],
+        Birthday: ["s43e.webp", "s40e.webp", "s94e.webp"],
         Gaming: ["s140e.webp", "s145e.webp", "s147e.webp"],
         Vintage: ["s175e.webp", "s112e.webp", "s164e.webp"],
         Islamic: ["s285e.webp", "s284e.webp", "s288e.webp"]
@@ -5709,7 +5709,7 @@ export const popularNames = [
         Islamic: ["s292e.webp", "s288e.webp", "s286e.webp"],
         Buddhist: ["s303e.webp", "s301e.webp", "s298e.webp"]
       },
-      otherStyles: ["Seasonal", "Movies & TV Shows", "Gaming", "Classic", "Gifts"]
+      otherStyles: ["Seasonal", "Movies & TV Shows", "Gaming", "Classic", "Birthday"]
     },
     {
       name: "Monroe",
@@ -5738,7 +5738,7 @@ export const popularNames = [
         Animals: ["s245e.webp", "s239e.webp", "s247e.webp"],
         Typography: ["s13e.webp", "s62e.webp", "s81e.webp"]
       },
-      otherStyles: ["Hobbies", "Islamic", "Gifts", "3D", "Classic"]
+      otherStyles: ["Hobbies", "Islamic", "Birthday", "3D", "Classic"]
     },
     {
       name: "Jessica",
@@ -5767,7 +5767,7 @@ export const popularNames = [
         Seasonal: ["s194e.webp", "s71e.webp", "s195e.webp"],
         Festive: ["s8e.webp", "s31e.webp", "s33e.webp"]
       },
-      otherStyles: ["Cute", "Food", "Classic", "Gifts", "Illustration", "Movies & TV Shows"]
+      otherStyles: ["Cute", "Food", "Classic", "Birthday", "Illustration", "Movies & TV Shows"]
     },
     {
       name: "Gabrielle",
@@ -5786,7 +5786,7 @@ export const popularNames = [
         Vintage: ["s259e.webp", "s85e.webp", "s166e.webp"],
         "3D": ["s52e.webp", "s130e.webp", "s44e.webp"]
       },
-      otherStyles: ["Gifts", "Floral", "Food"]
+      otherStyles: ["Birthday", "Floral", "Food"]
     },
     {
       name: "Beatrice",
@@ -5858,13 +5858,13 @@ export const popularNames = [
         Landscapes: ["s253e.webp", "s58e.webp", "s255e.webp"],
         Gaming: ["s137e.webp", "s14e.webp", "s146e.webp"]
       },
-      otherStyles: ["3D", "Buddhist", "Logos", "Hobbies", "Gifts", "Cute"]
+      otherStyles: ["3D", "Buddhist", "Logos", "Hobbies", "Birthday", "Cute"]
     },
     {
       name: "Alondra",
-      niches: ["Gifts", "Celebrations", "Logos", "Buddhist"],
+      niches: ["Birthday", "Celebrations", "Logos", "Buddhist"],
       images: {
-        Gifts: ["s36e.webp", "s86e.webp", "s3e.webp"],
+        Birthday: ["s43e.webp", "s100e.webp", "s40e.webp"],
         Celebrations: ["s94e.webp", "s126e.webp", "s40e.webp"],
         Logos: ["s265e.webp", "s267e.webp", "s264e.webp"],
         Buddhist: ["s295e.webp", "s297e.webp", "s294e.webp"]
@@ -5902,10 +5902,10 @@ export const popularNames = [
     },
     {
       name: "Jazlyn",
-      niches: ["Festive", "Gifts", "Buddhist"],
+      niches: ["Festive", "Birthday", "Buddhist"],
       images: {
         Festive: ["s88e.webp", "s33e.webp", "s32e.webp"],
-        Gifts: ["s68e.webp", "s86e.webp", "s66e.webp"],
+        Birthday: ["s91e.webp", "s100e.webp", "s94e.webp"],
         Buddhist: ["s300e.webp", "s294e.webp", "s295e.webp"]
       },
       otherStyles: ["Islamic", "Abstract", "Illustration", "Landscapes", "Vintage", "Celebrations"]
@@ -5928,7 +5928,7 @@ export const popularNames = [
         Food: ["s101e.webp", "s217e.webp", "s1e.webp"],
         Typography: ["s15e.webp", "s81e.webp", "s115e.webp"]
       },
-      otherStyles: ["Gaming", "Vintage", "Buddhist", "Gifts", "Animals", "Logos"]
+      otherStyles: ["Gaming", "Vintage", "Buddhist", "Birthday", "Animals", "Logos"]
     },
     {
       name: "Eileen",
@@ -5938,7 +5938,7 @@ export const popularNames = [
         Vintage: ["s85e.webp", "s171e.webp", "s173e.webp"],
         Fantasy: ["s96e.webp", "s67e.webp", "s72e.webp"]
       },
-      otherStyles: ["Gifts", "Landscapes", "Illustration", "Logos", "Food"]
+      otherStyles: ["Birthday", "Landscapes", "Illustration", "Logos", "Food"]
     },
     {
       name: "Lyric",
@@ -5958,7 +5958,7 @@ export const popularNames = [
         Christian: ["s274e.webp", "s283e.webp", "s277e.webp"],
         Gaming: ["s145e.webp", "s132e.webp", "s155e.webp"]
       },
-      otherStyles: ["Celebrations", "Seasonal", "Abstract", "Vintage", "Gifts"]
+      otherStyles: ["Celebrations", "Seasonal", "Abstract", "Vintage", "Birthday"]
     },
     {
       name: "Sierra",
@@ -5969,7 +5969,7 @@ export const popularNames = [
         Illustration: ["s35e.webp", "s90e.webp", "s37e.webp"],
         Abstract: ["s186e.webp", "s180e.webp", "s181e.webp"]
       },
-      otherStyles: ["Celebrations", "Food", "Animals", "Gifts", "Buddhist", "Christian"]
+      otherStyles: ["Celebrations", "Food", "Animals", "Birthday", "Buddhist", "Christian"]
     },
     {
       name: "Rosalia",
@@ -6052,7 +6052,7 @@ export const popularNames = [
         "3D": ["s262e.webp", "s129e.webp", "s130e.webp"],
         Islamic: ["s291e.webp", "s284e.webp", "s285e.webp"]
       },
-      otherStyles: ["Gifts", "Christian", "Gaming", "Cute", "Typography"]
+      otherStyles: ["Birthday", "Christian", "Gaming", "Cute", "Typography"]
     },
     {
       name: "Leslie",
@@ -6065,9 +6065,9 @@ export const popularNames = [
     },
     {
       name: "Sevyn",
-      niches: ["Gifts", "Gaming"],
+      niches: ["Birthday", "Gaming"],
       images: {
-        Gifts: ["s3e.webp", "s86e.webp", "s36e.webp"],
+        Birthday: ["s40e.webp", "s100e.webp", "s43e.webp"],
         Gaming: ["s146e.webp", "s6e.webp", "s148e.webp"]
       },
       otherStyles: ["3D", "Islamic", "Animals", "Floral", "Typography"]
@@ -6079,15 +6079,15 @@ export const popularNames = [
         Buddhist: ["s298e.webp", "s301e.webp", "s296e.webp"],
         Classic: ["s160e.webp", "s165e.webp", "s169e.webp"]
       },
-      otherStyles: ["Islamic", "Typography", "Gifts", "Celebrations"]
+      otherStyles: ["Islamic", "Typography", "Birthday", "Celebrations"]
     },
     {
       name: "Mina",
-      niches: ["Cute", "Logos", "Gifts", "Anime"],
+      niches: ["Cute", "Logos", "Birthday", "Anime"],
       images: {
         Cute: ["s16e.webp", "s55e.webp", "s7e.webp"],
         Logos: ["s269e.webp", "s263e.webp", "s271e.webp"],
-        Gifts: ["s36e.webp", "s83e.webp", "s86e.webp"],
+        Birthday: ["s43e.webp", "s77e.webp", "s100e.webp"],
         Anime: ["s26e.webp", "s76e.webp", "s218e.webp"]
       },
       otherStyles: ["Seasonal", "Christian", "Celebrations", "Gaming", "Abstract", "Typography"]
@@ -6111,7 +6111,7 @@ export const popularNames = [
         Christian: ["s274e.webp", "s275e.webp", "s281e.webp"],
         "3D": ["s129e.webp", "s52e.webp", "s49e.webp"]
       },
-      otherStyles: ["Illustration", "Gaming", "Landscapes", "Gifts", "Animals"]
+      otherStyles: ["Illustration", "Gaming", "Landscapes", "Birthday", "Animals"]
     },
     {
       name: "Tiana",
@@ -6216,7 +6216,7 @@ export const popularNames = [
         Christian: ["s279e.webp", "s281e.webp", "s282e.webp"],
         Animals: ["s56e.webp", "s17e.webp", "s61e.webp"]
       },
-      otherStyles: ["Food", "Hobbies", "3D", "Gifts", "Vintage", "Logos"]
+      otherStyles: ["Food", "Hobbies", "3D", "Birthday", "Vintage", "Logos"]
     },
     {
       name: "Journi",
@@ -6226,7 +6226,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s233e.webp", "s232e.webp", "s237e.webp"],
         Classic: ["s89e.webp", "s168e.webp", "s124e.webp"]
       },
-      otherStyles: ["Logos", "Gifts", "Food", "Typography", "Celebrations", "Christian"]
+      otherStyles: ["Logos", "Birthday", "Food", "Typography", "Celebrations", "Christian"]
     },
     {
       name: "Miranda",
@@ -6291,10 +6291,10 @@ export const popularNames = [
     },
     {
       name: "Kenzie",
-      niches: ["Abstract", "Gifts"],
+      niches: ["Abstract", "Birthday"],
       images: {
         Abstract: ["s187e.webp", "s180e.webp", "s178e.webp"],
-        Gifts: ["s68e.webp", "s36e.webp", "s3e.webp"]
+        Birthday: ["s91e.webp", "s43e.webp", "s40e.webp"]
       },
       otherStyles: ["Vintage", "Christian", "Hobbies", "Islamic", "Landscapes", "Cute"]
     },
@@ -6336,7 +6336,7 @@ export const popularNames = [
         Hobbies: ["s202e.webp", "s206e.webp", "s204e.webp"],
         Floral: ["s108e.webp", "s9e.webp", "s24e.webp"]
       },
-      otherStyles: ["Gifts", "Cute", "Celebrations", "Classic", "Abstract"]
+      otherStyles: ["Birthday", "Cute", "Celebrations", "Classic", "Abstract"]
     },
     {
       name: "Melina",
@@ -6345,7 +6345,7 @@ export const popularNames = [
         Celebrations: ["s120e.webp", "s40e.webp", "s78e.webp"],
         Illustration: ["s102e.webp", "s37e.webp", "s74e.webp"]
       },
-      otherStyles: ["Gifts", "Cute", "Vintage", "Buddhist"]
+      otherStyles: ["Birthday", "Cute", "Vintage", "Buddhist"]
     },
     {
       name: "Amani",
@@ -6500,7 +6500,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s231e.webp", "s230e.webp", "s229e.webp"],
         Gaming: ["s149e.webp", "s138e.webp", "s155e.webp"]
       },
-      otherStyles: ["Illustration", "Animals", "Gifts", "Classic", "Landscapes", "3D"]
+      otherStyles: ["Illustration", "Animals", "Birthday", "Classic", "Landscapes", "3D"]
     },
     {
       name: "Azariah",
@@ -6509,7 +6509,7 @@ export const popularNames = [
         Celebrations: ["s120e.webp", "s43e.webp", "s40e.webp"],
         Hobbies: ["s200e.webp", "s203e.webp", "s204e.webp"]
       },
-      otherStyles: ["Fantasy", "Cute", "Graffiti", "Gifts"]
+      otherStyles: ["Fantasy", "Cute", "Graffiti", "Birthday"]
     },
     {
       name: "Indie",
@@ -6518,7 +6518,7 @@ export const popularNames = [
         Vintage: ["s166e.webp", "s173e.webp", "s112e.webp"],
         Graffiti: ["s107e.webp", "s117e.webp", "s118e.webp"]
       },
-      otherStyles: ["Animals", "Fantasy", "Cute", "Gifts", "Seasonal"]
+      otherStyles: ["Animals", "Fantasy", "Cute", "Birthday", "Seasonal"]
     },
     {
       name: "Kaitlyn",
@@ -6528,7 +6528,7 @@ export const popularNames = [
         "3D": ["s262e.webp", "s52e.webp", "s130e.webp"],
         Abstract: ["s180e.webp", "s185e.webp", "s187e.webp"]
       },
-      otherStyles: ["Gifts", "Hobbies", "Vintage", "Fantasy", "Christian"]
+      otherStyles: ["Birthday", "Hobbies", "Vintage", "Fantasy", "Christian"]
     },
     {
       name: "Jazmin",
@@ -6572,10 +6572,10 @@ export const popularNames = [
     },
     {
       name: "Dallas",
-      niches: ["Islamic", "Gifts"],
+      niches: ["Islamic", "Birthday"],
       images: {
         Islamic: ["s293e.webp", "s288e.webp", "s287e.webp"],
-        Gifts: ["s68e.webp", "s36e.webp", "s3e.webp"]
+        Birthday: ["s91e.webp", "s43e.webp", "s40e.webp"]
       },
       otherStyles: ["Landscapes", "Cute", "Food", "Gaming", "Seasonal", "Festive"]
     },
@@ -6604,7 +6604,7 @@ export const popularNames = [
         Buddhist: ["s300e.webp", "s294e.webp", "s303e.webp"],
         Celebrations: ["s43e.webp", "s91e.webp", "s94e.webp"]
       },
-      otherStyles: ["Vintage", "Abstract", "Gifts", "Islamic", "Illustration", "Landscapes"]
+      otherStyles: ["Vintage", "Abstract", "Birthday", "Islamic", "Illustration", "Landscapes"]
     },
     {
       name: "Skyler",
@@ -6638,10 +6638,10 @@ export const popularNames = [
     },
     {
       name: "Dulce",
-      niches: ["Graffiti", "Gifts"],
+      niches: ["Graffiti", "Birthday"],
       images: {
         Graffiti: ["s117e.webp", "s118e.webp", "s107e.webp"],
-        Gifts: ["s68e.webp", "s3e.webp", "s36e.webp"]
+        Birthday: ["s91e.webp", "s40e.webp", "s43e.webp"]
       },
       otherStyles: ["Food", "Celebrations", "Animals", "Christian", "Illustration"]
     },
@@ -6702,7 +6702,7 @@ export const popularNames = [
         Celebrations: ["s43e.webp", "s120e.webp", "s94e.webp"],
         Logos: ["s266e.webp", "s271e.webp", "s264e.webp"]
       },
-      otherStyles: ["Graffiti", "3D", "Seasonal", "Gifts", "Abstract"]
+      otherStyles: ["Graffiti", "3D", "Seasonal", "Birthday", "Abstract"]
     },
     {
       name: "Kelsey",
@@ -6721,7 +6721,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s234e.webp", "s231e.webp", "s232e.webp"],
         Vintage: ["s173e.webp", "s174e.webp", "s112e.webp"]
       },
-      otherStyles: ["Festive", "Abstract", "Logos", "Typography", "Gifts"]
+      otherStyles: ["Festive", "Abstract", "Logos", "Typography", "Birthday"]
     },
     {
       name: "Chana",
@@ -6744,9 +6744,9 @@ export const popularNames = [
     },
     {
       name: "Selene",
-      niches: ["Gifts", "3D", "Animals"],
+      niches: ["Birthday", "3D", "Animals"],
       images: {
-        Gifts: ["s83e.webp", "s66e.webp", "s36e.webp"],
+        Birthday: ["s77e.webp", "s94e.webp", "s43e.webp"],
         "3D": ["s52e.webp", "s63e.webp", "s44e.webp"],
         Animals: ["s110e.webp", "s242e.webp", "s241e.webp"]
       },
@@ -6830,20 +6830,20 @@ export const popularNames = [
     },
     {
       name: "Lillie",
-      niches: ["Christian", "Illustration", "Landscapes", "Gifts"],
+      niches: ["Christian", "Illustration", "Landscapes", "Birthday"],
       images: {
         Christian: ["s277e.webp", "s282e.webp", "s278e.webp"],
         Illustration: ["s79e.webp", "s74e.webp", "s59e.webp"],
         Landscapes: ["s252e.webp", "s29e.webp", "s257e.webp"],
-        Gifts: ["s36e.webp", "s3e.webp", "s83e.webp"]
+        Birthday: ["s43e.webp", "s40e.webp", "s77e.webp"]
       },
       otherStyles: ["Graffiti", "Floral", "Seasonal", "Buddhist", "Animals"]
     },
     {
       name: "Kennedi",
-      niches: ["Gifts", "Animals", "Hobbies"],
+      niches: ["Birthday", "Animals", "Hobbies"],
       images: {
-        Gifts: ["s36e.webp", "s86e.webp", "s66e.webp"],
+        Birthday: ["s43e.webp", "s100e.webp", "s94e.webp"],
         Animals: ["s241e.webp", "s243e.webp", "s110e.webp"],
         Hobbies: ["s200e.webp", "s201e.webp", "s205e.webp"]
       },
@@ -6856,7 +6856,7 @@ export const popularNames = [
         Animals: ["s244e.webp", "s106e.webp", "s240e.webp"],
         Buddhist: ["s302e.webp", "s298e.webp", "s303e.webp"]
       },
-      otherStyles: ["Logos", "Movies & TV Shows", "Vintage", "Gifts"]
+      otherStyles: ["Logos", "Movies & TV Shows", "Vintage", "Birthday"]
     },
     {
       name: "Kendra",
@@ -6866,7 +6866,7 @@ export const popularNames = [
         Typography: ["s81e.webp", "s258e.webp", "s62e.webp"],
         Cute: ["s80e.webp", "s92e.webp", "s95e.webp"]
       },
-      otherStyles: ["Celebrations", "Fantasy", "Gifts", "Classic"]
+      otherStyles: ["Celebrations", "Fantasy", "Birthday", "Classic"]
     },
     {
       name: "Lennox",
@@ -6915,7 +6915,7 @@ export const popularNames = [
         Vintage: ["s177e.webp", "s166e.webp", "s172e.webp"],
         Anime: ["s26e.webp", "s220e.webp", "s222e.webp"]
       },
-      otherStyles: ["Typography", "Cute", "Gifts", "Christian", "Seasonal"]
+      otherStyles: ["Typography", "Cute", "Birthday", "Christian", "Seasonal"]
     },
     {
       name: "Marigold",
@@ -6988,7 +6988,7 @@ export const popularNames = [
         Anime: ["s76e.webp", "s223e.webp", "s218e.webp"],
         Festive: ["s88e.webp", "s8e.webp", "s31e.webp"]
       },
-      otherStyles: ["Islamic", "Cute", "Animals", "Hobbies", "Gifts", "Classic"]
+      otherStyles: ["Islamic", "Cute", "Animals", "Hobbies", "Birthday", "Classic"]
     },
     {
       name: "Milan",
@@ -7008,7 +7008,7 @@ export const popularNames = [
         Vintage: ["s85e.webp", "s173e.webp", "s174e.webp"],
         Animals: ["s106e.webp", "s243e.webp", "s110e.webp"]
       },
-      otherStyles: ["Illustration", "Gifts", "Classic", "Graffiti"]
+      otherStyles: ["Illustration", "Birthday", "Classic", "Graffiti"]
     },
     {
       name: "Ryan",
@@ -7132,7 +7132,7 @@ export const popularNames = [
         Fantasy: ["s123e.webp", "s67e.webp", "s46e.webp"],
         Logos: ["s268e.webp", "s264e.webp", "s271e.webp"]
       },
-      otherStyles: ["Buddhist", "Islamic", "Cute", "Floral", "Movies & TV Shows", "Gifts"]
+      otherStyles: ["Buddhist", "Islamic", "Cute", "Floral", "Movies & TV Shows", "Birthday"]
     },
     {
       name: "Lenora",
@@ -7142,7 +7142,7 @@ export const popularNames = [
         Food: ["s208e.webp", "s210e.webp", "s216e.webp"],
         Animals: ["s261e.webp", "s56e.webp", "s242e.webp"]
       },
-      otherStyles: ["Christian", "Gifts", "Abstract", "3D", "Landscapes", "Festive"]
+      otherStyles: ["Christian", "Birthday", "Abstract", "3D", "Landscapes", "Festive"]
     },
     {
       name: "Taytum",
@@ -7222,7 +7222,7 @@ export const popularNames = [
         Typography: ["s111e.webp", "s41e.webp", "s15e.webp"],
         Food: ["s212e.webp", "s211e.webp", "s213e.webp"]
       },
-      otherStyles: ["Seasonal", "Movies & TV Shows", "Vintage", "Logos", "Gifts"]
+      otherStyles: ["Seasonal", "Movies & TV Shows", "Vintage", "Logos", "Birthday"]
     },
     {
       name: "Araceli",
@@ -7243,7 +7243,7 @@ export const popularNames = [
         Vintage: ["s172e.webp", "s170e.webp", "s112e.webp"],
         Typography: ["s41e.webp", "s122e.webp", "s48e.webp"]
       },
-      otherStyles: ["Christian", "Gifts", "Illustration", "Festive", "Islamic"]
+      otherStyles: ["Christian", "Birthday", "Illustration", "Festive", "Islamic"]
     },
     {
       name: "Kenna",
@@ -7266,11 +7266,11 @@ export const popularNames = [
     },
     {
       name: "Bethany",
-      niches: ["Christian", "Logos", "Gifts"],
+      niches: ["Christian", "Logos", "Birthday"],
       images: {
         Christian: ["s283e.webp", "s281e.webp", "s275e.webp"],
         Logos: ["s270e.webp", "s264e.webp", "s269e.webp"],
-        Gifts: ["s68e.webp", "s36e.webp", "s86e.webp"]
+        Birthday: ["s91e.webp", "s43e.webp", "s100e.webp"]
       },
       otherStyles: ["Vintage", "Seasonal", "Gaming", "Cute", "Illustration"]
     },
@@ -7301,7 +7301,7 @@ export const popularNames = [
         Food: ["s1e.webp", "s209e.webp", "s99e.webp"],
         Fantasy: ["s260e.webp", "s72e.webp", "s96e.webp"]
       },
-      otherStyles: ["Gifts", "Celebrations", "Seasonal", "Hobbies"]
+      otherStyles: ["Birthday", "Celebrations", "Seasonal", "Hobbies"]
     },
     {
       name: "Kayleigh",
@@ -7372,7 +7372,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s84e.webp", "s232e.webp", "s47e.webp"],
         Seasonal: ["s195e.webp", "s188e.webp", "s193e.webp"]
       },
-      otherStyles: ["Graffiti", "Gifts", "Buddhist", "Animals", "Celebrations"]
+      otherStyles: ["Graffiti", "Birthday", "Buddhist", "Animals", "Celebrations"]
     },
     {
       name: "Winona",
@@ -7383,7 +7383,7 @@ export const popularNames = [
         Fantasy: ["s123e.webp", "s82e.webp", "s72e.webp"],
         Hobbies: ["s204e.webp", "s207e.webp", "s202e.webp"]
       },
-      otherStyles: ["Seasonal", "Buddhist", "Gifts", "Christian", "Animals", "Classic"]
+      otherStyles: ["Seasonal", "Buddhist", "Birthday", "Christian", "Animals", "Classic"]
     },
     {
       name: "Marisol",
@@ -7425,11 +7425,11 @@ export const popularNames = [
     },
     {
       name: "Michaela",
-      niches: ["Animals", "Movies & TV Shows", "Gifts", "Anime"],
+      niches: ["Animals", "Movies & TV Shows", "Birthday", "Anime"],
       images: {
         Animals: ["s56e.webp", "s247e.webp", "s246e.webp"],
         "Movies & TV Shows": ["s234e.webp", "s235e.webp", "s228e.webp"],
-        Gifts: ["s3e.webp", "s66e.webp", "s86e.webp"],
+        Birthday: ["s40e.webp", "s94e.webp", "s100e.webp"],
         Anime: ["s221e.webp", "s218e.webp", "s26e.webp"]
       },
       otherStyles: ["Vintage", "Classic", "Food", "Typography", "Celebrations", "Floral"]
@@ -7441,7 +7441,7 @@ export const popularNames = [
         Hobbies: ["s199e.webp", "s21e.webp", "s200e.webp"],
         Fantasy: ["s67e.webp", "s72e.webp", "s123e.webp"]
       },
-      otherStyles: ["Gifts", "Abstract", "Graffiti"]
+      otherStyles: ["Birthday", "Abstract", "Graffiti"]
     },
     {
       name: "Elyse",
@@ -7476,9 +7476,9 @@ export const popularNames = [
     },
     {
       name: "Zelda",
-      niches: ["Gifts", "Food", "Hobbies", "Typography"],
+      niches: ["Birthday", "Food", "Hobbies", "Typography"],
       images: {
-        Gifts: ["s83e.webp", "s66e.webp", "s68e.webp"],
+        Birthday: ["s77e.webp", "s94e.webp", "s91e.webp"],
         Food: ["s99e.webp", "s217e.webp", "s208e.webp"],
         Hobbies: ["s21e.webp", "s203e.webp", "s20e.webp"],
         Typography: ["s81e.webp", "s62e.webp", "s13e.webp"]
@@ -7512,7 +7512,7 @@ export const popularNames = [
         Food: ["s217e.webp", "s210e.webp", "s99e.webp"],
         Floral: ["s24e.webp", "s2e.webp", "s116e.webp"]
       },
-      otherStyles: ["Cute", "Abstract", "Gifts", "3D", "Buddhist"]
+      otherStyles: ["Cute", "Abstract", "Birthday", "3D", "Buddhist"]
     },
     {
       name: "Nala",
@@ -7522,7 +7522,7 @@ export const popularNames = [
         Graffiti: ["s39e.webp", "s117e.webp", "s25e.webp"],
         Logos: ["s265e.webp", "s264e.webp", "s263e.webp"]
       },
-      otherStyles: ["Gaming", "Gifts", "Fantasy"]
+      otherStyles: ["Gaming", "Birthday", "Fantasy"]
     },
     {
       name: "Paula",
@@ -7556,10 +7556,10 @@ export const popularNames = [
     },
     {
       name: "Lakelyn",
-      niches: ["Logos", "Gifts", "Landscapes"],
+      niches: ["Logos", "Birthday", "Landscapes"],
       images: {
         Logos: ["s269e.webp", "s266e.webp", "s267e.webp"],
-        Gifts: ["s83e.webp", "s86e.webp", "s3e.webp"],
+        Birthday: ["s77e.webp", "s100e.webp", "s40e.webp"],
         Landscapes: ["s249e.webp", "s248e.webp", "s28e.webp"]
       },
       otherStyles: ["Animals", "Christian", "Cute"]
@@ -7587,12 +7587,12 @@ export const popularNames = [
     },
     {
       name: "Aleah",
-      niches: ["Celebrations", "Illustration", "Fantasy", "Gifts"],
+      niches: ["Celebrations", "Illustration", "Fantasy", "Birthday"],
       images: {
         Celebrations: ["s126e.webp", "s120e.webp", "s91e.webp"],
         Illustration: ["s90e.webp", "s35e.webp", "s74e.webp"],
         Fantasy: ["s82e.webp", "s260e.webp", "s67e.webp"],
-        Gifts: ["s68e.webp", "s83e.webp", "s66e.webp"]
+        Birthday: ["s91e.webp", "s77e.webp", "s94e.webp"]
       },
       otherStyles: ["Gaming", "Food", "Buddhist", "Floral", "Movies & TV Shows"]
     },
@@ -7624,7 +7624,7 @@ export const popularNames = [
         Floral: ["s108e.webp", "s5e.webp", "s116e.webp"],
         Buddhist: ["s298e.webp", "s294e.webp", "s303e.webp"]
       },
-      otherStyles: ["Gifts", "Gaming", "Abstract"]
+      otherStyles: ["Birthday", "Gaming", "Abstract"]
     },
     {
       name: "Charleigh",
@@ -7644,26 +7644,26 @@ export const popularNames = [
         Fantasy: ["s67e.webp", "s96e.webp", "s125e.webp"],
         Abstract: ["s184e.webp", "s179e.webp", "s180e.webp"]
       },
-      otherStyles: ["Celebrations", "Movies & TV Shows", "Classic", "Gifts"]
+      otherStyles: ["Celebrations", "Movies & TV Shows", "Classic", "Birthday"]
     },
     {
       name: "Andi",
-      niches: ["Celebrations", "Gifts", "Floral"],
+      niches: ["Celebrations", "Birthday", "Floral"],
       images: {
         Celebrations: ["s40e.webp", "s126e.webp", "s78e.webp"],
-        Gifts: ["s36e.webp", "s83e.webp", "s86e.webp"],
+        Birthday: ["s43e.webp", "s77e.webp", "s100e.webp"],
         Floral: ["s108e.webp", "s2e.webp", "s131e.webp"]
       },
       otherStyles: ["Illustration", "Gaming", "Classic", "Logos"]
     },
     {
       name: "Nola",
-      niches: ["Fantasy", "Abstract", "Anime", "Gifts"],
+      niches: ["Fantasy", "Abstract", "Anime", "Birthday"],
       images: {
         Fantasy: ["s96e.webp", "s123e.webp", "s82e.webp"],
         Abstract: ["s185e.webp", "s183e.webp", "s178e.webp"],
         Anime: ["s225e.webp", "s222e.webp", "s221e.webp"],
-        Gifts: ["s66e.webp", "s86e.webp", "s68e.webp"]
+        Birthday: ["s94e.webp", "s100e.webp", "s91e.webp"]
       },
       otherStyles: ["Food", "Festive", "Typography", "Classic", "Vintage"]
     },
@@ -7676,7 +7676,7 @@ export const popularNames = [
         Floral: ["s127e.webp", "s116e.webp", "s5e.webp"],
         Hobbies: ["s20e.webp", "s203e.webp", "s207e.webp"]
       },
-      otherStyles: ["Anime", "Gifts", "Seasonal", "Cute", "Logos"]
+      otherStyles: ["Anime", "Birthday", "Seasonal", "Cute", "Logos"]
     },
     {
       name: "Adrianna",
@@ -7686,7 +7686,7 @@ export const popularNames = [
         Food: ["s214e.webp", "s97e.webp", "s210e.webp"],
         Buddhist: ["s294e.webp", "s297e.webp", "s299e.webp"]
       },
-      otherStyles: ["Gifts", "Floral", "Christian", "Seasonal", "Logos"]
+      otherStyles: ["Birthday", "Floral", "Christian", "Seasonal", "Logos"]
     },
     {
       name: "Kaeli",
@@ -7700,20 +7700,20 @@ export const popularNames = [
     },
     {
       name: "Addilyn",
-      niches: ["Vintage", "Christian", "Gifts"],
+      niches: ["Vintage", "Christian", "Birthday"],
       images: {
         Vintage: ["s164e.webp", "s259e.webp", "s85e.webp"],
         Christian: ["s281e.webp", "s280e.webp", "s274e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s68e.webp"]
+        Birthday: ["s100e.webp", "s43e.webp", "s91e.webp"]
       },
       otherStyles: ["Fantasy", "3D", "Seasonal"]
     },
     {
       name: "Freyja",
-      niches: ["Illustration", "Gifts", "Floral", "Buddhist"],
+      niches: ["Illustration", "Birthday", "Floral", "Buddhist"],
       images: {
         Illustration: ["s79e.webp", "s37e.webp", "s35e.webp"],
-        Gifts: ["s68e.webp", "s83e.webp", "s3e.webp"],
+        Birthday: ["s91e.webp", "s77e.webp", "s40e.webp"],
         Floral: ["s9e.webp", "s114e.webp", "s127e.webp"],
         Buddhist: ["s301e.webp", "s300e.webp", "s299e.webp"]
       },
@@ -7727,14 +7727,14 @@ export const popularNames = [
         Landscapes: ["s254e.webp", "s252e.webp", "s249e.webp"],
         Gaming: ["s134e.webp", "s150e.webp", "s141e.webp"]
       },
-      otherStyles: ["Logos", "Gifts", "Christian", "Typography", "Buddhist", "Fantasy"]
+      otherStyles: ["Logos", "Birthday", "Christian", "Typography", "Buddhist", "Fantasy"]
     },
     {
       name: "Samira",
-      niches: ["Logos", "Gifts", "Cute", "Hobbies"],
+      niches: ["Logos", "Birthday", "Cute", "Hobbies"],
       images: {
         Logos: ["s270e.webp", "s264e.webp", "s263e.webp"],
-        Gifts: ["s83e.webp", "s3e.webp", "s68e.webp"],
+        Birthday: ["s77e.webp", "s40e.webp", "s91e.webp"],
         Cute: ["s22e.webp", "s34e.webp", "s19e.webp"],
         Hobbies: ["s207e.webp", "s203e.webp", "s200e.webp"]
       },
@@ -7757,15 +7757,15 @@ export const popularNames = [
         Animals: ["s245e.webp", "s17e.webp", "s246e.webp"],
         Anime: ["s109e.webp", "s12e.webp", "s76e.webp"]
       },
-      otherStyles: ["Cute", "Festive", "Gifts", "Vintage", "Gaming"]
+      otherStyles: ["Cute", "Festive", "Birthday", "Vintage", "Gaming"]
     },
     {
       name: "Janelle",
-      niches: ["Floral", "Movies & TV Shows", "Gifts", "Celebrations"],
+      niches: ["Floral", "Movies & TV Shows", "Birthday", "Celebrations"],
       images: {
         Floral: ["s127e.webp", "s114e.webp", "s5e.webp"],
         "Movies & TV Shows": ["s230e.webp", "s237e.webp", "s229e.webp"],
-        Gifts: ["s86e.webp", "s83e.webp", "s68e.webp"],
+        Birthday: ["s100e.webp", "s77e.webp", "s91e.webp"],
         Celebrations: ["s126e.webp", "s40e.webp", "s78e.webp"]
       },
       otherStyles: ["Fantasy", "Classic", "Vintage"]
@@ -7801,21 +7801,21 @@ export const popularNames = [
     },
     {
       name: "Indy",
-      niches: ["Seasonal", "Gaming", "Gifts", "Floral"],
+      niches: ["Seasonal", "Gaming", "Birthday", "Floral"],
       images: {
         Seasonal: ["s197e.webp", "s71e.webp", "s193e.webp"],
         Gaming: ["s141e.webp", "s151e.webp", "s132e.webp"],
-        Gifts: ["s66e.webp", "s86e.webp", "s36e.webp"],
+        Birthday: ["s94e.webp", "s100e.webp", "s43e.webp"],
         Floral: ["s24e.webp", "s9e.webp", "s108e.webp"]
       },
       otherStyles: ["Landscapes", "Abstract", "Buddhist", "Fantasy", "Islamic"]
     },
     {
       name: "Paulina",
-      niches: ["Anime", "Gifts", "Gaming", "3D"],
+      niches: ["Anime", "Birthday", "Gaming", "3D"],
       images: {
         Anime: ["s221e.webp", "s219e.webp", "s26e.webp"],
-        Gifts: ["s68e.webp", "s66e.webp", "s3e.webp"],
+        Birthday: ["s91e.webp", "s94e.webp", "s40e.webp"],
         Gaming: ["s156e.webp", "s157e.webp", "s139e.webp"],
         "3D": ["s262e.webp", "s44e.webp", "s49e.webp"]
       },
@@ -7844,11 +7844,11 @@ export const popularNames = [
     },
     {
       name: "Chelsea",
-      niches: ["Seasonal", "Classic", "Gifts", "Illustration"],
+      niches: ["Seasonal", "Classic", "Birthday", "Illustration"],
       images: {
         Seasonal: ["s105e.webp", "s71e.webp", "s188e.webp"],
         Classic: ["s161e.webp", "s124e.webp", "s163e.webp"],
-        Gifts: ["s86e.webp", "s36e.webp", "s66e.webp"],
+        Birthday: ["s100e.webp", "s43e.webp", "s94e.webp"],
         Illustration: ["s74e.webp", "s102e.webp", "s37e.webp"]
       },
       otherStyles: ["Animals", "Floral", "Food"]
@@ -7871,7 +7871,7 @@ export const popularNames = [
         Christian: ["s277e.webp", "s275e.webp", "s274e.webp"],
         Celebrations: ["s91e.webp", "s120e.webp", "s126e.webp"]
       },
-      otherStyles: ["Movies & TV Shows", "Gifts", "Logos", "Floral", "Cute", "Festive"]
+      otherStyles: ["Movies & TV Shows", "Birthday", "Logos", "Floral", "Cute", "Festive"]
     },
     {
       name: "Valery",
@@ -7881,7 +7881,7 @@ export const popularNames = [
         Festive: ["s88e.webp", "s65e.webp", "s69e.webp"],
         Floral: ["s127e.webp", "s108e.webp", "s53e.webp"]
       },
-      otherStyles: ["Buddhist", "Anime", "Gifts", "Christian", "Vintage", "Fantasy"]
+      otherStyles: ["Buddhist", "Anime", "Birthday", "Christian", "Vintage", "Fantasy"]
     },
     {
       name: "Ivey",
@@ -7904,10 +7904,10 @@ export const popularNames = [
     },
     {
       name: "Stormi",
-      niches: ["Abstract", "Gifts", "Buddhist", "3D"],
+      niches: ["Abstract", "Birthday", "Buddhist", "3D"],
       images: {
         Abstract: ["s182e.webp", "s183e.webp", "s119e.webp"],
-        Gifts: ["s68e.webp", "s66e.webp", "s86e.webp"],
+        Birthday: ["s91e.webp", "s94e.webp", "s100e.webp"],
         Buddhist: ["s301e.webp", "s299e.webp", "s302e.webp"],
         "3D": ["s27e.webp", "s63e.webp", "s50e.webp"]
       },
@@ -7986,9 +7986,9 @@ export const popularNames = [
     },
     {
       name: "Adele",
-      niches: ["Gifts", "Gaming"],
+      niches: ["Birthday", "Gaming"],
       images: {
-        Gifts: ["s3e.webp", "s36e.webp", "s86e.webp"],
+        Birthday: ["s40e.webp", "s43e.webp", "s100e.webp"],
         Gaming: ["s18e.webp", "s158e.webp", "s132e.webp"]
       },
       otherStyles: ["Vintage", "Movies & TV Shows", "Animals", "Graffiti", "Festive", "Seasonal"]
@@ -8006,10 +8006,10 @@ export const popularNames = [
     },
     {
       name: "Jaliyah",
-      niches: ["Hobbies", "Gifts", "Animals"],
+      niches: ["Hobbies", "Birthday", "Animals"],
       images: {
         Hobbies: ["s204e.webp", "s206e.webp", "s30e.webp"],
-        Gifts: ["s3e.webp", "s36e.webp", "s83e.webp"],
+        Birthday: ["s40e.webp", "s43e.webp", "s77e.webp"],
         Animals: ["s240e.webp", "s110e.webp", "s23e.webp"]
       },
       otherStyles: ["Buddhist", "Illustration", "Food", "Seasonal"]
@@ -8027,10 +8027,10 @@ export const popularNames = [
     },
     {
       name: "Pearl",
-      niches: ["3D", "Gifts", "Food", "Buddhist"],
+      niches: ["3D", "Birthday", "Food", "Buddhist"],
       images: {
         "3D": ["s52e.webp", "s44e.webp", "s262e.webp"],
-        Gifts: ["s66e.webp", "s36e.webp", "s68e.webp"],
+        Birthday: ["s94e.webp", "s43e.webp", "s91e.webp"],
         Food: ["s217e.webp", "s216e.webp", "s215e.webp"],
         Buddhist: ["s294e.webp", "s302e.webp", "s298e.webp"]
       },
@@ -8038,10 +8038,10 @@ export const popularNames = [
     },
     {
       name: "Adalee",
-      niches: ["Graffiti", "Gifts", "Festive", "Buddhist"],
+      niches: ["Graffiti", "Birthday", "Festive", "Buddhist"],
       images: {
         Graffiti: ["s117e.webp", "s39e.webp", "s93e.webp"],
-        Gifts: ["s83e.webp", "s68e.webp", "s66e.webp"],
+        Birthday: ["s77e.webp", "s91e.webp", "s94e.webp"],
         Festive: ["s33e.webp", "s31e.webp", "s88e.webp"],
         Buddhist: ["s302e.webp", "s294e.webp", "s295e.webp"]
       },
@@ -8056,7 +8056,7 @@ export const popularNames = [
         Buddhist: ["s300e.webp", "s302e.webp", "s298e.webp"],
         Hobbies: ["s203e.webp", "s21e.webp", "s30e.webp"]
       },
-      otherStyles: ["Animals", "Classic", "Vintage", "Graffiti", "Gifts"]
+      otherStyles: ["Animals", "Classic", "Vintage", "Graffiti", "Birthday"]
     },
     {
       name: "Keyla",
@@ -8074,7 +8074,7 @@ export const popularNames = [
         Fantasy: ["s82e.webp", "s46e.webp", "s123e.webp"],
         "Movies & TV Shows": ["s231e.webp", "s233e.webp", "s229e.webp"]
       },
-      otherStyles: ["Gifts", "Classic", "Hobbies"]
+      otherStyles: ["Birthday", "Classic", "Hobbies"]
     },
     {
       name: "Baylor",
@@ -8126,7 +8126,7 @@ export const popularNames = [
         Buddhist: ["s294e.webp", "s301e.webp", "s295e.webp"],
         Fantasy: ["s60e.webp", "s96e.webp", "s67e.webp"]
       },
-      otherStyles: ["Abstract", "Gifts", "Illustration", "Anime", "Cute", "Gaming"]
+      otherStyles: ["Abstract", "Birthday", "Illustration", "Anime", "Cute", "Gaming"]
     },
     {
       name: "Theodora",
@@ -8149,9 +8149,9 @@ export const popularNames = [
     },
     {
       name: "Meilani",
-      niches: ["Gifts", "Illustration", "Landscapes", "Seasonal"],
+      niches: ["Birthday", "Illustration", "Landscapes", "Seasonal"],
       images: {
-        Gifts: ["s68e.webp", "s83e.webp", "s36e.webp"],
+        Birthday: ["s91e.webp", "s77e.webp", "s43e.webp"],
         Illustration: ["s74e.webp", "s35e.webp", "s59e.webp"],
         Landscapes: ["s256e.webp", "s128e.webp", "s250e.webp"],
         Seasonal: ["s189e.webp", "s194e.webp", "s188e.webp"]
@@ -8186,7 +8186,7 @@ export const popularNames = [
         "3D": ["s129e.webp", "s63e.webp", "s27e.webp"],
         Festive: ["s69e.webp", "s8e.webp", "s31e.webp"]
       },
-      otherStyles: ["Hobbies", "Food", "Logos", "Gifts"]
+      otherStyles: ["Hobbies", "Food", "Logos", "Birthday"]
     },
     {
       name: "Promise",
@@ -8206,7 +8206,7 @@ export const popularNames = [
         Typography: ["s41e.webp", "s13e.webp", "s15e.webp"],
         Anime: ["s225e.webp", "s222e.webp", "s227e.webp"]
       },
-      otherStyles: ["Movies & TV Shows", "Gifts", "Landscapes"]
+      otherStyles: ["Movies & TV Shows", "Birthday", "Landscapes"]
     },
     {
       name: "Xyla",
@@ -8215,7 +8215,7 @@ export const popularNames = [
         Classic: ["s38e.webp", "s89e.webp", "s169e.webp"],
         Logos: ["s265e.webp", "s269e.webp", "s268e.webp"]
       },
-      otherStyles: ["Gifts", "Celebrations", "Illustration", "Animals", "Buddhist", "Abstract"]
+      otherStyles: ["Birthday", "Celebrations", "Illustration", "Animals", "Buddhist", "Abstract"]
     },
     {
       name: "Kylee",
@@ -8257,7 +8257,7 @@ export const popularNames = [
         Buddhist: ["s302e.webp", "s298e.webp", "s295e.webp"],
         Classic: ["s163e.webp", "s167e.webp", "s89e.webp"]
       },
-      otherStyles: ["Celebrations", "Landscapes", "Movies & TV Shows", "Gifts"]
+      otherStyles: ["Celebrations", "Landscapes", "Movies & TV Shows", "Birthday"]
     },
     {
       name: "Zaria",
@@ -8278,13 +8278,13 @@ export const popularNames = [
         Anime: ["s221e.webp", "s222e.webp", "s218e.webp"],
         Graffiti: ["s25e.webp", "s39e.webp", "s93e.webp"]
       },
-      otherStyles: ["Gifts", "Gaming", "Food", "Landscapes"]
+      otherStyles: ["Birthday", "Gaming", "Food", "Landscapes"]
     },
     {
       name: "Luella",
-      niches: ["Gifts", "Landscapes", "Christian", "Illustration"],
+      niches: ["Birthday", "Landscapes", "Christian", "Illustration"],
       images: {
-        Gifts: ["s66e.webp", "s86e.webp", "s68e.webp"],
+        Birthday: ["s94e.webp", "s100e.webp", "s91e.webp"],
         Landscapes: ["s128e.webp", "s28e.webp", "s58e.webp"],
         Christian: ["s275e.webp", "s282e.webp", "s283e.webp"],
         Illustration: ["s59e.webp", "s74e.webp", "s79e.webp"]
@@ -8409,7 +8409,7 @@ export const popularNames = [
         Typography: ["s122e.webp", "s15e.webp", "s111e.webp"],
         "3D": ["s52e.webp", "s130e.webp", "s63e.webp"]
       },
-      otherStyles: ["Gifts", "Landscapes", "Christian"]
+      otherStyles: ["Birthday", "Landscapes", "Christian"]
     },
     {
       name: "Kahlani",
@@ -8448,7 +8448,7 @@ export const popularNames = [
         Animals: ["s121e.webp", "s23e.webp", "s242e.webp"],
         Graffiti: ["s39e.webp", "s25e.webp", "s118e.webp"]
       },
-      otherStyles: ["Gifts", "Anime", "Illustration"]
+      otherStyles: ["Birthday", "Anime", "Illustration"]
     },
     {
       name: "Zaniyah",
@@ -8466,7 +8466,7 @@ export const popularNames = [
         Abstract: ["s183e.webp", "s185e.webp", "s178e.webp"],
         Landscapes: ["s28e.webp", "s254e.webp", "s249e.webp"]
       },
-      otherStyles: ["Christian", "Islamic", "Gaming", "Gifts"]
+      otherStyles: ["Christian", "Islamic", "Gaming", "Birthday"]
     },
     {
       name: "Love",
@@ -8496,7 +8496,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s235e.webp", "s231e.webp", "s47e.webp"],
         Logos: ["s268e.webp", "s266e.webp", "s267e.webp"]
       },
-      otherStyles: ["Fantasy", "Floral", "Gifts", "3D", "Seasonal", "Anime"]
+      otherStyles: ["Fantasy", "Floral", "Birthday", "3D", "Seasonal", "Anime"]
     },
     {
       name: "Mercy",
@@ -8526,15 +8526,15 @@ export const popularNames = [
         Food: ["s1e.webp", "s101e.webp", "s215e.webp"],
         Abstract: ["s187e.webp", "s183e.webp", "s181e.webp"]
       },
-      otherStyles: ["Gifts", "Celebrations", "Typography", "Animals", "Movies & TV Shows", "Christian"]
+      otherStyles: ["Birthday", "Celebrations", "Typography", "Animals", "Movies & TV Shows", "Christian"]
     },
     {
       name: "Deborah",
-      niches: ["Celebrations", "Illustration", "Gifts"],
+      niches: ["Celebrations", "Illustration", "Birthday"],
       images: {
         Celebrations: ["s43e.webp", "s94e.webp", "s120e.webp"],
         Illustration: ["s37e.webp", "s74e.webp", "s90e.webp"],
-        Gifts: ["s66e.webp", "s68e.webp", "s3e.webp"]
+        Birthday: ["s94e.webp", "s91e.webp", "s40e.webp"]
       },
       otherStyles: ["Food", "Buddhist", "Vintage", "Anime", "Movies & TV Shows", "Christian"]
     },
@@ -8586,7 +8586,7 @@ export const popularNames = [
         Cute: ["s100e.webp", "s80e.webp", "s51e.webp"],
         Food: ["s45e.webp", "s209e.webp", "s216e.webp"]
       },
-      otherStyles: ["Graffiti", "Animals", "Buddhist", "Gifts"]
+      otherStyles: ["Graffiti", "Animals", "Buddhist", "Birthday"]
     },
     {
       name: "Marianna",
@@ -8606,7 +8606,7 @@ export const popularNames = [
         Anime: ["s224e.webp", "s222e.webp", "s109e.webp"],
         Celebrations: ["s120e.webp", "s94e.webp", "s43e.webp"]
       },
-      otherStyles: ["Gifts", "Festive", "Typography"]
+      otherStyles: ["Birthday", "Festive", "Typography"]
     },
     {
       name: "Barbara",
@@ -8628,7 +8628,7 @@ export const popularNames = [
         Anime: ["s219e.webp", "s225e.webp", "s220e.webp"],
         Typography: ["s115e.webp", "s103e.webp", "s13e.webp"]
       },
-      otherStyles: ["Islamic", "Gifts", "Vintage", "Christian", "Celebrations", "Food"]
+      otherStyles: ["Islamic", "Birthday", "Vintage", "Christian", "Celebrations", "Food"]
     },
     {
       name: "Dalia",
@@ -8667,7 +8667,7 @@ export const popularNames = [
         Celebrations: ["s91e.webp", "s94e.webp", "s120e.webp"],
         "Movies & TV Shows": ["s84e.webp", "s235e.webp", "s233e.webp"]
       },
-      otherStyles: ["Typography", "Gifts", "Graffiti", "Buddhist", "Seasonal", "Cute"]
+      otherStyles: ["Typography", "Birthday", "Graffiti", "Buddhist", "Seasonal", "Cute"]
     },
     {
       name: "Nataly",
@@ -8677,7 +8677,7 @@ export const popularNames = [
         "Movies & TV Shows": ["s230e.webp", "s234e.webp", "s236e.webp"],
         Fantasy: ["s67e.webp", "s123e.webp", "s72e.webp"]
       },
-      otherStyles: ["3D", "Abstract", "Gifts", "Cute", "Food"]
+      otherStyles: ["3D", "Abstract", "Birthday", "Cute", "Food"]
     },
     {
       name: "Cheyenne",
@@ -8686,23 +8686,23 @@ export const popularNames = [
         Festive: ["s8e.webp", "s31e.webp", "s69e.webp"],
         Islamic: ["s293e.webp", "s290e.webp", "s284e.webp"]
       },
-      otherStyles: ["Gifts", "3D", "Seasonal"]
+      otherStyles: ["Birthday", "3D", "Seasonal"]
     },
     {
       name: "Kelly",
-      niches: ["Abstract", "Gifts", "3D"],
+      niches: ["Abstract", "Birthday", "3D"],
       images: {
         Abstract: ["s184e.webp", "s186e.webp", "s185e.webp"],
-        Gifts: ["s66e.webp", "s83e.webp", "s36e.webp"],
+        Birthday: ["s94e.webp", "s77e.webp", "s43e.webp"],
         "3D": ["s44e.webp", "s130e.webp", "s49e.webp"]
       },
       otherStyles: ["Anime", "Graffiti", "Seasonal", "Christian", "Vintage", "Celebrations"]
     },
     {
       name: "Luisa",
-      niches: ["Gifts", "Abstract"],
+      niches: ["Birthday", "Abstract"],
       images: {
-        Gifts: ["s83e.webp", "s36e.webp", "s66e.webp"],
+        Birthday: ["s77e.webp", "s43e.webp", "s94e.webp"],
         Abstract: ["s185e.webp", "s186e.webp", "s178e.webp"]
       },
       otherStyles: ["Classic", "Animals", "Buddhist", "Graffiti"]
@@ -8719,10 +8719,10 @@ export const popularNames = [
     },
     {
       name: "Teresa",
-      niches: ["Graffiti", "Gifts", "Gaming", "Typography"],
+      niches: ["Graffiti", "Birthday", "Gaming", "Typography"],
       images: {
         Graffiti: ["s107e.webp", "s117e.webp", "s25e.webp"],
-        Gifts: ["s3e.webp", "s36e.webp", "s66e.webp"],
+        Birthday: ["s40e.webp", "s43e.webp", "s94e.webp"],
         Gaming: ["s137e.webp", "s155e.webp", "s159e.webp"],
         Typography: ["s103e.webp", "s115e.webp", "s258e.webp"]
       },
@@ -8761,9 +8761,9 @@ export const popularNames = [
     },
     {
       name: "Azari",
-      niches: ["Gifts", "Festive", "Cute"],
+      niches: ["Birthday", "Festive", "Cute"],
       images: {
-        Gifts: ["s3e.webp", "s66e.webp", "s86e.webp"],
+        Birthday: ["s40e.webp", "s94e.webp", "s100e.webp"],
         Festive: ["s88e.webp", "s32e.webp", "s65e.webp"],
         Cute: ["s92e.webp", "s73e.webp", "s55e.webp"]
       },
@@ -8778,14 +8778,14 @@ export const popularNames = [
         "Movies & TV Shows": ["s47e.webp", "s230e.webp", "s228e.webp"],
         "3D": ["s63e.webp", "s27e.webp", "s129e.webp"]
       },
-      otherStyles: ["Gifts", "Islamic", "Gaming"]
+      otherStyles: ["Birthday", "Islamic", "Gaming"]
     },
     {
       name: "Rebekah",
-      niches: ["Christian", "Gifts", "Landscapes", "Illustration"],
+      niches: ["Christian", "Birthday", "Landscapes", "Illustration"],
       images: {
         Christian: ["s282e.webp", "s283e.webp", "s275e.webp"],
-        Gifts: ["s86e.webp", "s3e.webp", "s66e.webp"],
+        Birthday: ["s100e.webp", "s40e.webp", "s94e.webp"],
         Landscapes: ["s248e.webp", "s252e.webp", "s251e.webp"],
         Illustration: ["s90e.webp", "s35e.webp", "s59e.webp"]
       },
@@ -8832,10 +8832,10 @@ export const popularNames = [
     },
     {
       name: "Jaycee",
-      niches: ["Celebrations", "Gifts", "Buddhist", "Logos"],
+      niches: ["Celebrations", "Birthday", "Buddhist", "Logos"],
       images: {
         Celebrations: ["s120e.webp", "s43e.webp", "s78e.webp"],
-        Gifts: ["s83e.webp", "s68e.webp", "s36e.webp"],
+        Birthday: ["s77e.webp", "s91e.webp", "s43e.webp"],
         Buddhist: ["s299e.webp", "s295e.webp", "s301e.webp"],
         Logos: ["s271e.webp", "s270e.webp", "s263e.webp"]
       },
@@ -8931,13 +8931,13 @@ export const popularNames = [
         Graffiti: ["s117e.webp", "s25e.webp", "s118e.webp"],
         Floral: ["s53e.webp", "s116e.webp", "s108e.webp"]
       },
-      otherStyles: ["Hobbies", "Animals", "Classic", "Anime", "Gifts"]
+      otherStyles: ["Hobbies", "Animals", "Classic", "Anime", "Birthday"]
     },
     {
       name: "Tru",
-      niches: ["Gifts", "Typography"],
+      niches: ["Birthday", "Typography"],
       images: {
-        Gifts: ["s66e.webp", "s83e.webp", "s36e.webp"],
+        Birthday: ["s94e.webp", "s77e.webp", "s43e.webp"],
         Typography: ["s13e.webp", "s115e.webp", "s64e.webp"]
       },
       otherStyles: ["Anime", "Logos", "Abstract"]
@@ -8964,9 +8964,9 @@ export const popularNames = [
     },
     {
       name: "Chandler",
-      niches: ["Gifts", "Typography", "Illustration", "Festive"],
+      niches: ["Birthday", "Typography", "Illustration", "Festive"],
       images: {
-        Gifts: ["s86e.webp", "s36e.webp", "s68e.webp"],
+        Birthday: ["s100e.webp", "s43e.webp", "s91e.webp"],
         Typography: ["s41e.webp", "s81e.webp", "s62e.webp"],
         Illustration: ["s59e.webp", "s102e.webp", "s79e.webp"],
         Festive: ["s31e.webp", "s65e.webp", "s69e.webp"]
@@ -9020,7 +9020,7 @@ export const popularNames = [
         Anime: ["s225e.webp", "s223e.webp", "s222e.webp"],
         Christian: ["s282e.webp", "s277e.webp", "s281e.webp"]
       },
-      otherStyles: ["Cute", "Abstract", "Gifts", "Classic", "Celebrations", "Hobbies"]
+      otherStyles: ["Cute", "Abstract", "Birthday", "Classic", "Celebrations", "Hobbies"]
     },
     {
       name: "Zyla",
@@ -9030,7 +9030,7 @@ export const popularNames = [
         Classic: ["s169e.webp", "s160e.webp", "s89e.webp"],
         "Movies & TV Shows": ["s229e.webp", "s233e.webp", "s232e.webp"]
       },
-      otherStyles: ["Floral", "Cute", "Abstract", "Gaming", "Gifts"]
+      otherStyles: ["Floral", "Cute", "Abstract", "Gaming", "Birthday"]
     },
     {
       name: "Jolie",
@@ -9041,7 +9041,7 @@ export const popularNames = [
         Typography: ["s48e.webp", "s13e.webp", "s62e.webp"],
         Abstract: ["s178e.webp", "s180e.webp", "s183e.webp"]
       },
-      otherStyles: ["Gifts", "Floral", "Movies & TV Shows", "Cute", "Anime", "Hobbies"]
+      otherStyles: ["Birthday", "Floral", "Movies & TV Shows", "Cute", "Anime", "Hobbies"]
     },
     {
       name: "Leanna",
@@ -9149,7 +9149,7 @@ export const popularNames = [
         Festive: ["s8e.webp", "s69e.webp", "s88e.webp"],
         Fantasy: ["s72e.webp", "s82e.webp", "s123e.webp"]
       },
-      otherStyles: ["Vintage", "Anime", "Buddhist", "Christian", "Gifts", "Hobbies"]
+      otherStyles: ["Vintage", "Anime", "Buddhist", "Christian", "Birthday", "Hobbies"]
     },
     {
       name: "Anaiah",
@@ -9179,7 +9179,7 @@ export const popularNames = [
         Christian: ["s274e.webp", "s275e.webp", "s279e.webp"],
         Typography: ["s258e.webp", "s15e.webp", "s111e.webp"]
       },
-      otherStyles: ["Hobbies", "Gifts", "Floral"]
+      otherStyles: ["Hobbies", "Birthday", "Floral"]
     },
     {
       name: "Yasmin",
@@ -9189,7 +9189,7 @@ export const popularNames = [
         "3D": ["s49e.webp", "s262e.webp", "s52e.webp"],
         Vintage: ["s170e.webp", "s177e.webp", "s172e.webp"]
       },
-      otherStyles: ["Graffiti", "Seasonal", "Gifts", "Illustration", "Movies & TV Shows"]
+      otherStyles: ["Graffiti", "Seasonal", "Birthday", "Illustration", "Movies & TV Shows"]
     },
     {
       name: "Zora",
@@ -9240,10 +9240,10 @@ export const popularNames = [
     },
     {
       name: "Indigo",
-      niches: ["Fantasy", "Gifts", "Landscapes", "Islamic"],
+      niches: ["Fantasy", "Birthday", "Landscapes", "Islamic"],
       images: {
         Fantasy: ["s123e.webp", "s96e.webp", "s125e.webp"],
-        Gifts: ["s68e.webp", "s3e.webp", "s83e.webp"],
+        Birthday: ["s91e.webp", "s40e.webp", "s77e.webp"],
         Landscapes: ["s250e.webp", "s28e.webp", "s29e.webp"],
         Islamic: ["s287e.webp", "s290e.webp", "s288e.webp"]
       },
@@ -9251,10 +9251,10 @@ export const popularNames = [
     },
     {
       name: "Arely",
-      niches: ["Christian", "Gifts", "Seasonal", "Movies & TV Shows"],
+      niches: ["Christian", "Birthday", "Seasonal", "Movies & TV Shows"],
       images: {
         Christian: ["s279e.webp", "s281e.webp", "s278e.webp"],
-        Gifts: ["s66e.webp", "s3e.webp", "s86e.webp"],
+        Birthday: ["s94e.webp", "s40e.webp", "s100e.webp"],
         Seasonal: ["s191e.webp", "s196e.webp", "s192e.webp"],
         "Movies & TV Shows": ["s231e.webp", "s47e.webp", "s235e.webp"]
       },
@@ -9291,9 +9291,9 @@ export const popularNames = [
     },
     {
       name: "Ayra",
-      niches: ["Gifts", "Cute"],
+      niches: ["Birthday", "Cute"],
       images: {
-        Gifts: ["s36e.webp", "s66e.webp", "s68e.webp"],
+        Birthday: ["s43e.webp", "s94e.webp", "s91e.webp"],
         Cute: ["s70e.webp", "s104e.webp", "s55e.webp"]
       },
       otherStyles: ["Logos", "Animals", "3D", "Gaming", "Festive", "Floral"]
@@ -9331,10 +9331,10 @@ export const popularNames = [
     },
     {
       name: "Madalyn",
-      niches: ["Abstract", "Gifts"],
+      niches: ["Abstract", "Birthday"],
       images: {
         Abstract: ["s185e.webp", "s186e.webp", "s179e.webp"],
-        Gifts: ["s83e.webp", "s68e.webp", "s86e.webp"]
+        Birthday: ["s77e.webp", "s91e.webp", "s100e.webp"]
       },
       otherStyles: ["3D", "Food", "Anime", "Cute", "Islamic", "Hobbies"]
     },
@@ -9356,7 +9356,7 @@ export const popularNames = [
         Graffiti: ["s39e.webp", "s117e.webp", "s118e.webp"],
         Vintage: ["s170e.webp", "s112e.webp", "s175e.webp"]
       },
-      otherStyles: ["Gifts", "Celebrations", "Anime"]
+      otherStyles: ["Birthday", "Celebrations", "Anime"]
     },
     {
       name: "Honey",
@@ -9370,10 +9370,10 @@ export const popularNames = [
     },
     {
       name: "Lettie",
-      niches: ["Anime", "Gifts", "Illustration", "Food"],
+      niches: ["Anime", "Birthday", "Illustration", "Food"],
       images: {
         Anime: ["s109e.webp", "s222e.webp", "s76e.webp"],
-        Gifts: ["s66e.webp", "s36e.webp", "s83e.webp"],
+        Birthday: ["s94e.webp", "s43e.webp", "s77e.webp"],
         Illustration: ["s35e.webp", "s59e.webp", "s74e.webp"],
         Food: ["s1e.webp", "s208e.webp", "s216e.webp"]
       },
@@ -9429,12 +9429,12 @@ export const popularNames = [
     },
     {
       name: "Zendaya",
-      niches: ["Food", "Landscapes", "Festive", "Gifts"],
+      niches: ["Food", "Landscapes", "Festive", "Birthday"],
       images: {
         Food: ["s212e.webp", "s209e.webp", "s99e.webp"],
         Landscapes: ["s255e.webp", "s28e.webp", "s249e.webp"],
         Festive: ["s65e.webp", "s69e.webp", "s88e.webp"],
-        Gifts: ["s66e.webp", "s83e.webp", "s36e.webp"]
+        Birthday: ["s94e.webp", "s77e.webp", "s43e.webp"]
       },
       otherStyles: ["Floral", "Christian", "Logos"]
     },
@@ -9519,14 +9519,14 @@ export const popularNames = [
         Cute: ["s77e.webp", "s80e.webp", "s57e.webp"],
         Landscapes: ["s254e.webp", "s250e.webp", "s248e.webp"]
       },
-      otherStyles: ["Gifts", "Buddhist", "Food", "Vintage", "Abstract", "Christian"]
+      otherStyles: ["Birthday", "Buddhist", "Food", "Vintage", "Abstract", "Christian"]
     },
     {
       name: "Campbell",
-      niches: ["Celebrations", "Gifts"],
+      niches: ["Celebrations", "Birthday"],
       images: {
         Celebrations: ["s91e.webp", "s40e.webp", "s78e.webp"],
-        Gifts: ["s36e.webp", "s66e.webp", "s3e.webp"]
+        Birthday: ["s43e.webp", "s94e.webp", "s40e.webp"]
       },
       otherStyles: ["Graffiti", "Food", "Festive"]
     },
@@ -9537,7 +9537,7 @@ export const popularNames = [
         Fantasy: ["s46e.webp", "s125e.webp", "s60e.webp"],
         Food: ["s217e.webp", "s208e.webp", "s215e.webp"]
       },
-      otherStyles: ["Seasonal", "Cute", "Buddhist", "Gifts", "Celebrations"]
+      otherStyles: ["Seasonal", "Cute", "Buddhist", "Birthday", "Celebrations"]
     },
     {
       name: "Tilly",
@@ -9557,7 +9557,7 @@ export const popularNames = [
         Anime: ["s226e.webp", "s26e.webp", "s223e.webp"],
         Typography: ["s64e.webp", "s81e.webp", "s41e.webp"]
       },
-      otherStyles: ["Illustration", "Hobbies", "Abstract", "Gifts"]
+      otherStyles: ["Illustration", "Hobbies", "Abstract", "Birthday"]
     },
     {
       name: "Akira",
@@ -9587,7 +9587,7 @@ export const popularNames = [
         Hobbies: ["s203e.webp", "s206e.webp", "s204e.webp"],
         Classic: ["s165e.webp", "s163e.webp", "s124e.webp"]
       },
-      otherStyles: ["Animals", "Anime", "Gifts", "Christian"]
+      otherStyles: ["Animals", "Anime", "Birthday", "Christian"]
     },
     {
       name: "Quincy",
@@ -9649,7 +9649,7 @@ export const popularNames = [
         Classic: ["s169e.webp", "s168e.webp", "s167e.webp"],
         Islamic: ["s293e.webp", "s286e.webp", "s289e.webp"]
       },
-      otherStyles: ["Illustration", "Vintage", "Graffiti", "Seasonal", "Gifts"]
+      otherStyles: ["Illustration", "Vintage", "Graffiti", "Seasonal", "Birthday"]
     },
     {
       name: "Violette",
@@ -9679,7 +9679,7 @@ export const popularNames = [
         Food: ["s212e.webp", "s217e.webp", "s1e.webp"],
         Islamic: ["s286e.webp", "s289e.webp", "s285e.webp"]
       },
-      otherStyles: ["Landscapes", "Hobbies", "Gifts", "Abstract", "Logos", "Anime"]
+      otherStyles: ["Landscapes", "Hobbies", "Birthday", "Abstract", "Logos", "Anime"]
     },
     {
       name: "Mazie",
@@ -9726,15 +9726,15 @@ export const popularNames = [
         Gaming: ["s134e.webp", "s135e.webp", "s159e.webp"],
         Logos: ["s270e.webp", "s263e.webp", "s269e.webp"]
       },
-      otherStyles: ["Cute", "Food", "Abstract", "Gifts"]
+      otherStyles: ["Cute", "Food", "Abstract", "Birthday"]
     },
     {
       name: "Elouise",
-      niches: ["Floral", "Cute", "Gifts", "Vintage"],
+      niches: ["Floral", "Cute", "Birthday", "Vintage"],
       images: {
         Floral: ["s127e.webp", "s131e.webp", "s24e.webp"],
         Cute: ["s55e.webp", "s100e.webp", "s92e.webp"],
-        Gifts: ["s68e.webp", "s86e.webp", "s66e.webp"],
+        Birthday: ["s91e.webp", "s100e.webp", "s94e.webp"],
         Vintage: ["s171e.webp", "s112e.webp", "s85e.webp"]
       },
       otherStyles: ["Festive", "Typography", "Graffiti", "Christian", "Islamic", "Anime"]
@@ -9769,9 +9769,9 @@ export const popularNames = [
     },
     {
       name: "Zoya",
-      niches: ["Gifts", "Islamic", "Vintage", "Hobbies"],
+      niches: ["Birthday", "Islamic", "Vintage", "Hobbies"],
       images: {
-        Gifts: ["s36e.webp", "s86e.webp", "s83e.webp"],
+        Birthday: ["s43e.webp", "s100e.webp", "s77e.webp"],
         Islamic: ["s293e.webp", "s289e.webp", "s286e.webp"],
         Vintage: ["s175e.webp", "s174e.webp", "s177e.webp"],
         Hobbies: ["s207e.webp", "s203e.webp", "s204e.webp"]
@@ -9787,7 +9787,7 @@ export const popularNames = [
         Fantasy: ["s67e.webp", "s96e.webp", "s72e.webp"],
         Buddhist: ["s295e.webp", "s301e.webp", "s300e.webp"]
       },
-      otherStyles: ["Typography", "Abstract", "Vintage", "Movies & TV Shows", "Gifts"]
+      otherStyles: ["Typography", "Abstract", "Vintage", "Movies & TV Shows", "Birthday"]
     },
     {
       name: "Kassidy",
@@ -9796,7 +9796,7 @@ export const popularNames = [
         Logos: ["s266e.webp", "s270e.webp", "s267e.webp"],
         Animals: ["s238e.webp", "s106e.webp", "s245e.webp"]
       },
-      otherStyles: ["Classic", "Anime", "Gifts", "Cute", "Vintage"]
+      otherStyles: ["Classic", "Anime", "Birthday", "Cute", "Vintage"]
     },
     {
       name: "Keily",
@@ -9806,7 +9806,7 @@ export const popularNames = [
         Floral: ["s114e.webp", "s131e.webp", "s5e.webp"],
         Christian: ["s278e.webp", "s275e.webp", "s274e.webp"]
       },
-      otherStyles: ["Logos", "Celebrations", "Gifts", "Graffiti"]
+      otherStyles: ["Logos", "Celebrations", "Birthday", "Graffiti"]
     },
     {
       name: "Harlee",
@@ -9874,7 +9874,7 @@ export const popularNames = [
         Seasonal: ["s192e.webp", "s188e.webp", "s197e.webp"],
         Cute: ["s92e.webp", "s19e.webp", "s7e.webp"]
       },
-      otherStyles: ["Hobbies", "Festive", "Graffiti", "Gifts", "Vintage"]
+      otherStyles: ["Hobbies", "Festive", "Graffiti", "Birthday", "Vintage"]
     },
     {
       name: "Arisbeth",
@@ -9958,11 +9958,11 @@ export const popularNames = [
     },
     {
       name: "Jianna",
-      niches: ["Floral", "Food", "Gifts", "Gaming"],
+      niches: ["Floral", "Food", "Birthday", "Gaming"],
       images: {
         Floral: ["s24e.webp", "s53e.webp", "s116e.webp"],
         Food: ["s212e.webp", "s1e.webp", "s99e.webp"],
-        Gifts: ["s66e.webp", "s86e.webp", "s36e.webp"],
+        Birthday: ["s94e.webp", "s100e.webp", "s43e.webp"],
         Gaming: ["s153e.webp", "s14e.webp", "s10e.webp"]
       },
       otherStyles: ["3D", "Fantasy", "Landscapes", "Classic", "Animals"]
