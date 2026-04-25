@@ -114,7 +114,7 @@ const ProductCardGrid = ({
             {card.description}
           </p>
           <span className="mt-5 inline-flex text-sm font-semibold text-brand-700">
-            Explore page
+            {`View ${card.label}`}
           </span>
         </div>
       </Link>
@@ -124,10 +124,8 @@ const ProductCardGrid = ({
 
 const VisualCardGrid = ({
   items,
-  ctaLabel = "Explore style",
 }: {
   items: StyleProductVisualCard[];
-  ctaLabel?: string;
 }) => (
   <div className="grid gap-6 md:grid-cols-3">
     {items.map((item) => (
@@ -150,7 +148,7 @@ const VisualCardGrid = ({
             {item.description}
           </p>
           <span className="mt-5 inline-flex text-sm font-semibold text-brand-700">
-            {ctaLabel}
+            {`View ${item.title}`}
           </span>
         </div>
       </Link>
