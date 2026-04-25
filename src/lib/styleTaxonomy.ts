@@ -1,4 +1,5 @@
 import { stylesData } from "~/data/stylesData";
+import { getStyleContent, type StyleContent } from "~/data/styleContent";
 import { popularNames } from "~/lib/names";
 import { getEnhancedNameArtSrc, getStyleImageAlt } from "~/lib/styleImageAlt";
 
@@ -10,6 +11,7 @@ export type StyleSubPage = {
   imageAlt: string;
   sampleImages: string[];
   count: number;
+  content: StyleContent;
 };
 
 export type StyleGroupPage = {
@@ -45,21 +47,26 @@ function buildNameArtStyleGroups(): StyleGroupPage[] {
     slug: slugify(groupTitle),
     title: groupTitle,
     description: `${groupTitle} name art styles grouped by design direction and visual mood.`,
-    items: Object.entries(substyles).map(([substyleTitle, entries]) => ({
-      slug: slugify(substyleTitle),
-      title: substyleTitle,
-      description: `Explore ${substyleTitle.toLowerCase()} name art styles for decor, gifts, keepsakes, and personalized products.`,
-      imageSrc: getEnhancedNameArtSrc(entries[0]?.src ?? "/banner.webp"),
-      imageAlt: getStyleImageAlt(entries[0]?.src ?? "/banner.webp", {
-        kind: "name",
+    items: Object.entries(substyles).map(([substyleTitle, entries]) => {
+      const slug = slugify(substyleTitle);
+
+      return {
+        slug,
         title: substyleTitle,
-        fallbackAlt: `${substyleTitle} name art style example`,
-      }),
-      sampleImages: entries
-        .slice(0, 12)
-        .map((entry) => getEnhancedNameArtSrc(entry.src)),
-      count: entries.length,
-    })),
+        description: `Explore ${substyleTitle.toLowerCase()} name art styles for decor, gifts, keepsakes, and personalized products.`,
+        imageSrc: getEnhancedNameArtSrc(entries[0]?.src ?? "/banner.webp"),
+        imageAlt: getStyleImageAlt(entries[0]?.src ?? "/banner.webp", {
+          kind: "name",
+          title: substyleTitle,
+          fallbackAlt: `${substyleTitle} name art style example`,
+        }),
+        sampleImages: entries
+          .slice(0, 12)
+          .map((entry) => getEnhancedNameArtSrc(entry.src)),
+        count: entries.length,
+        content: getStyleContent(slug),
+      };
+    }),
   }));
 }
 
@@ -107,6 +114,7 @@ function buildTaggedGroups(
         }),
         sampleImages: [item.src],
         count: 1,
+        content: {},
       })),
     } satisfies StyleGroupPage;
   });
@@ -146,6 +154,7 @@ export const ARABIC_STYLE_GROUPS: StyleGroupPage[] = [
       }),
       sampleImages: [item.src],
       count: 1,
+      content: {},
     })),
   },
 ];
@@ -166,6 +175,10 @@ export const ARABIC_STYLE_ITEMS = flattenGroups(ARABIC_STYLE_GROUPS);
 
 export function getNameArtStyleBySlug(slug: string) {
   return NAME_ART_STYLE_ITEMS.find((item) => item.slug === slug) ?? null;
+}
+
+export function getStyleEntry(slug: string) {
+  return getNameArtStyleBySlug(slug);
 }
 
 export function getCouplesStyleBySlug(slug: string) {
