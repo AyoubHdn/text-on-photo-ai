@@ -72,7 +72,7 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
                 Start the core creation flow if you already know the style direction you want.
               </p>
             </Link>
-            <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+            <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
               <h2 className="text-lg font-semibold">Couple Gifts</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Browse pages that connect couple art themes with stronger gifting intent.

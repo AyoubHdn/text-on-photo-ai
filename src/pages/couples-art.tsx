@@ -38,7 +38,7 @@ const relatedLinks = [
       "Compare romantic mugs, shirts, and wall art made specifically from couples art.",
   },
   {
-    href: "/couple-gifts",
+    href: "/personalized-gifts",
     label: "Couple Gifts",
     description:
       "Browse product and occasion ideas built around romantic name art and shared keepsakes.",
@@ -50,12 +50,12 @@ const relatedLinks = [
       "Expand from couple art into gifts for anniversaries, weddings, and milestones.",
   },
   {
-    href: "/personalized-name-mugs",
+    href: "/personalized-gifts",
     label: "Name Mugs",
     description: "Turn couple name art into daily-use mugs.",
   },
   {
-    href: "/personalized-name-wall-art",
+    href: "/personalized-gifts",
     label: "Name Wall Art",
     description: "Make couple name art the centerpiece of your home.",
   },

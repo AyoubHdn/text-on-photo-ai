@@ -12,7 +12,7 @@ const PersonalizedNameWallArtPage: NextPage = () => {
     <ProductCategoryPage
       title="Personalized Name Wall Art | Name Design AI"
       description="Create personalized name wall art from custom name art, Arabic calligraphy, or couple designs. Explore decor-ready pages for framed prints, posters, and keepsake displays."
-      path="/personalized-name-wall-art"
+      path="/personalized-gifts"
       h1="Personalized name wall art for rooms, homes, and keepsakes"
       eyebrow="Product Category"
       intro="Wall art is one of the strongest end uses for name-driven artwork because it gives the design room to breathe. This page helps visitors move from a custom name or relationship into a decor-ready format without losing the original identity-first intent."
@@ -84,13 +84,13 @@ const PersonalizedNameWallArtPage: NextPage = () => {
             "Use the broader hub if you are still deciding between decor and other product types.",
         },
         {
-          href: "/personalized-name-mugs",
+          href: "/personalized-gifts",
           label: "Personalized Name Mugs",
           description:
             "Better fit when the gift should be practical and used daily.",
         },
         {
-          href: "/couple-gifts",
+          href: "/personalized-gifts",
           label: "Couple Gifts",
           description:
             "Good next step when the wall art concept is tied to weddings, anniversaries, or shared spaces.",
@@ -115,11 +115,11 @@ const PersonalizedNameWallArtPage: NextPage = () => {
         },
       ]}
       categoryCards={getCategoryCards([
-        "/personalized-name-wall-art",
-        "/personalized-name-mugs",
-        "/custom-name-shirts",
-        "/arabic-name-gifts",
-        "/couple-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "olivia",
@@ -148,7 +148,7 @@ const PersonalizedNameWallArtPage: NextPage = () => {
       breadcrumbs={[
         { name: "Home", path: "/" },
         { name: "Personalized Gifts", path: "/personalized-gifts" },
-        { name: "Personalized Name Wall Art", path: "/personalized-name-wall-art" },
+        { name: "Personalized Name Wall Art", path: "/personalized-gifts" },
       ]}
     />
   );

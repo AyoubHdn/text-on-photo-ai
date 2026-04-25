@@ -179,7 +179,7 @@ const PRODUCT_CONFIGS: Record<StyleProductSlug, ProductBaseConfig> = {
     label: "Mugs",
     singularLabel: "mug",
     shortLabel: "mug",
-    broadProductHref: "/personalized-name-mugs",
+    broadProductHref: "/personalized-gifts",
     broadProductLabel: "Personalized Name Mugs",
     surfaceNote:
       "Mugs need a clear focal point, readable lettering, and enough empty space for the design to survive a curved surface.",
@@ -193,7 +193,7 @@ const PRODUCT_CONFIGS: Record<StyleProductSlug, ProductBaseConfig> = {
     label: "Shirts",
     singularLabel: "shirt",
     shortLabel: "shirt",
-    broadProductHref: "/custom-name-shirts",
+    broadProductHref: "/personalized-gifts",
     broadProductLabel: "Custom Name Shirts",
     surfaceNote:
       "Shirts work best with stronger contrast, simple silhouettes, and artwork that remains legible from a few feet away.",
@@ -207,7 +207,7 @@ const PRODUCT_CONFIGS: Record<StyleProductSlug, ProductBaseConfig> = {
     label: "Wall Art",
     singularLabel: "wall art print",
     shortLabel: "wall art",
-    broadProductHref: "/personalized-name-wall-art",
+    broadProductHref: "/personalized-gifts",
     broadProductLabel: "Personalized Name Wall Art",
     surfaceNote:
       "Wall art gives detailed name designs the most room, so it can support richer texture, decor styling, and premium keepsake intent.",
@@ -547,7 +547,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     generatorLabel: "Create Arabic name art",
     styleGalleryHref: "/arabic-calligraphy/styles",
     styleGalleryLabel: "Browse Arabic styles",
-    giftHubHref: "/arabic-name-gifts",
+    giftHubHref: "/personalized-gifts",
     giftHubLabel: "Arabic Name Gifts",
     hubTitle: "Arabic Name Art Products | Mugs, Shirts, Wall Art | Name Design AI",
     hubDescription:
@@ -866,7 +866,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     generatorLabel: "Create couples art",
     styleGalleryHref: "/couples-art/styles",
     styleGalleryLabel: "Browse couples styles",
-    giftHubHref: "/couple-gifts",
+    giftHubHref: "/personalized-gifts",
     giftHubLabel: "Couple Gifts",
     hubTitle: "Couples Art Products | Mugs, Shirts, Wall Art | Name Design AI",
     hubDescription:

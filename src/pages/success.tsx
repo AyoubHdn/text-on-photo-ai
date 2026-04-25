@@ -156,9 +156,9 @@ const SuccessPage: React.FC = () => {
             </p>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Mugs", href: "/personalized-name-mugs", emoji: "☕" },
-                { label: "Wall art", href: "/personalized-name-wall-art", emoji: "🖼️" },
-                { label: "Shirts", href: "/custom-name-shirts", emoji: "👕" },
+                { label: "Mugs", href: "/personalized-gifts", emoji: "☕" },
+                { label: "Wall art", href: "/personalized-gifts", emoji: "🖼️" },
+                { label: "Shirts", href: "/personalized-gifts", emoji: "👕" },
               ].map((item) => (
                 <Link
                   key={item.label}

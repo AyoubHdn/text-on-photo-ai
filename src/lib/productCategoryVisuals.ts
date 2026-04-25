@@ -24,40 +24,48 @@ export type ProductMockup = {
 };
 
 const categoryCardLibrary: Record<string, VisualCategoryCard> = {
-  "/personalized-name-mugs": {
-    href: "/personalized-name-mugs",
+  "/personalized-gifts": {
+    href: "/personalized-gifts",
+    title: "Personalized Gifts",
+    description:
+      "Unified hub for name art mugs, shirts, wall art, Arabic gifts, and couple gifts.",
+    imageSrc: "/images/products/poster.webp",
+    imageAlt: "Personalized name art products arranged as gift-ready options",
+  },
+  nameMugs: {
+    href: "/personalized-gifts",
     title: "Personalized Name Mugs",
     description:
       "Gift-ready mug designs that turn a name or phrase into a daily-use keepsake.",
     imageSrc: "/images/products/mug.webp",
     imageAlt: "Personalized name mug mockup featuring custom artwork",
   },
-  "/custom-name-shirts": {
-    href: "/custom-name-shirts",
+  nameShirts: {
+    href: "/personalized-gifts",
     title: "Custom Name Shirts",
     description:
       "Wearable name art for bold apparel, matching outfits, and playful gift ideas.",
     imageSrc: "/images/products/tshirt.webp",
     imageAlt: "Custom name shirt mockup with bold graphic lettering",
   },
-  "/personalized-name-wall-art": {
-    href: "/personalized-name-wall-art",
+  nameWallArt: {
+    href: "/personalized-gifts",
     title: "Personalized Name Wall Art",
     description:
       "Display-focused posters and framed print ideas built from personalized artwork.",
     imageSrc: "/images/products/poster.webp",
     imageAlt: "Personalized name wall art poster mockup for home decor",
   },
-  "/arabic-name-gifts": {
-    href: "/arabic-name-gifts",
+  arabicGifts: {
+    href: "/personalized-gifts",
     title: "Arabic Name Gifts",
     description:
       "Arabic calligraphy-inspired gift ideas for mugs, prints, and premium keepsakes.",
     imageSrc: "/images/products/arabic/poster.webp",
     imageAlt: "Arabic name art poster mockup for personalized gifts",
   },
-  "/couple-gifts": {
-    href: "/couple-gifts",
+  coupleGifts: {
+    href: "/personalized-gifts",
     title: "Couple Gifts",
     description:
       "Romantic keepsakes and shared decor ideas built from relationship-first artwork.",
@@ -119,7 +127,7 @@ const nameArtExampleLibrary: Record<string, NameArtExample> = {
 
 const productMockupLibrary: Record<string, ProductMockup> = {
   mug: {
-    href: "/personalized-name-mugs",
+    href: "/personalized-gifts",
     title: "Mug mockups",
     description:
       "Preview how a personalized name design reads on a giftable daily-use mug.",
@@ -128,7 +136,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "Explore mug ideas",
   },
   shirt: {
-    href: "/custom-name-shirts",
+    href: "/personalized-gifts",
     title: "Shirt mockups",
     description:
       "See how bold lettering and clean layouts translate into wearable custom apparel.",
@@ -137,7 +145,7 @@ const productMockupLibrary: Record<string, ProductMockup> = {
     ctaLabel: "Browse shirt ideas",
   },
   wallArt: {
-    href: "/personalized-name-wall-art",
+    href: "/personalized-gifts",
     title: "Wall art prints",
     description:
       "Use larger-format mockups to compare decor-ready posters and framed print concepts.",

@@ -78,31 +78,31 @@ const PersonalizedGiftsPage: NextPage = () => {
       ]}
       relatedLinks={[
         {
-          href: "/personalized-name-mugs",
+          href: "/personalized-gifts",
           label: "Personalized Name Mugs",
           description:
             "Daily-use gift format with room for playful, sentimental, or celebratory artwork.",
         },
         {
-          href: "/custom-name-shirts",
+          href: "/personalized-gifts",
           label: "Custom Name Shirts",
           description:
             "Apparel-focused page for wearable name art and stronger graphic styles.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Personalized Name Wall Art",
           description:
             "Decor-first route for framed prints, posters, and display-ready artwork.",
         },
         {
-          href: "/arabic-name-gifts",
+          href: "/personalized-gifts",
           label: "Arabic Name Gifts",
           description:
             "Gift page built around Arabic calligraphy and Arabic name design.",
         },
         {
-          href: "/couple-gifts",
+          href: "/personalized-gifts",
           label: "Couple Gifts",
           description:
             "Relationship-focused gift page for anniversaries, weddings, and romantic keepsakes.",
@@ -128,11 +128,11 @@ const PersonalizedGiftsPage: NextPage = () => {
       ]}
       categoryCardsHeading="Browse personalized gift categories"
       categoryCards={getCategoryCards([
-        "/personalized-name-mugs",
-        "/custom-name-shirts",
-        "/personalized-name-wall-art",
-        "/arabic-name-gifts",
-        "/couple-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "emma",

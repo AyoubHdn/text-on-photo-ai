@@ -12,7 +12,7 @@ const CustomNameShirtsPage: NextPage = () => {
     <ProductCategoryPage
       title="Custom Name Shirts | Name Design AI"
       description="Create custom name shirts from personalized name art and bolder graphic styles. Explore shirt-ready paths for names, nicknames, family gifts, and couple designs."
-      path="/custom-name-shirts"
+      path="/personalized-gifts"
       h1="Custom name shirts from AI-generated name art"
       eyebrow="Product Category"
       intro="Custom name shirts need artwork that reads clearly at a wearable scale. This page helps visitors choose a name-first design path, then match it to a shirt-friendly visual direction without losing the personalization angle."
@@ -78,19 +78,19 @@ const CustomNameShirtsPage: NextPage = () => {
       ]}
       relatedLinks={[
         {
-          href: "/personalized-name-mugs",
+          href: "/personalized-gifts",
           label: "Personalized Name Mugs",
           description:
             "Better fit when the buyer wants daily-use gifting without wearable styling.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Personalized Name Wall Art",
           description:
             "Better fit when the design is more decorative than graphic.",
         },
         {
-          href: "/couple-gifts",
+          href: "/personalized-gifts",
           label: "Couple Gifts",
           description:
             "Use this when the apparel idea is part of a broader anniversary or relationship gift set.",
@@ -115,11 +115,11 @@ const CustomNameShirtsPage: NextPage = () => {
         },
       ]}
       categoryCards={getCategoryCards([
-        "/custom-name-shirts",
-        "/personalized-name-mugs",
-        "/personalized-name-wall-art",
-        "/couple-gifts",
-        "/arabic-name-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "sarah",
@@ -148,7 +148,7 @@ const CustomNameShirtsPage: NextPage = () => {
       breadcrumbs={[
         { name: "Home", path: "/" },
         { name: "Personalized Gifts", path: "/personalized-gifts" },
-        { name: "Custom Name Shirts", path: "/custom-name-shirts" },
+        { name: "Custom Name Shirts", path: "/personalized-gifts" },
       ]}
     />
   );

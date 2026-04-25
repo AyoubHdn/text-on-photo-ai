@@ -12,7 +12,7 @@ const PersonalizedNameMugsPage: NextPage = () => {
     <ProductCategoryPage
       title="Personalized Name Mugs | Name Design AI"
       description="Create personalized name mugs from custom name art, Arabic calligraphy, or relationship-based designs. Use this page for gift-ready mug ideas that start with identity."
-      path="/personalized-name-mugs"
+      path="/personalized-gifts"
       h1="Personalized name mugs built from custom artwork"
       eyebrow="Product Category"
       intro="A personalized name mug works best when the design starts with a real identity cue: a person's name, initials, a romantic pairing, or an Arabic calligraphy concept. This page connects that idea to a mug-friendly workflow without flattening it into generic merchandise."
@@ -84,13 +84,13 @@ const PersonalizedNameMugsPage: NextPage = () => {
             "Return to the broader gift hub if you want to compare mugs with other product categories.",
         },
         {
-          href: "/custom-name-shirts",
+          href: "/personalized-gifts",
           label: "Custom Name Shirts",
           description:
             "Better fit if the artwork needs larger scale or stronger graphic expression.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Personalized Name Wall Art",
           description:
             "Better fit if the design should be framed or displayed rather than used daily.",
@@ -115,11 +115,11 @@ const PersonalizedNameMugsPage: NextPage = () => {
         },
       ]}
       categoryCards={getCategoryCards([
-        "/personalized-name-mugs",
-        "/custom-name-shirts",
-        "/personalized-name-wall-art",
-        "/arabic-name-gifts",
-        "/couple-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "emma",
@@ -148,7 +148,7 @@ const PersonalizedNameMugsPage: NextPage = () => {
       breadcrumbs={[
         { name: "Home", path: "/" },
         { name: "Personalized Gifts", path: "/personalized-gifts" },
-        { name: "Personalized Name Mugs", path: "/personalized-name-mugs" },
+        { name: "Personalized Name Mugs", path: "/personalized-gifts" },
       ]}
     />
   );

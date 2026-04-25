@@ -173,12 +173,12 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
             )}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
-                { href: "/personalized-name-mugs", label: "Mug" },
-                { href: "/custom-name-shirts", label: "Shirt" },
-                { href: "/personalized-name-wall-art", label: "Wall art" },
+                { href: "/personalized-gifts", label: "Mug" },
+                { href: "/personalized-gifts", label: "Shirt" },
+                { href: "/personalized-gifts", label: "Wall art" },
               ].map((item) => (
                 <Link
-                  key={item.href}
+                  key={`${item.href}-${item.label}`}
                   href={item.href}
                   className="rounded-2xl border border-cream-200 bg-white p-5 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
                 >

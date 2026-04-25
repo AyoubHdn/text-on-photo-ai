@@ -144,7 +144,7 @@ const popularNameExamples: VisualCard[] = [
 
 const productMockupCards: VisualCard[] = [
   {
-    href: "/personalized-name-mugs",
+    href: "/personalized-gifts",
     title: "Name art on mugs",
     description:
       "Show buyers how personalized artwork translates into a giftable daily-use product.",
@@ -154,7 +154,7 @@ const productMockupCards: VisualCard[] = [
     ctaLabel: "Shop mug ideas",
   },
   {
-    href: "/custom-name-shirts",
+    href: "/personalized-gifts",
     title: "Name art on shirts",
     description:
       "Preview bolder artwork on apparel before choosing a shirt-ready direction.",
@@ -164,7 +164,7 @@ const productMockupCards: VisualCard[] = [
     ctaLabel: "Browse shirt ideas",
   },
   {
-    href: "/personalized-name-wall-art",
+    href: "/personalized-gifts",
     title: "Name art as wall decor",
     description:
       "Use decor mockups to make framed prints and posters feel product-ready and gift-ready.",
@@ -174,7 +174,7 @@ const productMockupCards: VisualCard[] = [
     ctaLabel: "View wall art",
   },
   {
-    href: "/couple-gifts",
+    href: "/personalized-gifts",
     title: "Couple gift mockups",
     description:
       "Show how relationship-led artwork can become anniversary gifts and shared-home keepsakes.",
@@ -197,7 +197,7 @@ const giftIdeaCards: VisualCard[] = [
     ctaLabel: "See birthday ideas",
   },
   {
-    href: "/couple-gifts",
+    href: "/personalized-gifts",
     title: "Anniversary gifts",
     description:
       "Relationship-led designs for weddings, anniversaries, and romantic milestone keepsakes.",
@@ -207,7 +207,7 @@ const giftIdeaCards: VisualCard[] = [
     ctaLabel: "See anniversary ideas",
   },
   {
-    href: "/arabic-name-gifts",
+    href: "/personalized-gifts",
     title: "Eid gifts",
     description:
       "Arabic calligraphy-inspired gifts and decor paths for meaningful seasonal giving.",
@@ -227,7 +227,7 @@ const giftIdeaCards: VisualCard[] = [
     ctaLabel: "Browse gifts for her",
   },
   {
-    href: "/couple-gifts",
+    href: "/personalized-gifts",
     title: "Couple gifts",
     description:
       "Shared decor and keepsake ideas for two-name artwork, mug sets, and wall pieces.",

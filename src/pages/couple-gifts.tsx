@@ -12,7 +12,7 @@ const CoupleGiftsPage: NextPage = () => {
     <ProductCategoryPage
       title="Couple Gifts | Name Design AI"
       description="Explore couple gifts built from personalized couple name art. Find routes for anniversaries, weddings, shared decor, and romantic keepsakes."
-      path="/couple-gifts"
+      path="/personalized-gifts"
       h1="Couple gifts built from personalized name art"
       eyebrow="Gift Category"
       intro="Couple gifts work best when the artwork feels like it belongs to the relationship itself rather than a generic product catalog. This page turns couple name art into a stronger gifting architecture for anniversaries, weddings, engagements, and shared-home decor."
@@ -64,13 +64,13 @@ const CoupleGiftsPage: NextPage = () => {
             "The main place to explore relationship-focused artwork and romantic styles.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Wall Art Route",
           description:
             "Best when the couple gift should be framed, displayed, or used as shared decor.",
         },
         {
-          href: "/personalized-name-mugs",
+          href: "/personalized-gifts",
           label: "Mug Route",
           description:
             "Best when the buyer wants a practical gift while keeping the design relationship-led.",
@@ -90,7 +90,7 @@ const CoupleGiftsPage: NextPage = () => {
             "Editorial support for why couple artwork works so well as a keepsake and decor concept.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Personalized Name Wall Art",
           description:
             "Often the strongest output when the relationship design should live in a shared room or home.",
@@ -115,11 +115,11 @@ const CoupleGiftsPage: NextPage = () => {
         },
       ]}
       categoryCards={getCategoryCards([
-        "/couple-gifts",
-        "/personalized-name-wall-art",
-        "/personalized-name-mugs",
-        "/custom-name-shirts",
-        "/arabic-name-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "emma",
@@ -152,7 +152,7 @@ const CoupleGiftsPage: NextPage = () => {
       breadcrumbs={[
         { name: "Home", path: "/" },
         { name: "Personalized Gifts", path: "/personalized-gifts" },
-        { name: "Couple Gifts", path: "/couple-gifts" },
+        { name: "Couple Gifts", path: "/personalized-gifts" },
       ]}
     />
   );

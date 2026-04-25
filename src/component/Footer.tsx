@@ -35,14 +35,14 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
   const giftLinks = [
     { href: "/products", name: "All Products" },
     { href: "/personalized-gifts", name: "Personalized Gifts" },
-    { href: "/personalized-name-wall-art", name: "Name Wall Art" },
-    { href: "/personalized-name-mugs", name: "Name Mugs" },
-    { href: "/custom-name-shirts", name: "Name Shirts" },
+    { href: "/personalized-gifts", name: "Name Wall Art" },
+    { href: "/personalized-gifts", name: "Name Mugs" },
+    { href: "/personalized-gifts", name: "Name Shirts" },
     { href: "/name-art/products", name: "Name Art Products" },
     { href: "/arabic-calligraphy/products", name: "Arabic Products" },
     { href: "/couples-art/products", name: "Couple Art Products" },
-    { href: "/couple-gifts", name: "Couple Gifts" },
-    { href: "/arabic-name-gifts", name: "Arabic Name Gifts" },
+    { href: "/personalized-gifts", name: "Couple Gifts" },
+    { href: "/personalized-gifts", name: "Arabic Name Gifts" },
   ];
 
   const socialLinks = [

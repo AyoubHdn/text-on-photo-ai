@@ -121,7 +121,7 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
                   Move from inspiration into category pages built around gift intent.
                 </p>
               </Link>
-              <Link href="/couple-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+              <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
                 <h3 className="text-lg font-semibold">Couple Gifts</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Explore romantic and occasion-based product ideas linked to couple art.

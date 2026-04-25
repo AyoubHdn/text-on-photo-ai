@@ -61,7 +61,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
             itemPaths: [
               "/arabic-calligraphy-generator",
               "/arabic-calligraphy/products",
-              "/arabic-name-gifts",
+              "/personalized-gifts",
             ],
           }),
           ...(content.faqs && content.faqs.length > 0

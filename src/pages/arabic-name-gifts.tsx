@@ -12,7 +12,7 @@ const ArabicNameGiftsPage: NextPage = () => {
     <ProductCategoryPage
       title="Arabic Name Gifts | Name Design AI"
       description="Explore Arabic name gifts built from AI-assisted calligraphy and Arabic name art. Find gift-ready paths for mugs, wall art, and personalized keepsakes."
-      path="/arabic-name-gifts"
+      path="/personalized-gifts"
       h1="Arabic name gifts built from calligraphy-inspired artwork"
       eyebrow="Gift Category"
       intro="Arabic name gifts need more than a generic product template. They work best when the core design has real visual presence, and Arabic calligraphy is often the strongest starting point for that. This page helps connect Arabic name art to decor and gift ideas in a clearer way."
@@ -64,13 +64,13 @@ const ArabicNameGiftsPage: NextPage = () => {
             "The best starting point when Arabic calligraphy is the central visual requirement.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Wall Art Route",
           description:
             "Use this when the gift is likely to become framed decor or a display piece.",
         },
         {
-          href: "/personalized-name-mugs",
+          href: "/personalized-gifts",
           label: "Mug Route",
           description:
             "Use this when the buyer wants a practical daily-use gift with Arabic lettering.",
@@ -84,13 +84,13 @@ const ArabicNameGiftsPage: NextPage = () => {
             "Return to the broader gift hub if the buyer is still comparing Arabic and non-Arabic gift paths.",
         },
         {
-          href: "/personalized-name-wall-art",
+          href: "/personalized-gifts",
           label: "Personalized Name Wall Art",
           description:
             "Often the strongest format for detailed Arabic calligraphy and premium-looking keepsakes.",
         },
         {
-          href: "/personalized-name-mugs",
+          href: "/personalized-gifts",
           label: "Personalized Name Mugs",
           description:
             "Useful when the buyer wants a gift that is both personal and practical.",
@@ -115,11 +115,11 @@ const ArabicNameGiftsPage: NextPage = () => {
         },
       ]}
       categoryCards={getCategoryCards([
-        "/arabic-name-gifts",
-        "/personalized-name-wall-art",
-        "/personalized-name-mugs",
-        "/custom-name-shirts",
-        "/couple-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
+        "/personalized-gifts",
       ])}
       nameArtExamples={getNameArtExamples([
         "fatima",
@@ -152,7 +152,7 @@ const ArabicNameGiftsPage: NextPage = () => {
       breadcrumbs={[
         { name: "Home", path: "/" },
         { name: "Personalized Gifts", path: "/personalized-gifts" },
-        { name: "Arabic Name Gifts", path: "/arabic-name-gifts" },
+        { name: "Arabic Name Gifts", path: "/personalized-gifts" },
       ]}
     />
   );

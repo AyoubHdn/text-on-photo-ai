@@ -148,7 +148,7 @@ function buildStyleCategoryCards(name: string, styleNames: string[]) {
 function buildProductMockups(name: string) {
   return [
     {
-      href: "/personalized-name-mugs",
+      href: "/personalized-gifts",
       title: "Mug mockup",
       description:
         "See how the name art reads on a practical gift product people use every day.",
@@ -157,7 +157,7 @@ function buildProductMockups(name: string) {
       ctaLabel: "Explore personalized mugs",
     },
     {
-      href: "/custom-name-shirts",
+      href: "/personalized-gifts",
       title: "Shirt mockup",
       description:
         "Preview how bold or playful lettering can translate into wearable custom apparel.",
@@ -166,7 +166,7 @@ function buildProductMockups(name: string) {
       ctaLabel: "Explore custom shirts",
     },
     {
-      href: "/personalized-name-wall-art",
+      href: "/personalized-gifts",
       title: "Poster mockup",
       description:
         "Use a decor preview to judge whether the artwork works best as a framed print or poster.",

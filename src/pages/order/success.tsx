@@ -349,17 +349,17 @@ export default function OrderSuccess() {
           <div className="flex flex-col gap-2">
             {(order.productKey.includes("mug") || order.productKey === "coaster"
               ? [
-                  { href: "/personalized-name-wall-art", label: "Wall art print", detail: "Frame the same design for home decor" },
-                  { href: "/custom-name-shirts", label: "Custom shirt", detail: "Wear the artwork as a matching gift" },
+                  { href: "/personalized-gifts", label: "Wall art print", detail: "Frame the same design for home decor" },
+                  { href: "/personalized-gifts", label: "Custom shirt", detail: "Wear the artwork as a matching gift" },
                 ]
               : order.productKey === "tshirt"
               ? [
-                  { href: "/personalized-name-mugs", label: "Matching mug", detail: "A great companion to the shirt" },
-                  { href: "/personalized-name-wall-art", label: "Wall art print", detail: "Display the same design at home" },
+                  { href: "/personalized-gifts", label: "Matching mug", detail: "A great companion to the shirt" },
+                  { href: "/personalized-gifts", label: "Wall art print", detail: "Display the same design at home" },
                 ]
               : [
-                  { href: "/personalized-name-mugs", label: "Personalized mug", detail: "A practical gift for daily use" },
-                  { href: "/custom-name-shirts", label: "Custom shirt", detail: "Take the design off the wall" },
+                  { href: "/personalized-gifts", label: "Personalized mug", detail: "A practical gift for daily use" },
+                  { href: "/personalized-gifts", label: "Custom shirt", detail: "Take the design off the wall" },
                 ]
             ).map((item) => (
               <Link

@@ -61,7 +61,7 @@ const CouplesStylePage: NextPage<CouplesStylePageProps> = ({
             itemPaths: [
               "/couples-name-art-generator",
               "/couples-art/products",
-              "/couple-gifts",
+              "/personalized-gifts",
             ],
           }),
           ...(content.faqs && content.faqs.length > 0

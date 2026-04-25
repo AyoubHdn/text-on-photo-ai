@@ -71,7 +71,7 @@ const productLinks = [
       "Compare Arabic calligraphy mugs, shirts, and wall art before choosing the final product format.",
   },
   {
-    href: "/arabic-name-gifts",
+    href: "/personalized-gifts",
     title: "Arabic Name Gifts",
     description:
       "Use Arabic calligraphy artwork as the starting point for gift-ready products and keepsakes.",
