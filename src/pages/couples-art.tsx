@@ -10,10 +10,10 @@ import { getStyleImageAlt } from "~/lib/styleImageAlt";
 
 const galleryItems = [
   { src: "/styles/couples/c012e.webp", title: "Vintage Love Letter", tags: ["romantic"], href: "/couples-art/styles/vintage-love-letter" },
-  { src: "/styles/couples/c002e.webp", title: "Floral Watercolor", tags: ["romantic"], href: "/couples-art/styles/floral-watercolor" },
-  { src: "/styles/couples/c008e.webp", title: "Elegant Calligraphy Heart", tags: ["romantic"], href: "/couples-art/styles/elegant-calligraphy-heart" },
+  { src: "/styles/couples/c002e.webp", title: "Chic & Simple", tags: ["romantic"], href: "/couples-art/styles/chic-and-simple" },
+  { src: "/styles/couples/c008e.webp", title: "Timeless Love", tags: ["romantic"], href: "/couples-art/styles/timeless-love" },
   { src: "/styles/couples/c016e.webp", title: "Starlight Silhouettes", tags: ["romantic"], href: "/couples-art/styles/starlight-silhouettes" },
-  { src: "/styles/couples/c018e.webp", title: "Clean Sans-Serif", tags: ["modern"], href: "/couples-art/styles/clean-sans-serif" },
+  { src: "/styles/couples/c018e.webp", title: "Unique & Cute", tags: ["modern"], href: "/couples-art/styles/unique-and-cute" },
   { src: "/styles/couples/c019e.webp", title: "Single Line Art", tags: ["modern"], href: "/couples-art/styles/single-line-art" },
   { src: "/styles/couples/c024e.webp", title: "Abstract Watercolor", tags: ["modern", "playful"], href: "/couples-art/styles/abstract-watercolor" },
   { src: "/styles/couples/c020e.webp", title: "Marble & Gold", tags: ["modern", "romantic"], href: "/couples-art/styles/marble-and-gold" },

@@ -15,14 +15,14 @@ import { buildCollectionPageSchema, buildFAQSchema } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
 
 const galleryItems = [
-  { src: "/styles/arabic/thuluth-gold.webp", title: "Golden Thuluth", href: "/arabic-calligraphy/styles/golden-thuluth" },
+  { src: "/styles/arabic/thuluth-gold.webp", title: "Thuluth", href: "/arabic-calligraphy/styles/thuluth" },
   { src: "/styles/arabic/wireframe.webp", title: "Wireframe", href: "/arabic-calligraphy/styles/wireframe" },
-  { src: "/styles/arabic/diwani-ink.webp", title: "Royal Diwani", href: "/arabic-calligraphy/styles/royal-diwani" },
+  { src: "/styles/arabic/diwani-ink.webp", title: "Diwani", href: "/arabic-calligraphy/styles/diwani" },
   { src: "/styles/arabic/gold-3d.webp", title: "3D Gold Luxury", href: "/arabic-calligraphy/styles/3d-gold-luxury" },
   { src: "/styles/arabic/smoke-art.webp", title: "Mystical Smoke", href: "/arabic-calligraphy/styles/mystical-smoke" },
   { src: "/styles/arabic/sand-desert.webp", title: "Desert Sand", href: "/arabic-calligraphy/styles/desert-sand" },
   { src: "/styles/arabic/diamond.webp", title: "Diamond Encrusted", href: "/arabic-calligraphy/styles/diamond-encrusted" },
-  { src: "/styles/arabic/kufic-geo.webp", title: "Geometric Kufic", href: "/arabic-calligraphy/styles/geometric-kufic" },
+  { src: "/styles/arabic/kufic-geo.webp", title: "Kufic", href: "/arabic-calligraphy/styles/kufic" },
 ];
 
 const arabicFaqs = [
