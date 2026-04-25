@@ -1,3 +1,5 @@
+import { arabicStylesData } from "~/data/arabicStylesData";
+import { coupleStylesData } from "~/data/coupleStylesData";
 import { stylesData } from "~/data/stylesData";
 import { getStyleContent, type StyleContent } from "~/data/styleContent";
 import { popularNames } from "~/lib/names";
@@ -21,11 +23,73 @@ export type StyleGroupPage = {
   items: StyleSubPage[];
 };
 
-type TaggedStyleItem = {
+type CatalogStyleEntry = {
   src: string;
-  title: string;
-  tags: string[];
+  altText?: string;
+  name?: string;
+  basePrompt?: string;
+  allowCustomColors?: boolean;
 };
+
+type CatalogStylesData = Record<string, Record<string, CatalogStyleEntry[]>>;
+type StyleContentGetter = (slug: string) => StyleContent;
+
+type OptionalStyleContentModule = {
+  getArabicStyleContent?: StyleContentGetter;
+  getCoupleStyleContent?: StyleContentGetter;
+};
+
+type WebpackRequireContext = {
+  keys: () => string[];
+  <TModule>(id: string): TModule;
+};
+
+type WebpackRequire = NodeRequire & {
+  context?: (
+    directory: string,
+    useSubdirectories: boolean,
+    regExp: RegExp,
+  ) => WebpackRequireContext;
+};
+
+const EMPTY_STYLE_CONTENT: StyleContent = {};
+const getEmptyStyleContent: StyleContentGetter = () => EMPTY_STYLE_CONTENT;
+
+const optionalStyleContentContext = (require as WebpackRequire).context!(
+  "../data",
+  false,
+  /^\.\/(?:arabicStyleContent|coupleStyleContent)\.ts$/,
+);
+
+function getOptionalContentGetter(
+  moduleKey: "./arabicStyleContent.ts" | "./coupleStyleContent.ts",
+  exportName: keyof OptionalStyleContentModule,
+): StyleContentGetter {
+  if (!optionalStyleContentContext?.keys().includes(moduleKey)) {
+    return getEmptyStyleContent;
+  }
+
+  try {
+    const contentModule =
+      optionalStyleContentContext<OptionalStyleContentModule>(moduleKey);
+    const contentGetter = contentModule[exportName];
+
+    return typeof contentGetter === "function"
+      ? contentGetter
+      : getEmptyStyleContent;
+  } catch {
+    return getEmptyStyleContent;
+  }
+}
+
+const getArabicStyleContent = getOptionalContentGetter(
+  "./arabicStyleContent.ts",
+  "getArabicStyleContent",
+);
+const getCoupleStyleContent = getOptionalContentGetter(
+  "./coupleStyleContent.ts",
+  "getCoupleStyleContent",
+);
 
 function slugify(value: string) {
   return value
@@ -34,12 +98,6 @@ function slugify(value: string) {
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function toSentenceList(values: string[]) {
-  if (values.length <= 1) return values[0] ?? "";
-  if (values.length === 2) return `${values[0]} and ${values[1]}`;
-  return `${values.slice(0, -1).join(", ")}, and ${values[values.length - 1]}`;
 }
 
 function buildNameArtStyleGroups(): StyleGroupPage[] {
@@ -74,94 +132,70 @@ function buildNameArtStyleGroups(): StyleGroupPage[] {
   }));
 }
 
-const coupleStyleTabs = [
-  { key: "romantic", name: "Romantic and Classic" },
-  { key: "modern", name: "Modern and Minimalist" },
-  { key: "playful", name: "Playful and Fun" },
-];
+function buildCatalogStyleGroups({
+  data,
+  kind,
+  groupDescription,
+  itemDescription,
+  fallbackAlt,
+  contentGetter,
+}: {
+  data: CatalogStylesData;
+  kind: "arabic" | "couple";
+  groupDescription: (groupTitle: string) => string;
+  itemDescription: (substyleTitle: string) => string;
+  fallbackAlt: (substyleTitle: string) => string;
+  contentGetter: StyleContentGetter;
+}): StyleGroupPage[] {
+  return Object.entries(data).map(([groupTitle, substyles]) => ({
+    slug: slugify(groupTitle),
+    title: groupTitle,
+    description: groupDescription(groupTitle),
+    items: Object.entries(substyles).map(([substyleTitle, entries]) => {
+      const slug = slugify(substyleTitle);
+      const imageSrc = entries[0]?.src ?? "/banner.webp";
 
-const coupleStyleItems: TaggedStyleItem[] = [
-  { src: "/styles/couples/c012e.webp", title: "Vintage Love Letter", tags: ["romantic"] },
-  { src: "/styles/couples/c002e.webp", title: "Floral Watercolor", tags: ["romantic"] },
-  { src: "/styles/couples/c008e.webp", title: "Elegant Calligraphy Heart", tags: ["romantic"] },
-  { src: "/styles/couples/c016e.webp", title: "Starlight Silhouettes", tags: ["romantic"] },
-  { src: "/styles/couples/c018e.webp", title: "Clean Sans-Serif", tags: ["modern"] },
-  { src: "/styles/couples/c019e.webp", title: "Single Line Art", tags: ["modern"] },
-  { src: "/styles/couples/c024e.webp", title: "Abstract Watercolor", tags: ["modern", "playful"] },
-  { src: "/styles/couples/c020e.webp", title: "Marble & Gold", tags: ["modern", "romantic"] },
-  { src: "/styles/couples/c028e.webp", title: "Kawaii Characters", tags: ["playful"] },
-  { src: "/styles/couples/c030e.webp", title: "Pixel Art Robots", tags: ["playful"] },
-  { src: "/styles/couples/c033e.webp", title: "Cat Lovers", tags: ["playful", "modern"] },
-  { src: "/styles/couples/c032e.webp", title: "Comic Pop Art", tags: ["playful"] },
-];
-
-function buildTaggedGroups(
-  tabs: Array<{ key: string; name: string }>,
-  items: TaggedStyleItem[],
-  baseDescription: string,
-) {
-  return tabs.map((tab) => {
-    const groupItems = items.filter((item) => item.tags.includes(tab.key));
-    return {
-      slug: slugify(tab.key),
-      title: tab.name,
-      description: `${tab.name} ${baseDescription}`,
-      items: groupItems.map((item) => ({
-        slug: slugify(item.title),
-        title: item.title,
-        description: `${item.title} style with a ${toSentenceList(item.tags)} direction.`,
-        imageSrc: item.src,
-        imageAlt: getStyleImageAlt(item.src, {
-          kind: "couple",
-          title: item.title,
-          fallbackAlt: `${item.title} couple name art style example`,
+      return {
+        slug,
+        title: substyleTitle,
+        description: itemDescription(substyleTitle),
+        imageSrc,
+        imageAlt: getStyleImageAlt(imageSrc, {
+          kind,
+          title: substyleTitle,
+          fallbackAlt: fallbackAlt(substyleTitle),
         }),
-        sampleImages: [item.src],
-        count: 1,
-        content: {},
-      })),
-    } satisfies StyleGroupPage;
-  });
+        sampleImages: entries.slice(0, 12).map((entry) => entry.src),
+        count: entries.length,
+        content: contentGetter(slug),
+      };
+    }),
+  }));
 }
 
-const arabicStyleItems: TaggedStyleItem[] = [
-  { src: "/styles/arabic/thuluth-gold.webp", title: "Golden Thuluth", tags: ["calligraphy"] },
-  { src: "/styles/arabic/wireframe.webp", title: "Wireframe", tags: ["modern"] },
-  { src: "/styles/arabic/diwani-ink.webp", title: "Royal Diwani", tags: ["calligraphy"] },
-  { src: "/styles/arabic/gold-3d.webp", title: "3D Gold Luxury", tags: ["luxury"] },
-  { src: "/styles/arabic/smoke-art.webp", title: "Mystical Smoke", tags: ["experimental"] },
-  { src: "/styles/arabic/sand-desert.webp", title: "Desert Sand", tags: ["regional"] },
-  { src: "/styles/arabic/diamond.webp", title: "Diamond Encrusted", tags: ["luxury"] },
-  { src: "/styles/arabic/kufic-geo.webp", title: "Geometric Kufic", tags: ["calligraphy", "modern"] },
-];
-
 export const NAME_ART_STYLE_GROUPS = buildNameArtStyleGroups();
-export const COUPLES_STYLE_GROUPS = buildTaggedGroups(
-  coupleStyleTabs,
-  coupleStyleItems,
-  "couple name art styles for keepsakes, decor, and gifts.",
-);
-export const ARABIC_STYLE_GROUPS: StyleGroupPage[] = [
-  {
-    slug: "arabic-calligraphy",
-    title: "Arabic calligraphy styles",
-    description: "Arabic name art styles spanning calligraphy, luxury, and modern visual directions.",
-    items: arabicStyleItems.map((item) => ({
-      slug: slugify(item.title),
-      title: item.title,
-      description: `${item.title} Arabic name art style for decor, branding, gifts, and keepsakes.`,
-      imageSrc: item.src,
-      imageAlt: getStyleImageAlt(item.src, {
-        kind: "arabic",
-        title: item.title,
-        fallbackAlt: `${item.title} Arabic calligraphy example`,
-      }),
-      sampleImages: [item.src],
-      count: 1,
-      content: {},
-    })),
-  },
-];
+export const COUPLES_STYLE_GROUPS = buildCatalogStyleGroups({
+  data: coupleStylesData,
+  kind: "couple",
+  groupDescription: (groupTitle) =>
+    `${groupTitle} couple name art styles for keepsakes, decor, and gifts.`,
+  itemDescription: (substyleTitle) =>
+    `${substyleTitle} couple name art style for keepsakes, decor, and romantic gifts.`,
+  fallbackAlt: (substyleTitle) =>
+    `${substyleTitle} couple name art style example`,
+  contentGetter: getCoupleStyleContent,
+});
+export const ARABIC_STYLE_GROUPS = buildCatalogStyleGroups({
+  data: arabicStylesData,
+  kind: "arabic",
+  groupDescription: (groupTitle) =>
+    `${groupTitle} Arabic name art styles for decor, branding, gifts, and keepsakes.`,
+  itemDescription: (substyleTitle) =>
+    `${substyleTitle} Arabic name art style for decor, branding, gifts, and keepsakes.`,
+  fallbackAlt: (substyleTitle) =>
+    `${substyleTitle} Arabic calligraphy example`,
+  contentGetter: getArabicStyleContent,
+});
 
 function flattenGroups(groups: StyleGroupPage[]) {
   return groups.flatMap((group) =>
