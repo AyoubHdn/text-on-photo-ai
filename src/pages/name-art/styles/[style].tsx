@@ -3,13 +3,20 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { SeoHead } from "~/component/SeoHead";
+import type { StyleContent } from "~/data/styleContent";
 import {
   buildBreadcrumbSchema,
   buildCollectionPageSchema,
+  buildFAQSchema,
   buildItemListSchema,
 } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
-import { getNameArtStyleBySlug, getNamesForStyle, NAME_ART_STYLE_ITEMS } from "~/lib/styleTaxonomy";
+import {
+  getNameArtStyleBySlug,
+  getNamesForStyle,
+  getStyleEntry,
+  NAME_ART_STYLE_ITEMS,
+} from "~/lib/styleTaxonomy";
 
 type NameArtStylePageProps = {
   styleSlug: string;
@@ -20,6 +27,7 @@ type NameArtStylePageProps = {
   imageAlt: string;
   sampleImages: string[];
   relatedNames: Array<{ name: string; path: string; niches: string[] }>;
+  content: StyleContent;
 };
 
 const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
@@ -31,6 +39,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
   imageAlt,
   sampleImages,
   relatedNames,
+  content,
 }) => {
   const pagePath = `/name-art/styles/${styleSlug}`;
   const getGeneratorHref = (styleImage = imageSrc) =>
@@ -66,6 +75,9 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
             name: `${title} related names`,
             itemPaths: relatedNames.map((item) => item.path),
           }),
+          ...(content.faqs && content.faqs.length > 0
+            ? [buildFAQSchema(content.faqs)]
+            : []),
         ]}
       />
       <main className="bg-white dark:bg-gray-900">
@@ -86,7 +98,8 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
                   href={getGeneratorHref()}
                   className="rounded-lg bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"
                 >
-                  Create this style
+                  {content.ctaPrimary ??
+                    `Create your ${title.toLowerCase()} name art`}
                 </Link>
                 <Link
                   href="/name-art/styles"
@@ -101,6 +114,17 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
             </div>
           </div>
         </section>
+
+        {content.introBody && (
+          <section className="mx-auto max-w-3xl px-4 py-8">
+            {content.introHeading && (
+              <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+                {content.introHeading}
+              </h2>
+            )}
+            <p className="leading-relaxed text-gray-700">{content.introBody}</p>
+          </section>
+        )}
 
         <section className="px-4 py-16">
           <div className="container mx-auto max-w-6xl">
@@ -138,6 +162,64 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
           </div>
         </section>
 
+        {(content.productBridgeBody || content.productBridgeHeading) && (
+          <section className="mx-auto max-w-4xl px-4 py-12">
+            <h2 className="mb-3 text-2xl font-semibold text-gray-900">
+              {content.productBridgeHeading ??
+                `${title} name art on real products`}
+            </h2>
+            {content.productBridgeBody && (
+              <p className="mb-6 text-gray-700">{content.productBridgeBody}</p>
+            )}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {[
+                { href: "/personalized-name-mugs", label: "Mug" },
+                { href: "/custom-name-shirts", label: "Shirt" },
+                { href: "/personalized-name-wall-art", label: "Wall art" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-2xl border border-cream-200 bg-white p-5 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
+                >
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {item.label}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {content.relatedStyles && content.relatedStyles.length > 0 && (
+          <section className="mx-auto max-w-4xl px-4 py-12">
+            <h2 className="mb-6 text-2xl font-semibold text-gray-900">
+              Related name art styles
+            </h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {content.relatedStyles.map((relatedSlug) => {
+                const related = getStyleEntry(relatedSlug);
+                if (!related) return null;
+
+                return (
+                  <Link
+                    key={relatedSlug}
+                    href={`/name-art/styles/${relatedSlug}`}
+                    className="rounded-2xl border border-cream-200 bg-white p-5 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
+                  >
+                    <span className="text-sm text-gray-500">
+                      {related.groupTitle}
+                    </span>
+                    <h3 className="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+                      {related.title}
+                    </h3>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <section className="bg-gray-50 px-4 py-16 dark:bg-gray-800">
           <div className="container mx-auto max-w-6xl">
             <div className="max-w-3xl">
@@ -165,6 +247,36 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
               ))}
             </div>
           </div>
+        </section>
+
+        {content.faqs && content.faqs.length > 0 && (
+          <section className="mx-auto max-w-4xl px-4 py-12">
+            <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900">
+              Frequently asked questions about {title.toLowerCase()} name art
+            </h2>
+            <div className="space-y-6">
+              {content.faqs.map((faq) => (
+                <div
+                  key={faq.question}
+                  className="rounded-lg border border-gray-200 p-6"
+                >
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                    {faq.question}
+                  </h3>
+                  <p className="text-gray-700">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="px-4 pb-16 text-center">
+          <Link
+            href="/name-art/styles"
+            className="inline-flex rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-700"
+          >
+            Back to all name art styles
+          </Link>
         </section>
       </main>
     </>
@@ -197,6 +309,7 @@ export const getStaticProps: GetStaticProps<NameArtStylePageProps> = (context) =
       imageAlt: style.imageAlt,
       sampleImages: style.sampleImages,
       relatedNames: getNamesForStyle(style.title),
+      content: style.content,
     },
   };
 };
