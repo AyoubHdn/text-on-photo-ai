@@ -13,6 +13,7 @@ import {
   buildItemListSchema,
 } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
+import { NAME_ART_STYLE_ITEMS } from "~/lib/styleTaxonomy";
 
 const galleryItems = [
   { src: "/styles/name-art/Cute/s34e.webp", title: "3D Floral", tags: ["artistic", "playful"], href: "/name-art/styles/cute" },
@@ -117,6 +118,9 @@ const NameArtLandingPage: NextPage = () => {
             path: "/name-art",
             itemPaths: [
               "/name-art/styles",
+              ...NAME_ART_STYLE_ITEMS.map(
+                (item) => `/name-art/styles/${item.slug}`,
+              ),
               ...FEATURED_NAME_PAGES.map((item) => item.path),
               ...productLinks.map((item) => item.href),
             ],
@@ -288,6 +292,37 @@ const NameArtLandingPage: NextPage = () => {
                 Browse all name art styles
               </Link>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-12">
+          <h2 className="mb-6 text-2xl font-semibold text-gray-900">
+            Browse all name art styles
+          </h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {NAME_ART_STYLE_ITEMS.map((style) => (
+              <Link
+                key={style.slug}
+                href={`/name-art/styles/${style.slug}`}
+                className="group overflow-hidden rounded-lg border border-gray-200 transition hover:border-indigo-300"
+              >
+                <Image
+                  src={style.imageSrc}
+                  alt={`${style.title} name art example`}
+                  width={300}
+                  height={300}
+                  className="aspect-square w-full object-cover"
+                />
+                <div className="p-3">
+                  <span className="text-xs text-gray-500">
+                    {style.groupTitle}
+                  </span>
+                  <h3 className="text-sm font-medium text-gray-900 group-hover:text-indigo-600">
+                    {style.title}
+                  </h3>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
