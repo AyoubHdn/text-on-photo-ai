@@ -80,6 +80,11 @@ const config = {
         permanent: true,
       },
       {
+        source: "/name-art/styles/gifts",
+        destination: "/personalized-gifts",
+        permanent: true,
+      },
+      {
         source: "/ramadan-mug",
         destination: "/ramadan-mug-v2",
         permanent: true,

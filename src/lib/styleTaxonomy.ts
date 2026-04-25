@@ -49,11 +49,15 @@ function buildNameArtStyleGroups(): StyleGroupPage[] {
     description: `${groupTitle} name art styles grouped by design direction and visual mood.`,
     items: Object.entries(substyles).map(([substyleTitle, entries]) => {
       const slug = slugify(substyleTitle);
+      const description =
+        substyleTitle === "Logos"
+          ? "Personal name logos and monogram-style designs - make your name look like an emblem."
+          : `Explore ${substyleTitle.toLowerCase()} name art styles for decor, gifts, keepsakes, and personalized products.`;
 
       return {
         slug,
         title: substyleTitle,
-        description: `Explore ${substyleTitle.toLowerCase()} name art styles for decor, gifts, keepsakes, and personalized products.`,
+        description,
         imageSrc: getEnhancedNameArtSrc(entries[0]?.src ?? "/banner.webp"),
         imageAlt: getStyleImageAlt(entries[0]?.src ?? "/banner.webp", {
           kind: "name",
