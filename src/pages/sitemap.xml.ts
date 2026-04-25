@@ -34,10 +34,6 @@ const getPriority = (rawPage: string) => {
     "/arabic-calligraphy",
     "/couples-art",
     "/personalized-gifts",
-    "/personalized-name-mugs",
-    "/custom-name-shirts",
-    "/personalized-name-wall-art",
-    "/couple-gifts",
   ]);
 
   if (primaryLandingPages.has(page)) return "0.9";
@@ -51,8 +47,6 @@ const getPriority = (rawPage: string) => {
   ) {
     return "0.7";
   }
-  // Arabic gifts page is secondary — lower priority to avoid crowding out main product hubs
-  if (page === "/arabic-name-gifts") return "0.7";
   if (
     page === "/community" ||
     page === "/name-art/styles" ||
@@ -143,11 +137,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/couples-art/styles",
     "/products",
     "/personalized-gifts",
-    "/personalized-name-mugs",
-    "/custom-name-shirts",
-    "/personalized-name-wall-art",
-    "/arabic-name-gifts",
-    "/couple-gifts",
     ...STYLE_PRODUCT_SEO_PATHS,
     "/privacy-policy",
     "/terms-of-service",
