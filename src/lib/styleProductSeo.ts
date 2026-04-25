@@ -550,28 +550,28 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     ],
     inspiration: [
       {
-        title: "Golden Thuluth",
+        title: "Thuluth",
         description:
           "A premium calligraphy direction for display pieces, keepsakes, and refined gifts.",
         imageSrc: "/styles/arabic/thuluth-gold.webp",
-        imageAlt: "Golden Thuluth Arabic calligraphy style example",
-        href: "/arabic-calligraphy/styles/golden-thuluth",
+        imageAlt: "Thuluth Arabic calligraphy style example",
+        href: "/arabic-calligraphy/styles/thuluth",
       },
       {
-        title: "Royal Diwani",
+        title: "Diwani",
         description:
           "A flowing calligraphy style that suits framed decor and meaningful gift pages.",
         imageSrc: "/styles/arabic/diwani-ink.webp",
-        imageAlt: "Royal Diwani Arabic calligraphy style example",
-        href: "/arabic-calligraphy/styles/royal-diwani",
+        imageAlt: "Diwani Arabic calligraphy style example",
+        href: "/arabic-calligraphy/styles/diwani",
       },
       {
-        title: "Geometric Kufic",
+        title: "Kufic",
         description:
           "A structured Arabic style that can work especially well for modern products.",
         imageSrc: "/styles/arabic/kufic-geo.webp",
-        imageAlt: "Geometric Kufic Arabic style example",
-        href: "/arabic-calligraphy/styles/geometric-kufic",
+        imageAlt: "Kufic Arabic style example",
+        href: "/arabic-calligraphy/styles/kufic",
       },
     ],
     hubFaqItems: [
@@ -869,28 +869,28 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     ],
     inspiration: [
       {
-        title: "Elegant calligraphy heart",
+        title: "Timeless Love",
         description:
           "A romantic option for anniversary gifts, framed keepsakes, and classic couple products.",
         imageSrc: "/styles/couples/c008e.webp",
-        imageAlt: "Elegant calligraphy heart couple name art example",
-        href: "/couples-art/styles/elegant-calligraphy-heart",
+        imageAlt: "Timeless Love couple name art example",
+        href: "/couples-art/styles/timeless-love",
       },
       {
-        title: "Floral watercolor",
+        title: "Chic & Simple",
         description:
           "A softer style that suits wedding gifts, shared decor, and keepsake prints.",
         imageSrc: "/styles/couples/c002e.webp",
-        imageAlt: "Floral watercolor couple name art example",
-        href: "/couples-art/styles/floral-watercolor",
+        imageAlt: "Chic & Simple couple name art example",
+        href: "/couples-art/styles/chic-and-simple",
       },
       {
-        title: "Clean sans-serif",
+        title: "Unique & Cute",
         description:
           "A modern direction for shirts, minimal mugs, and contemporary home decor.",
         imageSrc: "/styles/couples/c018e.webp",
-        imageAlt: "Clean sans-serif couple name art example",
-        href: "/couples-art/styles/clean-sans-serif",
+        imageAlt: "Unique & Cute couple name art example",
+        href: "/couples-art/styles/unique-and-cute",
       },
     ],
     hubFaqItems: [
