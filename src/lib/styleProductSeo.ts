@@ -274,7 +274,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     ],
     productCopy: {
       mugs: {
-        title: "Name Art Mugs | Personalized Name Art on Custom Mugs | Name Design AI",
+        title: "Name Art Mugs | Custom Personalized Name Mugs | Name Design AI",
         description:
           "Create name art mugs from personalized AI-generated name designs. Learn what styles read clearly on mugs before making a printable design.",
         h1: "Name art mugs made from your custom design",
@@ -520,7 +520,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     styleGalleryLabel: "Browse Arabic styles",
     giftHubHref: "/arabic-name-gifts",
     giftHubLabel: "Arabic Name Gifts",
-    hubTitle: "Arabic Name Art Products | Mugs, Shirts, and Wall Art | Name Design AI",
+    hubTitle: "Arabic Name Art Products | Mugs, Shirts, Wall Art | Name Design AI",
     hubDescription:
       "Browse Arabic name art products for mugs, shirts, and wall art. Turn calligraphy-inspired Arabic name designs into gift-ready product formats.",
     hubH1: "Arabic name art products for gifts and decor",
@@ -593,7 +593,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     ],
     productCopy: {
       mugs: {
-        title: "Arabic Name Art Mugs | Custom Arabic Calligraphy Mugs | Name Design AI",
+        title: "Arabic Name Art Mugs | Custom Calligraphy Mugs | Name Design AI",
         description:
           "Create Arabic name art mugs from calligraphy-inspired designs. Learn which Arabic styles stay readable on custom mugs before generating artwork.",
         h1: "Arabic name art mugs with calligraphy-inspired designs",
@@ -671,7 +671,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
         ],
       },
       shirts: {
-        title: "Arabic Name Art Shirts | Custom Arabic Calligraphy Shirts | Name Design AI",
+        title: "Arabic Name Art Shirts | Calligraphy T-Shirts | Name Design AI",
         description:
           "Explore Arabic name art shirts for wearable calligraphy-inspired designs. Compare style directions before creating custom Arabic shirt artwork.",
         h1: "Arabic name art shirts for wearable calligraphy",
@@ -749,7 +749,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
         ],
       },
       "wall-art": {
-        title: "Arabic Name Art Wall Art | Personalized Arabic Calligraphy Prints",
+        title: "Arabic Name Art Wall Art | Custom Calligraphy Prints | Name Design AI",
         description:
           "Create Arabic name art wall art with calligraphy-inspired designs for framed prints, posters, rooms, and meaningful personalized gifts.",
         h1: "Arabic name art wall art for meaningful decor",
@@ -839,7 +839,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     styleGalleryLabel: "Browse couples styles",
     giftHubHref: "/couple-gifts",
     giftHubLabel: "Couple Gifts",
-    hubTitle: "Couples Art Products | Mugs, Shirts, and Wall Art | Name Design AI",
+    hubTitle: "Couples Art Products | Mugs, Shirts, Wall Art | Name Design AI",
     hubDescription:
       "Browse couples art products for mugs, shirts, and wall art. Turn romantic two-name artwork into anniversary, wedding, and keepsake gifts.",
     hubH1: "Couples art products for romantic gifts",
@@ -1068,7 +1068,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
         ],
       },
       "wall-art": {
-        title: "Couples Art Wall Art | Personalized Couple Name Prints",
+        title: "Couples Art Wall Art | Custom Couple Name Prints | Name Design AI",
         description:
           "Create couples art wall art for anniversaries, weddings, engagements, and shared-home decor. Turn two-name artwork into personalized prints.",
         h1: "Couples art wall art for anniversaries and shared spaces",
