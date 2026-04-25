@@ -1,4 +1,9 @@
 import type { BreadcrumbItem } from "~/lib/seo";
+import {
+  ARABIC_STYLE_ITEMS,
+  COUPLES_STYLE_ITEMS,
+  NAME_ART_STYLE_ITEMS,
+} from "~/lib/styleTaxonomy";
 
 export type StyleProductHubSlug = "name-art" | "arabic-calligraphy" | "couples-art";
 export type StyleProductSlug = "mugs" | "shirts" | "wall-art";
@@ -144,6 +149,30 @@ export const STYLE_PRODUCT_HUB_SLUGS: StyleProductHubSlug[] = [
   "couples-art",
 ];
 
+const STYLE_ITEMS_BY_NAMESPACE = {
+  "name-art": NAME_ART_STYLE_ITEMS,
+  "arabic-calligraphy": ARABIC_STYLE_ITEMS,
+  "couples-art": COUPLES_STYLE_ITEMS,
+} as const;
+
+export function buildStyleHref(
+  namespace: StyleProductHubSlug,
+  slug: string,
+): string {
+  const items = STYLE_ITEMS_BY_NAMESPACE[namespace];
+  const item = items.find((entry) => entry.slug === slug);
+
+  if (!item && process.env.NODE_ENV !== "production") {
+    throw new Error(
+      `[styleProductSeo] Unknown ${namespace} style slug: "${slug}". Available: ${items
+        .map((entry) => entry.slug)
+        .join(", ")}`,
+    );
+  }
+
+  return `/${namespace}/styles/${slug}`;
+}
+
 const PRODUCT_CONFIGS: Record<StyleProductSlug, ProductBaseConfig> = {
   mugs: {
     slug: "mugs",
@@ -236,7 +265,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A softer decor-friendly direction that translates naturally into prints and thoughtful gifts.",
         imageSrc: "/styles/name-art/Floral/s127e.webp",
         imageAlt: "Floral Olivia name art example for personalized products",
-        href: "/name-art/styles/floral",
+        href: buildStyleHref("name-art", "floral"),
       },
       {
         title: "Typography name art",
@@ -244,7 +273,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "Cleaner lettering that works especially well for shirts and compact product surfaces.",
         imageSrc: "/styles/name-art/Typography/s258e.webp",
         imageAlt: "Typography name art example for shirts and mugs",
-        href: "/name-art/styles/typography",
+        href: buildStyleHref("name-art", "typography"),
       },
       {
         title: "Cute name art",
@@ -252,7 +281,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "Playful styles that suit birthday gifts, kids rooms, mugs, and casual keepsakes.",
         imageSrc: "/styles/name-art/Cute/s57e.webp",
         imageAlt: "Cute pastel name art example for personalized gifts",
-        href: "/name-art/styles/cute",
+        href: buildStyleHref("name-art", "cute"),
       },
     ],
     hubFaqItems: [
@@ -555,7 +584,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A premium calligraphy direction for display pieces, keepsakes, and refined gifts.",
         imageSrc: "/styles/arabic/thuluth-gold.webp",
         imageAlt: "Thuluth Arabic calligraphy style example",
-        href: "/arabic-calligraphy/styles/thuluth",
+        href: buildStyleHref("arabic-calligraphy", "thuluth"),
       },
       {
         title: "Diwani",
@@ -563,7 +592,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A flowing calligraphy style that suits framed decor and meaningful gift pages.",
         imageSrc: "/styles/arabic/diwani-ink.webp",
         imageAlt: "Diwani Arabic calligraphy style example",
-        href: "/arabic-calligraphy/styles/diwani",
+        href: buildStyleHref("arabic-calligraphy", "diwani"),
       },
       {
         title: "Kufic",
@@ -571,7 +600,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A structured Arabic style that can work especially well for modern products.",
         imageSrc: "/styles/arabic/kufic-geo.webp",
         imageAlt: "Kufic Arabic style example",
-        href: "/arabic-calligraphy/styles/kufic",
+        href: buildStyleHref("arabic-calligraphy", "kufic"),
       },
     ],
     hubFaqItems: [
@@ -874,7 +903,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A romantic option for anniversary gifts, framed keepsakes, and classic couple products.",
         imageSrc: "/styles/couples/c008e.webp",
         imageAlt: "Timeless Love couple name art example",
-        href: "/couples-art/styles/timeless-love",
+        href: buildStyleHref("couples-art", "timeless-love"),
       },
       {
         title: "Chic & Simple",
@@ -882,7 +911,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A softer style that suits wedding gifts, shared decor, and keepsake prints.",
         imageSrc: "/styles/couples/c002e.webp",
         imageAlt: "Chic & Simple couple name art example",
-        href: "/couples-art/styles/chic-and-simple",
+        href: buildStyleHref("couples-art", "chic-and-simple"),
       },
       {
         title: "Unique & Cute",
@@ -890,7 +919,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
           "A modern direction for shirts, minimal mugs, and contemporary home decor.",
         imageSrc: "/styles/couples/c018e.webp",
         imageAlt: "Unique & Cute couple name art example",
-        href: "/couples-art/styles/unique-and-cute",
+        href: buildStyleHref("couples-art", "unique-and-cute"),
       },
     ],
     hubFaqItems: [
