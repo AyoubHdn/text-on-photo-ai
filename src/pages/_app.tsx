@@ -11,7 +11,6 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import { Header } from "~/component/Header";
 import { Footer } from "~/component/Footer";
-import { ExitIntentModal } from "~/component/ExitIntentModal";
 
 const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 const PAID_TRAFFIC_SOURCE_PAGE_KEY = "paidTrafficSourcePage";
@@ -253,8 +252,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
           style={{ display: "none", visibility: "hidden" }}
         ></iframe>
       </noscript>
-
-      <ExitIntentModal />
 
       {/* Main App */}
       {isRamadanMugV2Route ? (
