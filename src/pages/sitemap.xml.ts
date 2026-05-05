@@ -87,8 +87,7 @@ const isDynamicPage = (page: string) =>
   /^\/name-art\/[^/]+$/.test(page) ||
   /^\/name-art\/styles\/[^/]+$/.test(page) ||
   /^\/couples-art\/styles\/[^/]+$/.test(page) ||
-  /^\/arabic-calligraphy(\/|$)/.test(page) ||
-  page === "/arabic-calligraphy-generator";
+  /^\/arabic-calligraphy(\/|$)/.test(page);
 
 const getChangefreq = (page: string) => {
   if (page === "/") return "daily";
@@ -127,13 +126,10 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/blog",
     "/community",
     "/name-art",
-    "/name-art-generator",
     "/name-art/styles",
     "/arabic-calligraphy",
-    "/arabic-calligraphy-generator",
     "/arabic-calligraphy/styles",
     "/couples-art",
-    "/couples-name-art-generator",
     "/couples-art/styles",
     "/products",
     "/personalized-gifts",

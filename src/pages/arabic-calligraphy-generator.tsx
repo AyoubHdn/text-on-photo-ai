@@ -752,6 +752,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         title="Free Arabic Name Generator — Calligraphy & AI Name Design"
         description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles for gifts and decor."
         path="/arabic-calligraphy-generator"
+        noindex
         jsonLd={[
           buildWebApplicationSchema({
             name: "Arabic Name Art Generator",

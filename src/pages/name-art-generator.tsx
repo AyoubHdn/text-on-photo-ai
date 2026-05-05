@@ -827,6 +827,7 @@ const NameArtGeneratorPage: NextPage = () => {
         title="Free AI Name Art Generator & Name Design Maker — Create Online"
         description="Free AI name art generator and name design maker. Create custom name designs in seconds — pick a style, generate, then turn it into a mug, poster, or shirt."
         path="/name-art-generator"
+        noindex
         jsonLd={[
           buildWebApplicationSchema({
             name: "Name Art Generator",

@@ -789,6 +789,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
         title="Free Couple Name Generator & Stylish Couple Name Maker"
         description="Free couple name generator and stylish couple name maker. Enter two names, pick a romantic style, and create beautiful couple name designs for gifts."
         path="/couples-name-art-generator"
+        noindex
         jsonLd={[
           buildWebApplicationSchema({
             name: "Couple Name Generator",
