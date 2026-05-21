@@ -51,6 +51,17 @@ type VisualCard = {
   ctaLabel: string;
 };
 
+function encodePathSegments(path: string) {
+  return path
+    .split("/")
+    .map((segment) => (segment ? encodeURIComponent(segment) : segment))
+    .join("/");
+}
+
+function buildNameArtImageSrc(nicheName: string, imageFile: string) {
+  return encodePathSegments(`/styles/name-art/${nicheName}/${imageFile}`);
+}
+
 const buildFaqItems = (name: string, niches: string[]) => [
   {
     question: `What styles work well for ${name} name art?`,
@@ -99,7 +110,7 @@ function buildExampleCards(name: string, showcaseData: ShowcaseData) {
       exampleCards.push({
         title: getExampleLabel(name, niche),
         imageSrc: style.src,
-        imageAlt: getStyleImageAlt(style.src, {
+        imageAlt: getStyleImageAlt(decodeURIComponent(style.src), {
           kind: "name",
           title: niche,
           fallbackAlt: `${name} name art ${niche.toLowerCase()} design`,
@@ -128,11 +139,12 @@ function buildStyleCategoryCards(name: string, styleNames: string[]) {
     .map((styleName) => {
       const style = getNameArtStyleBySlug(slugifyStyleName(styleName));
       if (!style) return null;
+      const encodedImageSrc = encodePathSegments(style.imageSrc);
 
       return {
         title: style.title,
         description: style.description,
-        imageSrc: style.imageSrc,
+        imageSrc: encodedImageSrc,
         imageAlt: getStyleImageAlt(style.imageSrc, {
           kind: "name",
           title: style.title,
@@ -301,15 +313,15 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                     <article className="group h-full overflow-hidden rounded-3xl border border-white/70 bg-white shadow-xl shadow-slate-200/60 transition hover:-translate-y-1 hover:shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/20">
                       <div
                         className={`relative ${
-                          index === 0 ? "aspect-[4/5] h-full min-h-[300px]" : "aspect-[4/3]"
+                          index === 0 ? "h-full min-h-[300px]" : "aspect-[4/3]"
                         }`}
                       >
                         <Image
                           src={example.imageSrc}
                           alt={example.imageAlt}
                           fill
+                          sizes="(max-width: 640px) 100vw, 50vw"
                           className="object-cover transition duration-500 group-hover:scale-105"
-                          unoptimized={true}
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent p-5">
                           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">
@@ -352,8 +364,8 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                       src={example.imageSrc}
                       alt={example.imageAlt}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       className="object-cover transition duration-500 group-hover:scale-105"
-                      unoptimized={true}
                     />
                   </div>
                   <div className="p-5">
@@ -396,8 +408,8 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                       src={style.imageSrc}
                       alt={style.imageAlt}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                       className="object-cover transition duration-500 group-hover:scale-105"
-                      unoptimized={true}
                     />
                   </div>
                   <div className="p-5">
@@ -600,8 +612,8 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
                       src={related.previewSrc}
                       alt={related.previewAlt}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       className="object-cover transition duration-500 group-hover:scale-105"
-                      unoptimized={true}
                     />
                   </div>
                   <div className="p-5">
@@ -670,7 +682,7 @@ export const getStaticProps: GetStaticProps = (context) => {
 
     if (imagesForNiche) {
       showcaseData[nicheName] = imagesForNiche.map((imageFile) => ({
-        src: `/styles/name-art/${nicheName}/${imageFile}`,
+        src: buildNameArtImageSrc(nicheName, imageFile),
       }));
     }
   });
@@ -690,7 +702,7 @@ export const getStaticProps: GetStaticProps = (context) => {
       ...related,
       previewSrc:
         previewNiche && previewImage
-          ? `/styles/name-art/${previewNiche}/${previewImage}`
+          ? buildNameArtImageSrc(previewNiche, previewImage)
           : "/banner.webp",
       previewAlt: previewNiche && previewImage
         ? getStyleImageAlt(`/styles/name-art/${previewNiche}/${previewImage}`, {

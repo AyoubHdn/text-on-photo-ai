@@ -313,7 +313,7 @@ function HeroBanner() {
       imageAlt:
         "Collage of personalized name art, Arabic calligraphy, and custom gift mockups",
       className: "sm:row-span-2",
-      aspectClass: "aspect-[4/6] h-full min-h-[320px]",
+      aspectClass: "h-full min-h-[320px]",
     },
     {
       title: "Couple keepsakes",
@@ -640,7 +640,7 @@ function HowItWorksSection() {
               >
                 <div
                   className={`relative ${
-                    index === 0 ? "aspect-[4/6] h-full min-h-[280px]" : "aspect-[4/3]"
+                    index === 0 ? "h-full min-h-[280px]" : "aspect-[4/3]"
                   }`}
                 >
                   <Image

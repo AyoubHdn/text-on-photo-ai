@@ -69,7 +69,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         width={40}
                         height={40}
                         className="h-9 w-9 shrink-0 rounded sm:h-10 sm:w-10"
-                        unoptimized
                     />
                     <Image
                         src="/logo-full.webp"
@@ -77,7 +76,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         width={160}
                         height={36}
                         className="h-[29px] w-auto shrink-0 sm:h-[33px]"
-                        unoptimized
                     />
                 </PrimaryLink>
             </header>
@@ -96,7 +94,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                             width={40}
                             height={40}
                             className="h-9 w-9 shrink-0 rounded sm:h-10 sm:w-10"
-                            unoptimized
                         />
                         <Image
                             src="/logo-full.webp"
@@ -104,7 +101,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                             width={160}
                             height={36}
                             className="h-[29px] w-auto shrink-0 sm:h-[33px]"
-                            unoptimized
                         />
                     </PrimaryLink>
                 </li>

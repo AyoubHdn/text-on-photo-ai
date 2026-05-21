@@ -1058,7 +1058,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                         width={512}
                         height={512}
                         className="w-full rounded"
-                        unoptimized={true}
                       />
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3 rounded bg-gray-900/80 px-2 py-1.5 text-xs text-white dark:bg-gray-800/90">
