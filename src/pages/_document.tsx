@@ -1,8 +1,17 @@
-import { Html, Head, Main, NextScript } from "next/document";
+import {
+  Head,
+  Html,
+  Main,
+  NextScript,
+  type DocumentProps,
+} from "next/document";
 
-export default function Document() {
+export default function Document(props: DocumentProps) {
+  const pagePath = props.__NEXT_DATA__.page ?? "";
+  const isArabicRoute = pagePath.startsWith("/ar/");
+
   return (
-    <Html lang="en">
+    <Html lang={isArabicRoute ? "ar" : "en"} dir={isArabicRoute ? "rtl" : "ltr"}>
       <Head>
         {/* Preconnect to image CDN for faster LCP */}
         <link
