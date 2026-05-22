@@ -10,6 +10,7 @@ import {
   FiStar,
 } from "react-icons/fi";
 
+import { LanguageSwitchLink } from "~/component/LanguageSwitchLink";
 import { SeoHead } from "~/component/SeoHead";
 import { buildCollectionPageSchema, buildFAQSchema } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
@@ -92,6 +93,11 @@ const ArabicArtLandingPage: NextPage = () => {
         description="Create custom Arabic name art and calligraphy designs. Personalized styles for wall art, mugs, framed prints, and meaningful Islamic gifts."
         path="/arabic-calligraphy"
         keywords="arabic name art, arabic name gift, personalized arabic name, custom arabic calligraphy, arabic calligraphy gift, arabic name wall art"
+        alternates={[
+          { hrefLang: "en", href: "/arabic-calligraphy" },
+          { hrefLang: "ar", href: "/ar/arabic-calligraphy" },
+          { hrefLang: "x-default", href: "/arabic-calligraphy" },
+        ]}
         jsonLd={[
           buildCollectionPageSchema({
             name: "Arabic Name Art",
@@ -108,6 +114,13 @@ const ArabicArtLandingPage: NextPage = () => {
           <div className="absolute left-0 top-0 h-full w-full opacity-10 dark:opacity-5" />
 
           <div className="container relative z-10 mx-auto">
+            <div className="mb-6 flex">
+              <LanguageSwitchLink
+                href="/ar/arabic-calligraphy"
+                label="العربية"
+                className="ml-auto"
+              />
+            </div>
             <span className="mb-6 inline-block rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-brand-800">
               Arabic Name Gifts
             </span>

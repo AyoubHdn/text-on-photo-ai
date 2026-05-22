@@ -9,7 +9,7 @@ import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "~/component/Input";
-import { arabicStylesData } from "../data/arabicStylesData";
+import { arabicStylesData } from "~/data/arabicStylesData";
 import { useSession, signIn } from "next-auth/react";
 import {
   AiOutlineDownload,
@@ -106,39 +106,39 @@ const GENERATOR_DRAFT_TTL_MS = 1000 * 60 * 60 * 24;
 
 const arabicGeneratorFaqs = [
   {
-    question: "Can I write my name in Arabic calligraphy from English?",
+    question: "هل أستطيع كتابة اسمي بالعربية حتى لو أدخلته بحروف إنجليزية؟",
     answer:
-      "Yes. Type your name in English letters and the Arabic name generator transliterates and renders it in Arabic script using your chosen calligraphy style. No Arabic keyboard or knowledge required.",
+      "نعم، يمكنك كتابة الاسم بالطريقة التي تفضلها ثم استخدام الأداة لتحويله إلى تصميم عربي مزخرف بالأسلوب الذي تختاره.",
   },
   {
-    question: "What Arabic calligraphy styles are available?",
+    question: "ما أنواع الخطوط أو الأنماط المتاحة داخل الأداة؟",
     answer:
-      "Styles include traditional thuluth in gold, diwani ink, kufic geometric, ornamental 3D gold, modern wireframe, smoke art, sand desert, and diamond. Each style has a distinct visual character suited to different gifts and decor.",
+      "تتضمن الأداة أنماطًا مستوحاة من الخط العربي الكلاسيكي مثل الثلث والديواني والكوفي، بالإضافة إلى أنماط حديثة وزخرفية مناسبة للاستخدام الرقمي والطباعة.",
   },
   {
-    question: "Is the Arabic name generator free?",
+    question: "هل الأداة مجانية؟",
     answer:
-      "You can preview and explore styles free. Generating high-resolution, downloadable designs uses credits from our pricing plans, and we offer free credits through occasional promotions.",
+      "يمكنك استكشاف الواجهة والأنماط ومعاينة الفكرة، بينما يعتمد إنشاء النسخة النهائية القابلة للتنزيل على نظام الرصيد داخل الموقع.",
   },
   {
-    question: "Can I make an Arabic name wallpaper or DP?",
+    question: "هل يمكنني استخدام التصميم كخلفية أو صورة شخصية؟",
     answer:
-      "Yes. Choose a square or vertical aspect ratio, generate your name in your preferred calligraphy style, and download in high resolution. The result works for wallpapers, profile pictures, and social media.",
+      "نعم، يمكنك اختيار المقاس المناسب ثم استخدام التصميم الناتج كخلفية أو صورة شخصية أو منشور بصري أو بطاقة رقمية.",
   },
   {
-    question: "Is Arabic name art a good Islamic gift?",
+    question: "هل يصلح التصميم للطباعة على منتجات؟",
     answer:
-      "Yes. Arabic name art is a popular Islamic gift for weddings, Ramadan, Eid, birthdays, and nursery decor. Many users create designs featuring the recipient's name or a couple's combined names as a keepsake.",
+      "نعم، بعد إنشاء التصميم يمكنك معاينته على بعض المنتجات أو استخدامه في الطباعة على الأكواب واللوحات وغيرها من المنتجات المخصصة.",
   },
   {
-    question: "What's the difference between thuluth, diwani, and kufic?",
+    question: "هل يمكن إضافة التشكيل أو تجربة أكثر من شكل؟",
     answer:
-      "Thuluth features flowing, elongated strokes with dramatic curves — often used in mosque inscriptions. Diwani is ornate and highly decorative, historically used for Ottoman royal decrees. Kufic is angular and geometric, the oldest Arabic script style. Each suits a different mood and gift.",
+      "يمكنك تجربة أكثر من كتابة للاسم أو العبارة، بما في ذلك النسخ المشكلة أو المختصرة، ثم مقارنة النتائج بين الأنماط المختلفة.",
   },
   {
-    question: "Can I print Arabic name art on a mug or wall art?",
+    question: "كم يستغرق إنشاء التصميم؟",
     answer:
-      "Yes. Any Arabic design you generate can be ordered on a mug, poster, framed wall art, or shirt through our product catalog. Arabic name gifts are particularly popular for weddings and family decor.",
+      "في العادة يستغرق إنشاء التصميم بضع ثوانٍ فقط بعد اختيار الاسم والنمط والمقاس المناسبين.",
   },
 ];
 
@@ -230,7 +230,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     query: router.query as Record<string, unknown>,
   });
   const getSignInCallbackUrl = () => {
-    if (typeof window === "undefined") return "/arabic-calligraphy-generator";
+    if (typeof window === "undefined") return "/ar/arabic-calligraphy-generator";
     return `${window.location.pathname}${window.location.search}${window.location.hash}`;
   };
   const saveAuthDraft = () => {
@@ -735,10 +735,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const closeShareModal = () => setShareModalData({ isOpen: false, imageUrl: null });
 
   const aspectRatios: { label: string; value: AspectRatio; description: string }[] = [
-    { label: "1:1", value: "1:1", description: "Best for posters, profile images, and square designs" },
-    { label: "4:5", value: "4:5", description: "Best choice for posters and wall art" },
-    { label: "3:2", value: "3:2", description: "Ideal for wide posters and horizontal designs" },
-    { label: "16:9", value: "16:9", description: "Best for screens, wallpapers, and digital use" },
+    { label: "1:1", value: "1:1", description: "مناسب للصور المربعة والصور الشخصية." },
+    { label: "4:5", value: "4:5", description: "مناسب للمنشورات العمودية والطباعة الفنية." },
+    { label: "3:2", value: "3:2", description: "مناسب للتصاميم الأفقية والملصقات العريضة." },
+    { label: "16:9", value: "16:9", description: "مناسب للشاشات والخلفيات والعروض الرقمية." },
   ];
   const aspectVisualMap: Record<AspectRatio, string> = {
     "1:1": "aspect-[1/1]",
@@ -750,40 +750,39 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Free Arabic Name Generator — Calligraphy & AI Name Design"
-        description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles for gifts and decor."
-        path="/arabic-calligraphy-generator"
+        title="مولد الخط العربي بالذكاء الاصطناعي | أداة كتابة الاسم بالعربية | NameDesignAI"
+        description="أداة عربية لكتابة الاسم بالعربية وتجربة أنماط الخط والزخرفة بالذكاء الاصطناعي. اختر النمط والمقاس وأنشئ التصميم خلال ثوانٍ."
+        path="/ar/arabic-calligraphy-generator"
         noindex
         jsonLd={[
           buildWebApplicationSchema({
-            name: "Arabic Name Art Generator",
+            name: "مولد الخط العربي",
             description:
-              "Free Arabic name generator and calligraphy maker. Transliterate names from English to Arabic and render in traditional or modern calligraphy styles.",
-            path: "/arabic-calligraphy-generator",
+              "أداة ويب لإنشاء تصميمات عربية مزخرفة وتجربة أنماط الخط العربي بالذكاء الاصطناعي.",
+            path: "/ar/arabic-calligraphy-generator",
           }),
           buildFAQSchema(arabicGeneratorFaqs),
         ]}
       />
-      <main className="container m-auto mb-24 flex flex-col px-4 py-6 sm:px-8 sm:py-8 max-w-screen-md">
+      <main
+        lang="ar"
+        dir="rtl"
+        className="container m-auto mb-24 flex max-w-screen-md flex-col px-4 py-6 text-right sm:px-8 sm:py-8"
+      >
         <div className="mb-6 flex">
           <LanguageSwitchLink
-            href="/ar/arabic-calligraphy-generator"
-            label="العربية"
+            href="/arabic-calligraphy-generator"
+            label="English"
             className="ml-auto"
           />
         </div>
         
-        <h1 className="text-3xl font-bold text-center sm:text-4xl">Arabic Name Art Generator</h1>
+        <h1 className="text-center text-3xl font-bold sm:text-4xl">مولد الخط العربي</h1>
         <h2 className="mt-4 text-center text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-          Arabic Name Generator — Write Your Name in Arabic Calligraphy from English
+          اكتب اسمك بالعربية وجرّب أكثر من نمط خط وزخرفة داخل الأداة
         </h2>
         <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
-          Write your name in Arabic calligraphy in seconds. Our Arabic name
-          generator transliterates from English to Arabic script, then renders it
-          in your chosen calligraphy style — traditional thuluth and diwani,
-          modern geometric, or ornamental 3D gold. No Arabic knowledge needed.
-          Use the result as an Islamic gift, wedding keepsake, wall art, or mug
-          design.
+          أدخل الاسم أو العبارة، اختر النمط المناسب، ثم أنشئ تصميمًا عربيًا مزخرفًا خلال ثوانٍ لاستخدامه رقميًا أو طباعته لاحقًا.
         </p>
         <GeneratorNudge generatorType="arabic" />
         
@@ -791,19 +790,19 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           
           {/* 1. Enter Name - Standard English Labels, RTL Input */}
           <FormGroup>
-            <label className="text-xl font-semibold mb-2 block">1. Enter Name (Arabic or English)</label>
+            <label className="mb-2 block text-xl font-semibold">1. اكتب الاسم أو العبارة</label>
             <Input 
                 required 
                 value={form.name} 
                 onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} 
-                placeholder="Enter name here (e.g., محمد or Muhammad)" 
+                placeholder="اكتب الاسم هنا"
                 
             />
           </FormGroup>
 
           {/* 2. Choose Style */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">2. Choose Art Style</h2>
+            <h2 className="mb-4 text-xl font-semibold">2. اختر نمط الخط أو الزخرفة</h2>
             <div className="relative border-b dark:border-gray-700">
               {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
@@ -846,7 +845,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-4">3. Choose Arabic Quality</h2>
+            <h2 className="mb-4 text-xl font-semibold">3. اختر مستوى الجودة</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {ARABIC_GENERATOR_TIERS.map((tier) => {
                 const tierLocked = isModelCreditLocked(tier.credits);
@@ -875,16 +874,16 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       </div>
                       {tier.premium && (
                         <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">
-                          Better quality
+                          جودة أعلى
                         </span>
                       )}
                     </div>
                     <div className="mt-3 text-sm font-medium text-brand-700">
-                      {tier.credits} credits
+                      {tier.credits} رصيد
                     </div>
                     {tierLocked && (
                       <div className="mt-2 rounded bg-white/80 px-2 py-1 text-xs font-medium text-amber-800">
-                        Need {getModelCreditShortfall(tier.credits)} more credit{getModelCreditShortfall(tier.credits) === 1 ? "" : "s"}
+                        تحتاج إلى {getModelCreditShortfall(tier.credits)} رصيد إضافي
                       </div>
                     )}
                   </button>
@@ -894,16 +893,16 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             {hasKnownCreditBalance &&
               ARABIC_GENERATOR_TIERS.some((tier) => isModelCreditLocked(tier.credits)) && (
                 <p className="mt-3 text-xs text-amber-800">
-                  Premium Arabic needs more credits.{" "}
+                  الجودة العربية المميزة تحتاج إلى رصيد إضافي.{" "}
                   <Link href="/buy-credits" className="font-semibold underline">
-                    Get credits
+                    اشترِ رصيدًا
                   </Link>
                 </p>
               )}
           </div>
 
           {/* 3. Select Image Size (New Visual Style) */}
-          <h2 className="text-xl mt-6 mb-2">4. Select Image Size</h2>
+          <h2 className="mt-6 mb-2 text-xl">4. اختر مقاس الصورة</h2>
           <FormGroup className="mb-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {aspectRatios.map((ratio) => {
@@ -931,19 +930,18 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
           {error && (
             <div className="bg-red-500 text-white rounded p-4 text-xl mb-6">
-              {error} {error.includes("credits") && <Link href="/buy-credits" className="underline font-bold ml-2">Buy Credits</Link>}
+              {error} {error.includes("credits") && <Link href="/buy-credits" className="underline font-bold ml-2">شراء الرصيد</Link>}
             </div>
           )}
           
           {isCreditLocked && (
             <div className="rounded border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-              <div className="font-semibold">Your design is saved and ready.</div>
+              <div className="font-semibold">تم حفظ التصميم وهو جاهز.</div>
               <div className="mt-1">
-                You can still download, share, and preview it now. Add credits to create
-                more versions or remove the background for a cleaner result.
+                يمكنك تنزيله أو مشاركته أو معاينته الآن، ثم إضافة رصيد إذا أردت إنشاء نسخ جديدة أو إزالة الخلفية.
               </div>
               <Link href="/buy-credits" className="mt-3 inline-flex font-semibold underline">
-                Get more credits
+                احصل على رصيد إضافي
               </Link>
             </div>
           )}
@@ -954,8 +952,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
           >
             {isLoggedIn
-              ? `Generate My Design (${selectedTier.credits} Credits)`
-              : "Sign in to Generate"}
+              ? `أنشئ التصميم (${selectedTier.credits} رصيد)`
+              : "سجّل الدخول للإنشاء"}
           </Button>
           <GeneratorNudge generatorType="arabic" section="trust" />
         </form>
@@ -963,7 +961,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         {/* Results Section */}
         {imagesUrl.length > 0 && (
           <>
-            <h2 className="text-xl mt-8 mb-2 text-center">Your Arabic Masterpieces</h2>
+            <h2 className="mt-8 mb-2 text-center text-xl">نتائجك</h2>
             <section className={generatedImagesGridClass}>
               {imagesUrl.map(({ imageUrl }, index) => {
                 const imageId = extractImageId(imageUrl);
@@ -979,8 +977,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                           type="button"
                           onClick={() => openPopup(displayUrl)}
                           className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60 sm:h-6 sm:w-6 md:h-5 md:w-5"
-                          title="View Fullscreen"
-                          aria-label="View Fullscreen"
+                          title="عرض بالحجم الكامل"
+                          aria-label="عرض بالحجم الكامل"
                         >
                           <AiOutlineEye className="h-4 w-4" />
                         </button>
@@ -988,8 +986,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                           type="button"
                           onClick={() => void handleDownload(displayUrl)}
                           className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60 sm:h-6 sm:w-6 md:h-5 md:w-5"
-                          title="Download"
-                          aria-label="Download"
+                          title="تنزيل"
+                          aria-label="تنزيل"
                         >
                           <AiOutlineDownload className="h-4 w-4" />
                         </button>
@@ -997,8 +995,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                           type="button"
                           onClick={() => openShareModal(displayUrl)}
                           className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/60 sm:h-6 sm:w-6 md:h-5 md:w-5"
-                          title="Share"
-                          aria-label="Share"
+                          title="مشاركة"
+                          aria-label="مشاركة"
                         >
                           <AiOutlineShareAlt className="h-4 w-4" />
                         </button>
@@ -1011,7 +1009,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                                 kind: "arabic",
                                 title: activeSubTab || activeTab,
                               })
-                            : "Generated Arabic art"
+                            : "صورة عربية منشأة"
                         }
                         width={512}
                         height={512}
@@ -1019,16 +1017,20 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       />
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3 rounded bg-gray-900/80 px-2 py-1.5 text-xs text-white dark:bg-gray-800/90">
-                      <span className="opacity-80">Costs 1 credit</span>
+                      <span className="opacity-80">التكلفة: رصيد واحد</span>
                       <button
                         type="button"
                         onClick={() => void handleToggleBackground(imageUrl)}
                         disabled={!!isRemoving}
                         className="rounded bg-white/10 px-2 py-1 font-semibold hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
-                        title="Remove background"
-                        aria-label="Remove background"
+                        title="إزالة الخلفية"
+                        aria-label="إزالة الخلفية"
                       >
-                        {isRemoving ? "Removing..." : isTransparent ? "Background removed" : "Remove background"}
+                        {isRemoving
+                          ? "جارٍ الإزالة"
+                          : isTransparent
+                            ? "تمت إزالة الخلفية"
+                            : "إزالة الخلفية"}
                       </button>
                     </div>
                   </div>
@@ -1038,7 +1040,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
             {selectedModel === "google/nano-banana-2" && (
               <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Want a more detailed result? Generate a <strong>Premium Arabic</strong> version for 6 credits.
+                هل تريد نتيجة أكثر تفصيلاً؟ أنشئ نسخة عربية مميزة مقابل 6 أرصدة.
               </div>
             )}
 
@@ -1047,8 +1049,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-4 py-4">
                 <span className="text-3xl">☕</span>
                 <div className="flex-1">
-                  <p className="font-semibold text-brand-900">Your art is ready to print!</p>
-                  <p className="text-sm text-brand-700">Preview it on a real mug below — free, no commitment.</p>
+                  <p className="font-semibold text-brand-900">تصميمك جاهز للطباعة.</p>
+                  <p className="text-sm text-brand-700">عاينه على كوب حقيقي بالأسفل مجانًا.</p>
                 </div>
               </div>
 
@@ -1056,18 +1058,18 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               <div className="overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm">
                 <div className="flex flex-col sm:flex-row">
                   <div className="aspect-square w-full sm:w-1/2">
-                    <img src="/images/products/arabic/mug.webp" alt="Custom Mug" className="h-full w-full object-cover" />
+                    <img src="/images/products/arabic/mug.webp" alt="كوب مخصص" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex flex-col justify-center gap-4 p-6 sm:w-1/2">
                     <div>
                       <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-800">
-                        Most Popular Gift
+                        الهدية الأكثر طلبًا
                       </span>
-                      <h4 className="mt-2 text-2xl font-bold text-slate-900">Custom Mug</h4>
-                      <p className="mt-1 text-sm text-gray-500">Your Arabic name art printed on a premium ceramic mug.</p>
+                      <h4 className="mt-2 text-2xl font-bold text-slate-900">كوب مخصص</h4>
+                      <p className="mt-1 text-sm text-gray-500">طبّق تصميمك العربي على كوب خزفي أنيق بمعاينة سريعة قبل الطلب.</p>
                     </div>
                     <ul className="space-y-1 text-sm text-gray-700">
-                      {["High-quality glossy ceramic", "Dishwasher & microwave safe", "Premium print quality", "Shipping to selected countries"].map((pt) => (
+                      {["طباعة واضحة وعالية الجودة", "مناسب للهدايا والاستخدام اليومي", "معاينة سريعة قبل الشراء", "متوافق مع تصميمات الأسماء العربية"].map((pt) => (
                         <li key={pt} className="flex items-start gap-2">
                           <span className="text-brand-600">✔</span>{pt}
                         </li>
@@ -1075,7 +1077,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                     </ul>
                     {previewCooldown !== null && (
                       <div className="rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-900">
-                        ⏳ Preview paused. Try again in <strong>{previewCooldown}s</strong>.
+                        تمت إيقاف المعاينة مؤقتًا. حاول مرة أخرى خلال <strong>{previewCooldown}s</strong>.
                       </div>
                     )}
                     <button
@@ -1083,14 +1085,14 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       disabled={previewCooldown !== null}
                       onClick={() => {
                         if (selectedAspectRatio === "16:9") {
-                          alert("This image size is not supported for mugs.");
+                          alert("هذا المقاس غير مدعوم لمعاينة الأكواب.");
                           return;
                         }
                         setPreviewProduct("mug");
                         setPreviewImage(getDisplayImageUrl(imagesUrl[0]?.imageUrl ?? null));
                       }}
                     >
-                      {previewCooldown !== null ? `Wait ${previewCooldown}s…` : "Preview on Mug — Free"}
+                      {previewCooldown !== null ? `انتظر ${previewCooldown}s` : "عاين على كوب مجانًا"}
                     </button>
                   </div>
                 </div>
@@ -1099,8 +1101,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               {/* More products */}
               <div className="mt-6">
                 <div className="mb-3 flex items-center justify-between">
-                  <h4 className="font-semibold text-slate-900">More Products</h4>
-                  <Link href="/arabic-calligraphy/products" className="text-sm font-medium text-brand-700 hover:underline">View all Arabic name products →</Link>
+                  <h4 className="font-semibold text-slate-900">منتجات إضافية</h4>
+                  <Link href="/arabic-calligraphy/products" className="text-sm font-medium text-brand-700 hover:underline">اعرض جميع منتجات الخط العربي →</Link>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {GENERATOR_PRODUCT_THUMBNAILS.arabic.filter((p) => p.key !== "mug").map((p) => (
@@ -1125,7 +1127,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         )}
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="text-center text-3xl font-bold text-gray-900">
-            Frequently asked questions
+            الأسئلة الشائعة
           </h2>
           <div className="mt-10 space-y-6">
             {arabicGeneratorFaqs.map((faq) => (
@@ -1144,7 +1146,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="relative">
               <button onClick={closePopup} className="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700">✖️</button>
-              <img src={popupImage} alt="Fullscreen" className="max-w-full max-h-screen rounded" />
+              <img src={popupImage} alt="عرض بالحجم الكامل" className="max-w-full max-h-screen rounded" />
             </div>
           </div>
         )}

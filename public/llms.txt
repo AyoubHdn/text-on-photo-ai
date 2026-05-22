@@ -1,0 +1,9 @@
+# NameDesignAI
+
+> AI-powered personalized name art and gift platform. Turn names, relationships, and identity into visual designs and printed products (mugs, posters, shirts).
+
+## Main pages
+- [Name Art](https://www.namedesignai.com/name-art): Personalized name art designs
+- [Arabic Calligraphy](https://www.namedesignai.com/arabic-calligraphy): Arabic name art and calligraphy
+- [Couples Name Art](https://www.namedesignai.com/couples-art): Couple and relationship designs
+- [Personalized Gifts](https://www.namedesignai.com/personalized-gifts): Printed personalized products

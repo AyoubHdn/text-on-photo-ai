@@ -31,22 +31,51 @@ const config = {
     defaultLocale: "en",
   },
 
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
-      // Arabic section rename - 301 redirects
+      // Legacy Arabic "name art" routes were permanently renamed to
+      // "arabic-calligraphy" about one month ago. The old pages are
+      // intentionally deleted and must not be recreated. Keep these
+      // redirects in place so old URLs continue resolving correctly.
       {
         source: "/arabic-name-art",
         destination: "/arabic-calligraphy",
         permanent: true,
       },
       {
-        source: "/arabic-name-art-generator",
-        destination: "/arabic-calligraphy-generator",
+        source: "/ar/arabic-name-art",
+        destination: "/ar/arabic-calligraphy",
         permanent: true,
       },
       {
-        source: "/ar/arabic-name-art",
-        destination: "/arabic-calligraphy",
+        source: "/arabic-name-art-generator",
+        destination: "/arabic-calligraphy-generator",
         permanent: true,
       },
       {
@@ -60,7 +89,17 @@ const config = {
         permanent: true,
       },
       {
+        source: "/ar/arabic-name-art/styles",
+        destination: "/arabic-calligraphy/styles",
+        permanent: true,
+      },
+      {
         source: "/arabic-name-art/styles/:style",
+        destination: "/arabic-calligraphy/styles/:style",
+        permanent: true,
+      },
+      {
+        source: "/ar/arabic-name-art/styles/:style",
         destination: "/arabic-calligraphy/styles/:style",
         permanent: true,
       },
@@ -70,7 +109,17 @@ const config = {
         permanent: true,
       },
       {
+        source: "/ar/arabic-name-art/products",
+        destination: "/arabic-calligraphy/products",
+        permanent: true,
+      },
+      {
         source: "/arabic-name-art/products/:product",
+        destination: "/arabic-calligraphy/products/:product",
+        permanent: true,
+      },
+      {
+        source: "/ar/arabic-name-art/products/:product",
         destination: "/arabic-calligraphy/products/:product",
         permanent: true,
       },

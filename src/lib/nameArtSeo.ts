@@ -9,6 +9,14 @@ export function getNameArtPath(name: string) {
 
 export const SITEMAP_NAME_PAGES = popularNames.slice(0, NAME_SITEMAP_LIMIT);
 
+const APPROVED_NAME_SET = new Set(
+  SITEMAP_NAME_PAGES.map((item) => item.name.toLowerCase()),
+);
+
+export function isApprovedNamePage(name: string) {
+  return APPROVED_NAME_SET.has(name.toLowerCase());
+}
+
 export const FEATURED_NAME_PAGES = popularNames
   .slice(0, FEATURED_NAME_LIMIT)
   .map((item) => ({
@@ -37,6 +45,7 @@ export function getRelatedNamePages(currentName: string, limit = 8) {
       if (!candidate) continue;
       const key = candidate.name.toLowerCase();
       if (seen.has(key)) continue;
+      if (!APPROVED_NAME_SET.has(key)) continue;
 
       seen.add(key);
       related.push({

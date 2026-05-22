@@ -128,6 +128,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/name-art",
     "/name-art/styles",
     "/arabic-calligraphy",
+    "/ar/arabic-calligraphy",
     "/arabic-calligraphy/styles",
     "/couples-art",
     "/couples-art/styles",

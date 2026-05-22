@@ -1,0 +1,35 @@
+   ▲ Next.js 15.0.7
+   - Local:        http://localhost:3011
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 4.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 19.3s (575 modules)
+ GET / 200 in 59ms
+ ○ Compiling /name-art/[name] ...
+ ✓ Compiled /name-art/[name] in 11.2s (575 modules)
+ GET /name-art/amara 200 in 12447ms
+ GET /name-art/eva 200 in 13465ms
+ GET /name-art/eva 200 in 73ms
+ GET /name-art/amara 200 in 40ms
+ ✓ Compiled in 717ms (382 modules)
+ ✓ Compiled in 540ms (382 modules)
+ ✓ Compiled in 754ms (382 modules)
+ ✓ Compiled in 821ms (382 modules)
+ ✓ Compiled in 802ms (382 modules)
+ ✓ Compiled in 700ms (382 modules)
+ ✓ Compiled in 627ms (382 modules)
+ ✓ Compiled in 644ms (382 modules)
+ ✓ Compiled in 605ms (382 modules)
+ ✓ Compiled in 615ms (382 modules)
+ ✓ Compiled in 629ms (382 modules)
+ ✓ Compiled in 636ms (382 modules)
+ ✓ Compiled in 618ms (382 modules)
+ ✓ Compiled in 626ms (382 modules)
+ ✓ Compiled in 581ms (382 modules)
+ ✓ Compiled in 589ms (382 modules)
+ ✓ Compiled in 617ms (382 modules)
+ ✓ Compiled in 667ms (382 modules)
+ ✓ Compiled in 680ms (382 modules)
+ ✓ Compiled in 658ms (382 modules)

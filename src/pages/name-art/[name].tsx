@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FiDownload, FiEdit3, FiGift } from "react-icons/fi";
 
 import { SeoHead } from "~/component/SeoHead";
-import { getRelatedNamePages } from "~/lib/nameArtSeo";
+import { getRelatedNamePages, isApprovedNamePage } from "~/lib/nameArtSeo";
 import { popularNames } from "~/lib/names";
 import {
   buildBreadcrumbSchema,
@@ -33,6 +33,7 @@ interface NameArtPageProps {
   showcaseData: ShowcaseData;
   otherStyles: string[];
   relatedNames: RelatedName[];
+  noindex: boolean;
 }
 
 type ExampleCard = {
@@ -195,6 +196,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
   showcaseData,
   otherStyles,
   relatedNames,
+  noindex,
 }) => {
   const faqItems = buildFaqItems(name, niches);
   const pagePath = `/name-art/${name.toLowerCase()}`;
@@ -232,6 +234,7 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
         path={pagePath}
         image={firstShowcaseImage}
         imageAlt={`${name} personalized name art example`}
+        noindex={noindex}
         jsonLd={[
           buildBreadcrumbSchema([
             { name: "Home", path: "/" },
@@ -721,6 +724,7 @@ export const getStaticProps: GetStaticProps = (context) => {
       showcaseData,
       otherStyles: nameBlueprint.otherStyles,
       relatedNames,
+      noindex: !isApprovedNamePage(nameBlueprint.name),
     },
     revalidate: 60 * 60 * 24,
   };
