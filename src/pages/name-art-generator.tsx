@@ -63,6 +63,10 @@ type GeneratorDraft = {
   allowCustomColors: boolean;
   createdAt: number;
 };
+type ValidationErrors = {
+  name: boolean;
+  style: boolean;
+};
 
 const LAST_DESIGN_STORAGE_KEY = "name-art:last-design:v1";
 const GENERATOR_DRAFT_STORAGE_KEY = "name-art:auth-draft:v1";
@@ -158,6 +162,10 @@ const NameArtGeneratorPage: NextPage = () => {
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
   const [selectedStyleAltText, setSelectedStyleAltText] = useState<string | null>(null);
   const [selectedStyleLabel, setSelectedStyleLabel] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    name: false,
+    style: false,
+  });
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
   const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -172,8 +180,20 @@ const NameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const generationSubmitLockRef = useRef(false);
+  const nameFieldRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const styleSectionRef = useRef<HTMLDivElement>(null);
+  const modelSectionRef = useRef<HTMLDivElement>(null);
+  const imageSizeSectionRef = useRef<HTMLDivElement>(null);
+  const quantitySectionRef = useRef<HTMLDivElement>(null);
+  const submitSectionRef = useRef<HTMLDivElement>(null);
   const productsSectionRef = useRef<HTMLElement>(null);
   const hasScrolledToProducts = useRef(false);
+  const hasAutoAdvancedAfterNameEntryRef = useRef(false);
+  const hasAutoAdvancedAfterStyleSelectRef = useRef(false);
+  const hasAutoAdvancedAfterModelSelectRef = useRef(false);
+  const hasAutoAdvancedAfterSizeSelectRef = useRef(false);
+  const hasAutoAdvancedAfterQuantitySelectRef = useRef(false);
   const hasRestoredDraftRef = useRef(false);
   const restoredAuthDraftRef = useRef(false);
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
@@ -613,13 +633,66 @@ const NameArtGeneratorPage: NextPage = () => {
     generateIcon.mutate(buildGenerationInput());
   };
 
+  const scrollToSection = (
+    ref: React.RefObject<HTMLDivElement | HTMLElement>,
+    focusTarget?: React.RefObject<HTMLInputElement>,
+  ) => {
+    window.setTimeout(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      focusTarget?.current?.focus();
+    }, 120);
+  };
+
+  const revealNextStepAfterStyleSelect = () => {
+    if (hasAutoAdvancedAfterStyleSelectRef.current) return;
+    hasAutoAdvancedAfterStyleSelectRef.current = true;
+    scrollToSection(modelSectionRef);
+  };
+
+  const revealStyleStepAfterNameEntry = () => {
+    if (hasAutoAdvancedAfterNameEntryRef.current) return;
+    hasAutoAdvancedAfterNameEntryRef.current = true;
+    scrollToSection(styleSectionRef);
+  };
+
+  const revealImageSizeStepAfterModelSelect = () => {
+    if (hasAutoAdvancedAfterModelSelectRef.current) return;
+    hasAutoAdvancedAfterModelSelectRef.current = true;
+    scrollToSection(imageSizeSectionRef);
+  };
+
+  const revealQuantityStepAfterSizeSelect = () => {
+    if (hasAutoAdvancedAfterSizeSelectRef.current) return;
+    hasAutoAdvancedAfterSizeSelectRef.current = true;
+    scrollToSection(quantitySectionRef);
+  };
+
+  const revealSubmitStepAfterQuantitySelect = () => {
+    if (hasAutoAdvancedAfterQuantitySelectRef.current) return;
+    hasAutoAdvancedAfterQuantitySelectRef.current = true;
+    scrollToSection(submitSectionRef);
+  };
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoggedIn) { startGeneratorSignIn(); return; }
-    if (!form.name || !form.basePrompt) {
-      setError("Please select a style and enter a name."); return;
+    const nextValidationErrors: ValidationErrors = {
+      name: form.name.trim().length === 0,
+      style: form.basePrompt.trim().length === 0,
+    };
+
+    if (nextValidationErrors.name || nextValidationErrors.style) {
+      setValidationErrors(nextValidationErrors);
+      setError("Please complete the highlighted field(s).");
+      if (nextValidationErrors.name) {
+        scrollToSection(nameFieldRef, nameInputRef);
+      } else if (nextValidationErrors.style) {
+        scrollToSection(styleSectionRef);
+      }
+      return;
     }
 
+    setValidationErrors({ name: false, style: false });
     triggerGeneration();
   };
 
@@ -635,8 +708,10 @@ const NameArtGeneratorPage: NextPage = () => {
     setSelectedStyleImage(src);
     setSelectedStyleAltText(altText);
     setSelectedStyleLabel(styleLabel);
+    setValidationErrors((prev) => ({ ...prev, style: false }));
     setError("");
     setAllowCustomColors(allowColors);
+    revealNextStepAfterStyleSelect();
   };
 
   const handleDownload = async (imageUrl: string) => {
@@ -853,13 +928,50 @@ const NameArtGeneratorPage: NextPage = () => {
         <GeneratorNudge generatorType="default" />
         
         <form className="flex flex-col gap-3 mt-6" onSubmit={handleFormSubmit}>
-          <FormGroup className="mb-12">
+          <FormGroup ref={nameFieldRef} className="mb-12">
             <label className="text-xl font-semibold mb-2">1. Enter a Name/Text</label>
-            <Input required value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Type your name here" />
+            <Input
+              ref={nameInputRef}
+              required
+              value={form.name}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm((prev) => ({ ...prev, name: value }));
+                setValidationErrors((prev) => ({ ...prev, name: false }));
+                setError("");
+                if (value.trim().length > 0) {
+                  revealStyleStepAfterNameEntry();
+                }
+              }}
+              placeholder="Type your name here"
+              aria-invalid={validationErrors.name}
+              className={
+                validationErrors.name
+                  ? "border-red-400 bg-red-50/60 focus:border-red-500 focus:ring-red-500"
+                  : ""
+              }
+            />
+            {validationErrors.name && (
+              <p className="mt-2 text-sm text-red-600">
+                Enter a name so we can generate your design.
+              </p>
+            )}
           </FormGroup>
 
-          <div>
+          <div
+            ref={styleSectionRef}
+            className={
+              validationErrors.style
+                ? "rounded-2xl border border-red-300 bg-red-50/70 p-4"
+                : ""
+            }
+          >
             <h2 className="text-xl font-semibold mb-4">2. Choose Your Favorite Style</h2>
+            {validationErrors.style && (
+              <p className="mb-4 text-sm text-red-600">
+                Select one style to continue.
+              </p>
+            )}
             <div className="relative border-b dark:border-gray-700">
               {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
@@ -898,7 +1010,7 @@ const NameArtGeneratorPage: NextPage = () => {
               ))}
             </div>
           </div>
-          <div>
+          <div ref={modelSectionRef}>
             <h2 className="text-xl font-semibold mb-4">3. Select AI Model</h2>
                   <div className="grid grid-cols-2 gap-4">
                     {MODEL_OPTIONS.map((model) => {
@@ -917,6 +1029,7 @@ const NameArtGeneratorPage: NextPage = () => {
                           onClick={() => {
                             if (modelLocked) return;
                             setSelectedModel(model.value);
+                            revealImageSizeStepAfterModelSelect();
                           }}
                           disabled={modelLocked}
                           className={`relative flex flex-col items-center justify-center rounded-lg border p-4 transition ${
@@ -956,7 +1069,7 @@ const NameArtGeneratorPage: NextPage = () => {
                     )}
                 </div>
 
-          <div>
+          <div ref={imageSizeSectionRef}>
             <h2 className="text-xl font-semibold mb-4">4. Select Image Size</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {aspectRatios.map((ratio) => {
@@ -965,7 +1078,10 @@ const NameArtGeneratorPage: NextPage = () => {
                         <button
                           key={ratio.value}
                           type="button"
-                          onClick={() => setSelectedAspectRatio(ratio.value)}
+                          onClick={() => {
+                            setSelectedAspectRatio(ratio.value);
+                            revealQuantityStepAfterSizeSelect();
+                          }}
                           className={`relative flex items-center justify-center rounded-lg border p-4 transition ${
                             selectedAspectRatio === ratio.value
                               ? "border-brand-500 ring-2 ring-brand-500"
@@ -987,7 +1103,7 @@ const NameArtGeneratorPage: NextPage = () => {
                   </div>
                 </div>
 
-          <FormGroup className="mb-12">
+          <FormGroup ref={quantitySectionRef} className="mb-12">
             <label htmlFor="numberofImages" className="text-xl font-semibold mb-2">
               5. Number of designs
             </label>
@@ -1005,6 +1121,7 @@ const NameArtGeneratorPage: NextPage = () => {
                       const maxImages = isIdeogramModel ? 1 : MAX_GENERATION_IMAGES;
                       const clamped = Math.min(maxImages, Math.max(1, parsed));
                       setForm((prev) => ({ ...prev, numberofImages: String(clamped) }));
+                      revealSubmitStepAfterQuantitySelect();
                     }}
                     disabled={isIdeogramModel}
                     placeholder={isIdeogramModel ? "1 (Fixed)" : `1–${MAX_GENERATION_IMAGES}`}
@@ -1061,14 +1178,16 @@ const NameArtGeneratorPage: NextPage = () => {
             </div>
           )}
 
-          <Button
-            type={isLoggedIn ? "submit" : "button"}
-            onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
-            isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
-          >
-            {isLoggedIn ? "Generate Design" : "Sign in to Generate Free"}
-          </Button>
+          <div ref={submitSectionRef}>
+            <Button
+              type={isLoggedIn ? "submit" : "button"}
+              onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
+              isLoading={generateIcon.isLoading}
+              disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
+            >
+              {isLoggedIn ? "Generate Design" : "Sign in to Generate Free"}
+            </Button>
+          </div>
           <GeneratorNudge generatorType="default" section="trust" />
         </form>
         

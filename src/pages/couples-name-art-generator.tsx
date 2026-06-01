@@ -86,6 +86,11 @@ type GeneratorDraft = {
   allowCustomColors: boolean;
   createdAt: number;
 };
+type ValidationErrors = {
+  name1: boolean;
+  name2: boolean;
+  style: boolean;
+};
 
 const LAST_DESIGN_STORAGE_KEY = "couples-name-art:last-design:v1";
 const GENERATOR_DRAFT_STORAGE_KEY = "couples-name-art:auth-draft:v1";
@@ -166,6 +171,11 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const [selectedStyleImage, setSelectedStyleImage] = useState<string | null>(null);
   const [selectedStyleAltText, setSelectedStyleAltText] = useState<string | null>(null);
   const [selectedStyleLabel, setSelectedStyleLabel] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    name1: false,
+    name2: false,
+    style: false,
+  });
   const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewCooldown, setPreviewCooldown] = useState<number | null>(null);
@@ -179,9 +189,23 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const generationSubmitLockRef = useRef(false);
+  const firstNameFieldRef = useRef<HTMLDivElement>(null);
+  const firstNameInputRef = useRef<HTMLInputElement>(null);
+  const secondNameFieldRef = useRef<HTMLDivElement>(null);
+  const secondNameInputRef = useRef<HTMLInputElement>(null);
+  const styleSectionRef = useRef<HTMLDivElement>(null);
+  const modelSectionRef = useRef<HTMLHeadingElement>(null);
+  const imageSizeSectionRef = useRef<HTMLHeadingElement>(null);
+  const quantitySectionRef = useRef<HTMLHeadingElement>(null);
+  const submitSectionRef = useRef<HTMLDivElement>(null);
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const productsSectionRef = useRef<HTMLElement>(null);
   const hasScrolledToProducts = useRef(false);
+  const hasAutoAdvancedAfterNamesEntryRef = useRef(false);
+  const hasAutoAdvancedAfterStyleSelectRef = useRef(false);
+  const hasAutoAdvancedAfterModelSelectRef = useRef(false);
+  const hasAutoAdvancedAfterSizeSelectRef = useRef(false);
+  const hasAutoAdvancedAfterQuantitySelectRef = useRef(false);
   const hasRestoredDraftRef = useRef(false);
   const restoredAuthDraftRef = useRef(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
@@ -631,18 +655,77 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     generateIcon.mutate(buildGenerationInput());
   };
 
+  const scrollToSection = (
+    ref: React.RefObject<HTMLDivElement | HTMLHeadingElement | HTMLElement>,
+    focusTarget?: React.RefObject<HTMLInputElement>,
+  ) => {
+    window.setTimeout(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      focusTarget?.current?.focus();
+    }, 120);
+  };
+
+  const revealNextStepAfterStyleSelect = () => {
+    if (hasAutoAdvancedAfterStyleSelectRef.current) return;
+    hasAutoAdvancedAfterStyleSelectRef.current = true;
+    scrollToSection(modelSectionRef);
+  };
+
+  const revealStyleStepAfterNamesEntry = (nextName1: string, nextName2: string) => {
+    if (hasAutoAdvancedAfterNamesEntryRef.current) return;
+    if (nextName1.trim().length === 0 || nextName2.trim().length === 0) return;
+    hasAutoAdvancedAfterNamesEntryRef.current = true;
+    scrollToSection(styleSectionRef);
+  };
+
+  const revealImageSizeStepAfterModelSelect = () => {
+    if (hasAutoAdvancedAfterModelSelectRef.current) return;
+    hasAutoAdvancedAfterModelSelectRef.current = true;
+    scrollToSection(imageSizeSectionRef);
+  };
+
+  const revealQuantityStepAfterSizeSelect = () => {
+    if (hasAutoAdvancedAfterSizeSelectRef.current) return;
+    hasAutoAdvancedAfterSizeSelectRef.current = true;
+    scrollToSection(quantitySectionRef);
+  };
+
+  const revealSubmitStepAfterQuantitySelect = () => {
+    if (hasAutoAdvancedAfterQuantitySelectRef.current) return;
+    hasAutoAdvancedAfterQuantitySelectRef.current = true;
+    scrollToSection(submitSectionRef);
+  };
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoggedIn) {
       startGeneratorSignIn();
       return;
     }
-    // --- STRATEGIC CHANGE: Validate both names are entered ---
-    if (!form.name1 || !form.name2 || !form.basePrompt) {
-      setError("Please enter both names and select a style.");
+    const nextValidationErrors: ValidationErrors = {
+      name1: form.name1.trim().length === 0,
+      name2: form.name2.trim().length === 0,
+      style: form.basePrompt.trim().length === 0,
+    };
+
+    if (
+      nextValidationErrors.name1 ||
+      nextValidationErrors.name2 ||
+      nextValidationErrors.style
+    ) {
+      setValidationErrors(nextValidationErrors);
+      setError("Please complete the highlighted field(s).");
+      if (nextValidationErrors.name1) {
+        scrollToSection(firstNameFieldRef, firstNameInputRef);
+      } else if (nextValidationErrors.name2) {
+        scrollToSection(secondNameFieldRef, secondNameInputRef);
+      } else if (nextValidationErrors.style) {
+        scrollToSection(styleSectionRef);
+      }
       return;
     }
 
+    setValidationErrors({ name1: false, name2: false, style: false });
     (window.dataLayer = window.dataLayer || []).push({
       event: "form_submission",
       designType: "CouplesArt", // For analytics tracking
@@ -666,8 +749,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     setSelectedStyleImage(src);
     setSelectedStyleAltText(altText);
     setSelectedStyleLabel(styleLabel);
+    setValidationErrors((prev) => ({ ...prev, style: false }));
     setError("");
     setAllowCustomColors(allowColors);
+    revealNextStepAfterStyleSelect();
   };
 
   const handleDownload = async (imageUrl: string) => { /* ... (no changes needed, just filename) ... */
@@ -818,19 +903,79 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
           {/* --- STRATEGIC CHANGE: Two input fields for names --- */}
           <h2 className="text-xl">1. Enter Your Names</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-            <FormGroup>
+            <FormGroup ref={firstNameFieldRef}>
                 <label htmlFor="name1">First Name</label>
-                <Input required id="name1" value={form.name1} onChange={(e) => setForm((prev) => ({ ...prev, name1: e.target.value }))} placeholder="e.g., Sarah"/>
+                <Input
+                  ref={firstNameInputRef}
+                  required
+                  id="name1"
+                  value={form.name1}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((prev) => ({ ...prev, name1: value }));
+                    setValidationErrors((prev) => ({ ...prev, name1: false }));
+                    setError("");
+                    revealStyleStepAfterNamesEntry(value, form.name2);
+                  }}
+                  placeholder="e.g., Sarah"
+                  aria-invalid={validationErrors.name1}
+                  className={
+                    validationErrors.name1
+                      ? "border-red-400 bg-red-50/60 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }
+                />
+                {validationErrors.name1 && (
+                  <p className="mt-2 text-sm text-red-600">
+                    Enter the first name to continue.
+                  </p>
+                )}
             </FormGroup>
-            <FormGroup>
+            <FormGroup ref={secondNameFieldRef}>
                 <label htmlFor="name2">Second Name</label>
-                <Input required id="name2" value={form.name2} onChange={(e) => setForm((prev) => ({ ...prev, name2: e.target.value }))} placeholder="e.g., Michael"/>
+                <Input
+                  ref={secondNameInputRef}
+                  required
+                  id="name2"
+                  value={form.name2}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((prev) => ({ ...prev, name2: value }));
+                    setValidationErrors((prev) => ({ ...prev, name2: false }));
+                    setError("");
+                    revealStyleStepAfterNamesEntry(form.name1, value);
+                  }}
+                  placeholder="e.g., Michael"
+                  aria-invalid={validationErrors.name2}
+                  className={
+                    validationErrors.name2
+                      ? "border-red-400 bg-red-50/60 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }
+                />
+                {validationErrors.name2 && (
+                  <p className="mt-2 text-sm text-red-600">
+                    Enter the second name to continue.
+                  </p>
+                )}
             </FormGroup>
           </div>
           {/* --- End of change --- */}
 
           <h2 className="text-xl">2. Choose Your Romantic Style</h2>
-          <div className="mb-12">
+          <div
+            ref={styleSectionRef}
+            className={`mb-12 ${
+              validationErrors.style
+                ? "rounded-2xl border border-red-300 bg-red-50/70 p-4"
+                : ""
+            }`}
+          >
+            {validationErrors.style && (
+              <p className="mb-4 text-sm text-red-600">
+                Select one style to continue.
+              </p>
+            )}
             <div className="relative border-b mb-0 mt-4 flex items-center dark:border-gray-700">
                 {/* ... Category Scroller JSX (no changes) ... */}
                 <div ref={categoryScrollRef} onScroll={handleCategoryScroll} className="flex overflow-x-auto whitespace-nowrap no-scrollbar flex-1">
@@ -866,7 +1011,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
           </div>
 
           {/* 3. Select AI Model */}
-                    <h2 className="text-xl">3. Select AI Model</h2>
+                    <h2 ref={modelSectionRef} className="text-xl">3. Select AI Model</h2>
                     <FormGroup className="mb-12">
                       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
                         {MODEL_OPTIONS.map((model) => {
@@ -885,6 +1030,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                               onClick={() => {
                                 if (modelLocked) return;
                                 setSelectedModel(model.value);
+                                revealImageSizeStepAfterModelSelect();
                               }}
                               disabled={modelLocked}
                               className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
@@ -924,7 +1070,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                         )}
                     </FormGroup>
           {/* 4. Aspect Ratio */}
-                    <h2 className="text-xl">4. Select Image Size</h2>
+                    <h2 ref={imageSizeSectionRef} className="text-xl">4. Select Image Size</h2>
                     <FormGroup className="mb-12">
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {aspectRatios.map((ratio) => {
@@ -933,7 +1079,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                             <button
                               key={ratio.value}
                               type="button"
-                              onClick={() => setSelectedAspectRatio(ratio.value)}
+                              onClick={() => {
+                                setSelectedAspectRatio(ratio.value);
+                                revealQuantityStepAfterSizeSelect();
+                              }}
                               className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                                 selectedAspectRatio === ratio.value
                                   ? "border-brand-500 ring-2 ring-brand-500"
@@ -956,7 +1105,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                     </FormGroup>
 
           {/* 5. Number of images */}
-                    <h2 className="text-xl">5. How Many Designs You Want</h2>
+                    <h2 ref={quantitySectionRef} className="text-xl">5. How Many Designs You Want</h2>
                     <FormGroup className="mb-12">
                       <label htmlFor="numberofImages">Number of images</label>
                       <Input
@@ -966,9 +1115,13 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                         min={1}
                         max={selectedModel === "ideogram-ai/ideogram-v2-turbo" ? 1 : 10}
                         value={form.numberofImages}
-                        onChange={(e) =>
-                          setForm((prev) => ({ ...prev, numberofImages: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setForm((prev) => ({ ...prev, numberofImages: value }));
+                          if (value.trim().length > 0) {
+                            revealSubmitStepAfterQuantitySelect();
+                          }
+                        }}
                         disabled={selectedModel === "ideogram-ai/ideogram-v2-turbo"}
                         placeholder={
                           selectedModel === "ideogram-ai/ideogram-v2-turbo"
@@ -992,14 +1145,16 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
               </Link>
             </div>
           )}
-          <Button
-            type={isLoggedIn ? "submit" : "button"}
-            onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
-            isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
-          >
-            {isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}
-          </Button>
+          <div ref={submitSectionRef}>
+            <Button
+              type={isLoggedIn ? "submit" : "button"}
+              onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
+              isLoading={generateIcon.isLoading}
+              disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
+            >
+              {isLoggedIn ? "Generate Couples Art" : "Sign in to Generate"}
+            </Button>
+          </div>
           <GeneratorNudge generatorType="couples" section="trust" />
         </form>
 

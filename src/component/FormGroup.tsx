@@ -1,10 +1,17 @@
+import { forwardRef } from "react";
 import clsx from "clsx"
 
-export function FormGroup(props: React.ComponentPropsWithoutRef<"div">){
-    return (
-    <div {...props} className={clsx("flex flex-col gab-1", props.className)}>
-        {props.children}
+export const FormGroup = forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithoutRef<"div">
+>(function FormGroup(props, ref) {
+  return (
+    <div
+      {...props}
+      ref={ref}
+      className={clsx("flex flex-col gab-1", props.className)}
+    >
+      {props.children}
     </div>
-
-    );
-}
+  );
+});

@@ -98,6 +98,10 @@ type GeneratorDraft = {
   activeSubTab: string;
   createdAt: number;
 };
+type ValidationErrors = {
+  name: boolean;
+  style: boolean;
+};
 
 const LAST_DESIGN_STORAGE_KEY = "arabic-calligraphy:last-design:v1";
 const GENERATOR_DRAFT_STORAGE_KEY = "arabic-calligraphy:auth-draft:v1";
@@ -168,6 +172,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatio>("1:1");
   const [selectedStyleAltText, setSelectedStyleAltText] = useState<string | null>(null);
   const [selectedStyleLabel, setSelectedStyleLabel] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    name: false,
+    style: false,
+  });
   const [shareModalData, setShareModalData] = useState<{ isOpen: boolean; imageUrl: string | null }>({ isOpen: false, imageUrl: null });
   const [previewProduct, setPreviewProduct] = useState<"poster" | "tshirt" | "mug" | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -182,9 +190,19 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const generationSubmitLockRef = useRef(false);
+  const nameFieldRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const styleSectionRef = useRef<HTMLDivElement>(null);
+  const modelSectionRef = useRef<HTMLDivElement>(null);
+  const imageSizeSectionRef = useRef<HTMLHeadingElement>(null);
+  const submitSectionRef = useRef<HTMLDivElement>(null);
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const productsSectionRef = useRef<HTMLElement>(null);
   const hasScrolledToProducts = useRef(false);
+  const hasAutoAdvancedAfterNameEntryRef = useRef(false);
+  const hasAutoAdvancedAfterStyleSelectRef = useRef(false);
+  const hasAutoAdvancedAfterModelSelectRef = useRef(false);
+  const hasAutoAdvancedAfterSizeSelectRef = useRef(false);
   const hasRestoredDraftRef = useRef(false);
   const restoredAuthDraftRef = useRef(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
@@ -588,13 +606,60 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     generateIcon.mutate(buildGenerationInput());
   };
 
+  const scrollToSection = (
+    ref: React.RefObject<HTMLDivElement | HTMLElement>,
+    focusTarget?: React.RefObject<HTMLInputElement>,
+  ) => {
+    window.setTimeout(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      focusTarget?.current?.focus();
+    }, 120);
+  };
+
+  const revealNextStepAfterStyleSelect = () => {
+    if (hasAutoAdvancedAfterStyleSelectRef.current) return;
+    hasAutoAdvancedAfterStyleSelectRef.current = true;
+    scrollToSection(modelSectionRef);
+  };
+
+  const revealStyleStepAfterNameEntry = () => {
+    if (hasAutoAdvancedAfterNameEntryRef.current) return;
+    hasAutoAdvancedAfterNameEntryRef.current = true;
+    scrollToSection(styleSectionRef);
+  };
+
+  const revealImageSizeStepAfterModelSelect = () => {
+    if (hasAutoAdvancedAfterModelSelectRef.current) return;
+    hasAutoAdvancedAfterModelSelectRef.current = true;
+    scrollToSection(imageSizeSectionRef);
+  };
+
+  const revealSubmitStepAfterSizeSelect = () => {
+    if (hasAutoAdvancedAfterSizeSelectRef.current) return;
+    hasAutoAdvancedAfterSizeSelectRef.current = true;
+    scrollToSection(submitSectionRef);
+  };
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoggedIn) { startGeneratorSignIn(); return; }
-    if (!form.name || !form.basePrompt) {
-      setError("Please select a style and enter a name."); return;
+    const nextValidationErrors: ValidationErrors = {
+      name: form.name.trim().length === 0,
+      style: form.basePrompt.trim().length === 0,
+    };
+
+    if (nextValidationErrors.name || nextValidationErrors.style) {
+      setValidationErrors(nextValidationErrors);
+      setError("Please complete the highlighted field(s).");
+      if (nextValidationErrors.name) {
+        scrollToSection(nameFieldRef, nameInputRef);
+      } else if (nextValidationErrors.style) {
+        scrollToSection(styleSectionRef);
+      }
+      return;
     }
 
+    setValidationErrors({ name: false, style: false });
     triggerGeneration();
   };
 
@@ -608,7 +673,9 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     setForm((prev) => ({ ...prev, basePrompt }));
     setSelectedStyleAltText(altText);
     setSelectedStyleLabel(styleLabel);
+    setValidationErrors((prev) => ({ ...prev, style: false }));
     setError("");
+    revealNextStepAfterStyleSelect();
   };
 
   const handleDownload = async (imageUrl: string) => {
@@ -790,20 +857,51 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
         <form className="flex flex-col gap-6 mt-8" onSubmit={handleFormSubmit}>
           
           {/* 1. Enter Name - Standard English Labels, RTL Input */}
-          <FormGroup>
+          <FormGroup ref={nameFieldRef}>
             <label className="text-xl font-semibold mb-2 block">1. Enter Name (Arabic or English)</label>
             <Input 
+                ref={nameInputRef}
                 required 
                 value={form.name} 
-                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm((prev) => ({ ...prev, name: value }));
+                  setValidationErrors((prev) => ({ ...prev, name: false }));
+                  setError("");
+                  if (value.trim().length > 0) {
+                    revealStyleStepAfterNameEntry();
+                  }
+                }} 
                 placeholder="Enter name here (e.g., محمد or Muhammad)" 
-                
+                aria-invalid={validationErrors.name}
+                className={
+                  validationErrors.name
+                    ? "border-red-400 bg-red-50/60 focus:border-red-500 focus:ring-red-500"
+                    : ""
+                }
             />
+            {validationErrors.name && (
+              <p className="mt-2 text-sm text-red-600">
+                Enter a name so we can generate your design.
+              </p>
+            )}
           </FormGroup>
 
           {/* 2. Choose Style */}
-          <div>
+          <div
+            ref={styleSectionRef}
+            className={
+              validationErrors.style
+                ? "rounded-2xl border border-red-300 bg-red-50/70 p-4"
+                : ""
+            }
+          >
             <h2 className="text-xl font-semibold mb-4">2. Choose Art Style</h2>
+            {validationErrors.style && (
+              <p className="mb-4 text-sm text-red-600">
+                Select one style to continue.
+              </p>
+            )}
             <div className="relative border-b dark:border-gray-700">
               {showLeftCategoryArrow && <button type="button" onClick={() => scrollCategories('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-700 shadow-md rounded-full p-1 border border-gray-200 dark:border-gray-600"><AiOutlineLeft className="h-5 w-5"/></button>}
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
@@ -845,7 +943,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             </div>
           </div>
 
-          <div>
+          <div ref={modelSectionRef}>
             <h2 className="text-xl font-semibold mb-4">3. Choose Arabic Quality</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {ARABIC_GENERATOR_TIERS.map((tier) => {
@@ -858,6 +956,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                     onClick={() => {
                       if (tierLocked) return;
                       setSelectedModel(tier.model);
+                      revealImageSizeStepAfterModelSelect();
                     }}
                     disabled={tierLocked}
                     className={`rounded-xl border p-4 text-left transition ${
@@ -903,7 +1002,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           </div>
 
           {/* 3. Select Image Size (New Visual Style) */}
-          <h2 className="text-xl mt-6 mb-2">4. Select Image Size</h2>
+          <h2 ref={imageSizeSectionRef} className="text-xl mt-6 mb-2">4. Select Image Size</h2>
           <FormGroup className="mb-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {aspectRatios.map((ratio) => {
@@ -912,7 +1011,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                   <button
                     key={ratio.value}
                     type="button"
-                    onClick={() => setSelectedAspectRatio(ratio.value)}
+                    onClick={() => {
+                      setSelectedAspectRatio(ratio.value);
+                      revealSubmitStepAfterSizeSelect();
+                    }}
                     className={`relative flex items-center justify-center border rounded-lg p-4 transition ${
                       selectedAspectRatio === ratio.value ? "border-brand-500 ring-2 ring-brand-500" : "border-cream-200 hover:border-brand-300"
                     }`}
@@ -947,16 +1049,18 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               </Link>
             </div>
           )}
-          <Button
-            type={isLoggedIn ? "submit" : "button"}
-            onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
-            isLoading={generateIcon.isLoading}
-            disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
-          >
-            {isLoggedIn
-              ? `Generate My Design (${selectedTier.credits} Credits)`
-              : "Sign in to Generate"}
-          </Button>
+          <div ref={submitSectionRef}>
+            <Button
+              type={isLoggedIn ? "submit" : "button"}
+              onClick={!isLoggedIn ? startGeneratorSignIn : undefined}
+              isLoading={generateIcon.isLoading}
+              disabled={generateIcon.isLoading || isSubmittingGeneration || isCreditLocked}
+            >
+              {isLoggedIn
+                ? `Generate My Design (${selectedTier.credits} Credits)`
+                : "Sign in to Generate"}
+            </Button>
+          </div>
           <GeneratorNudge generatorType="arabic" section="trust" />
         </form>
         
