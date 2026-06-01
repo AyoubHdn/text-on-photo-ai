@@ -1751,7 +1751,7 @@ export const generateRouter = createTRPCRouter({
         "flux-schnell": { credits: 1 },
         "flux-dev": { credits: 3 },
         "ideogram-ai/ideogram-v2-turbo": { credits: 5 },
-        "google/nano-banana-pro": { credits: 4 },
+        "google/nano-banana-pro": { credits: 6 },
         "google/nano-banana-2": { credits: 3 },
       } as const;
 

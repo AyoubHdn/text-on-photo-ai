@@ -53,7 +53,7 @@ type AIModel = "google/nano-banana-pro";
 type AspectRatio = "1:1" | "4:5" | "3:2" | "16:9";
 
 const MODEL_CREDITS: Record<AIModel, number> = {
-  "google/nano-banana-pro": 4,
+  "google/nano-banana-pro": 6,
 };
 
 type SavedDesign = {
