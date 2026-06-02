@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useBuyCredits } from "~/hook/useBuyCredits";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import {
+  getCreditUpgradeVariantConfig,
+  type CreditUpgradeVariant,
+} from "~/config/creditUpgradeExperiment";
+import {
   hasTrackedCreditPurchaseCompletion,
   markTrackedCreditPurchaseCompletion,
 } from "~/lib/creditPurchaseTracking";
+import {
+  getStoredCreditUpgradeVariant,
+  resolveCreditUpgradeVariant,
+} from "~/lib/creditUpgradeVariant";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 
@@ -190,11 +199,15 @@ export function CreditUpgradeModal({
   onClose,
 }: Props) {
   const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
   const { buyCredits } = useBuyCredits();
   const creditsQuery = api.user.getCredits.useQuery(undefined, {
     enabled: isOpen,
     refetchOnWindowFocus: true,
   });
+  const [creditUpgradeVariant, setCreditUpgradeVariant] = useState<CreditUpgradeVariant | null>(() =>
+    getStoredCreditUpgradeVariant(),
+  );
   const [selectedPlan, setSelectedPlan] = useState<"starter" | "pro" | "elite" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
@@ -327,9 +340,76 @@ export function CreditUpgradeModal({
       }),
     [router.pathname, router.query, sourcePage, country],
   );
+  const language = isArabic ? "ar" : "en";
+
+  useEffect(() => {
+    if (sessionStatus === "loading") return;
+
+    if (session?.user?.id) {
+      setCreditUpgradeVariant(resolveCreditUpgradeVariant(session.user.id));
+      return;
+    }
+
+    if (creditUpgradeVariant === null) {
+      setCreditUpgradeVariant(resolveCreditUpgradeVariant(null));
+    }
+  }, [creditUpgradeVariant, session?.user?.id, sessionStatus]);
+
+  const experimentVariant = creditUpgradeVariant;
+  const sourcePageForTracking = funnelContext.source_page;
+  const experimentConfig = getCreditUpgradeVariantConfig(experimentVariant ?? "A");
   const showArabicSurveyUnlock = useMemo(
     () => isArabicSurveyEligible({ context, sourcePage }),
     [context, sourcePage],
+  );
+  const creditUpgradeStateQuery = api.user.getCreditUpgradeState.useQuery(undefined, {
+    enabled:
+      isOpen &&
+      experimentConfig.layout === "cpx_first_for_cold_users" &&
+      showArabicSurveyUnlock,
+  });
+  const hasPurchasedCreditsBefore =
+    creditUpgradeStateQuery.data?.hasPurchasedCreditsBefore ?? false;
+  const hasGeneratedBefore = creditUpgradeStateQuery.data?.hasGeneratedBefore ?? false;
+  const prioritizeSurveyUnlock =
+    experimentConfig.layout === "cpx_first_for_cold_users" &&
+    showArabicSurveyUnlock &&
+    !hasPurchasedCreditsBefore &&
+    !hasGeneratedBefore &&
+    currentCredits <= 1;
+  const hasRequiredTrackingParams =
+    (experimentVariant === "A" || experimentVariant === "B") &&
+    typeof language === "string" &&
+    language.length > 0 &&
+    typeof sourcePageForTracking === "string" &&
+    sourcePageForTracking.length > 0;
+  const isTrackingReady =
+    hasRequiredTrackingParams;
+  const isLayoutReady =
+    !showArabicSurveyUnlock ||
+    experimentConfig.layout !== "cpx_first_for_cold_users" ||
+    !creditUpgradeStateQuery.isLoading;
+  const eventBaseParams = useMemo(
+    () => ({
+      funnel: funnelContext.funnel,
+      product_type: funnelContext.product_type,
+      niche: funnelContext.niche,
+      traffic_type: funnelContext.traffic_type,
+      country: funnelContext.country,
+      variant: experimentVariant,
+      language,
+      source_page: sourcePageForTracking,
+    }),
+    [
+      funnelContext.funnel,
+      funnelContext.product_type,
+      funnelContext.niche,
+      funnelContext.traffic_type,
+      funnelContext.country,
+      experimentVariant,
+      language,
+      sourcePageForTracking,
+    ],
   );
 
   useEffect(() => {
@@ -349,24 +429,43 @@ export function CreditUpgradeModal({
       return;
     }
 
+    if (!isTrackingReady) {
+      return;
+    }
+
     baselineCreditsRef.current = currentCredits;
 
     if (!hasFiredViewedRef.current) {
-      trackEvent("credit_upgrade_viewed", {
+      const viewEventParams = {
         context,
         user_credits_before_action: currentCredits,
         required_credits: requiredCredits,
         current_credits: currentCredits,
-        ...funnelContext,
-      });
+        ...eventBaseParams,
+      };
+
+      console.log("eventBaseParams snapshot:", { ...eventBaseParams });
+      console.log("VIEW EVENT PARAMS snapshot:", { ...viewEventParams });
+
+      trackEvent("credit_upgrade_viewed", viewEventParams);
       fireMetaCustomEvent("credit_upgrade_viewed", {
         context,
         required_credits: requiredCredits,
-        ...funnelContext,
+        ...eventBaseParams,
       });
       hasFiredViewedRef.current = true;
     }
-  }, [isOpen, context, requiredCredits, currentCredits, funnelContext]);
+  }, [
+    isOpen,
+    isTrackingReady,
+    context,
+    requiredCredits,
+    currentCredits,
+    experimentVariant,
+    language,
+    funnelContext.source_page,
+    eventBaseParams,
+  ]);
 
   useEffect(() => {
     if (!isOpen || !isPolling) return;
@@ -402,7 +501,7 @@ export function CreditUpgradeModal({
         value: selectedOffer?.price ?? null,
         previous_credits: baseline,
         updated_credits: updatedCredits,
-        ...funnelContext,
+        ...eventBaseParams,
       });
       fireMetaCustomEvent("credit_purchase_completed", {
         context,
@@ -411,7 +510,7 @@ export function CreditUpgradeModal({
         value: selectedOffer?.price ?? null,
         previous_credits: baseline,
         updated_credits: updatedCredits,
-        ...funnelContext,
+        ...eventBaseParams,
       });
       markTrackedCreditPurchaseCompletion(pendingPurchaseSessionIdRef.current);
       hasFiredCompletedRef.current = true;
@@ -457,6 +556,7 @@ export function CreditUpgradeModal({
   }, [copy.paymentDetected, isOpen, router.query.credits_success]);
 
   if (!isOpen) return null;
+  if (!isTrackingReady) return null;
 
   const handleSelectPlan = async (offer: Offer) => {
     try {
@@ -465,13 +565,11 @@ export function CreditUpgradeModal({
       setStatusMessage(copy.openingSecurePayment);
 
       trackEvent("credit_plan_selected", {
-        ...funnelContext,
+        ...eventBaseParams,
         context,
         plan: offer.credits,
         price: offer.price,
-        variant: offer.plan,
-        language: isArabic ? "ar" : "en",
-        source_page: funnelContext.source_page,
+        plan_key: offer.plan,
         user_credits_before_action: currentCredits,
         required_credits: requiredCredits,
       });
@@ -483,7 +581,7 @@ export function CreditUpgradeModal({
         value: offer.price,
         user_credits_before_action: currentCredits,
         required_credits: requiredCredits,
-        ...funnelContext,
+        ...eventBaseParams,
       });
       fireMetaCustomEvent("credit_purchase_initiated", {
         context,
@@ -491,7 +589,7 @@ export function CreditUpgradeModal({
         credits: offer.credits,
         value: offer.price,
         required_credits: requiredCredits,
-        ...funnelContext,
+        ...eventBaseParams,
       });
 
       const response = await buyCredits(offer.plan, {
@@ -504,6 +602,8 @@ export function CreditUpgradeModal({
           plan: offer.plan,
           context,
           source_page: funnelContext.source_page,
+          language,
+          variant: experimentVariant,
           funnel: funnelContext.funnel,
           product_type: funnelContext.product_type,
           niche: funnelContext.niche,
@@ -526,6 +626,14 @@ export function CreditUpgradeModal({
       setIsSurveyUnlocking(true);
       setSurveyMessage(null);
       setSurveyRetryAfterMinutes(null);
+
+      trackEvent("cpx_unlock_clicked", {
+        context,
+        credits: CPX_DAILY_REWARD_CREDITS,
+        user_credits_before_action: currentCredits,
+        required_credits: requiredCredits,
+        ...eventBaseParams,
+      });
 
       const res = await fetch("/api/cpa/cpx/unlock", {
         method: "POST",
@@ -612,6 +720,80 @@ export function CreditUpgradeModal({
     }
   };
 
+  const plansSection = (
+    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      {OFFERS.map((offer) => (
+        <button
+          key={offer.plan}
+          type="button"
+          onClick={() => void handleSelectPlan(offer)}
+          disabled={isProcessing}
+          className={`relative rounded-lg border p-3 transition ${
+            isArabic ? "text-right" : "text-left"
+          } ${
+            offer.popular
+              ? "border-brand-500 bg-brand-950/50"
+              : "border-gray-700 bg-gray-900 hover:border-brand-500"
+          } ${selectedPlan === offer.plan ? "ring-2 ring-brand-500" : ""}`}
+        >
+          {offer.popular && (
+            <span
+              className={`absolute -top-2 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white ${
+                isArabic ? "right-3" : "left-3"
+              }`}
+            >
+              {copy.mostPopular}
+            </span>
+          )}
+          <div className="text-sm font-semibold">{copy.offerTitles[offer.titleKey]}</div>
+          <div className="mt-1 text-xs text-gray-300">
+            {copy.offerTitles[offer.subtitleKey]}
+          </div>
+          <div className="mt-3 text-sm font-medium">
+            {isArabic
+              ? formatArabicCredits(offer.credits)
+              : formatEnglishCredits(offer.credits)}
+          </div>
+          <div className="text-xl font-bold">${offer.price.toFixed(2)}</div>
+        </button>
+      ))}
+    </div>
+  );
+
+  const surveySection = showArabicSurveyUnlock ? (
+    <div
+      className={`mt-4 rounded-lg border px-4 py-3 ${
+        prioritizeSurveyUnlock
+          ? "border-emerald-500 bg-emerald-900/30 shadow-[0_0_0_1px_rgba(16,185,129,0.35)]"
+          : "border-emerald-900 bg-emerald-950/30"
+      }`}
+    >
+      <div className="text-sm font-semibold text-emerald-200">{copy.cheaperWay}</div>
+      <div className="mt-1 text-xs text-emerald-100/90">
+        {copy.surveyUnlock(surveyCreditsLabel)}
+      </div>
+      <button
+        type="button"
+        onClick={() => void handleArabicSurveyUnlock()}
+        disabled={isSurveyUnlocking}
+        className="mt-3 rounded-md bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-60"
+      >
+        {isSurveyUnlocking ? copy.openingSurvey : copy.surveyButton(surveyCreditsLabel)}
+      </button>
+      {surveyMessage && <div className="mt-2 text-xs text-emerald-100">{surveyMessage}</div>}
+      {surveyRetryAfterMinutes !== null && (
+        <button
+          type="button"
+          onClick={() => void handleCheckSurveyStatus()}
+          disabled={isCheckingSurveyStatus}
+          className="mt-3 rounded-md border border-emerald-700 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500 disabled:opacity-60"
+        >
+          {isCheckingSurveyStatus ? copy.checkingSurveyStatus : copy.checkSurveyStatus}
+        </button>
+      )}
+    </div>
+  ) : null;
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4">
       <div
@@ -638,43 +820,7 @@ export function CreditUpgradeModal({
           <p className="mt-2 text-sm text-gray-300">{copy.context[context]}</p>
           <p className="mt-2 text-xs text-gray-400">{copy.instantActivation}</p>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {OFFERS.map((offer) => (
-              <button
-                key={offer.plan}
-                type="button"
-                onClick={() => void handleSelectPlan(offer)}
-                disabled={isProcessing}
-                className={`relative rounded-lg border p-3 transition ${
-                  isArabic ? "text-right" : "text-left"
-                } ${
-                  offer.popular
-                    ? "border-brand-500 bg-brand-950/50"
-                    : "border-gray-700 bg-gray-900 hover:border-brand-500"
-                } ${selectedPlan === offer.plan ? "ring-2 ring-brand-500" : ""}`}
-              >
-                {offer.popular && (
-                  <span
-                    className={`absolute -top-2 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white ${
-                      isArabic ? "right-3" : "left-3"
-                    }`}
-                  >
-                    {copy.mostPopular}
-                  </span>
-                )}
-                <div className="text-sm font-semibold">{copy.offerTitles[offer.titleKey]}</div>
-                <div className="mt-1 text-xs text-gray-300">
-                  {copy.offerTitles[offer.subtitleKey]}
-                </div>
-                <div className="mt-3 text-sm font-medium">
-                  {isArabic
-                    ? formatArabicCredits(offer.credits)
-                    : formatEnglishCredits(offer.credits)}
-                </div>
-                <div className="text-xl font-bold">${offer.price.toFixed(2)}</div>
-              </button>
-            ))}
-          </div>
+          {prioritizeSurveyUnlock && isLayoutReady ? surveySection : plansSection}
 
           {statusMessage && (
             <div className="mt-4 rounded-lg border border-brand-900 bg-brand-950/40 px-3 py-2 text-xs text-brand-200">
@@ -682,33 +828,7 @@ export function CreditUpgradeModal({
             </div>
           )}
 
-          {showArabicSurveyUnlock && (
-            <div className="mt-4 rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-3">
-              <div className="text-sm font-semibold text-emerald-200">{copy.cheaperWay}</div>
-              <div className="mt-1 text-xs text-emerald-100/90">
-                {copy.surveyUnlock(surveyCreditsLabel)}
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleArabicSurveyUnlock()}
-                disabled={isSurveyUnlocking}
-                className="mt-3 rounded-md bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-60"
-              >
-                {isSurveyUnlocking ? copy.openingSurvey : copy.surveyButton(surveyCreditsLabel)}
-              </button>
-              {surveyMessage && <div className="mt-2 text-xs text-emerald-100">{surveyMessage}</div>}
-              {surveyRetryAfterMinutes !== null && (
-                <button
-                  type="button"
-                  onClick={() => void handleCheckSurveyStatus()}
-                  disabled={isCheckingSurveyStatus}
-                  className="mt-3 rounded-md border border-emerald-700 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500 disabled:opacity-60"
-                >
-                  {isCheckingSurveyStatus ? copy.checkingSurveyStatus : copy.checkSurveyStatus}
-                </button>
-              )}
-            </div>
-          )}
+          {prioritizeSurveyUnlock && isLayoutReady ? plansSection : surveySection}
 
           {isPolling && (
             <button

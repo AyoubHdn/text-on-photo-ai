@@ -17,6 +17,20 @@ export const userRouter = createTRPCRouter({
       });
       return user?.credits ? Number(user.credits) : 0;
     }),
+  getCreditUpgradeState: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: {
+        plan: true,
+        hasGeneratedDesign: true,
+      },
+    });
+
+    return {
+      hasPurchasedCreditsBefore: user?.plan !== "None",
+      hasGeneratedBefore: Boolean(user?.hasGeneratedDesign),
+    };
+  }),
   getPaidTrafficFunnelState: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },

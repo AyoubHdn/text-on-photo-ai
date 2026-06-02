@@ -31,6 +31,8 @@ type PurchaseData = {
   plan?: "starter" | "pro" | "elite";
   context?: string;
   source_page?: string;
+  language?: "ar" | "en";
+  variant?: "A" | "B";
   funnel?: string;
   product_type?: string;
   niche?: string | null;
@@ -87,30 +89,36 @@ const SuccessPage: React.FC = () => {
       });
 
       trackEvent("credit_purchase_completed", {
+        ...funnelContext,
         context:
           parsed.context ??
           (typeof router.query.credits_context === "string"
             ? router.query.credits_context
             : null),
+        variant: parsed.variant ?? null,
+        language: parsed.language ?? null,
+        source_page: parsed.source_page ?? funnelContext.source_page,
         plan: parsed.plan ?? null,
         credits: parsed.credits,
         value: parsed.value,
         previous_credits: null,
         updated_credits: null,
-        ...funnelContext,
       });
       fireMetaCustomEvent("credit_purchase_completed", {
+        ...funnelContext,
         context:
           parsed.context ??
           (typeof router.query.credits_context === "string"
             ? router.query.credits_context
             : null),
+        variant: parsed.variant ?? null,
+        language: parsed.language ?? null,
+        source_page: parsed.source_page ?? funnelContext.source_page,
         plan: parsed.plan ?? null,
         credits: parsed.credits,
         value: parsed.value,
         previous_credits: null,
         updated_credits: null,
-        ...funnelContext,
       });
       markTrackedCreditPurchaseCompletion(parsed.session_id);
     }

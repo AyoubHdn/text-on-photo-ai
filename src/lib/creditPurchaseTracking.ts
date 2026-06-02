@@ -2,6 +2,8 @@ export type CreditPurchaseTrackingPayload = {
   plan?: "starter" | "pro" | "elite";
   context?: string;
   source_page?: string;
+  language?: "ar" | "en";
+  variant?: "A" | "B";
   funnel?: string;
   product_type?: string;
   niche?: string | null;
