@@ -3,6 +3,10 @@ import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useBuyCredits } from "~/hook/useBuyCredits";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
+import {
+  hasTrackedCreditPurchaseCompletion,
+  markTrackedCreditPurchaseCompletion,
+} from "~/lib/creditPurchaseTracking";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 
@@ -50,6 +54,14 @@ type LocalizedCopy = {
   surveyOpenFailedOrBuy: string;
   surveyOpenFailed: string;
   openingSurvey: string;
+  surveyPendingRetry: (minutes: number) => string;
+  checkSurveyStatus: string;
+  checkingSurveyStatus: string;
+  surveyStatusPending: string;
+  surveyStatusApproved: string;
+  surveyStatusScreenout: string;
+  surveyStatusRejected: string;
+  surveyStatusError: string;
   completedPayment: string;
   checking: string;
   securePayment: string;
@@ -116,6 +128,15 @@ const ENGLISH_COPY: LocalizedCopy = {
     "Could not open the survey right now. Please try again or buy credits.",
   surveyOpenFailed: "Could not open the survey right now. Please try again.",
   openingSurvey: "Opening survey...",
+  surveyPendingRetry: (minutes) =>
+    `You already started a survey. You can try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+  checkSurveyStatus: "Check survey status",
+  checkingSurveyStatus: "Checking survey status...",
+  surveyStatusPending: "Your survey is still pending. Please wait a bit longer and try again.",
+  surveyStatusApproved: "Your survey reward was approved. Your credits should be available now.",
+  surveyStatusScreenout: "This survey did not award credits. You can try another one after the timer ends.",
+  surveyStatusRejected: "This survey reward was rejected by the provider.",
+  surveyStatusError: "Could not check survey status right now. Please try again shortly.",
   completedPayment: "I completed payment",
   checking: "Checking...",
   securePayment: "Secure payment via Stripe",
@@ -179,11 +200,14 @@ export function CreditUpgradeModal({
   const [isPolling, setIsPolling] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [isSurveyUnlocking, setIsSurveyUnlocking] = useState(false);
+  const [isCheckingSurveyStatus, setIsCheckingSurveyStatus] = useState(false);
   const [surveyMessage, setSurveyMessage] = useState<string | null>(null);
+  const [surveyRetryAfterMinutes, setSurveyRetryAfterMinutes] = useState<number | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const hasFiredViewedRef = useRef(false);
   const hasFiredCompletedRef = useRef(false);
   const baselineCreditsRef = useRef<number>(currentCredits);
+  const pendingPurchaseSessionIdRef = useRef<string | null>(null);
   const isArabic = router.pathname.startsWith("/ar/");
 
   const needed = useMemo(() => {
@@ -255,6 +279,23 @@ export function CreditUpgradeModal({
       surveyOpenFailed: "تعذر فتح الاستبيان الآن. يرجى المحاولة مرة أخرى.",
       // REVIEW_AR: Native-speaker review recommended for this revenue-critical purchase modal copy.
       openingSurvey: "جارٍ فتح الاستبيان...",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      surveyPendingRetry: (minutes) =>
+        `لقد بدأتَ استبيانًا بالفعل. يمكنك المحاولة مرة أخرى بعد ${minutes} دقيقة.`,
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      checkSurveyStatus: "تحقق من حالة الاستبيان",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      checkingSurveyStatus: "جارٍ التحقق من حالة الاستبيان...",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      surveyStatusPending: "لا يزال الاستبيان قيد المراجعة. يرجى الانتظار قليلًا ثم المحاولة مرة أخرى.",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      surveyStatusApproved: "تمت الموافقة على مكافأة الاستبيان. يجب أن يكون الرصيد متاحًا الآن.",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      surveyStatusScreenout: "لم يمنح هذا الاستبيان رصيدًا. يمكنك تجربة استبيان آخر بعد انتهاء المؤقت.",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      surveyStatusRejected: "تم رفض مكافأة هذا الاستبيان من مزود الخدمة.",
+      // REVIEW_AR: Native-speaker review recommended for this revenue-critical survey pending-state copy.
+      surveyStatusError: "تعذر التحقق من حالة الاستبيان الآن. يرجى المحاولة مرة أخرى بعد قليل.",
       // REVIEW_AR: Native-speaker review recommended for this revenue-critical purchase modal copy.
       completedPayment: "أكملت الدفع",
       // REVIEW_AR: Native-speaker review recommended for this revenue-critical purchase modal copy.
@@ -300,8 +341,11 @@ export function CreditUpgradeModal({
       setIsPolling(false);
       setIsCheckingPayment(false);
       setIsSurveyUnlocking(false);
+      setIsCheckingSurveyStatus(false);
       setSurveyMessage(null);
+      setSurveyRetryAfterMinutes(null);
       setStatusMessage(null);
+      pendingPurchaseSessionIdRef.current = null;
       return;
     }
 
@@ -340,9 +384,7 @@ export function CreditUpgradeModal({
     const updatedCredits = creditsQuery.data ?? currentCredits;
     const baseline = baselineCreditsRef.current;
     if (updatedCredits <= baseline) return;
-    const completionKey =
-      typeof window !== "undefined" ? window.sessionStorage.getItem("ga4_purchase_credits") : null;
-    if (completionKey === "1") {
+    if (hasTrackedCreditPurchaseCompletion(pendingPurchaseSessionIdRef.current)) {
       setIsPolling(false);
       setIsProcessing(false);
       setStatusMessage(null);
@@ -371,9 +413,7 @@ export function CreditUpgradeModal({
         updated_credits: updatedCredits,
         ...funnelContext,
       });
-      if (typeof window !== "undefined") {
-        window.sessionStorage.setItem("ga4_purchase_credits", "1");
-      }
+      markTrackedCreditPurchaseCompletion(pendingPurchaseSessionIdRef.current);
       hasFiredCompletedRef.current = true;
     }
 
@@ -424,6 +464,18 @@ export function CreditUpgradeModal({
       setIsProcessing(true);
       setStatusMessage(copy.openingSecurePayment);
 
+      trackEvent("credit_plan_selected", {
+        ...funnelContext,
+        context,
+        plan: offer.credits,
+        price: offer.price,
+        variant: offer.plan,
+        language: isArabic ? "ar" : "en",
+        source_page: funnelContext.source_page,
+        user_credits_before_action: currentCredits,
+        required_credits: requiredCredits,
+      });
+
       trackEvent("credit_purchase_initiated", {
         context,
         plan: offer.plan,
@@ -442,18 +494,26 @@ export function CreditUpgradeModal({
         ...funnelContext,
       });
 
-      await buyCredits(offer.plan, {
+      const response = await buyCredits(offer.plan, {
         purchaseContext: context,
-        returnPath: router.asPath,
-        openInNewTab: true,
+        returnPath: "/success",
         sourcePage: funnelContext.source_page,
         country: funnelContext.country ?? undefined,
         paidTrafficUser: funnelContext.traffic_type === "paid",
+        purchaseTracking: {
+          plan: offer.plan,
+          context,
+          source_page: funnelContext.source_page,
+          funnel: funnelContext.funnel,
+          product_type: funnelContext.product_type,
+          niche: funnelContext.niche,
+          traffic_type: funnelContext.traffic_type,
+          country: funnelContext.country,
+          credits: offer.credits,
+          value: offer.price,
+        },
       });
-
-      setIsProcessing(false);
-      setStatusMessage(copy.checkoutOpened);
-      setIsPolling(true);
+      pendingPurchaseSessionIdRef.current = response?.id ?? null;
     } catch (error) {
       console.error("[CREDIT_UPGRADE_MODAL]", error);
       setStatusMessage(copy.checkoutStartFailed);
@@ -465,6 +525,7 @@ export function CreditUpgradeModal({
     try {
       setIsSurveyUnlocking(true);
       setSurveyMessage(null);
+      setSurveyRetryAfterMinutes(null);
 
       const res = await fetch("/api/cpa/cpx/unlock", {
         method: "POST",
@@ -475,9 +536,16 @@ export function CreditUpgradeModal({
         code?: string;
         error?: string;
         redirectUrl?: string;
+        retryAfterMinutes?: number;
       };
 
       if (!res.ok) {
+        if (typeof data.retryAfterMinutes === "number") {
+          setSurveyRetryAfterMinutes(data.retryAfterMinutes);
+          setSurveyMessage(copy.surveyPendingRetry(data.retryAfterMinutes));
+          return;
+        }
+
         setSurveyMessage(data.error ?? copy.surveyOpenFailedOrBuy);
         return;
       }
@@ -487,15 +555,60 @@ export function CreditUpgradeModal({
         return;
       }
 
-      const opened = window.open(data.redirectUrl, "_blank", "noopener,noreferrer");
-      if (!opened) {
-        window.location.href = data.redirectUrl;
-      }
+      window.location.href = data.redirectUrl;
     } catch (error) {
       console.error("[ARABIC_SURVEY_UNLOCK]", error);
       setSurveyMessage(copy.surveyOpenFailed);
     } finally {
       setIsSurveyUnlocking(false);
+    }
+  };
+
+  const handleCheckSurveyStatus = async () => {
+    try {
+      setIsCheckingSurveyStatus(true);
+      setSurveyMessage(copy.checkingSurveyStatus);
+
+      const res = await fetch("/api/cpa/cpx/result", {
+        credentials: "include",
+      });
+      const data = (await res.json()) as {
+        status?: "approved" | "screenout" | "rejected" | "pending";
+        error?: string;
+      };
+
+      if (!res.ok || data.error) {
+        setSurveyMessage(copy.surveyStatusError);
+        return;
+      }
+
+      if (data.status === "approved") {
+        setSurveyRetryAfterMinutes(null);
+        await creditsQuery.refetch();
+        setSurveyMessage(copy.surveyStatusApproved);
+        onClose();
+        onSuccess();
+        return;
+      }
+
+      if (data.status === "screenout") {
+        setSurveyRetryAfterMinutes(null);
+        setSurveyMessage(copy.surveyStatusScreenout);
+        return;
+      }
+
+      if (data.status === "rejected") {
+        setSurveyRetryAfterMinutes(null);
+        setSurveyMessage(copy.surveyStatusRejected);
+        return;
+      }
+
+      setSurveyMessage(copy.surveyStatusPending);
+    } catch (error) {
+      console.error("[ARABIC_SURVEY_STATUS]", error);
+      setSurveyMessage(copy.surveyStatusError);
+    } finally {
+      setIsCheckingSurveyStatus(false);
     }
   };
 
@@ -584,6 +697,16 @@ export function CreditUpgradeModal({
                 {isSurveyUnlocking ? copy.openingSurvey : copy.surveyButton(surveyCreditsLabel)}
               </button>
               {surveyMessage && <div className="mt-2 text-xs text-emerald-100">{surveyMessage}</div>}
+              {surveyRetryAfterMinutes !== null && (
+                <button
+                  type="button"
+                  onClick={() => void handleCheckSurveyStatus()}
+                  disabled={isCheckingSurveyStatus}
+                  className="mt-3 rounded-md border border-emerald-700 px-3 py-2 text-xs font-semibold text-emerald-100 hover:border-emerald-500 disabled:opacity-60"
+                >
+                  {isCheckingSurveyStatus ? copy.checkingSurveyStatus : copy.checkSurveyStatus}
+                </button>
+              )}
             </div>
           )}
 

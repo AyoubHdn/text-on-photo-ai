@@ -1,5 +1,6 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { env } from "~/env.mjs";
+import { storePendingCreditPurchase, type CreditPurchaseTrackingPayload } from "~/lib/creditPurchaseTracking";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { api } from "~/utils/api";
 
@@ -56,10 +57,10 @@ export function useBuyCredits() {
       options?: {
         returnPath?: string;
         purchaseContext?: "generate" | "preview" | "remove_background";
-        openInNewTab?: boolean;
         sourcePage?: string;
         country?: string;
         paidTrafficUser?: boolean;
+        purchaseTracking?: Omit<CreditPurchaseTrackingPayload, "session_id">;
       }
     ) => {
       try {
@@ -88,15 +89,25 @@ export function useBuyCredits() {
           ...funnelContext,
         });
 
-        if (options?.openInNewTab && response.url) {
-          window.open(response.url, "_blank", "noopener,noreferrer");
-          return;
+        if (options?.purchaseTracking) {
+          storePendingCreditPurchase({
+            ...options.purchaseTracking,
+            session_id: response.id,
+          });
+        }
+
+        // Always use a single same-tab navigation for checkout to avoid
+        // double-opens and popup-blocker failures on mobile browsers.
+        if (response.url) {
+          window.location.href = response.url;
+          return response;
         }
 
         const stripe = await stripePromise;
         await stripe?.redirectToCheckout({
           sessionId: response.id,
         });
+        return response;
       } catch (error) {
         console.error("Error in buyCredits:", error);
         throw error;

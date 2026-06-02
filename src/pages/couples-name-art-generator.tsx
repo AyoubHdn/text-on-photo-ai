@@ -504,19 +504,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     }
   }, [imagesUrl.length]);
 
-  useEffect(() => {
-    if (!hasKnownCreditBalance) return;
-    const selectedModelCredits = MODEL_CREDITS[selectedModel] ?? 1;
-    if (currentCredits >= selectedModelCredits) return;
-
-    const fallbackModel =
-      MODEL_OPTIONS.find((model) => currentCredits >= model.cost) ??
-      MODEL_OPTIONS[0];
-    if (fallbackModel.value !== selectedModel) {
-      setSelectedModel(fallbackModel.value);
-    }
-  }, [currentCredits, hasKnownCreditBalance, selectedModel]);
-
   const openShareModal = (imageUrl: string) => setShareModalData({ isOpen: true, imageUrl });
   const closeShareModal = () => setShareModalData({ isOpen: false, imageUrl: null });
 
@@ -1028,16 +1015,16 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                               key={model.value}
                               type="button"
                               onClick={() => {
-                                if (modelLocked) return;
                                 setSelectedModel(model.value);
                                 revealImageSizeStepAfterModelSelect();
                               }}
-                              disabled={modelLocked}
                               className={`relative flex flex-col items-center justify-center border rounded-lg p-4 transition ${
-                                modelLocked
-                                  ? "cursor-not-allowed border-amber-200 bg-amber-50/60 opacity-75"
-                                  : selectedModel === model.value
-                                    ? "border-brand-500 ring-2 ring-brand-500"
+                                selectedModel === model.value
+                                  ? `border-brand-500 ring-2 ring-brand-500 ${
+                                      modelLocked ? "bg-amber-50/60 opacity-75" : ""
+                                    }`
+                                  : modelLocked
+                                    ? "cursor-pointer border-amber-200 bg-amber-50/60 opacity-75"
                                     : "border-cream-200 hover:border-brand-300"
                               }`}
                             >
@@ -1051,7 +1038,13 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
                               <span className="text-sm font-semibold">{model.name}</span>
                               <span className="text-sm text-gray-500">Cost: {model.cost} credits</span>
                               {modelLocked && (
-                                <span className="mt-2 rounded bg-white/80 px-2 py-1 text-center text-xs font-medium text-amber-800">
+                                <span
+                                  className={`mt-2 rounded bg-white/80 px-2 py-1 text-center text-xs font-medium text-amber-800 transition ${
+                                    selectedModel === model.value
+                                      ? "animate-pulse ring-2 ring-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.45)]"
+                                      : ""
+                                  }`}
+                                >
                                   Need {getModelCreditShortfall(model.cost)} more credit{getModelCreditShortfall(model.cost) === 1 ? "" : "s"}
                                 </span>
                               )}

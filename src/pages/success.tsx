@@ -3,6 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { SeoHead } from "~/component/SeoHead";
+import {
+  clearPendingCreditPurchase,
+  hasTrackedCreditPurchaseCompletion,
+  markTrackedCreditPurchaseCompletion,
+  readPendingCreditPurchase,
+} from "~/lib/creditPurchaseTracking";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 
@@ -32,6 +38,7 @@ type PurchaseData = {
   country?: string | null;
   credits?: number;
   value?: number;
+  session_id?: string | null;
 };
 
 const SuccessPage: React.FC = () => {
@@ -39,14 +46,7 @@ const SuccessPage: React.FC = () => {
 
   // Read purchase data synchronously before any useEffect can clear it
   const [purchaseData] = useState<PurchaseData | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = window.sessionStorage.getItem("last_credit_purchase");
-      if (!raw) return null;
-      return JSON.parse(raw) as PurchaseData;
-    } catch {
-      return null;
-    }
+    return readPendingCreditPurchase() as PurchaseData | null;
   });
 
   const creditsCount = purchaseData?.credits ?? null;
@@ -66,57 +66,56 @@ const SuccessPage: React.FC = () => {
 
     gtagEvent();
 
-    if (typeof window !== "undefined") {
-      const trackedKey = "ga4_purchase_credits";
-      if (!window.sessionStorage.getItem(trackedKey)) {
-        const raw = window.sessionStorage.getItem("last_credit_purchase");
-        if (raw) {
-          try {
-            const parsed = JSON.parse(raw) as PurchaseData;
-            if (typeof parsed?.credits === "number" && typeof parsed?.value === "number") {
-              const funnelContext = getFunnelContext({
-                route: router.pathname,
-                sourcePage: parsed.source_page ?? "success",
-                productType: parsed.product_type ?? "credits",
-                country: parsed.country ?? null,
-                query: router.query as Record<string, unknown>,
-              });
+    const parsed = readPendingCreditPurchase() as PurchaseData | null;
+    if (!parsed) return;
 
-              trackEvent("credit_purchase_completed", {
-                context:
-                  parsed.context ??
-                  (typeof router.query.credits_context === "string"
-                    ? router.query.credits_context
-                    : null),
-                plan: parsed.plan ?? null,
-                credits: parsed.credits,
-                value: parsed.value,
-                previous_credits: null,
-                updated_credits: null,
-                ...funnelContext,
-              });
-              fireMetaCustomEvent("credit_purchase_completed", {
-                context:
-                  parsed.context ??
-                  (typeof router.query.credits_context === "string"
-                    ? router.query.credits_context
-                    : null),
-                plan: parsed.plan ?? null,
-                credits: parsed.credits,
-                value: parsed.value,
-                previous_credits: null,
-                updated_credits: null,
-                ...funnelContext,
-              });
-              window.sessionStorage.setItem(trackedKey, "1");
-              window.sessionStorage.removeItem("last_credit_purchase");
-            }
-          } catch {
-            // ignore invalid storage
-          }
-        }
-      }
+    if (
+      typeof parsed.credits !== "number" ||
+      typeof parsed.value !== "number"
+    ) {
+      clearPendingCreditPurchase();
+      return;
     }
+
+    if (!hasTrackedCreditPurchaseCompletion(parsed.session_id)) {
+      const funnelContext = getFunnelContext({
+        route: router.pathname,
+        sourcePage: parsed.source_page ?? "success",
+        productType: parsed.product_type ?? "credits",
+        country: parsed.country ?? null,
+        query: router.query as Record<string, unknown>,
+      });
+
+      trackEvent("credit_purchase_completed", {
+        context:
+          parsed.context ??
+          (typeof router.query.credits_context === "string"
+            ? router.query.credits_context
+            : null),
+        plan: parsed.plan ?? null,
+        credits: parsed.credits,
+        value: parsed.value,
+        previous_credits: null,
+        updated_credits: null,
+        ...funnelContext,
+      });
+      fireMetaCustomEvent("credit_purchase_completed", {
+        context:
+          parsed.context ??
+          (typeof router.query.credits_context === "string"
+            ? router.query.credits_context
+            : null),
+        plan: parsed.plan ?? null,
+        credits: parsed.credits,
+        value: parsed.value,
+        previous_credits: null,
+        updated_credits: null,
+        ...funnelContext,
+      });
+      markTrackedCreditPurchaseCompletion(parsed.session_id);
+    }
+
+    clearPendingCreditPurchase();
   }, [router.pathname, router.query]);
 
   return (

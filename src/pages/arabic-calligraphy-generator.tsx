@@ -487,19 +487,6 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     }
   }, [imagesUrl.length]);
 
-  useEffect(() => {
-    if (!hasKnownCreditBalance) return;
-    const selectedModelCredits = MODEL_CREDITS[selectedModel] ?? 1;
-    if (currentCredits >= selectedModelCredits) return;
-
-    const fallbackTier =
-      ARABIC_GENERATOR_TIERS.find((tier) => currentCredits >= tier.credits) ??
-      ARABIC_GENERATOR_TIERS[0];
-    if (fallbackTier.model !== selectedModel) {
-      setSelectedModel(fallbackTier.model);
-    }
-  }, [currentCredits, hasKnownCreditBalance, selectedModel]);
-
   const startGeneratorSignIn = () => {
     saveAuthDraft();
     try {
@@ -954,16 +941,16 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                     key={tier.model}
                     type="button"
                     onClick={() => {
-                      if (tierLocked) return;
                       setSelectedModel(tier.model);
                       revealImageSizeStepAfterModelSelect();
                     }}
-                    disabled={tierLocked}
                     className={`rounded-xl border p-4 text-left transition ${
-                      tierLocked
-                        ? "cursor-not-allowed border-amber-200 bg-amber-50/60 opacity-75"
-                        : selectedModel === tier.model
-                          ? "border-brand-500 ring-2 ring-brand-500"
+                      selectedModel === tier.model
+                        ? `border-brand-500 ring-2 ring-brand-500 ${
+                            tierLocked ? "bg-amber-50/60 opacity-75" : ""
+                          }`
+                        : tierLocked
+                          ? "cursor-pointer border-amber-200 bg-amber-50/60 opacity-75"
                           : "border-cream-200 hover:border-brand-300"
                     }`}
                   >
@@ -982,7 +969,13 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       {tier.credits} credits
                     </div>
                     {tierLocked && (
-                      <div className="mt-2 rounded bg-white/80 px-2 py-1 text-xs font-medium text-amber-800">
+                      <div
+                        className={`mt-2 rounded bg-white/80 px-2 py-1 text-xs font-medium text-amber-800 transition ${
+                          selectedModel === tier.model
+                            ? "animate-pulse ring-2 ring-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.45)]"
+                            : ""
+                        }`}
+                      >
                         Need {getModelCreditShortfall(tier.credits)} more credit{getModelCreditShortfall(tier.credits) === 1 ? "" : "s"}
                       </div>
                     )}
