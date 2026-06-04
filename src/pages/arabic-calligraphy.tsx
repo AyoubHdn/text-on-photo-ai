@@ -17,13 +17,13 @@ import { getStyleImageAlt } from "~/lib/styleImageAlt";
 
 const galleryItems = [
   { src: "/styles/arabic/thuluth-gold.webp", title: "Thuluth", href: "/arabic-calligraphy/styles/thuluth" },
-  { src: "/styles/arabic/wireframe.webp", title: "Wireframe", href: "/arabic-calligraphy/styles/wireframe" },
+  { src: "/styles/arabic/diwani-modern.webp", title: "Diwani Modern", href: "/arabic-calligraphy/styles/diwani-modern" },
   { src: "/styles/arabic/diwani-ink.webp", title: "Diwani", href: "/arabic-calligraphy/styles/diwani" },
-  { src: "/styles/arabic/gold-3d.webp", title: "3D Gold Luxury", href: "/arabic-calligraphy/styles/3d-gold-luxury" },
-  { src: "/styles/arabic/smoke-art.webp", title: "Mystical Smoke", href: "/arabic-calligraphy/styles/mystical-smoke" },
-  { src: "/styles/arabic/sand-desert.webp", title: "Desert Sand", href: "/arabic-calligraphy/styles/desert-sand" },
-  { src: "/styles/arabic/diamond.webp", title: "Diamond Encrusted", href: "/arabic-calligraphy/styles/diamond-encrusted" },
-  { src: "/styles/arabic/kufic-geo.webp", title: "Kufic", href: "/arabic-calligraphy/styles/kufic" },
+  { src: "/styles/arabic/marble-gold.webp", title: "Marble Gold", href: "/arabic-calligraphy/styles/marble-gold" },
+  { src: "/styles/arabic/ruqah-classic.webp", title: "Ruq'ah Classic", href: "/arabic-calligraphy/styles/ruqah-classic" },
+  { src: "/styles/arabic/henna.webp", title: "Henna", href: "/arabic-calligraphy/styles/henna" },
+  { src: "/styles/arabic/crystal.webp", title: "Crystal", href: "/arabic-calligraphy/styles/crystal" },
+  { src: "/styles/arabic/kufic-ornate.webp", title: "Ornate Kufic", href: "/arabic-calligraphy/styles/ornate-kufic" },
 ];
 
 const arabicFaqs = [
@@ -55,7 +55,7 @@ const arabicFaqs = [
   {
     question: "What Arabic calligraphy styles do you offer?",
     answer:
-      "Our styles include thuluth in gold, diwani ink, kufic geometric patterns, smoke art, sand desert, diamond, 3D gold, and wireframe modern. Each style has a different visual character — browse the full Arabic calligraphy style gallery.",
+      "Our styles include Thuluth, Diwani, Kufic, Ruq'ah, Nastaliq, marble gold, black gold, crystal, light painting, henna, embroidery, botanical, and modern neon directions. Each style has a different visual character — browse the full Arabic calligraphy style gallery.",
   },
   {
     question: "Is Arabic name art suitable as an Islamic gift?",
