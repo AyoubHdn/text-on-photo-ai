@@ -2,6 +2,7 @@ import type { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { AdSenseUnit } from "~/component/AdSense";
 import { SeoHead } from "~/component/SeoHead";
 import type { StyleContent } from "~/data/styleContent";
 import {
@@ -190,6 +191,8 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
             </div>
           </section>
         )}
+
+        <AdSenseUnit />
 
         {content.relatedStyles && content.relatedStyles.length > 0 && (
           <section className="mx-auto max-w-4xl px-4 py-12">

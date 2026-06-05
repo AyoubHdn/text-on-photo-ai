@@ -5,6 +5,7 @@ import matter from 'gray-matter';
 import { MDXRemote, type MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
 import Link from "next/link";
+import { AdSenseUnit } from "~/component/AdSense";
 import { Button } from "~/component/Button";
 import { SeoHead } from "~/component/SeoHead";
 import {
@@ -103,6 +104,8 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
              {/* Use the 'source' prop here */}
             <MDXRemote {...source} components={components} />
           </div>
+
+          <AdSenseUnit className="px-0" />
 
           <section className="mt-16 rounded-2xl border border-slate-200 bg-slate-50 p-8 dark:border-slate-700 dark:bg-slate-800">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">

@@ -5,6 +5,7 @@ import path from 'path';
 import matter from 'gray-matter';
 
 import { SeoHead } from "~/component/SeoHead";
+import { AdSenseUnit } from "~/component/AdSense";
 import { buildCollectionPageSchema, buildItemListSchema } from "~/lib/seo";
 
 // Define the type for the frontmatter object
@@ -79,6 +80,8 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
               </p>
             </Link>
           </div>
+
+          <AdSenseUnit className="mb-12" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {posts.map(({ slug, frontmatter }) => (

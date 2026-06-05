@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FiDownload, FiEdit3, FiGift } from "react-icons/fi";
 
+import { AdSenseUnit } from "~/component/AdSense";
 import { SeoHead } from "~/component/SeoHead";
 import { getRelatedNamePages, isApprovedNamePage } from "~/lib/nameArtSeo";
 import { popularNames } from "~/lib/names";
@@ -474,6 +475,8 @@ const NameArtPage: NextPage<NameArtPageProps> = ({
             </div>
           </div>
         </section>
+
+        {!noindex ? <AdSenseUnit /> : null}
 
         {extraStyleCards.length > 0 ? (
           <section className="bg-gray-50 py-16 dark:bg-gray-800">

@@ -61,6 +61,8 @@ const client = z.object({
   NEXT_PUBLIC_S3_REGION: z.string(),
   NEXT_PUBLIC_S3_BUCKET_NAME: z.string(),
   NEXT_PUBLIC_META_PIXEL_ID: z.string().optional(),
+  NEXT_PUBLIC_ADSENSE_CLIENT_ID: z.string().optional(),
+  NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID: z.string().optional(),
 });
 
 /**
@@ -101,6 +103,9 @@ const processEnv = {
   NEXT_PUBLIC_S3_REGION: process.env.NEXT_PUBLIC_S3_REGION,
   NEXT_PUBLIC_S3_BUCKET_NAME: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
   NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
+  NEXT_PUBLIC_ADSENSE_CLIENT_ID: process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID,
+  NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID:
+    process.env.NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID,
   CPX_SECURITY_HASH: process.env.CPX_SECURITY_HASH,
   CPX_APP_ID: process.env.CPX_APP_ID,
   IPAPI_KEY: process.env.IPAPI_KEY,

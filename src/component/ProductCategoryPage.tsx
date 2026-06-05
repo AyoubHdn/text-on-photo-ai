@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { SeoHead } from "~/component/SeoHead";
+import { AdSenseUnit } from "~/component/AdSense";
 import {
   buildBreadcrumbSchema,
   buildCollectionPageSchema,
@@ -307,6 +308,8 @@ export function ProductCategoryPage({
             </div>
           </div>
         </section>
+
+        <AdSenseUnit />
 
         <section className="bg-cream-50 px-4 py-16">
           <div className="container mx-auto max-w-6xl">

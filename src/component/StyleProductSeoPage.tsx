@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { ProductPageContent } from "~/data/productPageContent";
+import { AdSenseUnit } from "~/component/AdSense";
 import { SeoHead } from "~/component/SeoHead";
 import {
   buildBreadcrumbSchema,
@@ -313,6 +314,8 @@ export function StyleProductHubPage({ config }: { config: StyleProductHubConfig 
           </div>
         </section>
 
+        <AdSenseUnit />
+
         <section className="bg-white px-4 py-16">
           <div className="container mx-auto max-w-5xl">
             <div className="max-w-3xl">
@@ -476,6 +479,8 @@ export function StyleProductDetailPage({
             </div>
           </div>
         </section>
+
+        <AdSenseUnit />
 
         <section className="container mx-auto max-w-6xl px-4 py-16">
           <div className="grid gap-10 lg:grid-cols-[0.9fr,1.1fr]">

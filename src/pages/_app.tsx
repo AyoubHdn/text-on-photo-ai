@@ -11,6 +11,8 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import { Header } from "~/component/Header";
 import { Footer } from "~/component/Footer";
+import { AdSenseScript } from "~/component/AdSense";
+import { shouldShowAdSenseForPath } from "~/lib/adsense";
 
 const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 const PAID_TRAFFIC_SOURCE_PAGE_KEY = "paidTrafficSourcePage";
@@ -80,6 +82,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const shouldNoindexRoute = GLOBAL_NOINDEX_PATHS.has(router.pathname);
+  const shouldLoadAdSense =
+    !shouldNoindexRoute && shouldShowAdSenseForPath(router.pathname, isPaidTrafficUser);
 
   useEffect(() => {
     try {
@@ -242,6 +246,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
           }}
         />
       )}
+
+      <AdSenseScript enabled={shouldLoadAdSense} />
       
       {/* Google Tag Manager NoScript Fallback */}
       <noscript>
