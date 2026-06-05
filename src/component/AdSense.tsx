@@ -1,9 +1,11 @@
 import Script from "next/script";
-import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 import {
   getAdSenseClientId,
   getAdSenseContentSlotId,
+  shouldShowAdSenseForPath,
 } from "~/lib/adsense";
 
 declare global {
@@ -19,6 +21,7 @@ type AdSenseUnitProps = {
 };
 
 const adClient = getAdSenseClientId();
+const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 
 export function AdSenseScript({ enabled }: { enabled: boolean }) {
   if (!enabled || !adClient) return null;
@@ -39,8 +42,28 @@ export function AdSenseUnit({
   label = "Advertisement",
   slotId = getAdSenseContentSlotId(),
 }: AdSenseUnitProps) {
+  const router = useRouter();
+  const [canRenderAd, setCanRenderAd] = useState(false);
+
   useEffect(() => {
-    if (!adClient || !slotId) return;
+    if (!adClient || !slotId) {
+      setCanRenderAd(false);
+      return;
+    }
+
+    let isPaidTrafficUser = false;
+    try {
+      isPaidTrafficUser =
+        window.sessionStorage.getItem(PAID_TRAFFIC_SESSION_KEY) === "true";
+    } catch {
+      isPaidTrafficUser = false;
+    }
+
+    setCanRenderAd(shouldShowAdSenseForPath(router.pathname, isPaidTrafficUser));
+  }, [router.pathname, slotId]);
+
+  useEffect(() => {
+    if (!adClient || !slotId || !canRenderAd) return;
 
     try {
       window.adsbygoogle = window.adsbygoogle || [];
@@ -48,9 +71,9 @@ export function AdSenseUnit({
     } catch {
       // AdSense can throw when an ad blocker or duplicate render intervenes.
     }
-  }, [slotId]);
+  }, [canRenderAd, slotId]);
 
-  if (!adClient || !slotId) return null;
+  if (!adClient || !slotId || !canRenderAd) return null;
 
   return (
     <aside
