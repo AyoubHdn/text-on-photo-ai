@@ -1,3 +1,5 @@
+export const ADSENSE_PUBLISHER_ID = "ca-pub-1557966465534942";
+
 const ADSENSE_EXCLUDED_PATHS = new Set([
   "/collection",
   "/buy-credits",
@@ -23,7 +25,9 @@ const ADSENSE_EXCLUDED_PREFIXES = [
 
 export function getAdSenseClientId() {
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID?.trim();
-  return clientId && clientId.startsWith("ca-pub-") ? clientId : undefined;
+  return clientId && clientId.startsWith("ca-pub-")
+    ? clientId
+    : ADSENSE_PUBLISHER_ID;
 }
 
 export function getAdSenseContentSlotId() {
