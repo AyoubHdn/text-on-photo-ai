@@ -43,3 +43,6 @@ yarn-error.log*
 
 # local seo audit cache
 .seo-cache/
+
+# AdSense verification file must be deployed from public/.
+!/public/ads.txt
