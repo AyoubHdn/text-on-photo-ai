@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useBuyCredits } from "~/hook/useBuyCredits";
+import { useLocale } from "~/hook/useLocale";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import {
   getCreditUpgradeVariantConfig,
@@ -221,7 +222,7 @@ export function CreditUpgradeModal({
   const hasFiredCompletedRef = useRef(false);
   const baselineCreditsRef = useRef<number>(currentCredits);
   const pendingPurchaseSessionIdRef = useRef<string | null>(null);
-  const isArabic = router.pathname.startsWith("/ar/");
+  const { isArabic } = useLocale();
 
   const needed = useMemo(() => {
     const delta = requiredCredits - currentCredits;
