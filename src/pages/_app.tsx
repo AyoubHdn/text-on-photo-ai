@@ -61,6 +61,27 @@ const MyApp: AppType<{ session: Session | null }> = ({
   pageProps: { session, ...pageProps },
 }) => {
   const router = useRouter();
+
+  // Persist lang cookie so Arabic locale survives cross-route navigation
+  // (sign-in redirect, Stripe redirect, /buy-credits, etc.).
+  // Set lang=ar on first /ar/* hit. Only set lang=en when no cookie exists yet
+  // so an Arabic user who navigates to /buy-credits keeps their ar preference.
+  useEffect(() => {
+    const isArabicRoute =
+      router.pathname.startsWith("/ar/") || router.pathname === "/ar";
+    if (isArabicRoute) {
+      document.cookie =
+        "lang=ar; Max-Age=31536000; Path=/; SameSite=Lax; Secure";
+    } else {
+      const hasLangCookie = document.cookie
+        .split("; ")
+        .some((p) => p.startsWith("lang="));
+      if (!hasLangCookie) {
+        document.cookie =
+          "lang=en; Max-Age=31536000; Path=/; SameSite=Lax; Secure";
+      }
+    }
+  }, [router.pathname]);
   const [isPaidTrafficUser, setIsPaidTrafficUser] = useState(false);
   const hasMarkedPaidTrafficUserRef = useRef(false);
   const isMarkingPaidTrafficUserRef = useRef(false);
