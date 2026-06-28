@@ -38,16 +38,19 @@ export const checkoutRouter = createTRPCRouter({
     const safeReturnPath =
       input.returnPath && input.returnPath.startsWith("/")
         ? input.returnPath
-        : "/success";
-    const hasQuery = safeReturnPath.includes("?");
-    const successUrl =
-      safeReturnPath === "/success"
-        ? `${env.HOST_NAME}/success`
-        : `${env.HOST_NAME}${safeReturnPath}${hasQuery ? "&" : "?"}credits_success=1${input.purchaseContext ? `&credits_context=${input.purchaseContext}` : ""}`;
+        : null;
+    const hasQuery = safeReturnPath?.includes("?") ?? false;
+    const successUrl = safeReturnPath
+      ? `${env.HOST_NAME}${safeReturnPath}${hasQuery ? "&" : "?"}credits_success=1${input.purchaseContext ? `&credits_context=${input.purchaseContext}` : ""}`
+      : `${env.HOST_NAME}/success`;
+    const cancelUrl = safeReturnPath
+      ? `${env.HOST_NAME}${safeReturnPath}`
+      : `${env.HOST_NAME}/cancel`;
 
     try {
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
+        locale: "auto",
         metadata: {
           userId: ctx.session.user.id,
           purchaseContext: input.purchaseContext ?? "generate",
@@ -62,7 +65,7 @@ export const checkoutRouter = createTRPCRouter({
         ],
         mode: "payment",
         success_url: successUrl,
-        cancel_url: `${env.HOST_NAME}/cancel`,
+        cancel_url: cancelUrl,
       });
 
       return session;

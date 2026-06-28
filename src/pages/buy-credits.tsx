@@ -96,6 +96,10 @@ const BuyCredits: React.FC = () => {
 
       await buyCredits(plan, {
         sourcePage: funnelContext.source_page,
+        returnPath:
+          typeof window !== "undefined"
+            ? `${window.location.pathname}${window.location.search}`
+            : undefined,
       });
     } catch (error) {
       console.error("Error during purchase:", error);

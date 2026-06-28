@@ -593,9 +593,14 @@ export function CreditUpgradeModal({
         ...eventBaseParams,
       });
 
+      const returnPath =
+        typeof window !== "undefined"
+          ? `${window.location.pathname}${window.location.search}`
+          : undefined;
+
       const response = await buyCredits(offer.plan, {
         purchaseContext: context,
-        returnPath: "/success",
+        returnPath,
         sourcePage: funnelContext.source_page,
         country: funnelContext.country ?? undefined,
         paidTrafficUser: funnelContext.traffic_type === "paid",
