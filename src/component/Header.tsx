@@ -6,6 +6,7 @@ import { api } from "~/utils/api";
 import Image from "next/image";
 import Link from "next/link";
 import { AiOutlineDown } from "react-icons/ai"; // Using an icon for the dropdown
+import { useLocale } from "~/hook/useLocale";
 
 type HeaderProps = {
     minimal?: boolean;
@@ -16,6 +17,17 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     const session = useSession();
     const credits = api.user.getCredits.useQuery();
     const isLoggedIn = !!session.data;
+    const { isArabic } = useLocale();
+
+    const handleSignIn = () => {
+        const callbackUrl =
+            typeof window !== "undefined"
+                ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+                : isArabic
+                ? "/ar/arabic-calligraphy-generator"
+                : undefined;
+        signIn(undefined, callbackUrl ? { callbackUrl } : undefined).catch(console.error);
+    };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
@@ -187,9 +199,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                     <li>
                         <Button
                             id="signIn-header-button"
-                            onClick={() => {
-                                signIn().catch(console.error);
-                            }}
+                            onClick={handleSignIn}
                         >
                             Sign In
                         </Button>
@@ -249,7 +259,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         ) : (
                             <>
                                 <li>
-                                    <button onClick={() => { signIn().catch(console.error); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
+                                    <button onClick={() => { handleSignIn(); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
                                         Sign In
                                     </button>
                                 </li>
