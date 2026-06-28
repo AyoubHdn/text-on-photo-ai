@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { Button } from "./Button";
 import { PrimaryLink } from "./PrimaryLink";
 import { api } from "~/utils/api";
 import Image from "next/image";
 import Link from "next/link";
-import { AiOutlineDown } from "react-icons/ai"; // Using an icon for the dropdown
+import { AiOutlineDown } from "react-icons/ai";
 import { useLocale } from "~/hook/useLocale";
+import { useHeaderStrings } from "~/lib/headerStrings";
+import { getTwin } from "~/lib/localeTwins";
 
 type HeaderProps = {
     minimal?: boolean;
@@ -17,7 +20,9 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     const session = useSession();
     const credits = api.user.getCredits.useQuery();
     const isLoggedIn = !!session.data;
-    const { isArabic } = useLocale();
+    const router = useRouter();
+    const { locale, isArabic, dir } = useLocale();
+    const { t } = useHeaderStrings(locale);
 
     const handleSignIn = () => {
         const callbackUrl =
@@ -29,20 +34,32 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
         signIn(undefined, callbackUrl ? { callbackUrl } : undefined).catch(console.error);
     };
 
+    const handleLocaleToggle = () => {
+        const targetLocale = isArabic ? "en" : "ar";
+        // Write lang cookie
+        document.cookie = `lang=${targetLocale}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
+        // Navigate to twin if one exists, otherwise re-render in place
+        const twin = getTwin(router.pathname, targetLocale);
+        if (twin) {
+            void router.push(twin);
+        } else {
+            // Force a re-render so useLocale() picks up the new cookie value
+            void router.replace(router.asPath);
+        }
+    };
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
 
     const mobileMenuRef = useRef<HTMLDivElement>(null);
-    // --- FIX: Changed from HTMLDivElement to HTMLLIElement to match the <li> it references ---
     const productsDropdownRef = useRef<HTMLLIElement>(null);
 
     const productLinks = [
         { href: "/name-art", name: "Name Art" },
-        { href: "/arabic-calligraphy", name: "Arabic Name Art" },
-        { href: "/couples-art", name: "Couples Art" },
+        { href: isArabic ? "/ar/arabic-calligraphy" : "/arabic-calligraphy", name: isArabic ? "خط عربي" : "Arabic Name Art" },
+        { href: "/couples-art", name: isArabic ? "فن الأزواج" : "Couples Art" },
     ];
 
-    // Close mobile dropdown when clicking outside
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
             if (mobileMenuRef.current && !(mobileMenuRef.current as HTMLElement).contains(event.target as Node)) {
@@ -53,7 +70,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
         return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, []);
 
-    // Close products dropdown when clicking outside
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
             if (productsDropdownRef.current && !(productsDropdownRef.current as HTMLElement).contains(event.target as Node)) {
@@ -64,12 +80,26 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
         return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, []);
 
+    // Locale toggle button — shown in both desktop and mobile
+    const localeToggleBtn = (closeMenu?: () => void) => (
+        <button
+            onClick={() => { handleLocaleToggle(); closeMenu?.(); }}
+            className={`text-sm font-medium px-2 py-1 rounded border transition
+                ${forceLight
+                    ? "border-slate-300 text-slate-700 hover:bg-slate-100"
+                    : "border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+            aria-label={isArabic ? t("toggleToEn") : t("toggleToAr")}
+        >
+            {isArabic ? t("toggleToEn") : t("toggleToAr")}
+        </button>
+    );
 
     if (minimal) {
         return (
             <header
-                dir="ltr"
-                lang="en"
+                dir={dir}
+                lang={locale}
                 className={
                     forceLight
                         ? "flex h-16 w-full items-center justify-center bg-[#1B2538] px-4"
@@ -97,9 +127,9 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     }
 
     return (
-        <header dir="ltr" lang="en" className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
-            {/* --- LEFT NAVIGATION --- */}
-            <ul className="flex gap-8 items-center">
+        <header dir={dir} lang={locale} className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
+            {/* --- LOGO + LEFT NAV --- */}
+            <ul className="flex gap-6 items-center">
                 <li className="shrink-0">
                     <PrimaryLink href="/" aria-label="Name Design AI Home" className="flex shrink-0 items-center gap-1.5">
                         <Image
@@ -118,20 +148,20 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         />
                     </PrimaryLink>
                 </li>
-                {/* --- START: NEW PRODUCTS DROPDOWN --- */}
+                {/* Products dropdown */}
                 <li ref={productsDropdownRef} className="relative hidden md:block">
                     <button
                         onClick={() => setIsProductsDropdownOpen(prev => !prev)}
                         className={`flex items-center gap-1 font-medium hover:text-brand-600 ${forceLight ? "text-slate-800" : "text-slate-800 dark:text-slate-200"}`}
                     >
-                        Create <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
+                        {t("create")} <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isProductsDropdownOpen && (
-                        <div className={`absolute top-full left-0 mt-2 w-56 z-20 rounded-md border bg-white shadow-lg ${forceLight ? "border-gray-200" : "dark:border-gray-600 dark:bg-gray-700"}`}>
+                        <div className={`absolute top-full ${isArabic ? "right-0" : "left-0"} mt-2 w-56 z-20 rounded-md border bg-white shadow-lg ${forceLight ? "border-gray-200" : "dark:border-gray-600 dark:bg-gray-700"}`}>
                             <ul className="py-1">
                                 {productLinks.map(link => (
                                     <li key={link.href}>
-                                        <Link 
+                                        <Link
                                             href={link.href}
                                             onClick={() => setIsProductsDropdownOpen(false)}
                                             className={`block px-4 py-2 text-sm hover:bg-gray-100 ${forceLight ? "text-gray-700" : "text-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"}`}
@@ -144,72 +174,64 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         </div>
                     )}
                 </li>
-                {/* --- END: NEW PRODUCTS DROPDOWN --- */}
                 <li>
                     <PrimaryLink id="community-header-button" href="/community" className="hidden md:block">
-                        Gallery
-                    </PrimaryLink>
-                </li>
-                <li>
-                    <PrimaryLink href="/personalized-gifts" className="hidden md:block">
-                        Gift Ideas
+                        {t("gallery")}
                     </PrimaryLink>
                 </li>
                 {isLoggedIn && (
                     <li>
                         <PrimaryLink id="collection-header-button" href="/collection" className="hidden md:block">
-                            My Designs
+                            {t("myDesigns")}
                         </PrimaryLink>
                     </li>
                 )}
                 <li>
                     <PrimaryLink id="pricing-header-button" href="/buy-credits" className="hidden md:block">
-                        Pricing
+                        {t("pricing")}
                     </PrimaryLink>
                 </li>
             </ul>
 
-            {/* --- RIGHT NAVIGATION (DESKTOP) --- */}
-            <ul className="hidden gap-4 items-center md:flex">
+            {/* --- RIGHT NAV (DESKTOP) --- */}
+            <ul className="hidden gap-3 items-center md:flex">
+                {/* Locale toggle */}
+                <li>{localeToggleBtn()}</li>
+
                 {isLoggedIn && (
                     <>
                         <li className="flex items-center gap-2">
                             <div className="w-8 h-8 flex items-center justify-center bg-brand-500 text-white text-sm font-bold rounded-full">
                                 {credits.data ?? 0}
                             </div>
-                            <span className="text-sm font-medium text-gray-500">Credits</span>
+                            <span className="text-sm font-medium text-gray-500">{t("credits")}</span>
                         </li>
                         <li>
                             <PrimaryLink href="/buy-credits">
-                                <Button id="buy-credits-header-button" >Buy Credits</Button>
+                                <Button id="buy-credits-header-button">{t("buyCredits")}</Button>
                             </PrimaryLink>
                         </li>
                         <li>
                             <Button
                                 id="SignOut-header-button"
                                 variant="secondary"
-                                onClick={() => {
-                                    signOut().catch(console.error);
-                                }}
+                                onClick={() => { signOut().catch(console.error); }}
                             >
-                                Sign Out
+                                {t("signOut")}
                             </Button>
                         </li>
                     </>
                 )}
                 {!isLoggedIn && (
                     <li>
-                        <Button
-                            id="signIn-header-button"
-                            onClick={handleSignIn}
-                        >
-                            Sign In
+                        <Button id="signIn-header-button" onClick={handleSignIn}>
+                            {t("signIn")}
                         </Button>
                     </li>
                 )}
             </ul>
 
-            {/* --- MOBILE HAMBURGER MENU --- */}
+            {/* --- MOBILE HAMBURGER --- */}
             <button
                 onClick={() => setIsMobileMenuOpen(prev => !prev)}
                 className="relative focus:outline-none md:hidden text-2xl"
@@ -219,42 +241,41 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
             {isMobileMenuOpen && (
                 <div ref={mobileMenuRef} className="absolute top-16 left-0 right-0 z-10 p-4 md:hidden">
                     <ul className={`rounded-lg bg-white p-4 text-slate-800 shadow-lg ${forceLight ? "" : "dark:bg-gray-900 dark:text-slate-200"}`}>
+                        {/* Locale toggle at top of mobile menu */}
+                        <li className="px-4 py-2">
+                            {localeToggleBtn(() => setIsMobileMenuOpen(false))}
+                        </li>
+                        <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+
                         {isLoggedIn ? (
                             <>
                                 <li>
-                                        <Link href="/buy-credits" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Buy Credits ({credits.data ?? 0} left)
+                                    <Link href="/buy-credits" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                        {t("buyCredits")} ({credits.data ?? 0} {t("credits")})
                                     </Link>
                                 </li>
-                                {/* --- START: Mobile Products Section --- */}
-                                <li className="px-4 py-2 font-bold text-gray-500">Products</li>
+                                <li className="px-4 py-2 font-bold text-gray-500">{t("create")}</li>
                                 {productLinks.map(link => (
-                                     <li key={link.href} className="pl-4">
-                                         <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                             {link.name}
-                                         </Link>
-                                     </li>
+                                    <li key={link.href} className="pl-4">
+                                        <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                            {link.name}
+                                        </Link>
+                                    </li>
                                 ))}
-                                <div className="my-2 border-t border-gray-700"></div> 
-                                {/* --- END: Mobile Products Section --- */}
-                                <li>
-                                    <Link href="/personalized-gifts" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Gift Ideas
-                                    </Link>
-                                </li>
+                                <div className="my-2 border-t border-gray-700" />
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Community
+                                        {t("gallery")}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/collection" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        My Designs
+                                        {t("myDesigns")}
                                     </Link>
                                 </li>
                                 <li>
                                     <button onClick={() => { signOut().catch(console.error); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
-                                        Sign Out
+                                        {t("signOut")}
                                     </button>
                                 </li>
                             </>
@@ -262,28 +283,21 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                             <>
                                 <li>
                                     <button onClick={() => { handleSignIn(); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
-                                        Sign In
+                                        {t("signIn")}
                                     </button>
                                 </li>
-                                 {/* --- START: Mobile Products Section --- */}
-                                <li className="px-4 py-2 font-bold text-gray-500">Products</li>
+                                <li className="px-4 py-2 font-bold text-gray-500">{t("create")}</li>
                                 {productLinks.map(link => (
-                                     <li key={link.href} className="pl-4">
-                                         <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                             {link.name}
-                                         </Link>
-                                     </li>
+                                    <li key={link.href} className="pl-4">
+                                        <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                            {link.name}
+                                        </Link>
+                                    </li>
                                 ))}
-                                <div className="my-2 border-t border-gray-700"></div> 
-                                {/* --- END: Mobile Products Section --- */}
-                                <li>
-                                    <Link href="/personalized-gifts" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Gift Ideas
-                                    </Link>
-                                </li>
+                                <div className="my-2 border-t border-gray-700" />
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        Community
+                                        {t("gallery")}
                                     </Link>
                                 </li>
                             </>
