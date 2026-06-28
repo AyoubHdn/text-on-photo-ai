@@ -68,6 +68,8 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     if (minimal) {
         return (
             <header
+                dir="ltr"
+                lang="en"
                 className={
                     forceLight
                         ? "flex h-16 w-full items-center justify-center bg-[#1B2538] px-4"
@@ -95,7 +97,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     }
 
     return (
-        <header className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
+        <header dir="ltr" lang="en" className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
             {/* --- LEFT NAVIGATION --- */}
             <ul className="flex gap-8 items-center">
                 <li className="shrink-0">
