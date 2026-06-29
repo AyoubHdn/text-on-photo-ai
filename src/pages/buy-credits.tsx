@@ -125,7 +125,6 @@ const BuyCredits: React.FC = () => {
   const features = [
     { icon: "🎨", label: t("featureGenerateLabel", locale), detail: t("featureGenerateDetail", locale) },
     { icon: "✂️", label: t("featureRemoveBgLabel", locale), detail: t("featureRemoveBgDetail", locale) },
-    { icon: "🖼️", label: "Preview on products", detail: "Free — no credits needed" }, // PHYSICAL
     { icon: "⬇️", label: t("featureDownloadLabel", locale), detail: t("featureDownloadDetail", locale) },
   ];
 
@@ -248,19 +247,11 @@ const BuyCredits: React.FC = () => {
             </div>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
-              <h2 className="mb-2 text-lg font-semibold">From Idea to Product</h2>{/* PHYSICAL */}
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Use credits to preview your design on real mugs, t-shirts, and posters before ordering.{/* PHYSICAL */}
-              </p>
-            </div>
-
+          <section>
             <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
               <h2 className="mb-2 text-lg font-semibold">{t("typicalUsageHeading", locale)}</h2>
               <div className="grid gap-1 text-sm text-gray-700 dark:text-gray-300">
                 <div>{t("typicalCostDesign", locale)}</div>
-                <div>Cost per preview: Free</div>{/* PHYSICAL */}
                 <div>{t("typicalSession", locale)}</div>
               </div>
             </div>
