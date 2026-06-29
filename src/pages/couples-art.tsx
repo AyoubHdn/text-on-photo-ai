@@ -126,8 +126,8 @@ const CouplesArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Couples Name Art | Romantic Designs for Anniversaries and Gifts"
-        description="Explore romantic couples name art styles and gift ideas. Anniversary, wedding, and relationship-themed designs for mugs, prints, and keepsakes."
+        title="Couples Name Art | Combine Two Names Into One Design"
+        description="Create romantic couples name art with AI — combine two names into one design. Anniversary, wedding, and relationship styles. Free to preview, download-ready."
         path="/couples-art"
         jsonLd={[
           buildCollectionPageSchema({

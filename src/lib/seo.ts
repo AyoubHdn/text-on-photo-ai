@@ -64,7 +64,7 @@ export function buildOrganizationSchema() {
     name: SITE_NAME,
     url: SITE_URL,
     description:
-      "AI-powered platform for personalized name art, Arabic calligraphy, and custom gifts. Create name designs for mugs, wall art, shirts, and more.",
+      "AI-powered platform for creating custom Arabic calligraphy, name art, and couples designs. Type a name, pick a style, download in seconds — no design skills needed.",
     logo: toAbsoluteUrl("/logo.webp"),
     sameAs: [
       "https://www.facebook.com/profile.php?id=61571453621496",

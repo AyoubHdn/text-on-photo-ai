@@ -102,7 +102,7 @@ const ArabicArtLandingPage: NextPage = () => {
           buildCollectionPageSchema({
             name: "Arabic Name Art",
             description:
-              "Explore Arabic name art and calligraphy styles for gifts, wall decor, and personalized keepsakes.",
+              "Explore Arabic name art and calligraphy styles in styles like diwani, thuluth, kufic, and more.",
             path: "/arabic-calligraphy",
           }),
           buildFAQSchema(arabicFaqs),
