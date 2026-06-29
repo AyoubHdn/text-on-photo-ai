@@ -62,10 +62,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   const router = useRouter();
 
-  // Persist lang cookie so Arabic locale survives cross-route navigation
-  // (sign-in redirect, Stripe redirect, /buy-credits, etc.).
-  // Set lang=ar on first /ar/* hit. Only set lang=en when no cookie exists yet
-  // so an Arabic user who navigates to /buy-credits keeps their ar preference.
+  // Write lang cookie on /ar/* routes as a persistent signal for server-side
+  // use (e.g. future middleware, analytics). useLocale() no longer reads this
+  // cookie — locale on non-/ar/ pages is driven by the ?lang= query param.
   useEffect(() => {
     const isArabicRoute =
       router.pathname.startsWith("/ar/") || router.pathname === "/ar";
