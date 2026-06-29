@@ -174,30 +174,6 @@ const SuccessPage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Product quick-links */}
-          <div className="mt-8 w-full">
-            <p className="mb-4 text-center text-sm text-gray-500 dark:text-gray-400">
-              Explore gift product ideas
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Mugs", href: "/personalized-gifts", emoji: "☕" },
-                { label: "Wall art", href: "/personalized-gifts", emoji: "🖼️" },
-                { label: "Shirts", href: "/personalized-gifts", emoji: "👕" },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex flex-col items-center rounded-xl border border-cream-200 bg-white p-4 text-center transition hover:border-brand-300 hover:bg-brand-50"
-                >
-                  <span className="text-2xl">{item.emoji}</span>
-                  <span className="mt-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    {item.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
 
         </div>
       </main>
