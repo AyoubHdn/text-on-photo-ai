@@ -986,7 +986,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               ARABIC_GENERATOR_TIERS.some((tier) => isModelCreditLocked(tier.credits)) && (
                 <p className="mt-3 text-xs text-amber-800">
                   الجودة العربية المميزة تحتاج إلى رصيد إضافي.{" "}
-                  <Link href="/buy-credits" className="font-semibold underline">
+                  <Link href="/buy-credits?lang=ar" className="font-semibold underline">
                     اشترِ رصيدًا
                   </Link>
                 </p>
@@ -1025,7 +1025,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
           {error && (
             <div className="bg-red-500 text-white rounded p-4 text-xl mb-6">
-              {error} {error.includes("credits") && <Link href="/buy-credits" className="underline font-bold ml-2">شراء الرصيد</Link>}
+              {error} {error.includes("credits") && <Link href="/buy-credits?lang=ar" className="underline font-bold ml-2">شراء الرصيد</Link>}
             </div>
           )}
           
@@ -1035,7 +1035,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               <div className="mt-1">
                 يمكنك تنزيله أو مشاركته أو معاينته الآن، ثم إضافة رصيد إذا أردت إنشاء نسخ جديدة أو إزالة الخلفية.
               </div>
-              <Link href="/buy-credits" className="mt-3 inline-flex font-semibold underline">
+              <Link href="/buy-credits?lang=ar" className="mt-3 inline-flex font-semibold underline">
                 احصل على رصيد إضافي
               </Link>
             </div>
