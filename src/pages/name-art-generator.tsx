@@ -1263,6 +1263,8 @@ const NameArtGeneratorPage: NextPage = () => {
           
         
 
+        {/* HIDDEN W1: physical product nudge — re-enable by removing {false &&} wrapper */}
+        {false && (
         <section ref={productsSectionRef} className="mt-10 scroll-mt-20">
           {/* Nudge banner */}
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-4 py-4">
@@ -1352,6 +1354,7 @@ const NameArtGeneratorPage: NextPage = () => {
             </div>
           </div>
         </section>
+        )}
         </>
         )}
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -1414,6 +1417,8 @@ const NameArtGeneratorPage: NextPage = () => {
           }}
         />
 
+        {/* HIDDEN W1: ProductPreviewModal — re-enable with the section above */}
+        {false && (
         <ProductPreviewModal
           isOpen={!!previewProduct}
           onClose={() => setPreviewProduct(null)}
@@ -1424,6 +1429,7 @@ const NameArtGeneratorPage: NextPage = () => {
           transparentImageUrl={previewImageInfo.transparentImageUrl}
           useTransparent={previewImageInfo.useTransparent}
         />
+        )}
 
       </main>
     </>
