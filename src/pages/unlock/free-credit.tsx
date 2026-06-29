@@ -8,6 +8,8 @@ import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
+import { useLocale } from "~/hook/useLocale";
+import { t } from "~/lib/funnelStrings";
 
 export default function FreeCreditUnlock() {
   const [unlocking, setUnlocking] = useState(false);
@@ -15,6 +17,7 @@ export default function FreeCreditUnlock() {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [dailyLimitMessage, setDailyLimitMessage] = useState<string | null>(null);
   const defaultTotalCreditsAfterReward = CPX_DAILY_REWARD_CREDITS + 1;
+  const { locale, isArabic } = useLocale();
 
   const unlock = async () => {
     setUnlocking(true);
@@ -43,8 +46,7 @@ export default function FreeCreditUnlock() {
 
       if (!res.ok && data?.code === "DAILY_LIMIT") {
         setDailyLimitMessage(
-          data?.error ??
-            "You already claimed free credits today. Try again tomorrow or buy credits.",
+          data?.error ?? t("dailyLimitDefault", locale),
         );
         return;
       }
@@ -67,14 +69,20 @@ export default function FreeCreditUnlock() {
     }
   };
 
+  const n = CPX_DAILY_REWARD_CREDITS;
+  const total = defaultTotalCreditsAfterReward;
+
   return (
     <>
       <Head>
-        <title>Get {CPX_DAILY_REWARD_CREDITS} Extra Credits - Name Design AI</title>
+        <title>Get {n} Extra Credits - Name Design AI</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-[#f8f3ea] via-[#f1f7f2] to-[#eef6ff] dark:from-[#0b111a] dark:via-[#0b1524] dark:to-[#0a1a2b]">
+      <div
+        dir={isArabic ? "rtl" : "ltr"}
+        className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-[#f8f3ea] via-[#f1f7f2] to-[#eef6ff] dark:from-[#0b111a] dark:via-[#0b1524] dark:to-[#0a1a2b]"
+      >
         <div className="relative w-full max-w-3xl">
           <div className="pointer-events-none absolute -top-10 -left-12 h-40 w-40 rounded-full bg-[#ffe6c7] blur-2xl opacity-70 dark:bg-[#2a1f18]" />
           <div className="pointer-events-none absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-[#cfe9ff] blur-2xl opacity-70 dark:bg-[#0b2a3f]" />
@@ -83,13 +91,13 @@ export default function FreeCreditUnlock() {
             <div className="flex flex-col gap-6 text-left">
               <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.2em] text-gray-600 dark:text-slate-300">
                 <span className="rounded-full border border-black/10 bg-white px-3 py-1 dark:border-white/15 dark:bg-slate-900/60">
-                  No payment required
+                  {t("badgeNoPayment", locale)}
                 </span>
                 <span className="rounded-full border border-black/10 bg-white px-3 py-1 dark:border-white/15 dark:bg-slate-900/60">
-                  Optional
+                  {t("badgeOptional", locale)}
                 </span>
                 <span className="rounded-full border border-black/10 bg-white px-3 py-1 dark:border-white/15 dark:bg-slate-900/60">
-                  Instant credit after completion
+                  {t("badgeInstant", locale)}
                 </span>
               </div>
 
@@ -98,44 +106,41 @@ export default function FreeCreditUnlock() {
                 className="text-4xl font-semibold text-gray-900 md:text-5xl dark:text-white"
                 style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}
               >
-                Get {CPX_DAILY_REWARD_CREDITS} extra credits
+                {t("unlockHeading", locale, { n })}
               </h1>
 
               <p className="text-base text-gray-700 md:text-lg dark:text-slate-200">
-                Complete an optional survey and receive {CPX_DAILY_REWARD_CREDITS} extra
-                credits immediately after a successful completion. If you are on the
-                default 1-credit balance, that brings you to {defaultTotalCreditsAfterReward}{" "}
-                total credits.
+                {t("pageDesc", locale, { n, total })}
               </p>
 
               {/* What it unlocks */}
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-slate-400">
-                  What {CPX_DAILY_REWARD_CREDITS} extra credits unlock
+                  {t("unlocksSectionLabel", locale, { n })}
                 </p>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                   <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-slate-900/60">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {CPX_DAILY_REWARD_CREDITS} standard Name Art designs
+                      {t("unlocksCard1Title", locale, { n })}
                     </p>
                     <p className="mt-2 text-xs text-gray-600 dark:text-slate-300">
-                      Try multiple styles or names without paying.
+                      {t("unlocksCard1Desc", locale)}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-slate-900/60">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      Or {CPX_DAILY_REWARD_CREDITS} background removals
+                      {t("unlocksCard2Title", locale, { n })}
                     </p>
                     <p className="mt-2 text-xs text-gray-600 dark:text-slate-300">
-                      Clean exports for print, editing, or sharing.
+                      {t("unlocksCard2Desc", locale)}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-slate-900/60">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {defaultTotalCreditsAfterReward} total credits on a new account
+                      {t("unlocksCard3Title", locale, { total })}
                     </p>
                     <p className="mt-2 text-xs text-gray-600 dark:text-slate-300">
-                      Enough for 1 Flux Dev generation if you start from the default balance.
+                      {t("unlocksCard3Desc", locale)}
                     </p>
                   </div>
                 </div>
@@ -143,13 +148,13 @@ export default function FreeCreditUnlock() {
 
               <div className="grid gap-3 rounded-2xl border border-black/10 bg-[#f7f7f2] p-4 text-sm text-gray-700 md:grid-cols-3 dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-200">
                 <div>
-                  <span className="font-semibold text-gray-900 dark:text-white">1.</span> Start the survey
+                  <span className="font-semibold text-gray-900 dark:text-white">1.</span> {t("step1", locale)}
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-900 dark:text-white">2.</span> Complete it successfully
+                  <span className="font-semibold text-gray-900 dark:text-white">2.</span> {t("step2", locale)}
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-900 dark:text-white">3.</span> Credits are added instantly
+                  <span className="font-semibold text-gray-900 dark:text-white">3.</span> {t("step3", locale)}
                 </div>
               </div>
 
@@ -159,25 +164,28 @@ export default function FreeCreditUnlock() {
                 disabled={unlocking}
                 className="w-full rounded-2xl bg-brand-600 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-brand-700 disabled:opacity-60"
               >
-                {unlocking ? "Opening survey..." : `Get ${CPX_DAILY_REWARD_CREDITS} Extra Credits`}
+                {unlocking ? t("ctaOpening", locale) : t("ctaDefault", locale, { n })}
               </button>
 
               {/* Login required */}
               {error === "login_required" && (
                 <p className="text-sm text-gray-700 dark:text-slate-200">
-                  Please{" "}
+                  {t("loginPromptPre", locale)}{" "}
                   <Link href="/api/auth/signin" className="text-brand-700 underline">
-                    sign in
+                    {t("loginPromptLink", locale)}
                   </Link>{" "}
-                  to earn {CPX_DAILY_REWARD_CREDITS} extra credits.
+                  {t("loginPromptPost", locale, { n })}
                 </p>
               )}
 
-              {/* Cooldown */}
+              {/* Cooldown — English keeps singular/plural branch; Arabic uses one neutral form */}
               {error === "cooldown" && retryAfter !== null && (
                 <p className="text-sm text-gray-700 dark:text-slate-200">
-                  You already started a survey.
-                  Try again in {retryAfter} minute{retryAfter > 1 ? "s" : ""}.
+                  {t(
+                    locale === "ar" || retryAfter <= 1 ? "cooldownMsg" : "cooldownMsgPlural",
+                    locale,
+                    { minutes: retryAfter },
+                  )}
                 </p>
               )}
 
@@ -197,8 +205,7 @@ export default function FreeCreditUnlock() {
 
               {/* Footer note */}
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                Surveys are optional and provided by a trusted research partner.
-                VPNs and proxies must be disabled to ensure survey availability.
+                {t("footerNote", locale)}
               </p>
             </div>
           </div>
