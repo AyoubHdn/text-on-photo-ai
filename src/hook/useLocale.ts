@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 export type Locale = "ar" | "en";
@@ -9,39 +8,25 @@ export type UseLocaleResult = {
   dir: "rtl" | "ltr";
 };
 
-function readLangCookie(): Locale | null {
-  if (typeof document === "undefined") return null;
-  const cookies = document.cookie ? document.cookie.split("; ") : [];
-  for (const part of cookies) {
-    const [k, ...rest] = part.split("=");
-    if (k === "lang") {
-      const v = decodeURIComponent(rest.join("="));
-      if (v === "ar" || v === "en") return v;
-    }
-  }
-  return null;
-}
-
 export function useLocale(): UseLocaleResult {
   const router = useRouter();
 
-  // (a) route prefix is authoritative — safe on both server and client
+  // (1) /ar/* path is authoritative — available on both server and client
   const pathIsArabic = router.pathname.startsWith("/ar/") || router.pathname === "/ar";
 
-  // (b) cookie — read only after mount to avoid SSR/client hydration mismatch.
-  //     Start null (= same as server) and update once the browser is ready.
-  const [cookieLocale, setCookieLocale] = useState<Locale | null>(null);
-  useEffect(() => {
-    setCookieLocale(readLangCookie());
-  }, []);
+  // (2) ?lang=ar param — read only after router hydrates (router.isReady).
+  //     Before hydration, both SSR and first client render see null → "en",
+  //     so there is no SSR/client tree mismatch.
+  const queryLang: Locale | null = router.isReady
+    ? router.query.lang === "ar"
+      ? "ar"
+      : router.query.lang === "en"
+      ? "en"
+      : null
+    : null;
 
-  let locale: Locale;
-  if (pathIsArabic) {
-    locale = "ar";
-  } else {
-    // (c) default English until cookie is known
-    locale = cookieLocale ?? "en";
-  }
+  // (3) Default English — cookie is never consulted here.
+  const locale: Locale = pathIsArabic ? "ar" : (queryLang ?? "en");
 
   return {
     locale,
