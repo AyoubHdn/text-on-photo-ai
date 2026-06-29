@@ -6,6 +6,8 @@ import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { useBuyCredits } from "~/hook/useBuyCredits";
+import { useLocale } from "~/hook/useLocale";
+import { t } from "~/lib/funnelStrings";
 
 const BuyCredits: React.FC = () => {
   const router = useRouter();
@@ -13,6 +15,7 @@ const BuyCredits: React.FC = () => {
   const isLoggedIn = !!session;
   const { buyCredits } = useBuyCredits();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { locale, isArabic } = useLocale();
 
   type Offer = {
     name: string;
@@ -26,25 +29,25 @@ const BuyCredits: React.FC = () => {
 
   const offers: Offer[] = [
     {
-      name: "Starter Plan",
+      name: t("planStarterName", locale),
       images: 20,
       price: 1.99,
-      description: "Perfect for getting started quickly.",
+      description: t("planStarterDesc", locale),
       plan: "starter",
     },
     {
-      name: "Pro Plan",
+      name: t("planProName", locale),
       images: 50,
       price: 3.99,
-      description: "Best for regular creators and testing variations.",
+      description: t("planProDesc", locale),
       plan: "pro",
       popular: true,
     },
     {
-      name: "Elite Plan",
+      name: t("planEliteName", locale),
       images: 100,
       price: 6.99,
-      description: "Ideal for power users and heavier sessions.",
+      description: t("planEliteDesc", locale),
       plan: "elite",
     },
   ].map((offer) => ({
@@ -103,11 +106,18 @@ const BuyCredits: React.FC = () => {
       });
     } catch (error) {
       console.error("Error during purchase:", error);
-      alert("Something went wrong. Please try again.");
+      alert(t("purchaseError", locale));
     } finally {
       setLoadingPlan(null);
     }
   };
+
+  const features = [
+    { icon: "🎨", label: t("featureGenerateLabel", locale), detail: t("featureGenerateDetail", locale) },
+    { icon: "✂️", label: t("featureRemoveBgLabel", locale), detail: t("featureRemoveBgDetail", locale) },
+    { icon: "🖼️", label: "Preview on products", detail: "Free — no credits needed" }, // PHYSICAL
+    { icon: "⬇️", label: t("featureDownloadLabel", locale), detail: t("featureDownloadDetail", locale) },
+  ];
 
   return (
     <>
@@ -118,19 +128,22 @@ const BuyCredits: React.FC = () => {
         noindex
       />
 
-      <main className="container mx-auto mt-20 min-h-screen px-4 pb-16 sm:px-8">
+      <main
+        dir={isArabic ? "rtl" : "ltr"}
+        className="container mx-auto mt-20 min-h-screen px-4 pb-16 sm:px-8"
+      >
         <div className="mx-auto w-full max-w-6xl">
           <section className="mb-6 rounded-2xl border border-brand-200 bg-gradient-to-b from-brand-50 to-white p-6 text-center">
             <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-              Unlock More Designs Instantly
+              {t("buyCreditsHeading", locale)}
             </h1>
             <p className="mx-auto max-w-2xl text-sm text-gray-700 dark:text-gray-200 sm:text-base">
-              Choose a credit pack and continue generating, previewing, and refining your design without interruptions.
+              {t("pageSubtitle", locale)}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs font-medium text-gray-600 dark:text-gray-400">
-              <span>⚡ Instant activation</span>
-              <span>🔒 Secure payment via Stripe</span>
-              <span>💳 All major cards accepted</span>
+              <span>{t("trustInstant", locale)}</span>
+              <span>{t("trustSecure", locale)}</span>
+              <span>{t("trustCards", locale)}</span>
             </div>
           </section>
 
@@ -138,9 +151,9 @@ const BuyCredits: React.FC = () => {
             {offers.map((offer, index) => {
               const badgeLabel =
                 offer.plan === "elite"
-                  ? "Best Value"
+                  ? t("badgeBestValue", locale)
                   : offer.plan === "pro"
-                  ? "Most Popular"
+                  ? t("badgeMostPopular", locale)
                   : null;
 
               return (
@@ -166,10 +179,10 @@ const BuyCredits: React.FC = () => {
                   </div>
 
                   <p className="mb-1 text-gray-700 dark:text-gray-200">
-                    {offer.images} AI designs included
+                    {t("designsIncluded", locale, { n: offer.images })}
                   </p>
                   <p className="mb-5 text-sm font-semibold text-brand-700">
-                    ${offer.pricePerImage} per design
+                    {t("pricePerDesign", locale, { price: offer.pricePerImage! })}
                   </p>
 
                   <button
@@ -182,7 +195,9 @@ const BuyCredits: React.FC = () => {
                     }`}
                     disabled={loadingPlan === offer.plan}
                   >
-                    {loadingPlan === offer.plan ? "Processing..." : `Get ${offer.images} Credits`}
+                    {loadingPlan === offer.plan
+                      ? t("planCtaLoading", locale)
+                      : t("planCta", locale, { n: offer.images })}
                   </button>
                 </div>
               );
@@ -190,22 +205,23 @@ const BuyCredits: React.FC = () => {
           </section>
 
           <p className="mb-6 text-center text-xs text-gray-600 dark:text-gray-300">
-            Please review our{" "}
-            <Link href="/refund" className="underline dark:text-gray-100">
-              Refund Policy
-            </Link>{" "}
-            before buying credits.
+            {isArabic ? (
+              t("refundNote", locale)
+            ) : (
+              <>
+                Please review our{" "}
+                <Link href="/refund" className="underline dark:text-gray-100">
+                  Refund Policy
+                </Link>{" "}
+                before buying credits.
+              </>
+            )}
           </p>
 
           <section className="mb-5 rounded-xl border border-brand-200 bg-brand-50/60 p-5">
-            <h2 className="mb-4 text-lg font-semibold">What you can do with credits</h2>
+            <h2 className="mb-4 text-lg font-semibold">{t("whatYouCanDoHeading", locale)}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                { icon: "🎨", label: "Generate AI name art", detail: "1 credit per Standard design" },
-                { icon: "✂️", label: "Remove background", detail: "1 credit — makes designs print-ready" },
-                { icon: "🖼️", label: "Preview on products", detail: "Free — no credits needed" },
-                { icon: "⬇️", label: "High-res download", detail: "Free — always included" },
-              ].map((item) => (
+              {features.map((item) => (
                 <div key={item.label} className="flex items-start gap-3">
                   <span className="text-xl">{item.icon}</span>
                   <div>
@@ -219,18 +235,18 @@ const BuyCredits: React.FC = () => {
 
           <section className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
-              <h2 className="mb-2 text-lg font-semibold">From Idea to Product</h2>
+              <h2 className="mb-2 text-lg font-semibold">From Idea to Product</h2>{/* PHYSICAL */}
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Use credits to preview your design on real mugs, t-shirts, and posters before ordering.
+                Use credits to preview your design on real mugs, t-shirts, and posters before ordering.{/* PHYSICAL */}
               </p>
             </div>
 
             <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
-              <h2 className="mb-2 text-lg font-semibold">Typical Session Usage</h2>
+              <h2 className="mb-2 text-lg font-semibold">{t("typicalUsageHeading", locale)}</h2>
               <div className="grid gap-1 text-sm text-gray-700 dark:text-gray-300">
-                <div>Cost per design: about 1 credit</div>
-                <div>Cost per preview: Free</div>
-                <div>Most customers use 10-20 credits per session</div>
+                <div>{t("typicalCostDesign", locale)}</div>
+                <div>Cost per preview: Free</div>{/* PHYSICAL */}
+                <div>{t("typicalSession", locale)}</div>
               </div>
             </div>
           </section>
