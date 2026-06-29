@@ -8,8 +8,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { AiOutlineDown } from "react-icons/ai";
 import { useLocale } from "~/hook/useLocale";
-import { useHeaderStrings } from "~/lib/headerStrings";
-import { getTwin } from "~/lib/localeTwins";
 
 type HeaderProps = {
     minimal?: boolean;
@@ -21,8 +19,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     const credits = api.user.getCredits.useQuery();
     const isLoggedIn = !!session.data;
     const router = useRouter();
-    const { locale, isArabic, dir } = useLocale();
-    const { t } = useHeaderStrings(locale);
+    const { isArabic } = useLocale();
 
     const handleSignIn = () => {
         const callbackUrl =
@@ -32,20 +29,6 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                 ? "/ar/arabic-calligraphy-generator"
                 : undefined;
         signIn(undefined, callbackUrl ? { callbackUrl } : undefined).catch(console.error);
-    };
-
-    const handleLocaleToggle = () => {
-        const targetLocale = isArabic ? "en" : "ar";
-        // Write lang cookie
-        document.cookie = `lang=${targetLocale}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
-        // Navigate to twin if one exists, otherwise re-render in place
-        const twin = getTwin(router.pathname, targetLocale);
-        if (twin) {
-            void router.push(twin);
-        } else {
-            // Force a re-render so useLocale() picks up the new cookie value
-            void router.replace(router.asPath);
-        }
     };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -80,26 +63,11 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
         return () => document.removeEventListener("mousedown", handleOutsideClick);
     }, []);
 
-    // Locale toggle button — shown in both desktop and mobile
-    const localeToggleBtn = (closeMenu?: () => void) => (
-        <button
-            onClick={() => { handleLocaleToggle(); closeMenu?.(); }}
-            className={`text-sm font-medium px-2 py-1 rounded border transition
-                ${forceLight
-                    ? "border-slate-300 text-slate-700 hover:bg-slate-100"
-                    : "border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                }`}
-            aria-label={isArabic ? t("toggleToEn") : t("toggleToAr")}
-        >
-            {isArabic ? t("toggleToEn") : t("toggleToAr")}
-        </button>
-    );
-
     if (minimal) {
         return (
             <header
-                dir={dir}
-                lang={locale}
+                dir="ltr"
+                lang="en"
                 className={
                     forceLight
                         ? "flex h-16 w-full items-center justify-center bg-[#1B2538] px-4"
@@ -127,7 +95,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
     }
 
     return (
-        <header dir={dir} lang={locale} className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
+        <header dir="ltr" lang="en" className={`container mx-auto flex h-16 items-center justify-between px-4 ${forceLight ? "" : "dark:bg-gray-800"}`}>
             {/* --- LOGO + LEFT NAV --- */}
             <ul className="flex gap-6 items-center">
                 <li className="shrink-0">
@@ -154,10 +122,10 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                         onClick={() => setIsProductsDropdownOpen(prev => !prev)}
                         className={`flex items-center gap-1 font-medium hover:text-brand-600 ${forceLight ? "text-slate-800" : "text-slate-800 dark:text-slate-200"}`}
                     >
-                        {t("create")} <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
+                        Create <AiOutlineDown size={14} className={`transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isProductsDropdownOpen && (
-                        <div className={`absolute top-full ${isArabic ? "right-0" : "left-0"} mt-2 w-56 z-20 rounded-md border bg-white shadow-lg ${forceLight ? "border-gray-200" : "dark:border-gray-600 dark:bg-gray-700"}`}>
+                        <div className={`absolute top-full left-0 mt-2 w-56 z-20 rounded-md border bg-white shadow-lg ${forceLight ? "border-gray-200" : "dark:border-gray-600 dark:bg-gray-700"}`}>
                             <ul className="py-1">
                                 {productLinks.map(link => (
                                     <li key={link.href}>
@@ -176,39 +144,36 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                 </li>
                 <li>
                     <PrimaryLink id="community-header-button" href="/community" className="hidden md:block">
-                        {t("gallery")}
+                        Gallery
                     </PrimaryLink>
                 </li>
                 {isLoggedIn && (
                     <li>
                         <PrimaryLink id="collection-header-button" href="/collection" className="hidden md:block">
-                            {t("myDesigns")}
+                            My Designs
                         </PrimaryLink>
                     </li>
                 )}
                 <li>
                     <PrimaryLink id="pricing-header-button" href="/buy-credits" className="hidden md:block">
-                        {t("pricing")}
+                        Pricing
                     </PrimaryLink>
                 </li>
             </ul>
 
             {/* --- RIGHT NAV (DESKTOP) --- */}
             <ul className="hidden gap-3 items-center md:flex">
-                {/* Locale toggle */}
-                <li>{localeToggleBtn()}</li>
-
                 {isLoggedIn && (
                     <>
                         <li className="flex items-center gap-2">
                             <div className="w-8 h-8 flex items-center justify-center bg-brand-500 text-white text-sm font-bold rounded-full">
                                 {credits.data ?? 0}
                             </div>
-                            <span className="text-sm font-medium text-gray-500">{t("credits")}</span>
+                            <span className="text-sm font-medium text-gray-500">Credits</span>
                         </li>
                         <li>
                             <PrimaryLink href="/buy-credits">
-                                <Button id="buy-credits-header-button">{t("buyCredits")}</Button>
+                                <Button id="buy-credits-header-button">Buy Credits</Button>
                             </PrimaryLink>
                         </li>
                         <li>
@@ -217,7 +182,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 variant="secondary"
                                 onClick={() => { signOut().catch(console.error); }}
                             >
-                                {t("signOut")}
+                                Sign Out
                             </Button>
                         </li>
                     </>
@@ -225,7 +190,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                 {!isLoggedIn && (
                     <li>
                         <Button id="signIn-header-button" onClick={handleSignIn}>
-                            {t("signIn")}
+                            Sign In
                         </Button>
                     </li>
                 )}
@@ -241,20 +206,14 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
             {isMobileMenuOpen && (
                 <div ref={mobileMenuRef} className="absolute top-16 left-0 right-0 z-10 p-4 md:hidden">
                     <ul className={`rounded-lg bg-white p-4 text-slate-800 shadow-lg ${forceLight ? "" : "dark:bg-gray-900 dark:text-slate-200"}`}>
-                        {/* Locale toggle at top of mobile menu */}
-                        <li className="px-4 py-2">
-                            {localeToggleBtn(() => setIsMobileMenuOpen(false))}
-                        </li>
-                        <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
-
                         {isLoggedIn ? (
                             <>
                                 <li>
                                     <Link href="/buy-credits" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        {t("buyCredits")} ({credits.data ?? 0} {t("credits")})
+                                        Buy Credits ({credits.data ?? 0} Credits)
                                     </Link>
                                 </li>
-                                <li className="px-4 py-2 font-bold text-gray-500">{t("create")}</li>
+                                <li className="px-4 py-2 font-bold text-gray-500">Create</li>
                                 {productLinks.map(link => (
                                     <li key={link.href} className="pl-4">
                                         <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
@@ -265,17 +224,17 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700" />
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        {t("gallery")}
+                                        Gallery
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/collection" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        {t("myDesigns")}
+                                        My Designs
                                     </Link>
                                 </li>
                                 <li>
                                     <button onClick={() => { signOut().catch(console.error); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
-                                        {t("signOut")}
+                                        Sign Out
                                     </button>
                                 </li>
                             </>
@@ -283,10 +242,10 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                             <>
                                 <li>
                                     <button onClick={() => { handleSignIn(); setIsMobileMenuOpen(false); }} className={`block w-full px-4 py-2 text-left ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`}>
-                                        {t("signIn")}
+                                        Sign In
                                     </button>
                                 </li>
-                                <li className="px-4 py-2 font-bold text-gray-500">{t("create")}</li>
+                                <li className="px-4 py-2 font-bold text-gray-500">Create</li>
                                 {productLinks.map(link => (
                                     <li key={link.href} className="pl-4">
                                         <Link href={link.href} className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
@@ -297,7 +256,7 @@ export function Header({ minimal = false, forceLight = false }: HeaderProps) {
                                 <div className="my-2 border-t border-gray-700" />
                                 <li>
                                     <Link href="/community" className={`block px-4 py-2 ${forceLight ? "text-slate-800 hover:bg-gray-100" : "dark:text-white hover:bg-gray-700"}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                        {t("gallery")}
+                                        Gallery
                                     </Link>
                                 </li>
                             </>
