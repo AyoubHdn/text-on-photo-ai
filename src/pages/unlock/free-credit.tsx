@@ -7,6 +7,7 @@
 import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import { useLocale } from "~/hook/useLocale";
 import { t } from "~/lib/funnelStrings";
@@ -17,7 +18,18 @@ export default function FreeCreditUnlock() {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [dailyLimitMessage, setDailyLimitMessage] = useState<string | null>(null);
   const defaultTotalCreditsAfterReward = CPX_DAILY_REWARD_CREDITS + 1;
+  const router = useRouter();
   const { locale, isArabic } = useLocale();
+
+  const switchLocale = (newLang: "en" | "ar") => {
+    const query = { ...router.query };
+    if (newLang === "ar") {
+      query.lang = "ar";
+    } else {
+      delete query.lang;
+    }
+    void router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+  };
 
   const unlock = async () => {
     setUnlocking(true);
@@ -88,6 +100,11 @@ export default function FreeCreditUnlock() {
           <div className="pointer-events-none absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-[#cfe9ff] blur-2xl opacity-70 dark:bg-[#0b2a3f]" />
 
           <div className="relative rounded-3xl border border-black/10 bg-white/90 p-8 shadow-[0_25px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur md:p-10 dark:border-white/10 dark:bg-[#0f172a]/90 dark:shadow-[0_25px_60px_-30px_rgba(0,0,0,0.7)]">
+            <div className="mb-2 flex justify-end gap-1 text-xs text-gray-400">
+              <button onClick={() => switchLocale("en")} className={locale === "en" ? "font-semibold text-gray-700 dark:text-gray-200" : "opacity-60 hover:opacity-100"}>English</button>
+              <span className="opacity-40">|</span>
+              <button onClick={() => switchLocale("ar")} className={locale === "ar" ? "font-semibold text-gray-700 dark:text-gray-200" : "opacity-60 hover:opacity-100"}>العربية</button>
+            </div>
             <div className="flex flex-col gap-6 text-left">
               <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.2em] text-gray-600 dark:text-slate-300">
                 <span className="rounded-full border border-black/10 bg-white px-3 py-1 dark:border-white/15 dark:bg-slate-900/60">

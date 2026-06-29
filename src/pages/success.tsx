@@ -49,6 +49,16 @@ const SuccessPage: React.FC = () => {
   const router = useRouter();
   const { locale, isArabic } = useLocale();
 
+  const switchLocale = (newLang: "en" | "ar") => {
+    const query = { ...router.query };
+    if (newLang === "ar") {
+      query.lang = "ar";
+    } else {
+      delete query.lang;
+    }
+    void router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+  };
+
   // Read purchase data synchronously before any useEffect can clear it
   const [purchaseData] = useState<PurchaseData | null>(() => {
     return readPendingCreditPurchase() as PurchaseData | null;
@@ -139,6 +149,11 @@ const SuccessPage: React.FC = () => {
       />
       <main dir={isArabic ? "rtl" : "ltr"} className="min-h-screen bg-white dark:bg-gray-950">
         <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-16">
+          <div className="mb-4 flex w-full justify-end gap-1 text-xs text-gray-400">
+            <button onClick={() => switchLocale("en")} className={locale === "en" ? "font-semibold text-gray-600 dark:text-gray-300" : "opacity-60 hover:opacity-100"}>English</button>
+            <span className="opacity-40">|</span>
+            <button onClick={() => switchLocale("ar")} className={locale === "ar" ? "font-semibold text-gray-600 dark:text-gray-300" : "opacity-60 hover:opacity-100"}>العربية</button>
+          </div>
 
           {/* Confirmation card */}
           <div className="w-full rounded-2xl border border-green-200 bg-green-50 p-8 text-center dark:border-green-900 dark:bg-green-950/30">

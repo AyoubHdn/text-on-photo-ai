@@ -17,6 +17,16 @@ const BuyCredits: React.FC = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { locale, isArabic } = useLocale();
 
+  const switchLocale = (newLang: "en" | "ar") => {
+    const query = { ...router.query };
+    if (newLang === "ar") {
+      query.lang = "ar";
+    } else {
+      delete query.lang;
+    }
+    void router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+  };
+
   type Offer = {
     name: string;
     images: number;
@@ -133,6 +143,11 @@ const BuyCredits: React.FC = () => {
         className="container mx-auto mt-20 min-h-screen px-4 pb-16 sm:px-8"
       >
         <div className="mx-auto w-full max-w-6xl">
+          <div className="mb-3 flex justify-end gap-1 text-xs text-gray-500">
+            <button onClick={() => switchLocale("en")} className={locale === "en" ? "font-semibold text-gray-800" : "opacity-60 hover:opacity-100"}>English</button>
+            <span className="opacity-40">|</span>
+            <button onClick={() => switchLocale("ar")} className={locale === "ar" ? "font-semibold text-gray-800" : "opacity-60 hover:opacity-100"}>العربية</button>
+          </div>
           <section className="mb-6 rounded-2xl border border-brand-200 bg-gradient-to-b from-brand-50 to-white p-6 text-center">
             <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
               {t("buyCreditsHeading", locale)}
