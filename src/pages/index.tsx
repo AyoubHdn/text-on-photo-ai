@@ -257,11 +257,11 @@ const HomePage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Name Design AI | Personalized Name Art, Gifts, and Arabic Calligraphy"
-        description="Create personalized name art, name design, Arabic calligraphy, and couple designs with AI. Turn names into meaningful art and product-ready gifts."
+        title="Name Design AI | Arabic Calligraphy, Name Art & Couples Designs"
+        description="Create custom Arabic calligraphy, name art, and couples designs with AI. Free to preview — download-ready in seconds, no design skills needed."
         path="/"
-        keywords="personalized name art, custom name art, arabic name art, couple name art, custom name gifts"
-        imageAlt="Name Design AI homepage showing personalized name art examples and gift mockups"
+        keywords="arabic calligraphy generator, name art generator, custom name art, arabic name art, couples name art"
+        imageAlt="Name Design AI — Arabic calligraphy, name art, and couples designs created with AI"
         jsonLd={[
           buildOrganizationSchema(),
           buildWebsiteSchema(),
@@ -343,15 +343,14 @@ function HeroBanner() {
       <div className="container mx-auto grid gap-14 px-6 py-16 lg:grid-cols-[1.05fr,0.95fr] lg:px-8 lg:py-20">
         <div className="flex flex-col justify-center">
           <span className="inline-flex w-fit rounded-full bg-brand-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
-            AI name art, name design, and personalized gifts
+            Arabic calligraphy · Name art · Couples designs
           </span>
           <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
-            Turn identity into visual art, gift mockups, and keepsake-ready products
+            Turn any name into custom AI art
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300 md:text-xl">
-            Create personalized name art, Arabic calligraphy, and couple designs
-            in minutes, then move that artwork into mugs, shirts, wall art, and
-            occasion-focused gifts.
+            Create Arabic calligraphy, name art, and couples designs in seconds.
+            Free to preview — download-ready, no design skills needed.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link

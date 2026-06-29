@@ -7,7 +7,7 @@ const NotFoundPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Page Not Found | NameDesignAI</title>
+        <title>Page Not Found | Name Design AI</title>
         <meta
           name="description"
           content="The page you are looking for could not be found."
@@ -25,13 +25,13 @@ const NotFoundPage: NextPage = () => {
                 <div className="mb-5 flex items-center gap-3">
                   <Image
                     src="/logo.webp"
-                    alt="NameDesignAI"
+                    alt="Name Design AI"
                     width={44}
                     height={44}
                     className="rounded-full"
                   />
                   <span className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-600">
-                    NameDesignAI
+                    Name Design AI
                   </span>
                 </div>
 
@@ -72,9 +72,9 @@ const NotFoundPage: NextPage = () => {
                   </div>
                   <div className="rounded-2xl border border-cream-200 bg-cream-50 px-4 py-4">
                     <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      Gift Idea
+                      Trending
                     </div>
-                    <div className="mt-2 text-sm font-medium">Personalized Mug Designs</div>
+                    <div className="mt-2 text-sm font-medium">Couples Name Art</div>
                   </div>
                   <div className="rounded-2xl border border-cream-200 bg-cream-50 px-4 py-4">
                     <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">

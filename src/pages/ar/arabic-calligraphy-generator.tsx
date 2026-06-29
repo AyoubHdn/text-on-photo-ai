@@ -804,7 +804,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="مولد الخط العربي بالذكاء الاصطناعي | أداة كتابة الاسم بالعربية | NameDesignAI"
+        title="مولد الخط العربي بالذكاء الاصطناعي | أداة كتابة الاسم بالعربية | Name Design AI"
         description="أداة عربية لكتابة الاسم بالعربية وتجربة أنماط الخط والزخرفة بالذكاء الاصطناعي. اختر النمط والمقاس وأنشئ التصميم خلال ثوانٍ."
         path="/ar/arabic-calligraphy-generator"
         noindex

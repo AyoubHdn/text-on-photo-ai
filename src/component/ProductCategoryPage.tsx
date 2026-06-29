@@ -368,7 +368,7 @@ export function ProductCategoryPage({
         <section className="container mx-auto max-w-5xl px-4 py-16">
           <div className="max-w-3xl">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-              How these personalized products fit the NameDesignAI workflow
+              How these personalized products fit the Name Design AI workflow
             </h2>
               <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
               Every product still starts with a custom design. These use-case

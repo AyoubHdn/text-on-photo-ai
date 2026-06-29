@@ -89,10 +89,10 @@ const ArabicArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Arabic Name Art for Gifts | Custom Calligraphy Designs | NameDesignAI"
-        description="Create custom Arabic name art and calligraphy designs. Personalized styles for wall art, mugs, framed prints, and meaningful Islamic gifts."
+        title="Arabic Calligraphy Name Art | AI-Generated Custom Designs | Name Design AI"
+        description="Create custom Arabic calligraphy and name art with AI. Explore styles, preview instantly, download in seconds — no design skills needed."
         path="/arabic-calligraphy"
-        keywords="arabic name art, arabic name gift, personalized arabic name, custom arabic calligraphy, arabic calligraphy gift, arabic name wall art"
+        keywords="arabic calligraphy generator, arabic name art, custom arabic calligraphy, arabic calligraphy online, arabic name design"
         alternates={[
           { hrefLang: "en", href: "/arabic-calligraphy" },
           { hrefLang: "ar", href: "/ar/arabic-calligraphy" },
@@ -122,10 +122,10 @@ const ArabicArtLandingPage: NextPage = () => {
               />
             </div>
             <span className="mb-6 inline-block rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-brand-800">
-              Arabic Name Gifts
+              Arabic Calligraphy
             </span>
             <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-6xl lg:text-7xl">
-              Turn an Arabic name into a personalized gift
+              Turn an Arabic name into custom calligraphy art
             </h1>
             <h2 className="mx-auto mb-10 max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300 md:text-2xl">
               Create custom Arabic name art and Arabic calligraphy in minutes

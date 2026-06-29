@@ -12,7 +12,7 @@ interface ShareModalProps {
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, imageUrl }) => {
   if (!isOpen || !imageUrl) return null;
 
-  const shareText = "Check out the cool name art I made on NameDesignAI! Create your own here:";
+  const shareText = "Check out the name art I made on Name Design AI! Create your own here:";
   const websiteUrl = "https://www.namedesignai.com"; // Your actual website URL
 
   // Encode components for safe URL creation
