@@ -38,14 +38,6 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
     { href: "/couples-art/styles", name: "Couple Art Styles" },
   ];
 
-  const giftLinks = [
-    { href: "/products", name: "All Products" },
-    { href: "/personalized-gifts", name: "Personalized Gifts" },
-    { href: "/name-art/products", name: "Name Art Products" },
-    { href: "/arabic-calligraphy/products", name: "Arabic Calligraphy Products" },
-    { href: "/couples-art/products", name: "Couple Art Products" },
-  ];
-
   const socialLinks = [
     {
       href: "https://www.facebook.com/profile.php?id=61571453621496",
@@ -71,15 +63,15 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
       }`}
     >
       <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="flex flex-col gap-4">
-            <h3 className="text-lg font-semibold">NameDesignAi.com</h3>
+            <h3 className="text-lg font-semibold">Name Design AI</h3>
             <p
               className={`text-sm ${
                 forceLight ? "text-gray-600" : "text-gray-600 dark:text-gray-400"
               }`}
             >
-              A personalized engine that turns identity into art and products.
+              AI-generated name art — Arabic calligraphy, custom name art, and couples designs.
             </p>
             <p
               className={`text-sm ${
@@ -124,19 +116,6 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
             <h3 className="mb-4 mt-6 text-lg font-semibold">Styles</h3>
             <ul className="flex flex-col gap-3">
               {styleLinks.map((link) => (
-                <li key={link.href}>
-                  <PrimaryLink href={link.href} className="text-sm">
-                    {link.name}
-                  </PrimaryLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 text-lg font-semibold">Gift Ideas</h3>
-            <ul className="flex flex-col gap-3">
-              {giftLinks.map((link) => (
                 <li key={link.href}>
                   <PrimaryLink href={link.href} className="text-sm">
                     {link.name}
