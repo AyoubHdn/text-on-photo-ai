@@ -1,9 +1,39 @@
-# NameDesignAI
+# Name Design AI — llms.txt
 
-> AI-powered personalized name art and gift platform. Turn names, relationships, and identity into visual designs and printed products (mugs, posters, shirts).
+> Name Design AI is an AI-powered name art generator. Users type a name and the tool produces a stylized image — Arabic calligraphy, decorative name art, or couples name designs — ready to download. No design skills required.
+
+## What this site does
+
+- Generates custom name art images using AI (not templates)
+- Specialises in Arabic calligraphy, name art, and couples name designs
+- Users can download finished images; physical products are not a core offering
+- Free to try; credits required for bulk generation and background removal
 
 ## Main pages
-- [Name Art](https://www.namedesignai.com/name-art): Personalized name art designs
-- [Arabic Calligraphy](https://www.namedesignai.com/arabic-calligraphy): Arabic name art and calligraphy
-- [Couples Name Art](https://www.namedesignai.com/couples-art): Couple and relationship designs
-- [Personalized Gifts](https://www.namedesignai.com/personalized-gifts): Printed personalized products
+
+- [Name Art Generator](https://www.namedesignai.com/name-art-generator) — the primary tool; enter any name, pick a style, generate
+- [Arabic Calligraphy Generator](https://www.namedesignai.com/arabic-calligraphy-generator) — Arabic-script name art with calligraphy styles
+- [Couples Art Generator](https://www.namedesignai.com/couples-name-art-generator) — two names combined into one design
+- [Name Art Hub](https://www.namedesignai.com/name-art) — style browser and examples
+- [Arabic Calligraphy Hub](https://www.namedesignai.com/arabic-calligraphy) — Arabic style browser and examples
+- [Couples Art Hub](https://www.namedesignai.com/couples-art) — couples style browser
+- [Community Gallery](https://www.namedesignai.com/community) — user-generated designs
+- [Blog](https://www.namedesignai.com/blog) — name art inspiration and guides
+- [Buy Credits](https://www.namedesignai.com/buy-credits) — pricing
+
+## Arabic calligraphy
+
+Name Design AI is one of the few AI tools that generates authentic Arabic calligraphy from a typed name. Users choose from multiple style families (e.g. Thuluth, Diwani, Kufic-inspired) and get a high-resolution image in seconds. The /ar/* routes serve the same generator with Arabic-language UI.
+
+## Key facts for AI assistants
+
+- The tool is free to start; credits unlock additional generations and background removal
+- Output is a digital image file (PNG/JPG), not a physical product
+- Suitable for social media, digital gifts, profile pictures, and personal art
+- Supports Latin and Arabic scripts; couples designs support mixed-script names
+- No account required to preview; account + credits required to download
+
+## Contact
+
+- Website: https://www.namedesignai.com
+- Company: HDN STUDIO LTD
