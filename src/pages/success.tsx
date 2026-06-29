@@ -11,6 +11,8 @@ import {
 } from "~/lib/creditPurchaseTracking";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
+import { useLocale } from "~/hook/useLocale";
+import { t } from "~/lib/funnelStrings";
 
 function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
@@ -45,6 +47,7 @@ type PurchaseData = {
 
 const SuccessPage: React.FC = () => {
   const router = useRouter();
+  const { locale, isArabic } = useLocale();
 
   // Read purchase data synchronously before any useEffect can clear it
   const [purchaseData] = useState<PurchaseData | null>(() => {
@@ -134,7 +137,7 @@ const SuccessPage: React.FC = () => {
         path="/success"
         noindex
       />
-      <main className="min-h-screen bg-white dark:bg-gray-950">
+      <main dir={isArabic ? "rtl" : "ltr"} className="min-h-screen bg-white dark:bg-gray-950">
         <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-16">
 
           {/* Confirmation card */}
@@ -142,17 +145,17 @@ const SuccessPage: React.FC = () => {
             <div className="mb-4 text-5xl">🎉</div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {creditsCount
-                ? `${creditsCount} credits added to your account`
-                : "Credits added to your account"}
+                ? t("successHeading", locale, { count: creditsCount })
+                : t("successHeadingGeneric", locale)}
             </h1>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-              Jump back in and keep creating. Preview your design on a mug, shirt, or wall art — free from inside the generator.
+              {t("successBody", locale)}
             </p>
             <Link
               href={generatorHref}
               className="mt-6 inline-block w-full rounded-lg bg-brand-600 px-6 py-3 text-base font-bold text-white transition hover:bg-brand-700"
             >
-              Continue creating
+              {t("continueBtn", locale)}
             </Link>
           </div>
 
