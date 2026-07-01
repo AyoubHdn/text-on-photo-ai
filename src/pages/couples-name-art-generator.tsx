@@ -110,7 +110,7 @@ const couplesGeneratorFaqs = [
   {
     question: "Is this couple name generator free?",
     answer:
-      "Yes, previewing is free. Generating high-resolution, print-ready designs uses credits from our pricing plans, starting at $1.99.",
+      "Yes, previewing is free. Generating high-resolution designs uses credits from our pricing plans, starting at $1.99.",
   },
   {
     question: "What's the difference between a couple name generator and a couple name maker?",
@@ -125,12 +125,7 @@ const couplesGeneratorFaqs = [
   {
     question: "What styles work best for anniversaries and weddings?",
     answer:
-      "Romantic styles — floral, watercolor hearts, cursive calligraphy, gold foil — are most popular for anniversaries and wedding gifts. Modern styles like neon and geometric suit younger couples or casual keepsakes.",
-  },
-  {
-    question: "Can I turn the couple name design into a mug or print?",
-    answer:
-      "Yes. Every couple name design can be ordered on a personalized mug, framed print, wall art, or shirt. Two-sided mugs featuring one name on each side are especially popular as anniversary gifts.",
+      "Romantic styles — floral, watercolor hearts, cursive calligraphy, gold foil — are most popular for anniversaries, weddings, and special dates. Modern styles like neon and geometric suit younger couples or contemporary designs.",
   },
   {
     question: "What names work best in a couple name design?",
@@ -287,8 +282,8 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   });
 
   const aspectRatios: { label: string; value: AspectRatio; description: string }[] = [
-    { label: "1:1", value: "1:1", description: "Best for posters, profile images, and square designs" },
-    { label: "4:5", value: "4:5", description: "Best choice for posters and wall art" },
+    { label: "1:1", value: "1:1", description: "Best for profile images and square designs" },
+    { label: "4:5", value: "4:5", description: "Best for vertical designs and wallpapers" },
     { label: "3:2", value: "3:2", description: "Ideal for wide posters and horizontal designs" },
     { label: "16:9", value: "16:9", description: "Best for screens, wallpapers, and digital use" },
   ];
@@ -859,14 +854,14 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     <>
       <SeoHead
         title="Free Couple Name Generator & Stylish Couple Name Maker"
-        description="Free couple name generator and stylish couple name maker. Enter two names, pick a romantic style, and create beautiful couple name designs for gifts."
+        description="Free couple name generator and stylish couple name maker. Enter two names, pick a romantic style, and create beautiful couple name designs, ready to download in seconds."
         path="/couples-name-art-generator"
         noindex
         jsonLd={[
           buildWebApplicationSchema({
             name: "Couple Name Generator",
             description:
-              "Free couple name generator and stylish couple name maker. Combine two names into a single design for anniversaries, weddings, and gifts.",
+              "Free couple name generator and stylish couple name maker. Combine two names into a single design for anniversaries, weddings, and special dates.",
             path: "/couples-name-art-generator",
           }),
           buildFAQSchema(couplesGeneratorFaqs),
@@ -880,9 +875,9 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
         <p className="mt-4 text-base text-gray-700 dark:text-gray-300 sm:text-lg">
           Create a beautiful couple name design in seconds. Our free couple name
           generator combines both names into a single stylish artwork — perfect
-          for anniversaries, weddings, DPs, and thoughtful gifts. Pick from
-          romantic, modern, or calligraphy styles, then download your design or
-          turn it into a mug, print, or shirt.
+          for anniversaries, weddings, DPs, and meaningful designs. Pick from
+          romantic, modern, or calligraphy styles, then download your design in
+          high resolution for social, profiles, and digital use.
         </p>
         <GeneratorNudge generatorType="couples" />
         
@@ -1226,85 +1221,12 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
               })}
             </section>
 
+            {/* HIDDEN W1 — products/mug section: mug nudge, Custom Couple Mug card, More Products
+                links to /couples-art/products. Orphaned physical page; render suppressed.
             <section ref={productsSectionRef} className="mt-10 scroll-mt-20">
-              {/* Nudge banner */}
-              <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-4 py-4">
-                <span className="text-3xl">☕</span>
-                <div className="flex-1">
-                  <p className="font-semibold text-brand-900">Your art is ready to print!</p>
-                  <p className="text-sm text-brand-700">Preview it on a real mug below — free, no commitment.</p>
-                </div>
-              </div>
-
-              {/* Primary: Mug */}
-              <div className="overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="aspect-square w-full sm:w-1/2">
-                    <img src="/images/products/mug.webp" alt="Custom Mug" className="h-full w-full object-cover" />
-                  </div>
-                  <div className="flex flex-col justify-center gap-4 p-6 sm:w-1/2">
-                    <div>
-                      <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-800">
-                        Most Popular Gift
-                      </span>
-                      <h4 className="mt-2 text-2xl font-bold text-slate-900">Custom Couple Mug</h4>
-                      <p className="mt-1 text-sm text-gray-500">Your couple name art printed on a premium ceramic mug — perfect gift.</p>
-                    </div>
-                    <ul className="space-y-1 text-sm text-gray-700">
-                      {["High-quality glossy ceramic", "Dishwasher & microwave safe", "Premium print quality", "Shipping to selected countries"].map((pt) => (
-                        <li key={pt} className="flex items-start gap-2">
-                          <span className="text-brand-600">✔</span>{pt}
-                        </li>
-                      ))}
-                    </ul>
-                    {previewCooldown !== null && (
-                      <div className="rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-900">
-                        ⏳ Preview paused. Try again in <strong>{previewCooldown}s</strong>.
-                      </div>
-                    )}
-                    <button
-                      className="w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
-                      disabled={previewCooldown !== null}
-                      onClick={() => {
-                        if (selectedAspectRatio === "16:9") {
-                          alert("This image size is not supported for mugs.");
-                          return;
-                        }
-                        setPreviewProduct("mug");
-                        setPreviewImage(getDisplayImageUrl(imagesUrl[0]?.imageUrl ?? null));
-                      }}
-                    >
-                      {previewCooldown !== null ? `Wait ${previewCooldown}s…` : "Preview on Mug — Free"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* More products */}
-              <div className="mt-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <h4 className="font-semibold text-slate-900">More Products</h4>
-                  <Link href="/couples-art/products" className="text-sm font-medium text-brand-700 hover:underline">View all couple name products →</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {GENERATOR_PRODUCT_THUMBNAILS.couples.filter((p) => p.key !== "mug").map((p) => (
-                    <Link
-                      key={p.key}
-                      href="/couples-art/products"
-                      className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
-                    >
-                      <div className="aspect-video overflow-hidden">
-                        <img src={p.image} alt={p.label} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                      </div>
-                      <div className="px-3 py-2">
-                        <div className="font-semibold text-slate-800">{p.label}</div>
-                        <div className="text-xs text-gray-500">{p.description}</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              (nudge banner "Your art is ready to print!", Custom Couple Mug card, More Products grid)
             </section>
+            */}
           </>
         )}
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
