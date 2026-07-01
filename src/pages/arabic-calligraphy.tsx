@@ -30,7 +30,7 @@ const arabicFaqs = [
   {
     question: "What is Arabic name art?",
     answer:
-      "Arabic name art is a personalized design where an Arabic name is written in a calligraphy or decorative typography style. It's often used for gifts, wall decor, and keepsakes with cultural and spiritual meaning. Arabic name calligraphy can be traditional (thuluth, diwani, kufic) or modern.",
+      "Arabic name art is a personalized design where an Arabic name is written in a calligraphy or decorative typography style. It's often used for social media, profile art, and personal projects with cultural and spiritual meaning. Arabic name calligraphy can be traditional (thuluth, diwani, kufic) or modern.",
   },
   {
     question: "Can I write my name in Arabic calligraphy online for free?",
@@ -43,9 +43,9 @@ const arabicFaqs = [
       "Traditional Arabic calligraphy (thuluth, diwani, kufic) follows centuries-old proportional rules used in Islamic calligraphy and manuscripts. Modern Arabic calligraphy takes those roots and simplifies them — cleaner lines, contemporary color palettes, and decorative elements like geometric patterns or gold leaf.",
   },
   {
-    question: "Can I order Arabic name art on products?",
+    question: "Can I download my Arabic name art?",
     answer:
-      "Yes. Every Arabic name design can be printed on mugs, framed wall art, posters, and shirts. Arabic name gifts are especially popular for weddings, Ramadan, Eid, and family keepsakes.",
+      "Yes — every design downloads as a high-resolution, watermark-free PNG, ready for social media, profile art, or digital use.",
   },
   {
     question: "Do I need to know Arabic to use the tool?",
@@ -60,7 +60,7 @@ const arabicFaqs = [
   {
     question: "Is Arabic name art suitable as an Islamic gift?",
     answer:
-      "Yes. Arabic name art is widely gifted for Islamic occasions — weddings, Ramadan, Eid al-Fitr, Eid al-Adha, and family celebrations. Many customers use it for nursery decor with a child's name, or as a wedding gift featuring both spouses' names.",
+      "Yes. Arabic name art is widely used for Islamic occasions — weddings, Ramadan, Eid al-Fitr, Eid al-Adha, and family celebrations. Many people use it for social profiles, digital art, or personal keepsakes.",
   },
 ];
 
@@ -187,9 +187,9 @@ const ArabicArtLandingPage: NextPage = () => {
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
                   <FiDownload className="text-4xl" />
                 </div>
-                <h3 className="mb-3 text-xl font-bold">3. Download or Print</h3>
+                <h3 className="mb-3 text-xl font-bold">3. Download Your Design</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Use the final design for social visuals, wall art, product printing, or gifting.
+                  Use the final design for social media, profile art, or digital use.
                 </p>
               </div>
             </div>
@@ -254,6 +254,7 @@ const ArabicArtLandingPage: NextPage = () => {
           </div>
         </section>
 
+        {/* HIDDEN W1 — gift ideas section: re-enable by unwrapping
         <section className="bg-white py-24">
           <div className="container mx-auto px-4">
             <div className="mb-16 text-center">
@@ -266,57 +267,44 @@ const ArabicArtLandingPage: NextPage = () => {
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
                 <FiStar className="mb-4 text-4xl text-amber-500" />
                 <h3 className="mb-3 text-2xl font-bold">Eid and occasion gifts</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  A name in calligraphy-inspired style makes a distinctive gift for Eid, birthdays, and family milestones.
-                </p>
+                <p className="text-gray-600 dark:text-gray-400">A name in calligraphy-inspired style makes a distinctive gift for Eid, birthdays, and family milestones.</p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
                 <FiGlobe className="mb-4 text-4xl text-brand-600" />
                 <h3 className="mb-3 text-2xl font-bold">Framed wall art</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Print the design as a framed keepsake for a home, office, or shared space — a gift that stays visible.
-                </p>
+                <p className="text-gray-600 dark:text-gray-400">Print the design as a framed keepsake for a home, office, or shared space — a gift that stays visible.</p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
                 <FiCpu className="mb-4 text-4xl text-purple-500" />
                 <h3 className="mb-3 text-2xl font-bold">Mugs and daily-use gifts</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Put the artwork on a mug or coaster — a practical gift that keeps the name in view every day.
-                </p>
+                <p className="text-gray-600 dark:text-gray-400">Put the artwork on a mug or coaster — a practical gift that keeps the name in view every day.</p>
               </div>
             </div>
           </div>
         </section>
+        */}
 
+        {/* HIDDEN W1 — gift/decor categories section: re-enable by unwrapping
         <section className="bg-cream-50 py-24">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">
-              <h2 className="text-3xl font-bold md:text-4xl">
-                Continue into Arabic gift and decor categories
-              </h2>
+              <h2 className="text-3xl font-bold md:text-4xl">Continue into Arabic gift and decor categories</h2>
               <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                Once the calligraphy direction is set, choose the gift or decor
-                format that fits it best.
+                Once the calligraphy direction is set, choose the gift or decor format that fits it best.
               </p>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {productLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
-                >
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    {link.title}
-                  </h3>
-                  <p className="mt-3 text-slate-600 dark:text-slate-300">
-                    {link.description}
-                  </p>
+                <Link key={link.href} href={link.href}
+                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm transition hover:border-brand-400 hover:bg-brand-50">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{link.title}</h3>
+                  <p className="mt-3 text-slate-600 dark:text-slate-300">{link.description}</p>
                 </Link>
               ))}
             </div>
           </div>
         </section>
+        */}
 
         <section className="bg-cream-50 py-24">
           <div className="container mx-auto max-w-3xl px-4">
@@ -346,7 +334,7 @@ const ArabicArtLandingPage: NextPage = () => {
               Ready to create your masterpiece?
             </h2>
             <p className="mx-auto mb-10 max-w-2xl text-xl text-brand-100">
-              Join users creating Arabic name art for identity, decor, branding, and gifts.
+              Join users creating Arabic name art for identity, branding, and digital art.
             </p>
             <Link href="/arabic-calligraphy-generator">
               <button className="transform rounded-full bg-white px-10 py-5 text-lg font-bold text-brand-800 shadow-2xl transition hover:-translate-y-1 hover:bg-brand-50">
