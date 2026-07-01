@@ -89,10 +89,10 @@ const ArabicArtLandingPage: NextPage = () => {
   return (
     <>
       <SeoHead
-        title="Arabic Calligraphy Name Art | AI-Generated Custom Designs | Name Design AI"
-        description="Create custom Arabic calligraphy and name art with AI. Explore styles, preview instantly, download in seconds — no design skills needed."
+        title="Write Your Name in Arabic Calligraphy | Arabic Name Style Generator | Name Design AI"
+        description="Type your name in English and see it in Arabic calligraphy — Diwani, Thuluth, Kufic and more. Free AI generator, download in seconds. No Arabic needed."
         path="/arabic-calligraphy"
-        keywords="arabic calligraphy generator, arabic name art, custom arabic calligraphy, arabic calligraphy online, arabic name design"
+        keywords="arabic calligraphy generator, arabic name art, custom arabic calligraphy, arabic calligraphy online, arabic name design, arabic name style, write name in arabic, arabic name generator, english to arabic name"
         alternates={[
           { hrefLang: "en", href: "/arabic-calligraphy" },
           { hrefLang: "ar", href: "/ar/arabic-calligraphy" },
@@ -125,10 +125,10 @@ const ArabicArtLandingPage: NextPage = () => {
               Arabic Calligraphy
             </span>
             <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-6xl lg:text-7xl">
-              Turn an Arabic name into custom calligraphy art
+              Write your name in Arabic calligraphy
             </h1>
             <h2 className="mx-auto mb-10 max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300 md:text-2xl">
-              Create custom Arabic name art and Arabic calligraphy in minutes
+              Create your Arabic name style — from English to Arabic calligraphy in seconds
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link href="/arabic-calligraphy-generator">
@@ -200,7 +200,7 @@ const ArabicArtLandingPage: NextPage = () => {
           <div className="container mx-auto px-4">
             <div className="mb-16 text-center">
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                Styles that balance tradition and modern identity
+                Arabic calligraphy styles — Diwani, Thuluth, Kufic and more
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400">
                 Explore a curated set of Arabic art directions before creating your Arabic name art.
