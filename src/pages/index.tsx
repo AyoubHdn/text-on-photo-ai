@@ -65,8 +65,8 @@ const generatorCards: VisualCard[] = [
     imageAlt: "Emma personalized name art example",
     eyebrow: "Visual generator",
     ctaLabel: "Explore generator",
-    secondaryHref: "/name-art/styles",
-    secondaryLabel: "Browse all name art styles",
+    secondaryHref: "/name-art",
+    secondaryLabel: "Browse name art & name design",
   },
   {
     href: "/arabic-calligraphy",
@@ -333,7 +333,7 @@ function HeroBanner() {
             Turn any name into custom AI art
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300 md:text-xl">
-            Create Arabic calligraphy, name art, and couples designs in seconds.
+            Create Arabic calligraphy, name art and name design, and couples designs in seconds.
             Free to preview — download-ready, no design skills needed.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
