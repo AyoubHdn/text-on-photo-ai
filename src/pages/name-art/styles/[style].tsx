@@ -12,6 +12,7 @@ import {
   buildItemListSchema,
 } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
+const PHYSICAL_FAQ_RE = /print|mug|shirt|product|order|طباعة|منتج|كوب|قميص|طلب/i;
 import {
   getNameArtStyleBySlug,
   getNamesForStyle,
@@ -43,6 +44,9 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
   content,
 }) => {
   const pagePath = `/name-art/styles/${styleSlug}`;
+  const visibleFaqs = (content.faqs ?? []).filter(
+    (faq) => !PHYSICAL_FAQ_RE.test(faq.question),
+  );
   const getGeneratorHref = (styleImage = imageSrc) =>
     `/name-art-generator?style=${encodeURIComponent(
       styleSlug,
@@ -76,9 +80,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
             name: `${title} related names`,
             itemPaths: relatedNames.map((item) => item.path),
           }),
-          ...(content.faqs && content.faqs.length > 0
-            ? [buildFAQSchema(content.faqs)]
-            : []),
+          ...(visibleFaqs.length > 0 ? [buildFAQSchema(visibleFaqs)] : []),
         ]}
       />
       <main className="bg-white dark:bg-gray-900">
@@ -255,13 +257,13 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
           </div>
         </section>
 
-        {content.faqs && content.faqs.length > 0 && (
+        {visibleFaqs.length > 0 && (
           <section className="mx-auto max-w-4xl px-4 py-12">
             <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900">
               Frequently asked questions about {title.toLowerCase()} name art
             </h2>
             <div className="space-y-6">
-              {content.faqs.map((faq) => (
+              {visibleFaqs.map((faq) => (
                 <div
                   key={faq.question}
                   className="rounded-lg border border-gray-200 p-6"

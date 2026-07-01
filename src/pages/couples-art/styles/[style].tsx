@@ -10,6 +10,7 @@ import {
   buildFAQSchema,
 } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
+const PHYSICAL_FAQ_RE = /print|mug|shirt|product|order|طباعة|منتج|كوب|قميص|طلب/i;
 import { COUPLES_STYLE_ITEMS, getCouplesStyleBySlug } from "~/lib/styleTaxonomy";
 
 type CouplesStylePageProps = {
@@ -34,6 +35,9 @@ const CouplesStylePage: NextPage<CouplesStylePageProps> = ({
   content,
 }) => {
   const pagePath = `/couples-art/styles/${styleSlug}`;
+  const visibleFaqs = (content.faqs ?? []).filter(
+    (faq) => !PHYSICAL_FAQ_RE.test(faq.question),
+  );
   const getGeneratorHref = (styleImage = imageSrc) =>
     `/couples-name-art-generator?style=${encodeURIComponent(
       styleSlug,
@@ -64,9 +68,7 @@ const CouplesStylePage: NextPage<CouplesStylePageProps> = ({
               "/personalized-gifts",
             ],
           }),
-          ...(content.faqs && content.faqs.length > 0
-            ? [buildFAQSchema(content.faqs)]
-            : []),
+          ...(visibleFaqs.length > 0 ? [buildFAQSchema(visibleFaqs)] : []),
         ]}
       />
       <main className="bg-white dark:bg-gray-900">
@@ -212,14 +214,14 @@ const CouplesStylePage: NextPage<CouplesStylePageProps> = ({
           </section>
         )}
 
-        {content.faqs && content.faqs.length > 0 && (
+        {visibleFaqs.length > 0 && (
           <section className="mx-auto max-w-4xl px-4 py-12">
             <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900">
               Frequently asked questions about {title.toLowerCase()} couple name
               art
             </h2>
             <div className="space-y-6">
-              {content.faqs.map((faq) => (
+              {visibleFaqs.map((faq) => (
                 <div
                   key={faq.question}
                   className="rounded-lg border border-gray-200 p-6"
