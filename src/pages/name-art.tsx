@@ -62,7 +62,7 @@ const nameArtFaqs = [
   {
     question: "What is name art?",
     answer:
-      "Name art is a visual design built around a name — using typography, illustration, or decorative effects to turn the name itself into artwork. It's used for gifts, decor, profile images, and personalized keepsakes. Modern name art is often created with AI tools, which let you generate a design quickly and explore different styles before committing to one.",
+      "Name art is a visual design built around a name — using typography, illustration, or decorative effects to turn the name itself into artwork. It's used for profile images, social posts, wallpapers, and creative projects. Modern name art is often created with AI tools, which let you generate a design quickly and explore different styles before committing to one.",
   },
   {
     question: "What's the difference between name art and name design?",
@@ -80,9 +80,9 @@ const nameArtFaqs = [
       "Yes. You can create a custom name design by entering any name, word, or short phrase, picking a style, and generating the artwork. The tool handles name edits, initials, and text-based designs across dozens of style directions.",
   },
   {
-    question: "Can I get name art on a mug, shirt, or poster?",
+    question: "What can I download?",
     answer:
-      "Yes. Every design you create can be ordered on a personalized mug, custom name shirt, or wall art print.",
+      "High-resolution, watermark-free PNG files, ready for social media, profile art, wallpapers, or digital printing.",
   },
   {
     question: "What styles of name art are available?",
@@ -92,7 +92,7 @@ const nameArtFaqs = [
   {
     question: "Is stylish name art free?",
     answer:
-      "You can preview and explore styles for free. Generating high-resolution, print-ready designs uses credits from our pricing plans, starting at $1.99.",
+      "You can preview and explore styles for free. Generating high-resolution designs uses credits from our pricing plans, starting at $1.99.",
   },
 ];
 
@@ -114,7 +114,7 @@ const NameArtLandingPage: NextPage = () => {
           buildCollectionPageSchema({
             name: "Name Art and Name Design",
             description:
-              "Browse personalized name art and name design styles for gifts, decor, and printable formats.",
+              "Browse personalized name art and name design styles in styles like calligraphy, neon, floral, and more.",
             path: "/name-art",
             itemPaths: [
               "/name-art/styles",
@@ -122,7 +122,6 @@ const NameArtLandingPage: NextPage = () => {
                 (item) => `/name-art/styles/${item.slug}`,
               ),
               ...FEATURED_NAME_PAGES.map((item) => item.path),
-              ...productLinks.map((item) => item.href),
             ],
           }),
           buildItemListSchema({
@@ -145,11 +144,9 @@ const NameArtLandingPage: NextPage = () => {
                   Transform your name into a work of art
                 </h1>
                 <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-slate-300">
-                  Explore personalized name art and name design styles for custom
-                  decor, keepsakes, gifts, and product-ready designs. Browse text
-                  styles, artistic directions, and design ideas for your name,
-                  initials, or phrase — then move that artwork into wall art,
-                  mugs, and shirts.
+                  Explore text styles, calligraphy, and creative directions, then
+                  download your name art in high resolution — ready for social,
+                  profile art, and digital use.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link
@@ -168,7 +165,7 @@ const NameArtLandingPage: NextPage = () => {
                 <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
                   <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">Free to start</span>
                   <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">High-res downloads</span>
-                  <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">Print-ready products</span>
+                  <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2">No design skills needed</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -217,14 +214,14 @@ const NameArtLandingPage: NextPage = () => {
                 <FiHeart className="mb-4 text-5xl text-brand-500" />
                 <h3 className="mb-2 text-xl font-semibold">2. Pick a Style</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Choose from elegant, bold, playful, modern, and gift-ready visual directions.
+                  Choose from elegant, bold, playful, modern, and creative visual directions.
                 </p>
               </div>
               <div className="flex flex-col items-center p-6">
                 <FiDownload className="mb-4 text-5xl text-brand-500" />
                 <h3 className="mb-2 text-xl font-semibold">3. Generate and Use</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Download the artwork or move it into print-focused categories when you are ready.
+                  Download it in high resolution when you're happy with the direction.
                 </p>
               </div>
             </div>
@@ -356,6 +353,7 @@ const NameArtLandingPage: NextPage = () => {
           </div>
         </section>
 
+        {/* HIDDEN W1 — product categories section: re-enable by unwrapping
         <section className="bg-cream-50 py-24 dark:bg-gray-800">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">
@@ -369,35 +367,24 @@ const NameArtLandingPage: NextPage = () => {
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {productLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm transition hover:border-brand-400 hover:bg-brand-50"
-                >
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    {link.label}
-                  </h3>
-                  <p className="mt-3 text-slate-600 dark:text-slate-300">
-                    {link.description}
-                  </p>
+                <Link key={link.href} href={link.href}
+                  className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm transition hover:border-brand-400 hover:bg-brand-50">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{link.label}</h3>
+                  <p className="mt-3 text-slate-600 dark:text-slate-300">{link.description}</p>
                 </Link>
               ))}
             </div>
             <div className="mt-8 text-center text-sm text-gray-600">
               <p>
                 Looking for ideas beyond name art styles? Browse all{" "}
-                <Link href="/personalized-gifts" className="font-medium text-indigo-600 hover:underline">
-                  personalized gifts
-                </Link>{" "}
+                <Link href="/personalized-gifts" className="font-medium text-indigo-600 hover:underline">personalized gifts</Link>{" "}
                 or explore our full{" "}
-                <Link href="/products" className="font-medium text-indigo-600 hover:underline">
-                  product catalog
-                </Link>
-                .
+                <Link href="/products" className="font-medium text-indigo-600 hover:underline">product catalog</Link>.
               </p>
             </div>
           </div>
         </section>
+        */}
 
         <section className="py-24">
           <div className="container mx-auto px-4 text-center">
@@ -417,7 +404,7 @@ const NameArtLandingPage: NextPage = () => {
                 <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   &quot;It helped me test a lot of styles quickly. I ended up using
-                  one version for my profile and another for a custom mug.&quot;
+                  one version for my profile and another in a totally different style.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- David L.</p>
               </div>
@@ -425,7 +412,7 @@ const NameArtLandingPage: NextPage = () => {
                 <FaQuoteLeft className="mb-4 text-3xl text-brand-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
                   &quot;We made art with our kids&apos; names for their playroom and
-                  then used one of the designs as a framed gift.&quot;
+                  then used one of the designs as my profile art.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Carol P.</p>
               </div>
@@ -456,8 +443,8 @@ const NameArtLandingPage: NextPage = () => {
               Ready to see your name in a new light?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-gray-700 dark:text-gray-300">
-              Start with personalized name art ideas, then expand into prints and
-              products once the direction is clear.
+              Start with personalized name art ideas, then download it in high
+              resolution once the direction is clear.
             </p>
             <div className="mt-8">
               <Link
