@@ -20,42 +20,42 @@ const galleryItems = [
   {
     src: "/styles/arabic/thuluth-gold.webp",
     title: "Thuluth",
-    href: "/arabic-calligraphy/styles/thuluth",
+    href: "/ar/arabic-calligraphy-generator?style=thuluth",
   },
   {
     src: "/styles/arabic/diwani-modern.webp",
     title: "Diwani Modern",
-    href: "/arabic-calligraphy/styles/diwani-modern",
+    href: "/ar/arabic-calligraphy-generator?style=diwani-modern",
   },
   {
     src: "/styles/arabic/diwani-ink.webp",
     title: "Diwani",
-    href: "/arabic-calligraphy/styles/diwani",
+    href: "/ar/arabic-calligraphy-generator?style=diwani",
   },
   {
     src: "/styles/arabic/marble-gold.webp",
     title: "Marble Gold",
-    href: "/arabic-calligraphy/styles/marble-gold",
+    href: "/ar/arabic-calligraphy-generator?style=marble-gold",
   },
   {
     src: "/styles/arabic/ruqah-classic.webp",
     title: "Ruq'ah Classic",
-    href: "/arabic-calligraphy/styles/ruqah-classic",
+    href: "/ar/arabic-calligraphy-generator?style=ruqah-classic",
   },
   {
     src: "/styles/arabic/henna.webp",
     title: "Henna",
-    href: "/arabic-calligraphy/styles/henna",
+    href: "/ar/arabic-calligraphy-generator?style=henna",
   },
   {
     src: "/styles/arabic/crystal.webp",
     title: "Crystal",
-    href: "/arabic-calligraphy/styles/crystal",
+    href: "/ar/arabic-calligraphy-generator?style=crystal",
   },
   {
     src: "/styles/arabic/kufic-ornate.webp",
     title: "Ornate Kufic",
-    href: "/arabic-calligraphy/styles/ornate-kufic",
+    href: "/ar/arabic-calligraphy-generator?style=ornate-kufic",
   },
 ];
 
@@ -81,6 +81,16 @@ const arabicFaqs = [
     question: "هل يمكنني تنزيل تصميم الخط العربي؟",
     answer:
       "نعم، يتم تنزيل كل تصميم كصورة PNG عالية الدقة وبدون علامة مائية، جاهزة لمواقع التواصل أو صورتك الشخصية أو الاستخدام الرقمي.",
+  },
+  {
+    question: "كيف أزخرف اسمي بالعربي؟",
+    answer:
+      "أدخل اسمك أو العبارة في حقل الكتابة، ثم اختر النمط الذي يناسبك من الثلث أو الديواني أو الكوفي أو الرقعة، وستحصل على زخرفة اسمك بخط عربي مزخرف في ثوانٍ جاهزة للتنزيل والمشاركة.",
+  },
+  {
+    question: "هل يمكنني نسخ الزخرفة ولصقها؟",
+    answer:
+      "التصاميم الناتجة عن الأداة هي صور PNG عالية الدقة يمكن تنزيلها فورًا ومشاركتها مباشرةً في أي منصة أو منشور. يمكنك رفعها كصورة شخصية أو إرفاقها بمنشور أو تضمينها في عروض رقمية دون الحاجة إلى معالجة إضافية.",
   },
 ];
 
@@ -154,7 +164,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
             <h2 className="mx-auto mb-10 max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300 md:text-2xl">
               كتابة الخط العربي بالذكاء الاصطناعي تمنحك مساحة لتجربة الثلث
               والديواني والكوفي وأنماط زخرفة عربية احترافية بالتشكيل، مع نتائج
-              تركز على شكل الحروف والإيقاع البصري للخط لا على زخرفة الاسم العامة.
+              تركز على شكل الحروف والإيقاع البصري للخط، وتصلح كذلك لزخرفة الأسماء العربية بلمسة احترافية.
             </h2>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link href="/ar/arabic-calligraphy-generator">
@@ -237,11 +247,37 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
                   تصفح جميع أنماط الخط
                 </Link>
               </div>
-              <Link href="/ar/arabic-calligraphy-generator">
+              <Link href="/ar/arabic-calligraphy-generator?style=thuluth">
                 <button className="inline-block rounded-full bg-brand-600 px-10 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-brand-700 hover:shadow-xl">
                   جرّب هذه الأنماط الآن
                 </button>
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Names sub-intent section — targets زخرفة أسماء عربية cluster */}
+        <section className="bg-white py-24">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="mb-6 text-3xl font-bold md:text-4xl">
+                زخرفة الأسماء العربية
+              </h2>
+              <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+                زخرفة الأسماء العربية بالذكاء الاصطناعي تتيح لك تحويل اسمك أو اسم
+                من تحب إلى تصميم خط عربي مزخرف في ثوانٍ. أدخل الاسم واختر النمط
+                الذي يناسبك، وستحصل على زخرفة عربية احترافية جاهزة للتنزيل دون أي
+                معرفة بالتصميم. كثير من المستخدمين يبحثون عن زخرفه الأسماء لإضفاء
+                طابع مميز على صورتهم الشخصية أو بطاقاتهم الرقمية، والأداة توفر هذا
+                بأنماط متعددة من الثلث إلى الديواني إلى الكوفي وما بينهما.
+              </p>
+              <div className="mt-10">
+                <Link href="/ar/arabic-calligraphy-generator">
+                  <button className="rounded-xl bg-brand-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition hover:-translate-y-1 hover:bg-brand-700 hover:shadow-2xl">
+                    زخرف اسمك الآن
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -340,6 +376,49 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Individual scripts section — targets ثلث/ديواني/كوفي/رقعة intent */}
+        <section className="bg-cream-50 py-24">
+          <div className="container mx-auto px-4">
+            <div className="mb-12 text-center">
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+                أشهر أنماط الخط العربي
+              </h2>
+            </div>
+            <p className="mx-auto max-w-3xl text-center text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+              أبرز أنماط الخط العربي التي يمكنك تجربتها مباشرةً:{" "}
+              <Link
+                href="/ar/arabic-calligraphy-generator?style=thuluth"
+                className="font-semibold text-brand-700 hover:underline"
+              >
+                خط الثلث
+              </Link>
+              {" "}الكلاسيكي بسماكته وزخارفه الأصيلة،{" "}
+              <Link
+                href="/ar/arabic-calligraphy-generator?style=diwani"
+                className="font-semibold text-brand-700 hover:underline"
+              >
+                الديواني
+              </Link>
+              {" "}الانسيابي ذو المنحنيات المتشابكة والأناقة العثمانية،{" "}
+              <Link
+                href="/ar/arabic-calligraphy-generator?style=kufic"
+                className="font-semibold text-brand-700 hover:underline"
+              >
+                الكوفي
+              </Link>
+              {" "}الهندسي بتكويناته المعمارية المتميزة، و
+              <Link
+                href="/ar/arabic-calligraphy-generator?style=ruqah-classic"
+                className="font-semibold text-brand-700 hover:underline"
+              >
+                خط الرقعة
+              </Link>
+              {" "}بضرباته السريعة الواضحة المناسبة للكتابة اليومية. كل نمط يمنح
+              الاسم أو العبارة هوية بصرية مختلفة — جرّب أياً منها مباشرةً داخل الأداة.
+            </p>
           </div>
         </section>
 
