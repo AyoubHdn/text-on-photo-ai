@@ -9,7 +9,11 @@ import { Button } from "~/component/Button";
 import { FormGroup } from "~/component/FormGroup";
 import { api } from "~/utils/api";
 import { Input } from "~/component/Input";
-import { arabicStylesData } from "~/data/arabicStylesData";
+import {
+  arabicStylesData,
+  ARABIC_CATEGORY_LABELS_AR,
+  ARABIC_SUBCATEGORY_LABELS_AR,
+} from "~/data/arabicStylesData";
 import { useSession, signIn } from "next-auth/react";
 import {
   AiOutlineDownload,
@@ -49,6 +53,7 @@ import {
 interface StyleItem {
   src: string;
   name: string;
+  nameAr?: string;
   basePrompt: string;
   altText: string;
 }
@@ -632,7 +637,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
     if (nextValidationErrors.name || nextValidationErrors.style) {
       setValidationErrors(nextValidationErrors);
-      setError("Please complete the highlighted field(s).");
+      setError("يرجى إكمال الحقول المطلوبة.");
       if (nextValidationErrors.name) {
         scrollToSection(nameFieldRef, nameInputRef);
       } else if (nextValidationErrors.style) {
@@ -772,7 +777,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       });
     } catch (err) {
       console.error("[ARABIC_REMOVE_BACKGROUND_UI]", err);
-      alert("Background removal failed. Please try again.");
+      alert("فشل إزالة الخلفية. يرجى المحاولة مجددًا.");
     } finally {
       setRemovingBackgroundMap((prev) => ({ ...prev, [imageId]: false }));
     }
@@ -888,7 +893,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               <div ref={categoryScrollRef} onScroll={() => handleScroll(categoryScrollRef, setShowLeftCategoryArrow, setShowRightCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(typedArabicStylesData).map((catKey) => (
                   <button key={catKey} type="button" onClick={() => { setActiveTab(catKey); setActiveSubTab(Object.keys(typedArabicStylesData[catKey]!)[0]!); }} className={`px-4 py-2 whitespace-nowrap font-semibold ${activeTab === catKey ? 'border-b-2 border-brand-500 text-brand-600' : 'text-gray-500 hover:text-gray-900'}`}>
-                    {catKey}
+                    {ARABIC_CATEGORY_LABELS_AR[catKey] ?? catKey}
                   </button>
                 ))}
               </div>
@@ -900,7 +905,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               <div ref={subcategoryScrollRef} onScroll={() => handleScroll(subcategoryScrollRef, setShowLeftSubCategoryArrow, setShowRightSubCategoryArrow)} className="flex overflow-x-auto no-scrollbar">
                 {Object.keys(typedArabicStylesData[activeTab] ?? {}).map((sub) => (
                   <button key={sub} type="button" id={sub} onClick={() => setActiveSubTab(sub)} className={`px-3 py-1.5 whitespace-nowrap text-sm rounded-full ${activeSubTab === sub ? 'bg-brand-600 text-white font-semibold' : 'bg-cream-100 text-gray-600 hover:bg-cream-200'}`}>
-                    {sub}
+                    {ARABIC_SUBCATEGORY_LABELS_AR[sub] ?? sub}
                   </button>
                 ))}
               </div>
@@ -918,7 +923,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                       className="w-full h-auto aspect-square object-cover"
                     />
                     <button type="button" onClick={(e) => { e.stopPropagation(); openPopup(item.src); }} className="absolute top-1 right-1 bg-black bg-opacity-40 text-white rounded-full p-1 text-xs hover:bg-opacity-60">🔍</button>
-                    <div className="p-2 text-center text-xs font-medium truncate">{item.name}</div>
+                    <div className="p-2 text-center text-xs font-medium truncate">{item.nameAr ?? item.name}</div>
                   </div>
               ))}
             </div>
@@ -950,8 +955,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <div className="text-base font-semibold">{tier.label}</div>
-                        <div className="mt-1 text-sm text-gray-500">{tier.description}</div>
+                        <div className="text-base font-semibold">{tier.labelAr}</div>
+                        <div className="mt-1 text-sm text-gray-500">{tier.descAr}</div>
                       </div>
                       {tier.premium && (
                         <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">

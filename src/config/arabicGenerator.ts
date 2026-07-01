@@ -8,7 +8,9 @@ export const ARABIC_GENERATOR_TIERS = [
   {
     id: "standard",
     label: "Standard Arabic",
+    labelAr: "عربي قياسي",
     description: "Faster and more affordable Arabic generation",
+    descAr: "إنشاء عربي أسرع وأوفر",
     model: "google/nano-banana-2",
     credits: 3,
     premium: false,
@@ -16,7 +18,9 @@ export const ARABIC_GENERATOR_TIERS = [
   {
     id: "premium",
     label: "Premium Arabic",
+    labelAr: "عربي متميّز",
     description: "Higher quality Arabic details and refinement",
+    descAr: "تفاصيل عربية أدق وجودة أعلى",
     model: "google/nano-banana-pro",
     credits: 6,
     premium: true,

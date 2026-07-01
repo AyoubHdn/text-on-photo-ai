@@ -14,8 +14,8 @@ const COPY: Record<
     trust: "High-quality materials • Worldwide-ready fulfillment",
   },
   arabic: {
-    hero: "Turn your name into elegant Arabic calligraphy - perfect for your home, desk, or as a meaningful gift.",
-    trust: "✨ Customers are turning their names into real products every day.",
+    hero: "حوّل اسمك إلى خط عربي أنيق — مثالي لصورتك الشخصية أو أعمالك الرقمية أو كلوحة فنية رقمية.",
+    trust: "✨ آلاف الأسماء تتحوّل إلى فن رقمي كل يوم",
   },
   couples: {
     hero: "Celebrate your relationship with a personalized couples design - perfect for anniversaries and gifts.",
