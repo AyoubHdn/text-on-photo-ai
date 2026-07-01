@@ -151,6 +151,8 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
           </div>
         </section>
 
+        {/* HIDDEN W1 productBridge — mug/shirt/wall-art upsell block.
+            Data fields kept in arabicStyleContent.ts; only render suppressed.
         {(content.productBridgeBody || content.productBridgeHeading) && (
           <section className="mx-auto max-w-4xl px-4 py-12">
             <h2 className="mb-3 text-2xl font-semibold text-gray-900">
@@ -182,6 +184,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
             </div>
           </section>
         )}
+        */}
 
         {content.relatedStyles && content.relatedStyles.length > 0 && (
           <section className="mx-auto max-w-4xl px-4 py-12">

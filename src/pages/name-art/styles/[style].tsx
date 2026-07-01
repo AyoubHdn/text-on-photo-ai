@@ -163,6 +163,8 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
           </div>
         </section>
 
+        {/* HIDDEN W1 productBridge — mug/shirt/wall-art upsell block.
+            Data fields kept in styleContent.ts; only render suppressed.
         {(content.productBridgeBody || content.productBridgeHeading) && (
           <section className="mx-auto max-w-4xl px-4 py-12">
             <h2 className="mb-3 text-2xl font-semibold text-gray-900">
@@ -191,6 +193,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
             </div>
           </section>
         )}
+        */}
 
         <AdSenseUnit />
 
