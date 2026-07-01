@@ -117,7 +117,7 @@ const arabicGeneratorFaqs = [
   {
     question: "What Arabic calligraphy styles are available?",
     answer:
-      "Styles include traditional thuluth in gold, diwani ink, kufic geometric, ornamental 3D gold, modern wireframe, smoke art, sand desert, and diamond. Each style has a distinct visual character suited to different gifts and decor.",
+      "Styles include traditional thuluth in gold, diwani ink, kufic geometric, ornamental 3D gold, modern wireframe, smoke art, sand desert, and diamond. Each style has a distinct visual character suited to different styles and moods.",
   },
   {
     question: "Is the Arabic name generator free?",
@@ -130,19 +130,9 @@ const arabicGeneratorFaqs = [
       "Yes. Choose a square or vertical aspect ratio, generate your name in your preferred calligraphy style, and download in high resolution. The result works for wallpapers, profile pictures, and social media.",
   },
   {
-    question: "Is Arabic name art a good Islamic gift?",
-    answer:
-      "Yes. Arabic name art is a popular Islamic gift for weddings, Ramadan, Eid, birthdays, and nursery decor. Many users create designs featuring the recipient's name or a couple's combined names as a keepsake.",
-  },
-  {
     question: "What's the difference between thuluth, diwani, and kufic?",
     answer:
-      "Thuluth features flowing, elongated strokes with dramatic curves — often used in mosque inscriptions. Diwani is ornate and highly decorative, historically used for Ottoman royal decrees. Kufic is angular and geometric, the oldest Arabic script style. Each suits a different mood and gift.",
-  },
-  {
-    question: "Can I print Arabic name art on a mug or wall art?",
-    answer:
-      "Yes. Any Arabic design you generate can be ordered on a mug, poster, framed wall art, or shirt through our product catalog. Arabic name gifts are particularly popular for weddings and family decor.",
+      "Thuluth features flowing, elongated strokes with dramatic curves — often used in mosque inscriptions. Diwani is ornate and highly decorative, historically used for Ottoman royal decrees. Kufic is angular and geometric, the oldest Arabic script style. Each suits a different mood and style.",
   },
 ];
 
@@ -789,8 +779,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const closeShareModal = () => setShareModalData({ isOpen: false, imageUrl: null });
 
   const aspectRatios: { label: string; value: AspectRatio; description: string }[] = [
-    { label: "1:1", value: "1:1", description: "Best for posters, profile images, and square designs" },
-    { label: "4:5", value: "4:5", description: "Best choice for posters and wall art" },
+    { label: "1:1", value: "1:1", description: "Best for profile images and square designs" },
+    { label: "4:5", value: "4:5", description: "Best for vertical designs and wallpapers" },
     { label: "3:2", value: "3:2", description: "Ideal for wide posters and horizontal designs" },
     { label: "16:9", value: "16:9", description: "Best for screens, wallpapers, and digital use" },
   ];
@@ -805,7 +795,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     <>
       <SeoHead
         title="Free Arabic Name Generator — Calligraphy & AI Name Design"
-        description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles for gifts and decor."
+        description="Free Arabic name generator and calligraphy maker. Write your name in Arabic calligraphy from English — traditional or modern styles, ready to download in seconds."
         path="/arabic-calligraphy-generator"
         noindex
         jsonLd={[
@@ -836,8 +826,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           generator transliterates from English to Arabic script, then renders it
           in your chosen calligraphy style — traditional thuluth and diwani,
           modern geometric, or ornamental 3D gold. No Arabic knowledge needed.
-          Use the result as an Islamic gift, wedding keepsake, wall art, or mug
-          design.
+          Download the result in high resolution — ready for social media, profile art,
+          and digital use.
         </p>
         <GeneratorNudge generatorType="arabic" />
         
@@ -1139,85 +1129,12 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               </div>
             )}
 
+            {/* HIDDEN W1 — products/mug section: mug nudge, Custom Mug card, More Products
+                links to /arabic-calligraphy/products. Orphaned physical page; render suppressed.
             <section ref={productsSectionRef} className="mt-10 scroll-mt-20">
-              {/* Nudge banner */}
-              <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-4 py-4">
-                <span className="text-3xl">☕</span>
-                <div className="flex-1">
-                  <p className="font-semibold text-brand-900">Your art is ready to print!</p>
-                  <p className="text-sm text-brand-700">Preview it on a real mug below — free, no commitment.</p>
-                </div>
-              </div>
-
-              {/* Primary: Mug */}
-              <div className="overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="aspect-square w-full sm:w-1/2">
-                    <img src="/images/products/arabic/mug.webp" alt="Custom Mug" className="h-full w-full object-cover" />
-                  </div>
-                  <div className="flex flex-col justify-center gap-4 p-6 sm:w-1/2">
-                    <div>
-                      <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-800">
-                        Most Popular Gift
-                      </span>
-                      <h4 className="mt-2 text-2xl font-bold text-slate-900">Custom Mug</h4>
-                      <p className="mt-1 text-sm text-gray-500">Your Arabic name art printed on a premium ceramic mug.</p>
-                    </div>
-                    <ul className="space-y-1 text-sm text-gray-700">
-                      {["High-quality glossy ceramic", "Dishwasher & microwave safe", "Premium print quality", "Shipping to selected countries"].map((pt) => (
-                        <li key={pt} className="flex items-start gap-2">
-                          <span className="text-brand-600">✔</span>{pt}
-                        </li>
-                      ))}
-                    </ul>
-                    {previewCooldown !== null && (
-                      <div className="rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-900">
-                        ⏳ Preview paused. Try again in <strong>{previewCooldown}s</strong>.
-                      </div>
-                    )}
-                    <button
-                      className="w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
-                      disabled={previewCooldown !== null}
-                      onClick={() => {
-                        if (selectedAspectRatio === "16:9") {
-                          alert("This image size is not supported for mugs.");
-                          return;
-                        }
-                        setPreviewProduct("mug");
-                        setPreviewImage(getDisplayImageUrl(imagesUrl[0]?.imageUrl ?? null));
-                      }}
-                    >
-                      {previewCooldown !== null ? `Wait ${previewCooldown}s…` : "Preview on Mug — Free"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* More products */}
-              <div className="mt-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <h4 className="font-semibold text-slate-900">More Products</h4>
-                  <Link href="/arabic-calligraphy/products" className="text-sm font-medium text-brand-700 hover:underline">View all Arabic name products →</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {GENERATOR_PRODUCT_THUMBNAILS.arabic.filter((p) => p.key !== "mug").map((p) => (
-                    <Link
-                      key={p.key}
-                      href="/arabic-calligraphy/products"
-                      className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
-                    >
-                      <div className="aspect-video overflow-hidden">
-                        <img src={p.image} alt={p.label} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                      </div>
-                      <div className="px-3 py-2">
-                        <div className="font-semibold text-slate-800">{p.label}</div>
-                        <div className="text-xs text-gray-500">{p.description}</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              (nudge banner "Your art is ready to print!", Custom Mug card, More Products grid)
             </section>
+            */}
           </>
         )}
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
