@@ -5,9 +5,10 @@ import {
   FiCpu,
   FiDownload,
   FiGlobe,
+  FiImage,
   FiLayers,
   FiPenTool,
-  FiStar,
+  FiShare2,
 } from "react-icons/fi";
 
 import { LanguageSwitchLink } from "~/component/LanguageSwitchLink";
@@ -77,12 +78,14 @@ const arabicFaqs = [
       "نعم، يمكنك إدخال الاسم أو العبارة بالشكل الذي تفضله ثم تجربة مخرجات أقرب إلى زخرفة عربية احترافية بالتشكيل، مع اختلاف النتيجة بحسب النمط المختار وطريقة كتابة النص.",
   },
   {
-    question: "هل يمكن استخدام التصميم على منتجات أو طباعته؟",
+    question: "هل يمكنني تنزيل تصميم الخط العربي؟",
     answer:
-      "نعم، بعد إنشاء التصميم يمكنك استخدامه على منتجات مطبوعة مثل الأكواب واللوحات والملصقات، أو تنزيله لاستخدامات رقمية وشخصية مختلفة.",
+      "نعم، يتم تنزيل كل تصميم كصورة PNG عالية الدقة وبدون علامة مائية، جاهزة لمواقع التواصل أو صورتك الشخصية أو الاستخدام الرقمي.",
   },
 ];
 
+/* HIDDEN W1 — productLinks: links to /arabic-calligraphy/products, /personalized-gifts,
+   /arabic-calligraphy/products/wall-art — orphaned physical pages, not linked from this page.
 const productLinks = [
   {
     href: "/arabic-calligraphy/products",
@@ -103,6 +106,7 @@ const productLinks = [
       "حوّل الاسم أو العبارة إلى لوحة زخرفة خط عربي تناسب الديكور أو الإهداء أو الهوية البصرية.",
   },
 ];
+*/
 
 const ArabicCalligraphyLandingArabicPage: NextPage = () => {
   return (
@@ -251,7 +255,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400">
                 ثلاث خطوات سريعة للحصول على زخرفة خط عربي متوازنة بصريًا وقابلة
-                للاستخدام الرقمي أو الطباعي.
+                للاستخدام الرقمي والمشاركة.
               </p>
             </div>
 
@@ -284,8 +288,8 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
                 </div>
                 <h3 className="mb-3 text-xl font-bold">3. احصل على التصميم</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  أنشئ النتيجة النهائية، ثم نزّلها أو استخدمها في منتج مطبوع أو
-                  معاينة رقمية أو هوية بصرية شخصية.
+                  أنشئ النتيجة النهائية، ثم نزّلها بدقة عالية واستخدمها في مواقع
+                  التواصل أو صورتك الشخصية أو أعمالك الرقمية.
                 </p>
               </div>
             </div>
@@ -300,29 +304,29 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
                 استخدامات زخرفة الخط العربي
               </h2>
               <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                يمكن توظيف كتابة الخط العربي بالذكاء الاصطناعي في الهدايا والديكور
-                والعرض الرقمي مع الحفاظ على طابع الخط وهوية الحروف.
+                يمكن توظيف كتابة الخط العربي بالذكاء الاصطناعي في مواقع التواصل
+                والعرض الرقمي والأعمال الإبداعية.
               </p>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
-                <FiStar className="mb-4 text-4xl text-amber-500" />
+                <FiShare2 className="mb-4 text-4xl text-amber-500" />
                 <h3 className="mb-3 text-2xl font-bold">
-                  هدايا للمناسبات الراقية
+                  مشاركة على مواقع التواصل
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  استخدم زخرفة عربية احترافية للأسماء أو العبارات في هدايا الزفاف
-                  والتهاني والذكريات الخاصة.
+                  استخدم تصميمك صورةً شخصية أو منشورًا مميزًا على منصات التواصل
+                  الاجتماعي.
                 </p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
-                <FiGlobe className="mb-4 text-4xl text-brand-600" />
+                <FiImage className="mb-4 text-4xl text-brand-600" />
                 <h3 className="mb-3 text-2xl font-bold">
-                  لوحات وديكور جداري
+                  عمل فني رقمي
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  حوّل الاسم أو الجملة إلى لوحة خط عربية تناسب المنزل أو المكتب
-                  أو المساحات الرسمية.
+                  حوّل الاسم إلى لوحة خط عربي رقمية عالية الدقة جاهزة للعرض
+                  والمشاركة.
                 </p>
               </div>
               <div className="rounded-2xl border p-8 transition duration-300 hover:shadow-xl dark:border-gray-700">
@@ -339,7 +343,8 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
           </div>
         </section>
 
-        {/* REVIEW_AR: Supporting-link copy should be refined by a native Arabic speaker before publishing. */}
+        {/* HIDDEN W1 — "خطواتك التالية" section: linked to /arabic-calligraphy/products,
+            /personalized-gifts, /arabic-calligraphy/products/wall-art. Orphaned physical pages.
         <section className="bg-cream-50 py-24">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">
@@ -369,6 +374,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
             </div>
           </div>
         </section>
+        */}
 
         {/* REVIEW_AR: FAQ copy should be refined by a native Arabic speaker before publishing. */}
         <section className="bg-cream-50 py-24">
