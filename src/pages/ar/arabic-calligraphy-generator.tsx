@@ -117,7 +117,7 @@ const arabicGeneratorFaqs = [
   {
     question: "ما أنواع الخطوط أو الأنماط المتاحة داخل الأداة؟",
     answer:
-      "تتضمن الأداة أنماطًا مستوحاة من الخط العربي الكلاسيكي مثل الثلث والديواني والكوفي، بالإضافة إلى أنماط حديثة وزخرفية مناسبة للاستخدام الرقمي والطباعة.",
+      "تتضمن الأداة أنماطًا مستوحاة من الخط العربي الكلاسيكي مثل الثلث والديواني والكوفي، بالإضافة إلى أنماط حديثة وزخرفية مناسبة للاستخدام الرقمي والمشاركة.",
   },
   {
     question: "هل الأداة مجانية؟",
@@ -128,11 +128,6 @@ const arabicGeneratorFaqs = [
     question: "هل يمكنني استخدام التصميم كخلفية أو صورة شخصية؟",
     answer:
       "نعم، يمكنك اختيار المقاس المناسب ثم استخدام التصميم الناتج كخلفية أو صورة شخصية أو منشور بصري أو بطاقة رقمية.",
-  },
-  {
-    question: "هل يصلح التصميم للطباعة على منتجات؟",
-    answer:
-      "نعم، بعد إنشاء التصميم يمكنك معاينته على بعض المنتجات أو استخدامه في الطباعة على الأكواب واللوحات وغيرها من المنتجات المخصصة.",
   },
   {
     question: "هل يمكن إضافة التشكيل أو تجربة أكثر من شكل؟",
@@ -790,8 +785,8 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
   const aspectRatios: { label: string; value: AspectRatio; description: string }[] = [
     { label: "1:1", value: "1:1", description: "مناسب للصور المربعة والصور الشخصية." },
-    { label: "4:5", value: "4:5", description: "مناسب للمنشورات العمودية والطباعة الفنية." },
-    { label: "3:2", value: "3:2", description: "مناسب للتصاميم الأفقية والملصقات العريضة." },
+    { label: "4:5", value: "4:5", description: "مناسب للمنشورات العمودية والتصاميم الرقمية." },
+    { label: "3:2", value: "3:2", description: "مناسب للتصاميم الأفقية والعرض الرقمي." },
     { label: "16:9", value: "16:9", description: "مناسب للشاشات والخلفيات والعروض الرقمية." },
   ];
   const aspectVisualMap: Record<AspectRatio, string> = {
@@ -836,7 +831,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
           اكتب اسمك بالعربية وجرّب أكثر من نمط خط وزخرفة داخل الأداة
         </h2>
         <p className="mt-4 text-center text-base text-gray-700 dark:text-gray-300 sm:text-lg">
-          أدخل الاسم أو العبارة، اختر النمط المناسب، ثم أنشئ تصميمًا عربيًا مزخرفًا خلال ثوانٍ لاستخدامه رقميًا أو طباعته لاحقًا.
+          أدخل الاسم أو العبارة، اختر النمط المناسب، ثم أنشئ تصميمًا عربيًا مزخرفًا خلال ثوانٍ لاستخدامه رقميًا ومشاركته.
         </p>
         <GeneratorNudge generatorType="arabic" />
         
@@ -1141,85 +1136,12 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               </div>
             )}
 
+            {/* HIDDEN W1 — products/mug section (AR): مولد كوب مخصص + منتجات إضافية
+                links to /arabic-calligraphy/products. Orphaned physical page; render suppressed.
             <section ref={productsSectionRef} className="mt-10 scroll-mt-20">
-              {/* Nudge banner */}
-              <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-4 py-4">
-                <span className="text-3xl">☕</span>
-                <div className="flex-1">
-                  <p className="font-semibold text-brand-900">تصميمك جاهز للطباعة.</p>
-                  <p className="text-sm text-brand-700">عاينه على كوب حقيقي بالأسفل مجانًا.</p>
-                </div>
-              </div>
-
-              {/* Primary: Mug */}
-              <div className="overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="aspect-square w-full sm:w-1/2">
-                    <img src="/images/products/arabic/mug.webp" alt="كوب مخصص" className="h-full w-full object-cover" />
-                  </div>
-                  <div className="flex flex-col justify-center gap-4 p-6 sm:w-1/2">
-                    <div>
-                      <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-800">
-                        الهدية الأكثر طلبًا
-                      </span>
-                      <h4 className="mt-2 text-2xl font-bold text-slate-900">كوب مخصص</h4>
-                      <p className="mt-1 text-sm text-gray-500">طبّق تصميمك العربي على كوب خزفي أنيق بمعاينة سريعة قبل الطلب.</p>
-                    </div>
-                    <ul className="space-y-1 text-sm text-gray-700">
-                      {["طباعة واضحة وعالية الجودة", "مناسب للهدايا والاستخدام اليومي", "معاينة سريعة قبل الشراء", "متوافق مع تصميمات الأسماء العربية"].map((pt) => (
-                        <li key={pt} className="flex items-start gap-2">
-                          <span className="text-brand-600">✔</span>{pt}
-                        </li>
-                      ))}
-                    </ul>
-                    {previewCooldown !== null && (
-                      <div className="rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-900">
-                        تمت إيقاف المعاينة مؤقتًا. حاول مرة أخرى خلال <strong>{previewCooldown}s</strong>.
-                      </div>
-                    )}
-                    <button
-                      className="w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
-                      disabled={previewCooldown !== null}
-                      onClick={() => {
-                        if (selectedAspectRatio === "16:9") {
-                          alert("هذا المقاس غير مدعوم لمعاينة الأكواب.");
-                          return;
-                        }
-                        setPreviewProduct("mug");
-                        setPreviewImage(getDisplayImageUrl(imagesUrl[0]?.imageUrl ?? null));
-                      }}
-                    >
-                      {previewCooldown !== null ? `انتظر ${previewCooldown}s` : "عاين على كوب مجانًا"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* More products */}
-              <div className="mt-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <h4 className="font-semibold text-slate-900">منتجات إضافية</h4>
-                  <Link href="/arabic-calligraphy/products" className="text-sm font-medium text-brand-700 hover:underline">اعرض جميع منتجات الخط العربي →</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {GENERATOR_PRODUCT_THUMBNAILS.arabic.filter((p) => p.key !== "mug").map((p) => (
-                    <Link
-                      key={p.key}
-                      href="/arabic-calligraphy/products"
-                      className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
-                    >
-                      <div className="aspect-video overflow-hidden">
-                        <img src={p.image} alt={p.label} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                      </div>
-                      <div className="px-3 py-2">
-                        <div className="font-semibold text-slate-800">{p.label}</div>
-                        <div className="text-xs text-gray-500">{p.description}</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              (nudge "تصميمك جاهز للطباعة", كوب مخصص card, منتجات إضافية grid)
             </section>
+            */}
           </>
         )}
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
