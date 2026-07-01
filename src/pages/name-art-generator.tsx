@@ -102,7 +102,7 @@ const nameArtGeneratorFaqs = [
   {
     question: "Is this name art generator really free?",
     answer:
-      "Yes. You can preview designs, browse styles, and see how your name looks in different directions completely free. Generating high-resolution, watermark-free, print-ready designs uses credits from our pricing plans, starting at $1.99.",
+      "Yes. You can preview designs, browse styles, and see how your name looks in different directions completely free. Generating high-resolution, watermark-free designs uses credits from our pricing plans, starting at $1.99.",
   },
   {
     question: "What's the difference between a name art generator and a name design maker?",
@@ -117,17 +117,17 @@ const nameArtGeneratorFaqs = [
   {
     question: "Can I use the generated name art commercially?",
     answer:
-      "You own the designs you generate and can use them for personal projects, gifts, printing, and social media. For commercial resale at scale, check our terms of service.",
+      "You own the designs you generate and can use them for personal projects, social media, and digital art. For commercial resale at scale, check our terms of service.",
   },
   {
     question: "What file formats can I download?",
     answer:
-      "Generated designs download as high-resolution PNG images by default, suitable for printing on mugs, shirts, posters, wall art, or sharing online.",
+      "Generated designs download as high-resolution PNG images, ready for social media, profile art, wallpapers, or digital use.",
   },
   {
-    question: "Can I put my name art on a mug or shirt?",
+    question: "What can I do with my downloaded design?",
     answer:
-      "Yes. Every design you generate can be ordered directly on a personalized mug, custom name shirt, or wall art print through our product catalog.",
+      "Use it anywhere digital — social media, profile pictures, wallpapers, or digital prints. Files are high-resolution and watermark-free.",
   },
   {
     question: "Do I need design skills to use this?",
@@ -887,7 +887,7 @@ const NameArtGeneratorPage: NextPage = () => {
     <>
       <SeoHead
         title="Free AI Name Art Generator & Name Design Maker — Create Online"
-        description="Free AI name art generator and name design maker. Create custom name designs in seconds — pick a style, generate, then turn it into a mug, poster, or shirt."
+        description="Free AI name art generator and name design maker. Create custom name designs in seconds — pick a style, generate, then download a high-resolution, watermark-free design."
         path="/name-art-generator"
         noindex
         jsonLd={[
@@ -908,9 +908,9 @@ const NameArtGeneratorPage: NextPage = () => {
         <p className="text-lg mt-4">
           Create custom name art and name designs in seconds. Our free AI name art
           generator doubles as a name design maker — type any name, pick a style,
-          and generate personalized artwork for decor, gifts, and downloads. No
-          sign-up required to preview, and you can turn any design into a mug,
-          poster, or t-shirt.
+          and generate personalized artwork for social media, profile art, and
+          digital use. No sign-up required to preview, and you can download it in
+          high resolution — ready for social, profile art, and digital use.
         </p>
         <GeneratorNudge generatorType="default" />
         
