@@ -2,7 +2,7 @@ import { type NextPage } from "next";
 import Link from "next/link";
 import { useState } from "react";
 import { FaQuoteLeft } from "react-icons/fa";
-import { FiEdit3, FiGift, FiHeart } from "react-icons/fi";
+import { FiDownload, FiEdit3, FiHeart } from "react-icons/fi";
 
 import { SeoHead } from "~/component/SeoHead";
 import { buildCollectionPageSchema, buildFAQSchema } from "~/lib/seo";
@@ -81,7 +81,7 @@ const couplesArtFaqs = [
   {
     question: "What is couple name art?",
     answer:
-      "Couple name art is a design that combines two partners' names into a single artwork. It's used as a romantic gift, anniversary keepsake, wedding decor, or shared profile picture. The design itself is meaningful — two names, one artwork, one story.",
+      "Couple name art is a design that combines two partners' names into a single artwork. It's used as shared profile art, a romantic design, or a digital keepsake. The design itself is meaningful — two names, one artwork, one story.",
   },
   {
     question: "How do I create couple name art online?",
@@ -99,14 +99,14 @@ const couplesArtFaqs = [
       "Yes. Many users create couple name art specifically for social media DPs, WhatsApp profile pictures, and Instagram. Choose a square format style, download in high resolution, and it's ready to use as a shared couple profile image.",
   },
   {
-    question: "Can I order couple name art as a gift?",
+    question: "Can I download couples name art?",
     answer:
-      "Yes. Couple name designs can be printed on mugs, framed prints for the home, shirts, and wall art. Our anniversary and wedding gift categories feature mockups you can order directly.",
+      "Yes — download it as a high-resolution, watermark-free PNG for social media, shared profiles, or digital use.",
   },
   {
     question: "What occasions is couple name art best for?",
     answer:
-      "The most popular occasions are anniversaries, wedding gifts, engagements, Valentine's Day, and couple moving-in / first-home gifts. It's also used by parents gifting to newlywed children.",
+      "The most popular occasions are anniversaries, engagements, Valentine's Day, and couples celebrating a milestone. It's also used by parents for newlywed children.",
   },
   {
     question: "Is couple name art free?",
@@ -133,11 +133,10 @@ const CouplesArtLandingPage: NextPage = () => {
           buildCollectionPageSchema({
             name: "Couples Name Art",
             description:
-              "Explore romantic couple name art styles, gift pathways, and supporting content.",
+              "Explore romantic couple name art styles and supporting content.",
             path: "/couples-art",
             itemPaths: [
               "/couples-art/styles",
-              ...relatedLinks.map((item) => item.href),
             ],
           }),
           buildFAQSchema(couplesArtFaqs),
@@ -151,12 +150,12 @@ const CouplesArtLandingPage: NextPage = () => {
               Where two names become one artwork
             </h1>
             <h2 className="mx-auto mt-4 max-w-3xl text-xl text-gray-700 dark:text-gray-300 md:text-2xl">
-              Create custom couple name art for anniversaries, weddings, special
-              dates, and meaningful gifts.
+              Create custom couple name art for anniversaries, weddings, and special dates.
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-              Use romantic, modern, or playful styles to turn two names into a
-              keepsake that still works for decor, gifting, and product-ready formats.
+              Use romantic, modern, or playful styles to turn two names into one
+              design you can download in high resolution — ready for social, profile
+              art, and shared spaces.
             </p>
             <div className="mt-10">
               <Link href="/couples-name-art-generator">
@@ -174,7 +173,7 @@ const CouplesArtLandingPage: NextPage = () => {
               Create your couple art in three steps
             </h2>
             <p className="mx-auto mb-16 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-              A simple path from two names to a romantic keepsake.
+              A simple path from two names to a romantic design.
             </p>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 text-center md:grid-cols-3">
               <div className="flex flex-col items-center p-6">
@@ -192,10 +191,10 @@ const CouplesArtLandingPage: NextPage = () => {
                 </p>
               </div>
               <div className="flex flex-col items-center p-6">
-                <FiGift className="mb-4 text-5xl text-pink-500" />
-                <h3 className="mb-2 text-xl font-semibold">3. Turn It Into a Keepsake</h3>
+                <FiDownload className="mb-4 text-5xl text-pink-500" />
+                <h3 className="mb-2 text-xl font-semibold">3. Download Your Design</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Download the art or continue into gift and decor-focused pages.
+                  Download the finished art in high resolution.
                 </p>
               </div>
             </div>
@@ -265,35 +264,28 @@ const CouplesArtLandingPage: NextPage = () => {
           </div>
         </section>
 
+        {/* HIDDEN W1 — gift/occasion related links: re-enable by unwrapping
         <section className="py-24">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">
-              <h2 className="text-3xl font-bold md:text-4xl">
-                Continue into gift and occasion pages
-              </h2>
+              <h2 className="text-3xl font-bold md:text-4xl">Continue into gift and occasion pages</h2>
               <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                Couple name art often performs best when it is tied to a clear
-                gifting or decor use case. Use these related pages to go deeper.
+                Couple name art often performs best when it is tied to a clear gifting or decor use case.
+                Use these related pages to go deeper.
               </p>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {relatedLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-2xl border border-cream-200 p-6 transition hover:border-pink-400 hover:bg-pink-50"
-                >
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    {link.label}
-                  </h3>
-                  <p className="mt-3 text-slate-600 dark:text-slate-300">
-                    {link.description}
-                  </p>
+                <Link key={link.href} href={link.href}
+                  className="rounded-2xl border border-cream-200 p-6 transition hover:border-pink-400 hover:bg-pink-50">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{link.label}</h3>
+                  <p className="mt-3 text-slate-600 dark:text-slate-300">{link.description}</p>
                 </Link>
               ))}
             </div>
           </div>
         </section>
+        */}
 
         <section className="py-24">
           <div className="container mx-auto px-4 text-center">
@@ -312,16 +304,16 @@ const CouplesArtLandingPage: NextPage = () => {
               <div className="rounded-lg bg-gray-50 p-8 text-left shadow-xl dark:bg-gray-800">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  &quot;We used a couple design as a wedding keepsake and then carried
-                  the same concept into our guest-book display.&quot;
+                  &quot;We used a couple design for our anniversary and then used it as our
+                  shared profile art.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Sarah and Liam</p>
               </div>
               <div className="rounded-lg bg-cream-50 p-8 text-left border border-cream-200">
                 <FaQuoteLeft className="mb-4 text-3xl text-pink-400" />
                 <p className="mb-6 italic text-gray-600 dark:text-gray-300">
-                  &quot;It gave me a personal gift idea that felt much more thoughtful
-                  than generic decor.&quot;
+                  &quot;It gave me a design that felt much more personal and thoughtful
+                  than anything else I tried.&quot;
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">- Chloe J.</p>
               </div>
@@ -334,7 +326,7 @@ const CouplesArtLandingPage: NextPage = () => {
             Frequently asked questions about couple name art
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-center text-gray-600">
-            Everything you need to know about creating couple name designs for gifts, anniversaries, and shared keepsakes.
+            Everything you need to know about creating couple name designs for anniversaries, special dates, and shared profiles.
           </p>
           <div className="mt-10 space-y-6">
             {couplesArtFaqs.map((faq) => (
@@ -369,7 +361,7 @@ const CouplesArtLandingPage: NextPage = () => {
               Ready to create your love story in art?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-pink-100">
-              Design the artwork first, then move into gifts, decor, or milestone-focused pages.
+              Design the artwork first, then download it in high resolution once the design feels right.
             </p>
             <div className="mt-8">
               <Link href="/couples-name-art-generator">
