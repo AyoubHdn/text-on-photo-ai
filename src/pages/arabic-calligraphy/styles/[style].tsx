@@ -10,7 +10,7 @@ import {
   buildFAQSchema,
 } from "~/lib/seo";
 import { getStyleImageAlt } from "~/lib/styleImageAlt";
-const PHYSICAL_FAQ_RE = /print|mug|shirt|product|order|طباعة|منتج|كوب|قميص|طلب/i;
+const PHYSICAL_FAQ_RE = /print|mug|shirt|poster|wall art|gift|product|order|طباعة|منتج|كوب|قميص|طلب|هدية|لوحة/i;
 import { ARABIC_STYLE_ITEMS, getArabicStyleBySlug } from "~/lib/styleTaxonomy";
 
 type ArabicStylePageProps = {
