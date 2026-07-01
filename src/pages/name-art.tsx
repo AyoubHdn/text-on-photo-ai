@@ -141,7 +141,7 @@ const NameArtLandingPage: NextPage = () => {
                   Personalized name art
                 </span>
                 <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
-                  Transform your name into a work of art
+                  Name Art & Name Design — Custom Styles for Any Name
                 </h1>
                 <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-slate-300">
                   Explore text styles, calligraphy, and creative directions, then
