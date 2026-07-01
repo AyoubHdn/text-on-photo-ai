@@ -36,7 +36,7 @@ const homepageFaqs = [
   {
     question: "What is Name Design AI?",
     answer:
-      "Name Design AI is a platform for creating personalized name art, Arabic calligraphy, couple name designs, and gift-ready visuals using artificial intelligence.",
+      "Name Design AI is a platform for creating personalized name art, Arabic calligraphy, and couple name designs using artificial intelligence. Type a name, pick a style, and get a download-ready design in seconds.",
   },
   {
     question: "Can I create Arabic name art online?",
@@ -44,19 +44,14 @@ const homepageFaqs = [
       "Yes. We offer a dedicated Arabic name art experience with styles inspired by traditional calligraphy and modern visual design.",
   },
   {
-    question: "Is Name Design AI useful for personalized gifts?",
+    question: "Can I download my designs in high resolution?",
     answer:
-      "Yes. Many customers use Name Design AI to create artwork that can be turned into framed wall art, mugs, shirts, and occasion-focused gifts.",
+      "Yes. Every design downloads as a high-resolution, watermark-free PNG — ready for social media, profile art, wallpapers, or digital printing. No design skills needed.",
   },
   {
     question: "Do I need design skills to use Name Design AI?",
     answer:
       "No. The generators are designed for non-designers and let you create polished artwork quickly with guided style choices.",
-  },
-  {
-    question: "Can I download my designs in high resolution?",
-    answer:
-      "Yes. Finished designs can be downloaded in high resolution so they are ready for printing, sharing, or personal keepsakes.",
   },
 ];
 
@@ -65,7 +60,7 @@ const generatorCards: VisualCard[] = [
     href: "/name-art-generator",
     title: "Create Name Art",
     description:
-      "Turn any name into visual art for decor, gifts, profile images, and printable keepsakes.",
+      "Turn any name into visual art — explore dozens of styles and download in seconds.",
     imageSrc: "/name-art.webp",
     imageAlt: "Emma personalized name art example",
     eyebrow: "Visual generator",
@@ -77,7 +72,7 @@ const generatorCards: VisualCard[] = [
     href: "/arabic-calligraphy",
     title: "Arabic Name Art",
     description:
-      "Create Arabic calligraphy-inspired artwork for identity-rich gifts, decor, and premium visuals.",
+      "Create Arabic calligraphy-inspired artwork across dozens of authentic script styles.",
     imageSrc: "/styles/arabic/thuluth-black.webp",
     imageAlt: "Arabic calligraphy name art example in a black thuluth style",
     eyebrow: "Calligraphy styles",
@@ -89,9 +84,9 @@ const generatorCards: VisualCard[] = [
     href: "/couples-art",
     title: "Couples Name Art",
     description:
-      "Design romantic visuals for anniversaries, weddings, shared decor, and couple keepsakes.",
+      "Design romantic visuals for anniversaries, weddings, and relationship-led art.",
     imageSrc: "/user-couple-art.webp",
-    imageAlt: "Couple name art example for wedding and anniversary gifts",
+    imageAlt: "Couple name art example combining two names into one romantic design",
     eyebrow: "Relationship art",
     ctaLabel: "See couple designs",
     secondaryHref: "/couples-art/styles",
@@ -104,7 +99,7 @@ const popularNameExamples: VisualCard[] = [
     href: "/name-art/emma",
     title: "Emma name art",
     description:
-      "Soft, playful lettering that works well for mugs, nursery decor, and birthday gifts.",
+      "Clean, playful styling that works across modern and script directions.",
     imageSrc: "/images/home/emma.webp",
     imageAlt: "Emma name art example in a cute pastel personalized style",
     eyebrow: "Popular example",
@@ -114,7 +109,7 @@ const popularNameExamples: VisualCard[] = [
     href: "/name-art/olivia",
     title: "Olivia name art",
     description:
-      "Floral styling that feels premium on framed prints and decor-focused gift pages.",
+      "Feels premium in elegant serif and calligraphic styles.",
     imageSrc: "/user-birthday-design.webp",
     imageAlt: "Olivia floral name art example for personalized wall decor",
     eyebrow: "Popular example",
@@ -124,7 +119,7 @@ const popularNameExamples: VisualCard[] = [
     href: "/name-art/mohammed",
     title: "Mohammed Arabic calligraphy",
     description:
-      "Arabic-inspired styling for culturally specific gifts, elegant branding, and premium wall art.",
+      "Strong fit for Arabic calligraphy and culturally rich designs.",
     imageSrc: "/images/home/muhammed.webp",
     imageAlt: "Mohammed Arabic calligraphy name art example in a gold style",
     eyebrow: "Popular example",
@@ -134,7 +129,7 @@ const popularNameExamples: VisualCard[] = [
     href: "/name-art/sarah",
     title: "Sarah floral style",
     description:
-      "A softer decorative direction that feels at home on prints, keepsakes, and gift sets.",
+      "Versatile across minimal, decorative, and hand-lettered styles.",
     imageSrc: "/images/home/sarah.webp",
     imageAlt: "Sarah floral style name art example with watercolor flowers",
     eyebrow: "Popular example",
@@ -269,17 +264,13 @@ const HomePage: NextPage = () => {
           buildCollectionPageSchema({
             name: "Name Design AI homepage",
             description:
-              "Browse name art examples, product mockups, gift categories, and generator entry points.",
+              "Arabic calligraphy, name art, and couples designs — AI-generated and download-ready.",
             path: "/",
             itemPaths: homepageCollectionItems,
           }),
           buildItemListSchema({
             name: "Popular name art examples",
             itemPaths: popularNameExamples.map((item) => item.href),
-          }),
-          buildItemListSchema({
-            name: "Gift idea categories",
-            itemPaths: giftIdeaCards.map((item) => item.href),
           }),
         ]}
       />
@@ -288,8 +279,8 @@ const HomePage: NextPage = () => {
         <TrustStrip />
         <ProductsSection />
         <PopularNameExamplesSection />
-        <ProductMockupSection />
-        <GiftIdeasSection />
+        {/* HIDDEN W1: ProductMockupSection — re-enable by removing comment */}
+        {/* HIDDEN W1: GiftIdeasSection — re-enable by removing comment */}
         <HowItWorksSection />
         <PopularTodaySection />
         <FinalCTASection />
@@ -311,14 +302,14 @@ function HeroBanner() {
       title: "Personalized name art",
       imageSrc: "/images/home/name_art.webp",
       imageAlt:
-        "Collage of personalized name art, Arabic calligraphy, and custom gift mockups",
+        "Collage of personalized name art, Arabic calligraphy, and couples designs",
       className: "sm:row-span-2",
       aspectClass: "h-full min-h-[320px]",
     },
     {
-      title: "Couple keepsakes",
+      title: "Couples designs",
       imageSrc: "/styles/couples/c001e.webp",
-      imageAlt: "Couple name art example for romantic keepsakes",
+      imageAlt: "Couple name art example combining two names into one design",
       className: "",
       aspectClass: "aspect-[4/3]",
     },
@@ -328,13 +319,6 @@ function HeroBanner() {
       imageAlt: "Arabic calligraphy style example for personalized name art",
       className: "",
       aspectClass: "aspect-[4/3]",
-    },
-    {
-      title: "product mockups",
-      imageSrc: "/images/home/products.webp",
-      imageAlt: "Personalized name art printed on mug mockup",
-      className: "sm:col-span-2",
-      aspectClass: "aspect-[8/3]",
     },
   ];
 
@@ -375,10 +359,10 @@ function HeroBanner() {
               Arabic calligraphy
             </span>
             <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 dark:bg-slate-800">
-              Product mockups
+              Instant download
             </span>
             <span className="rounded-full border border-cream-200 bg-cream-50 px-4 py-2 dark:bg-slate-800">
-              Personalized gift pages
+              No design skills needed
             </span>
           </div>
         </div>
@@ -412,9 +396,9 @@ function HeroBanner() {
 function TrustStrip() {
   const stats = [
     { icon: "🎨", label: "AI-generated designs", value: "10,000+" },
-    { icon: "🌍", label: "Shipped worldwide", value: "Free shipping" },
+    { icon: "⚡", label: "Download in seconds", value: "Instant" },
     { icon: "⭐", label: "Customer satisfaction", value: "4.9 / 5" },
-    { icon: "🔒", label: "Secure checkout", value: "Powered by Stripe" },
+    { icon: "🔒", label: "Stripe-protected payments", value: "Secure" },
   ];
 
   return (
@@ -504,9 +488,9 @@ function PopularNameExamplesSection() {
   );
 }
 
+{/* HIDDEN W1 — ProductMockupSection: re-enable by unwrapping
 function ProductMockupSection() {
   const homepageProductMockups = productMockupCards.slice(0, 3);
-
   return (
     <section className="py-20 lg:py-24">
       <div className="container mx-auto px-6 lg:px-8">
@@ -519,7 +503,6 @@ function ProductMockupSection() {
             while keeping the design itself front and center.
           </p>
         </div>
-
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {homepageProductMockups.map((card) => (
             <VisualMarketplaceCard key={card.href + card.title} card={card} />
@@ -529,7 +512,9 @@ function ProductMockupSection() {
     </section>
   );
 }
+*/}
 
+{/* HIDDEN W1 — GiftIdeasSection: re-enable by unwrapping
 function GiftIdeasSection() {
   return (
     <section id="gift-ideas" className="bg-cream-50 py-20 dark:bg-gray-800 lg:py-24">
@@ -543,7 +528,6 @@ function GiftIdeasSection() {
             the format that fits the person and the moment.
           </p>
         </div>
-
         <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
           {giftIdeaCards.map((card) => (
             <VisualMarketplaceCard key={card.title} card={card} />
@@ -553,6 +537,7 @@ function GiftIdeasSection() {
     </section>
   );
 }
+*/}
 
 function HowItWorksSection() {
   const steps = [
@@ -569,37 +554,37 @@ function HowItWorksSection() {
     {
       title: "Compare visual directions",
       description:
-        "Try decorative, bold, floral, romantic, or calligraphy-led styles before committing to a product.",
+        "Try decorative, bold, floral, romantic, or calligraphy-led styles before you download.",
     },
     {
-      title: "Download or move into products",
+      title: "Download your design",
       description:
-        "Use the final artwork digitally or continue into mugs, shirts, wall art, and other gift-ready formats.",
+        "Get a high-resolution, watermark-free PNG ready to use anywhere — social, profile art, digital prints.",
     },
   ];
 
   const trustPoints = [
-    "Designed for personalized gifts and keepsakes",
+    "Designed for personal, creative, and social use",
     "High-resolution downloads available",
     "No design software required",
-    "Works for decor, products, and social visuals",
+    "Works for decor, wallpapers, and social visuals",
   ];
 
   const workflowGallery = [
     {
-      title: "Poster-ready art",
+      title: "High-res digital art",
       imageSrc: "/images/home/best-dad-ever-poster.webp",
-      imageAlt: "Personalized name art shown as a framed poster mockup",
+      imageAlt: "Personalized name art in high resolution, ready to download",
     },
     {
-      title: "Giftable mug design",
-      imageSrc: "/images/products/mug.webp",
-      imageAlt: "Personalized name art shown on a mug product mockup",
+      title: "Calligraphy-ready art",
+      imageSrc: "/images/home/amira.webp",
+      imageAlt: "Arabic calligraphy name art example ready to download",
     },
     {
-      title: "Couple keepsake",
+      title: "Couples design",
       imageSrc: "/styles/couples/c033e.webp",
-      imageAlt: "Couple name art example for a keepsake or anniversary gift",
+      imageAlt: "Couple name art example combining two names into one design",
     },
   ];
 
@@ -742,8 +727,8 @@ function FinalCTASection() {
           Create a name that feels worth keeping
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-brand-100">
-          Start with the artwork, then move into wall decor, mugs, shirts, or
-          gift-ready products once the design direction is right.
+          Type a name, pick a style, and download your design in seconds — Arabic
+          calligraphy, name art, or couples designs.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           {isLoggedIn ? (
@@ -762,10 +747,10 @@ function FinalCTASection() {
             </button>
           )}
           <Link
-            href="/personalized-gifts"
+            href="/arabic-calligraphy/styles"
             className="rounded-lg border border-white/30 px-8 py-4 text-lg font-bold text-white transition hover:border-white hover:bg-white/10"
           >
-            Browse Gift Pages
+            Browse Styles
           </Link>
         </div>
       </div>
