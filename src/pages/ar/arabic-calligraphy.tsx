@@ -144,7 +144,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
 
       <main lang="ar" dir="rtl" className="bg-white text-right">
         {/* REVIEW_AR: Hero copy should be polished by a native Arabic copywriter before publishing. */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white px-4 py-24 text-center dark:from-gray-800 dark:to-gray-900 lg:py-32">
+        <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white px-4 py-24 text-center dark:from-gray-800 dark:to-gray-900 lg:py-32 min-h-[560px] md:min-h-[640px] [contain:layout]">
           <div className="absolute left-0 top-0 h-full w-full opacity-10 dark:opacity-5" />
 
           <div className="container relative z-10 mx-auto">
