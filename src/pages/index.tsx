@@ -379,6 +379,7 @@ function HeroBanner() {
                   alt={item.imageAlt}
                   fill
                   priority={item.title === "Personalized name art"}
+                  sizes="(max-width: 640px) 100vw, 50vw"
                   className="object-cover transition duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 via-slate-950/15 to-transparent p-5">

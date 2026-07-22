@@ -207,7 +207,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-              {galleryItems.map((style) => (
+              {galleryItems.map((style, index) => (
                 <Link
                   key={style.title}
                   href={style.href}
@@ -222,6 +222,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
                         fallbackAlt: `${style.title} Arabic calligraphy style example`,
                       })}
                       fill
+                      priority={index === 0}
                       sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
