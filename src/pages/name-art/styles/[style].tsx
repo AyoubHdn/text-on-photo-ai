@@ -55,8 +55,8 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
   return (
     <>
       <SeoHead
-        title={`${title} Name Art Styles | Name Design AI`}
-        description={description}
+        title={`${title} Name Art & Name Design Ideas | Name Design AI`}
+        description={`Explore ${title.toLowerCase()} name art and name design ideas — browse examples and create your own with AI. Free to try, download in seconds.`}
         path={pagePath}
         image={imageSrc}
         imageAlt={imageAlt}
@@ -91,7 +91,7 @@ const NameArtStylePage: NextPage<NameArtStylePageProps> = ({
                 {groupTitle}
               </p>
               <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-5xl">
-                {title} name art styles
+                {title} name art
               </h1>
               <p className="mt-5 text-lg text-slate-600 dark:text-slate-300">
                 {description}
