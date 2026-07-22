@@ -4,7 +4,8 @@ import { storePendingCreditPurchase, type CreditPurchaseTrackingPayload } from "
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { api } from "~/utils/api";
 
-const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_KEY);
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+const getStripe = () => (stripePromise ??= loadStripe(env.NEXT_PUBLIC_STRIPE_KEY));
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -103,7 +104,7 @@ export function useBuyCredits() {
           return response;
         }
 
-        const stripe = await stripePromise;
+        const stripe = await getStripe();
         await stripe?.redirectToCheckout({
           sessionId: response.id,
         });
