@@ -40,7 +40,16 @@
       "Bash(dir C:\\\\Users\\\\ULTRAPC\\\\Documents\\\\GitHub\\\\SaaS\\\\text-on-photo-ai\\\\scripts *)",
       "Bash(dir C:\\\\Users\\\\ULTRAPC\\\\Documents\\\\GitHub\\\\SaaS\\\\text-on-photo-ai *)",
       "Bash(dir C:\\\\Users\\\\ULTRAPC\\\\Documents\\\\GitHub\\\\SaaS\\\\text-on-photo-ai\\\\codex-seo *)",
-      "Bash(dir C:\\\\Users\\\\ULTRAPC\\\\Documents\\\\GitHub\\\\SaaS\\\\text-on-photo-ai\\\\codex-seo\\\\scripts *)"
+      "Bash(dir C:\\\\Users\\\\ULTRAPC\\\\Documents\\\\GitHub\\\\SaaS\\\\text-on-photo-ai\\\\codex-seo\\\\scripts *)",
+      "Bash(git push *)",
+      "Bash(python codex-seo/scripts/gsc_query.py --property \"sc-domain:namedesignai.com\" --days 28 --dimensions \"query,page\" --limit 5000 --json)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(python codex-seo/scripts/gsc_query.py --property \"sc-domain:namedesignai.com\" --days 28 --dimensions \"page\" --limit 5000 --json)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(python scripts/pagespeed_check.py \"https://www.namedesignai.com/\" --psi-only --json)",
+      "Bash(echo \"EXIT $?\")",
+      "Bash(npm audit *)",
+      "Bash(npm ls *)"
     ]
   }
 }
