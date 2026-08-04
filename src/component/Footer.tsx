@@ -12,7 +12,9 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
     return (
       <footer
         className={`border-t border-gray-200 py-3 ${
-          forceLight ? "bg-white" : "bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+          forceLight
+            ? "bg-white"
+            : "bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
         }`}
       >
         <div
@@ -68,14 +70,19 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
             <h3 className="text-lg font-semibold">Name Design AI</h3>
             <p
               className={`text-sm ${
-                forceLight ? "text-gray-600" : "text-gray-600 dark:text-gray-400"
+                forceLight
+                  ? "text-gray-600"
+                  : "text-gray-600 dark:text-gray-400"
               }`}
             >
-              AI-generated name art — Arabic calligraphy, custom name art, and couples designs.
+              AI-generated name art — Arabic calligraphy, custom name art, and
+              couples designs.
             </p>
             <p
               className={`text-sm ${
-                forceLight ? "text-gray-600" : "text-gray-600 dark:text-gray-400"
+                forceLight
+                  ? "text-gray-600"
+                  : "text-gray-600 dark:text-gray-400"
               }`}
             >
               © {new Date().getFullYear()} HDN STUDIO LTD
@@ -162,6 +169,19 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
               <li>
                 <PrimaryLink href="/refund" className="text-sm">
                   Refund Policy
+                </PrimaryLink>
+              </li>
+              <li>
+                <PrimaryLink href="/pageposter/privacy" className="text-sm">
+                  PagePoster Privacy
+                </PrimaryLink>
+              </li>
+              <li>
+                <PrimaryLink
+                  href="/pageposter/data-deletion"
+                  className="text-sm"
+                >
+                  PagePoster Data Deletion
                 </PrimaryLink>
               </li>
             </ul>
