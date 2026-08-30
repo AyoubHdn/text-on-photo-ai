@@ -171,19 +171,6 @@ export function Footer({ minimal = false, forceLight = false }: FooterProps) {
                   Refund Policy
                 </PrimaryLink>
               </li>
-              <li>
-                <PrimaryLink href="/pageposter/privacy" className="text-sm">
-                  PagePoster Privacy
-                </PrimaryLink>
-              </li>
-              <li>
-                <PrimaryLink
-                  href="/pageposter/data-deletion"
-                  className="text-sm"
-                >
-                  PagePoster Data Deletion
-                </PrimaryLink>
-              </li>
             </ul>
           </div>
         </div>
