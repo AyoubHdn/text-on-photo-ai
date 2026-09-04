@@ -11,6 +11,8 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import { Header } from "~/component/Header";
 import { Footer } from "~/component/Footer";
+import { BuyerAwareAdSenseScript } from "~/component/AdSense";
+import { ZakhrafaPromoBanner } from "~/component/ZakhrafaPromoBanner";
 
 const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 const PAID_TRAFFIC_SOURCE_PAGE_KEY = "paidTrafficSourcePage";
@@ -221,6 +223,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   return (
     <SessionProvider session={session}>
+      <BuyerAwareAdSenseScript />
       {shouldNoindexRoute && (
         <Head>
           <meta name="robots" content="noindex, nofollow" key="global-robots" />
@@ -310,6 +313,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
           <Footer minimal={isRamadanAdLayout} />
         </>
       )}
+      <ZakhrafaPromoBanner />
     </SessionProvider>
   );
 };

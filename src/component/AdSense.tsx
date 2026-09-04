@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -7,6 +8,7 @@ import {
   getAdSenseContentSlotId,
   shouldShowAdSenseForPath,
 } from "~/lib/adsense";
+import { api } from "~/utils/api";
 
 declare global {
   interface Window {
@@ -23,8 +25,23 @@ type AdSenseUnitProps = {
 const adClient = getAdSenseClientId();
 const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 
+function useCanShowAdsForAccount() {
+  const session = useSession();
+  const buyerState = api.user.getCreditUpgradeState.useQuery(undefined, {
+    enabled: session.status === "authenticated",
+    refetchOnWindowFocus: true,
+  });
+
+  return (
+    session.status === "unauthenticated" ||
+    (session.status === "authenticated" &&
+      buyerState.data?.hasPurchasedCreditsBefore === false)
+  );
+}
+
 export function AdSenseScript({ enabled }: { enabled: boolean }) {
-  if (!enabled || !adClient) return null;
+  if (process.env.NODE_ENV !== "production" || !enabled || !adClient)
+    return null;
 
   return (
     <Script
@@ -37,16 +54,22 @@ export function AdSenseScript({ enabled }: { enabled: boolean }) {
   );
 }
 
+export function BuyerAwareAdSenseScript() {
+  const canShowAdsForAccount = useCanShowAdsForAccount();
+  return <AdSenseScript enabled={canShowAdsForAccount} />;
+}
+
 export function AdSenseUnit({
   className = "",
   label = "Advertisement",
   slotId = getAdSenseContentSlotId(),
 }: AdSenseUnitProps) {
   const router = useRouter();
+  const canShowAdsForAccount = useCanShowAdsForAccount();
   const [canRenderAd, setCanRenderAd] = useState(false);
 
   useEffect(() => {
-    if (!adClient || !slotId) {
+    if (!adClient || !slotId || !canShowAdsForAccount) {
       setCanRenderAd(false);
       return;
     }
@@ -59,8 +82,10 @@ export function AdSenseUnit({
       isPaidTrafficUser = false;
     }
 
-    setCanRenderAd(shouldShowAdSenseForPath(router.pathname, isPaidTrafficUser));
-  }, [router.pathname, slotId]);
+    setCanRenderAd(
+      shouldShowAdSenseForPath(router.pathname, isPaidTrafficUser)
+    );
+  }, [canShowAdsForAccount, router.pathname, slotId]);
 
   useEffect(() => {
     if (!adClient || !slotId || !canRenderAd) return;
