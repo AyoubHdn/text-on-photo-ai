@@ -9,6 +9,84 @@ export interface MauticApiResponse {
   [key: string]: unknown; // Allows for other properties Mautic might send
 }
 
+export const MAUTIC_PREFERRED_LOCALE_ALIAS = "preferred_locale";
+
+export async function updateExistingMauticContactLocale(
+  email: string,
+  locale: "ar" | "en",
+): Promise<MauticApiResponse> {
+  const mauticBaseUrl = env.MAUTIC_BASE_URL.replace(/\/+$/, "");
+  const authHeader =
+    "Basic " +
+    Buffer.from(`${env.MAUTIC_USERNAME}:${env.MAUTIC_PASSWORD}`).toString("base64");
+
+  try {
+    const searchResponse = await fetch(
+      `${mauticBaseUrl}/api/contacts?search=email:${encodeURIComponent(email)}&limit=1`,
+      { headers: { Authorization: authHeader } },
+    );
+
+    if (!searchResponse.ok) {
+      return {
+        errors: [
+          {
+            message: `Mautic contact lookup failed (${searchResponse.status})`,
+            code: searchResponse.status,
+            type: "api_error",
+          },
+        ],
+      };
+    }
+
+    const searchData = (await searchResponse.json()) as {
+      contacts?: Record<string, { id?: number }>;
+    };
+    const existingContact = Object.values(searchData.contacts ?? {}).find(
+      (contact) => typeof contact.id === "number",
+    );
+
+    if (!existingContact?.id) {
+      return { skipped: "contact_not_found" };
+    }
+
+    const updateResponse = await fetch(
+      `${mauticBaseUrl}/api/contacts/${existingContact.id}/edit`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ [MAUTIC_PREFERRED_LOCALE_ALIAS]: locale }),
+      },
+    );
+
+    if (!updateResponse.ok) {
+      return {
+        errors: [
+          {
+            message: `Mautic locale update failed (${updateResponse.status})`,
+            code: updateResponse.status,
+            type: "api_error",
+          },
+        ],
+      };
+    }
+
+    return (await updateResponse.json()) as MauticApiResponse;
+  } catch (error) {
+    return {
+      errors: [
+        {
+          message: error instanceof Error ? error.message : "Mautic locale update failed",
+          code: 500,
+          type: "internal_error",
+        },
+      ],
+    };
+  }
+}
+
 // Define the shape of the data we'll send to Mautic (payload for create/update)
 // This includes all possible fields we might want to set.
 interface MauticContactPayload {

@@ -13,6 +13,7 @@ import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { useLocale } from "~/hook/useLocale";
 import { t } from "~/lib/funnelStrings";
+import { persistExplicitLocale } from "~/lib/localePreference";
 
 function fireMetaCustomEvent(eventName: string, params?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
@@ -50,6 +51,7 @@ const SuccessPage: React.FC = () => {
   const { locale, isArabic } = useLocale();
 
   const switchLocale = (newLang: "en" | "ar") => {
+    persistExplicitLocale(newLang);
     const query = { ...router.query };
     if (newLang === "ar") {
       query.lang = "ar";

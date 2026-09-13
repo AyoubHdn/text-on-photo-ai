@@ -8,7 +8,9 @@ import {
 
 export default function Document(props: DocumentProps) {
   const pagePath = props.__NEXT_DATA__.page ?? "";
-  const isArabicRoute = pagePath.startsWith("/ar/");
+  const queryLang = props.__NEXT_DATA__.query?.lang;
+  const isArabicRoute =
+    pagePath.startsWith("/ar/") || queryLang === "ar";
 
   return (
     <Html lang={isArabicRoute ? "ar" : "en"} dir={isArabicRoute ? "rtl" : "ltr"}>

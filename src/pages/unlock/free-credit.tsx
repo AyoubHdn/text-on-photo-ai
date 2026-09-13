@@ -11,6 +11,7 @@ import { useRouter } from "next/router";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import { useLocale } from "~/hook/useLocale";
 import { t } from "~/lib/funnelStrings";
+import { persistExplicitLocale } from "~/lib/localePreference";
 
 export default function FreeCreditUnlock() {
   const [unlocking, setUnlocking] = useState(false);
@@ -22,6 +23,7 @@ export default function FreeCreditUnlock() {
   const { locale, isArabic } = useLocale();
 
   const switchLocale = (newLang: "en" | "ar") => {
+    persistExplicitLocale(newLang);
     const query = { ...router.query };
     if (newLang === "ar") {
       query.lang = "ar";

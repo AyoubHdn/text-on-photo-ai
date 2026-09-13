@@ -8,6 +8,7 @@ import { getFunnelContext } from "~/lib/tracking/funnel";
 import { useBuyCredits } from "~/hook/useBuyCredits";
 import { useLocale } from "~/hook/useLocale";
 import { t } from "~/lib/funnelStrings";
+import { persistExplicitLocale } from "~/lib/localePreference";
 
 const BuyCredits: React.FC = () => {
   const router = useRouter();
@@ -18,6 +19,7 @@ const BuyCredits: React.FC = () => {
   const { locale, isArabic } = useLocale();
 
   const switchLocale = (newLang: "en" | "ar") => {
+    persistExplicitLocale(newLang);
     const query = { ...router.query };
     if (newLang === "ar") {
       query.lang = "ar";

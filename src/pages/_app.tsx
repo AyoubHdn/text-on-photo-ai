@@ -12,7 +12,10 @@ import "~/styles/globals.css";
 import { Header } from "~/component/Header";
 import { Footer } from "~/component/Footer";
 import { BuyerAwareAdSenseScript } from "~/component/AdSense";
+import { MauticTracking } from "~/component/MauticTracking";
+import { MauticLocaleSync } from "~/component/MauticLocaleSync";
 import { ZakhrafaPromoBanner } from "~/component/ZakhrafaPromoBanner";
+import { useLocale } from "~/hook/useLocale";
 
 const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 const PAID_TRAFFIC_SOURCE_PAGE_KEY = "paidTrafficSourcePage";
@@ -63,6 +66,12 @@ const MyApp: AppType<{ session: Session | null }> = ({
   pageProps: { session, ...pageProps },
 }) => {
   const router = useRouter();
+  const { locale: appLocale } = useLocale();
+
+  useEffect(() => {
+    document.documentElement.lang = appLocale;
+    document.documentElement.dir = appLocale === "ar" ? "rtl" : "ltr";
+  }, [appLocale]);
 
   // Write lang cookie on /ar/* routes as a persistent signal for server-side
   // use (e.g. future middleware, analytics). useLocale() no longer reads this
@@ -224,6 +233,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <SessionProvider session={session}>
       <BuyerAwareAdSenseScript />
+      <MauticTracking />
+      <MauticLocaleSync />
       {shouldNoindexRoute && (
         <Head>
           <meta name="robots" content="noindex, nofollow" key="global-robots" />

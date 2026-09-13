@@ -1,13 +1,42 @@
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
-import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import {
+  updateExistingMauticContactLocale,
+  updateMauticContact,
+} from "~/server/api/routers/mautic-utils";
 import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
 
 export const userRouter = createTRPCRouter({
+  syncPreferredLocale: protectedProcedure
+    .input(z.object({ locale: z.enum(["ar", "en"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { email: true },
+      });
+
+      if (!user?.email) {
+        return { success: false, skipped: "missing_email" as const };
+      }
+
+      const result = await updateExistingMauticContactLocale(user.email, input.locale);
+
+      if (result.errors?.length) {
+        throw new Error(result.errors[0]?.message ?? "Mautic locale sync failed");
+      }
+
+      return {
+        success: true,
+        skipped:
+          result.skipped === "contact_not_found"
+            ? result.skipped
+            : undefined,
+      };
+    }),
   getCredits: protectedProcedure
     .query(async ({ ctx }) => {
       const user = await ctx.prisma.user.findUnique({
