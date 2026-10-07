@@ -26,6 +26,18 @@ const config = {
     ],
   },
 
+  outputFileTracingIncludes: {
+    "/*": [
+      "./node_modules/stripe/esm/**/*",
+      "./node_modules/stripe/cjs/**/*",
+      "./node_modules/stripe/package.json",
+      "./node_modules/jose/dist/browser/**/*",
+      "./node_modules/jose/package.json",
+      "./node_modules/@panva/hkdf/dist/web/**/*",
+      "./node_modules/@panva/hkdf/package.json",
+    ],
+  },
+
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
