@@ -1,0 +1,83 @@
+name: Cloudflare staging build
+
+on:
+  push:
+    branches:
+      - migration/cloudflare-staging
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_ENV: production
+      SKIP_ENV_VALIDATION: "1"
+      DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      NEXTAUTH_URL: https://namedesignai-cloudflare-staging.workers.dev
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      REPLICATE_API_TOKEN: ci-replicate-token
+      MOCK_REPLICATE: "true"
+      ACCESS_KEY_ID: ci-access-key
+      SECRET_ACCESS_KEY: ci-secret-key
+      STRIPE_SECRET_KEY: sk_test_ci_only
+      HOST_NAME: https://namedesignai-cloudflare-staging.workers.dev
+      STRIPE_WEB_HOOK_SECRET: whsec_ci_only
+      PRICE_ID_STARTER: price_ci_starter
+      PRICE_ID_PRO: price_ci_pro
+      PRICE_ID_ELITE: price_ci_elite
+      MAUTIC_BASE_URL: https://mautic.invalid
+      MAUTIC_API_TOKEN: ci-mautic-token
+      MAUTIC_USERNAME: ci-mautic-user
+      MAUTIC_PASSWORD: ci-mautic-password
+      CRON_SECRET: ci-cron-secret
+      CPX_SECURITY_HASH: ci-cpx-security-hash
+      CPX_APP_ID: ci-cpx-app-id
+      IPAPI_KEY: ci-ipapi-key
+      PRINTFUL_API_KEY: ci-printful-api-key
+      PRINTFUL_WEBHOOK_SECRET: ci-printful-webhook-secret
+      META_PIXEL_ID: ci-meta-pixel-id
+      META_ACCESS_TOKEN: ci-meta-access-token
+      NEXT_PUBLIC_STRIPE_KEY: pk_test_ci_only
+      NEXT_PUBLIC_S3_REGION: us-east-1
+      NEXT_PUBLIC_S3_BUCKET_NAME: ci-namedesignai-bucket
+      NEXT_PUBLIC_META_PIXEL_ID: ci-meta-pixel-id
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ca-pub-ci-only
+      NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID: ci-slot
+
+    steps:
+      - name: Check out staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: migration/cloudflare-staging
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        run: npm run build
+
+      - name: Build OpenNext Cloudflare worker
+        run: npm run cloudflare:build
+
+      - name: Report safe build sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f .open-next/worker.js ]]; then
+            stat -c 'worker.js bytes: %s' .open-next/worker.js
+          else
+            echo 'worker.js was not generated'
+          fi
+          du -sh .open-next 2>/dev/null || true

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "cloudflare:build": "opennextjs-cloudflare build",
+    "cloudflare:preview": "wrangler dev",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
@@ -57,6 +59,7 @@
     "zod": "^3.20.6"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.2",
     "@types/eslint": "^8.21.1",
     "@types/node": "^18.14.0",
     "@types/number-to-words": "^1.2.3",
@@ -73,7 +76,8 @@
     "prettier-plugin-tailwindcss": "^0.2.1",
     "prisma": "^4.9.0",
     "tailwindcss": "^3.2.0",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "wrangler": "^4.86.0"
   },
   "ct3aMetadata": {
     "initVersion": "7.5.9"
