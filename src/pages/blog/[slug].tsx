@@ -1,17 +1,9 @@
 import { type GetStaticPaths, type GetStaticProps, type NextPage } from "next";
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
-import { MDXRemote, type MDXRemoteSerializeResult } from 'next-mdx-remote';
-import { serialize } from 'next-mdx-remote/serialize';
 import Link from "next/link";
 import { AdSenseUnit } from "~/component/AdSense";
-import { Button } from "~/component/Button";
 import { SeoHead } from "~/component/SeoHead";
-import {
-  buildArticleSchema,
-  buildBreadcrumbSchema,
-} from "~/lib/seo";
+import blogContent from "~/generated/blog-content.json";
+import { buildArticleSchema, buildBreadcrumbSchema } from "~/lib/seo";
 
 // Define a clear type for the frontmatter
 interface PostFrontmatter {
@@ -25,31 +17,10 @@ interface PostFrontmatter {
 interface PostPageProps {
   slug: string;
   frontmatter: PostFrontmatter;
-  source: MDXRemoteSerializeResult; // Changed prop name to 'source'
+  html: string;
 }
 
-// Custom components to be used within your MDX files
-// Ensure this component exists if you plan to use it in MDX
-const CTA = ({ title, description, href, buttonText }: { title: string, description: string, href: string, buttonText: string }) => (
-    <div className="my-12 p-8 bg-brand-50 border-l-4 border-brand-500 rounded-r-lg">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h3>
-        <p className="mt-2 mb-6 text-lg text-gray-700 dark:text-gray-300">{description}</p>
-        <Link href={href}>
-            <Button>{buttonText}</Button>
-        </Link>
-    </div>
-);
-
-const components = {
-  h2: (props: any) => <h2 className="text-3xl font-bold mt-12 mb-4" {...props} />,
-  h3: (props: any) => <h3 className="text-2xl font-semibold mt-8 mb-4" {...props} />,
-  p: (props: any) => <p className="text-lg leading-relaxed mb-6" {...props} />,
-  ul: (props: any) => <ul className="list-disc list-inside mb-6 pl-4" {...props} />,
-  li: (props: any) => <li className="mb-2" {...props} />,
-  CTA,
-};
-
-const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
+const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, html }) => {
   const articlePath = `/blog/${slug}`;
   return (
     <>
@@ -79,8 +50,8 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
           }),
         ]}
       />
-      <main className="bg-white dark:bg-gray-900 py-16">
-        <article className="container mx-auto px-6 max-w-3xl">
+      <main className="bg-white py-16 dark:bg-gray-900">
+        <article className="container mx-auto max-w-3xl px-6">
           <nav className="mb-8 text-sm text-gray-500 dark:text-gray-400">
             <Link href="/" className="hover:text-brand-600">
               Home
@@ -92,18 +63,29 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
             / <span>{frontmatter.title}</span>
           </nav>
           <header className="mb-12 text-center">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{frontmatter.title}</h1>
+            <h1 className="mb-4 text-4xl font-extrabold tracking-tight md:text-5xl">
+              {frontmatter.title}
+            </h1>
             <p className="text-gray-500 dark:text-gray-400">
-              Posted on {new Date(frontmatter.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              Posted on{" "}
+              {new Date(frontmatter.date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </header>
-          
-          <img src={frontmatter.featuredImage} alt={frontmatter.title} className="w-full h-auto rounded-lg shadow-lg mb-12"/>
 
-          <div className="prose prose-lg dark:prose-invert max-w-none">
-             {/* Use the 'source' prop here */}
-            <MDXRemote {...source} components={components} />
-          </div>
+          <img
+            src={frontmatter.featuredImage}
+            alt={frontmatter.title}
+            className="mb-12 h-auto w-full rounded-lg shadow-lg"
+          />
+
+          <div
+            className="prose prose-lg dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
 
           <AdSenseUnit className="px-0" />
 
@@ -112,22 +94,33 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
               Continue exploring
             </h2>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <Link href="/name-art" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+              <Link
+                href="/name-art"
+                className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50"
+              >
                 <h3 className="text-lg font-semibold">Name Art</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   Start with the core name art page and generator.
                 </p>
               </Link>
-              <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+              <Link
+                href="/personalized-gifts"
+                className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50"
+              >
                 <h3 className="text-lg font-semibold">Personalized Gifts</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  Move from inspiration into category pages built around gift intent.
+                  Move from inspiration into category pages built around gift
+                  intent.
                 </p>
               </Link>
-              <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+              <Link
+                href="/personalized-gifts"
+                className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50"
+              >
                 <h3 className="text-lg font-semibold">Couple Gifts</h3>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  Explore romantic and occasion-based product ideas linked to couple art.
+                  Explore romantic and occasion-based product ideas linked to
+                  couple art.
                 </p>
               </Link>
             </div>
@@ -138,14 +131,11 @@ const PostPage: NextPage<PostPageProps> = ({ slug, frontmatter, source }) => {
   );
 };
 
-
 // Removed 'async' as it is not needed
 export const getStaticPaths: GetStaticPaths = () => {
-  const postsDirectory = path.join(process.cwd(), '_posts');
-  const filenames = fs.readdirSync(postsDirectory);
-  const paths = filenames.map((filename) => ({
+  const paths = blogContent.map((post) => ({
     params: {
-      slug: filename.replace(/\.mdx?$/, ''),
+      slug: post.slug,
     },
   }));
 
@@ -155,31 +145,21 @@ export const getStaticPaths: GetStaticPaths = () => {
   };
 };
 
-// Marked as async because 'serialize' is an async function
 export const getStaticProps: GetStaticProps = async (context) => {
   // Type safety check for slug
   const slug = context.params?.slug;
-  if (typeof slug !== 'string') {
+  if (typeof slug !== "string") {
     return { notFound: true };
   }
 
-  const filePath = path.join(process.cwd(), '_posts', `${slug}.mdx`);
-  const fileContents = fs.readFileSync(filePath, 'utf8');
-
-  const { data: frontmatter, content } = matter(fileContents);
-
-  const mdxSource = await serialize(content, {
-    mdxOptions: {
-      // Potentially add MDX plugins here if needed
-    },
-    parseFrontmatter: false,
-  });
+  const post = blogContent.find((entry) => entry.slug === slug);
+  if (!post) return { notFound: true };
 
   return {
     props: {
       slug,
-      frontmatter,
-      source: mdxSource, // Pass the serialized content to the 'source' prop
+      frontmatter: post.frontmatter,
+      html: post.html,
     },
   };
 };

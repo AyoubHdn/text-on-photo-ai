@@ -1,12 +1,10 @@
 import { type GetStaticProps, type NextPage } from "next";
 import Link from "next/link";
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
 
 import { SeoHead } from "~/component/SeoHead";
 import { AdSenseUnit } from "~/component/AdSense";
 import { buildCollectionPageSchema, buildItemListSchema } from "~/lib/seo";
+import blogContent from "~/generated/blog-content.json";
 
 // Define the type for the frontmatter object
 interface PostFrontmatter {
@@ -53,48 +51,81 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
       />
       <main className="bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-6 py-16">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">From Our Blog</h1>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Ideas and inspiration for gifts, decor, and celebrating the people you love.
+          <div className="mb-16 text-center">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+              From Our Blog
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
+              Ideas and inspiration for gifts, decor, and celebrating the people
+              you love.
             </p>
           </div>
 
           <div className="mb-12 grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:grid-cols-3">
-            <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+            <Link
+              href="/personalized-gifts"
+              className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50"
+            >
               <h2 className="text-lg font-semibold">Personalized Gifts</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Move from editorial inspiration into category pages built for gift intent.
+                Move from editorial inspiration into category pages built for
+                gift intent.
               </p>
             </Link>
-            <Link href="/name-art-generator" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+            <Link
+              href="/name-art-generator"
+              className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50"
+            >
               <h2 className="text-lg font-semibold">Create Name Art</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Start the core creation flow if you already know the style direction you want.
+                Start the core creation flow if you already know the style
+                direction you want.
               </p>
             </Link>
-            <Link href="/personalized-gifts" className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50">
+            <Link
+              href="/personalized-gifts"
+              className="rounded-xl border border-transparent p-4 transition hover:border-brand-400 hover:bg-brand-50"
+            >
               <h2 className="text-lg font-semibold">Couple Gifts</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Browse pages that connect couple art themes with stronger gifting intent.
+                Browse pages that connect couple art themes with stronger
+                gifting intent.
               </p>
             </Link>
           </div>
 
           <AdSenseUnit className="mb-12" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {posts.map(({ slug, frontmatter }) => (
-              <Link key={slug} href={`/blog/${slug}`} className="group block bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+              <Link
+                key={slug}
+                href={`/blog/${slug}`}
+                className="group block overflow-hidden rounded-lg bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-800"
+              >
                 <div className="relative">
-                  <img src={frontmatter.featuredImage} alt={frontmatter.title} className="w-full h-56 object-cover" />
+                  <img
+                    src={frontmatter.featuredImage}
+                    alt={frontmatter.title}
+                    className="h-56 w-full object-cover"
+                  />
                 </div>
                 <div className="p-6">
-                  <p className="text-sm text-brand-600 font-semibold mb-2">{frontmatter.category}</p>
-                  <h2 className="text-xl font-bold mb-3 group-hover:text-brand-600 transition-colors">{frontmatter.title}</h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">{frontmatter.description}</p>
+                  <p className="mb-2 text-sm font-semibold text-brand-600">
+                    {frontmatter.category}
+                  </p>
+                  <h2 className="mb-3 text-xl font-bold transition-colors group-hover:text-brand-600">
+                    {frontmatter.title}
+                  </h2>
+                  <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                    {frontmatter.description}
+                  </p>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(frontmatter.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {new Date(frontmatter.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </div>
                 </div>
               </Link>
@@ -109,29 +140,9 @@ const BlogIndexPage: NextPage<BlogIndexProps> = ({ posts }) => {
 // This function runs at build time to get all the posts
 // Removed 'async' as it's not needed for synchronous fs calls
 export const getStaticProps: GetStaticProps = () => {
-  const postsDirectory = path.join(process.cwd(), '_posts');
-  const filenames = fs.readdirSync(postsDirectory);
-
-  const posts = filenames.map((filename) => {
-    const slug = filename.replace(/\.mdx?$/, '');
-    const filePath = path.join(postsDirectory, filename);
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    const { data: frontmatter } = matter(fileContents);
-
-    return {
-      slug,
-      frontmatter,
-    };
-  }).sort((a, b) => {
-    // Explicitly cast date to string to satisfy TypeScript
-    const dateA = new Date(a.frontmatter.date as string).getTime();
-    const dateB = new Date(b.frontmatter.date as string).getTime();
-    return dateB - dateA; // Sort by most recent
-  });
-
   return {
     props: {
-      posts,
+      posts: blogContent,
     },
   };
 };

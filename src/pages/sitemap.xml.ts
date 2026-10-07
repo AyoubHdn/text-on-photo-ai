@@ -2,8 +2,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-import fs from "fs";
-import path from "path";
 import { type GetServerSideProps } from "next";
 
 import { SITEMAP_NAME_PAGES, getNameArtPath } from "~/lib/nameArtSeo";
@@ -14,6 +12,7 @@ import {
   COUPLES_STYLE_ITEMS,
   NAME_ART_STYLE_ITEMS,
 } from "~/lib/styleTaxonomy";
+import blogContent from "~/generated/blog-content.json";
 
 const normalizePath = (pagePath: string) => {
   if (!pagePath.startsWith("/")) return `/${pagePath}`;
@@ -42,7 +41,7 @@ const getPriority = (rawPage: string) => {
   }
   if (
     /^\/(name-art|arabic-calligraphy|couples-art)\/products\/(mugs|shirts|wall-art)$/.test(
-      page,
+      page
     )
   ) {
     return "0.7";
@@ -71,12 +70,7 @@ const getPriority = (rawPage: string) => {
 };
 
 const getBlogPostPaths = () => {
-  const postsDirectory = path.join(process.cwd(), "_posts");
-
-  return fs
-    .readdirSync(postsDirectory)
-    .filter((filename) => filename.endsWith(".mdx") || filename.endsWith(".md"))
-    .map((filename) => `/blog/${filename.replace(/\.mdx?$/, "")}`);
+  return blogContent.map((post) => `/blog/${post.slug}`);
 };
 
 // Pages whose content changes frequently — get today's lastmod
@@ -141,21 +135,34 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   ];
 
   const blogPages = getBlogPostPaths();
-  const nameArtPages = SITEMAP_NAME_PAGES.map((item) => getNameArtPath(item.name));
-  const nameArtStylePages = NAME_ART_STYLE_ITEMS.map((item) => `/name-art/styles/${item.slug}`);
-  const couplesStylePages = COUPLES_STYLE_ITEMS.map((item) => `/couples-art/styles/${item.slug}`);
-  const arabicStylePages = ARABIC_STYLE_ITEMS.map((item) => `/arabic-calligraphy/styles/${item.slug}`);
-  const allPages = Array.from(new Set([
-    ...staticPages,
-    ...blogPages,
-    ...nameArtPages,
-    ...nameArtStylePages,
-    ...couplesStylePages,
-    ...arabicStylePages,
-  ]));
+  const nameArtPages = SITEMAP_NAME_PAGES.map((item) =>
+    getNameArtPath(item.name)
+  );
+  const nameArtStylePages = NAME_ART_STYLE_ITEMS.map(
+    (item) => `/name-art/styles/${item.slug}`
+  );
+  const couplesStylePages = COUPLES_STYLE_ITEMS.map(
+    (item) => `/couples-art/styles/${item.slug}`
+  );
+  const arabicStylePages = ARABIC_STYLE_ITEMS.map(
+    (item) => `/arabic-calligraphy/styles/${item.slug}`
+  );
+  const allPages = Array.from(
+    new Set([
+      ...staticPages,
+      ...blogPages,
+      ...nameArtPages,
+      ...nameArtStylePages,
+      ...couplesStylePages,
+      ...arabicStylePages,
+    ])
+  );
 
   res.setHeader("Content-Type", "text/xml");
-  res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=3600");
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=86400, stale-while-revalidate=3600"
+  );
   res.write(generateSiteMap(allPages));
   res.end();
 

@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "cloudflare:build": "opennextjs-cloudflare build",
+    "blog:generate": "node scripts/generate-blog-content.mjs",
+    "build": "npm run blog:generate && next build",
+    "cloudflare:build": "npm run blog:generate && opennextjs-cloudflare build",
     "cloudflare:preview": "wrangler dev",
+    "predev": "npm run blog:generate",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
