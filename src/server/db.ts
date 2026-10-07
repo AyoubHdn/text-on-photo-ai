@@ -1,4 +1,5 @@
 import { PrismaClient, type Prisma } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 import { env } from "~/env.mjs";
 
@@ -12,7 +13,14 @@ const prismaClientOptions = {
 };
 
 function createPrismaClient() {
-  return new PrismaClient(prismaClientOptions);
+  const adapter = new PrismaPg({
+    connectionString: env.DATABASE_URL,
+  });
+
+  return new PrismaClient({
+    ...prismaClientOptions,
+    adapter,
+  });
 }
 
 function hasGenerationRequestDelegate(client: PrismaClient | undefined) {
