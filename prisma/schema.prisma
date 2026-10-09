@@ -6,6 +6,14 @@ generator client {
     engineType = "client"
 }
 
+generator workerClient {
+    provider            = "prisma-client"
+    output              = "../workers/db/generated/prisma"
+    engineType          = "client"
+    runtime             = "workerd"
+    importFileExtension = "ts"
+}
+
 datasource db {
     provider = "postgresql"
     // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.Text annotations in model Account below
