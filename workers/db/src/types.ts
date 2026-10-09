@@ -11,6 +11,21 @@ export interface DiagnosticResponse {
   ok: true;
 }
 
+export interface PricingAvailabilityInput {
+  productType: string;
+  variantId: number;
+  countryCode: string;
+}
+
+export interface PricingAvailabilityResponse {
+  available: boolean;
+}
+
+export interface PricingAvailabilityErrorResponse {
+  ok: false;
+  code: DbErrorCode;
+}
+
 export type DbErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"

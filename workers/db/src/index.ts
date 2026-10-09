@@ -1,10 +1,22 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { toSafeErrorResponse } from "./errors";
-import type { DiagnosticResponse, Env, HealthResponse } from "./types";
+import { DbServiceError, toSafeErrorResponse } from "./errors";
+import type {
+  DiagnosticResponse,
+  Env,
+  HealthResponse,
+  PricingAvailabilityInput,
+  PricingAvailabilityErrorResponse,
+  PricingAvailabilityResponse,
+} from "./types";
 
 export default class DbService extends WorkerEntrypoint<Env> {
+  // The service is intended for RPC bindings; direct HTTP access is disabled.
+  async fetch(): Promise<Response> {
+    return new Response("Not Found", { status: 404 });
+  }
+
   async health(): Promise<HealthResponse> {
     return { ok: true, service: "namedesignai-db" };
   }
@@ -16,7 +28,45 @@ export default class DbService extends WorkerEntrypoint<Env> {
       return { ok: true };
     } catch (error) {
       console.error("DB diagnostic failed", toSafeErrorResponse(error));
-      throw new Error("DB diagnostic failed");
+      throw new DbServiceError("DEPENDENCY_UNAVAILABLE");
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async pricingGetAvailability(
+    input: PricingAvailabilityInput,
+  ): Promise<PricingAvailabilityResponse | PricingAvailabilityErrorResponse> {
+    const productType = input?.productType?.trim();
+    const countryCode = input?.countryCode?.trim().toUpperCase();
+    const variantId = input?.variantId;
+
+    if (
+      !productType ||
+      productType.length > 100 ||
+      !Number.isInteger(variantId) ||
+      variantId <= 0 ||
+      !/^[A-Z]{2}$/.test(countryCode)
+    ) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const record = await prisma.productVariantAvailabilityCache.findUnique({
+        where: {
+          productType_variantId_countryCode: {
+            productType,
+            variantId,
+            countryCode,
+          },
+        },
+        select: { id: true },
+      });
+      return { available: Boolean(record) };
+    } catch (error) {
+      console.error("Pricing availability lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally {
       await prisma.$disconnect();
     }
