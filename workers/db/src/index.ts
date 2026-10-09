@@ -9,6 +9,10 @@ import type {
   PricingAvailabilityInput,
   PricingAvailabilityErrorResponse,
   PricingAvailabilityResponse,
+  PricingCachedCostsInput,
+  PricingCachedCostsResponse,
+  PricingCachedCostsNotFoundResponse,
+  PricingCachedCostsErrorResponse,
 } from "./types";
 
 export default class DbService extends WorkerEntrypoint<Env> {
@@ -66,6 +70,54 @@ export default class DbService extends WorkerEntrypoint<Env> {
       return { available: Boolean(record) };
     } catch (error) {
       console.error("Pricing availability lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async pricingGetCachedCosts(
+    input: PricingCachedCostsInput,
+  ): Promise<
+    | PricingCachedCostsResponse
+    | PricingCachedCostsNotFoundResponse
+    | PricingCachedCostsErrorResponse
+  > {
+    const productType = input?.productType?.trim();
+    const sizeKey = input?.sizeKey?.trim();
+    const countryCode = input?.countryCode?.trim().toUpperCase();
+
+    if (
+      !productType ||
+      productType.length > 100 ||
+      !sizeKey ||
+      sizeKey.length > 150 ||
+      !/^[A-Z]{2}$/.test(countryCode)
+    ) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const record = await prisma.productPricingCache.findUnique({
+        where: {
+          productType_sizeKey_countryCode: {
+            productType,
+            sizeKey,
+            countryCode,
+          },
+        },
+        select: { baseCost: true, shippingCost: true },
+      });
+
+      if (!record) return { found: false };
+      return {
+        found: true,
+        baseCost: record.baseCost.toString(),
+        shippingCost: record.shippingCost.toString(),
+      };
+    } catch (error) {
+      console.error("Pricing cost lookup failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally {
       await prisma.$disconnect();

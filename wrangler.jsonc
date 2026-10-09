@@ -6,7 +6,8 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
   "vars": {
-    "DB_VARIANT_AVAILABILITY_BACKEND": "service"
+    "DB_VARIANT_AVAILABILITY_BACKEND": "service",
+    "DB_PRODUCT_PRICING_BACKEND": "service"
   },
   "services": [
     {

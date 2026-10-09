@@ -26,6 +26,27 @@ export interface PricingAvailabilityErrorResponse {
   code: DbErrorCode;
 }
 
+export interface PricingCachedCostsInput {
+  productType: string;
+  sizeKey: string;
+  countryCode: string;
+}
+
+export interface PricingCachedCostsResponse {
+  found: true;
+  baseCost: string;
+  shippingCost: string;
+}
+
+export interface PricingCachedCostsNotFoundResponse {
+  found: false;
+}
+
+export interface PricingCachedCostsErrorResponse {
+  ok: false;
+  code: DbErrorCode;
+}
+
 export type DbErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"

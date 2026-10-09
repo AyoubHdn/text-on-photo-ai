@@ -1,6 +1,7 @@
 import { prisma } from "~/server/db";
 import { isMugProductKey } from "~/config/physicalProducts";
 import { PRODUCT_MARGINS } from "~/server/credits/constants";
+import { pricingGetCachedCostsFromService } from "~/server/cloudflare/dbService";
 
 const SAFETY_BUFFER_RATE = 0.2;
 const EXTRA_MUG_DISCOUNT_RATE = 0.2;
@@ -48,15 +49,22 @@ export async function calculateProductPriceFromCache({
     ? Math.max(1, Math.floor(quantity))
     : 1;
 
-  const cached = await prisma.productPricingCache.findUnique({
-    where: {
-      productType_sizeKey_countryCode: {
-        productType,
-        sizeKey: normalizedSizeKey,
-        countryCode: normalizedCountry,
-      },
-    },
-  });
+  const cached =
+    process.env.DB_PRODUCT_PRICING_BACKEND === "service"
+      ? await pricingGetCachedCostsFromService({
+          productType,
+          sizeKey: normalizedSizeKey,
+          countryCode: normalizedCountry,
+        })
+      : await prisma.productPricingCache.findUnique({
+          where: {
+            productType_sizeKey_countryCode: {
+              productType,
+              sizeKey: normalizedSizeKey,
+              countryCode: normalizedCountry,
+            },
+          },
+        });
 
   if (!cached) {
     throw new Error("Pricing not available for this variant.");

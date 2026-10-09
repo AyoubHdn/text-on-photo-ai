@@ -13,12 +13,22 @@ export type PricingAvailabilityResult =
   | { available: boolean }
   | { ok: false; code: DbErrorCode };
 
+export type PricingCachedCostsResult =
+  | { found: true; baseCost: string; shippingCost: string }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
 type DbServiceBinding = {
   pricingGetAvailability(input: {
     productType: ProductType;
     variantId: number;
     countryCode: string;
   }): Promise<PricingAvailabilityResult>;
+  pricingGetCachedCosts(input: {
+    productType: ProductType;
+    sizeKey: string;
+    countryCode: string;
+  }): Promise<PricingCachedCostsResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -31,8 +41,15 @@ export class DbServiceConfigurationError extends Error {
 export class DbServiceRequestError extends Error {
   readonly code: DbErrorCode;
 
-  constructor(code: DbErrorCode) {
-    super("Unable to check product availability.");
+  constructor(
+    code: DbErrorCode,
+    operation: "availability" | "pricing" = "availability",
+  ) {
+    super(
+      operation === "pricing"
+        ? "Unable to load product pricing."
+        : "Unable to check product availability.",
+    );
     this.name = "DbServiceRequestError";
     this.code = code;
   }
@@ -58,5 +75,28 @@ export async function pricingGetAvailabilityFromService(input: {
   }
 
   console.error("DB service availability lookup failed", result.code);
-  throw new DbServiceRequestError(result.code);
+  throw new DbServiceRequestError(result.code, "availability");
+}
+
+export async function pricingGetCachedCostsFromService(input: {
+  productType: ProductType;
+  sizeKey: string;
+  countryCode: string;
+}): Promise<{ baseCost: string; shippingCost: string } | null> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding })
+    .DB_SERVICE;
+
+  if (!dbService) throw new DbServiceConfigurationError();
+
+  const result = await dbService.pricingGetCachedCosts(input);
+  if ("found" in result) {
+    return result.found
+      ? { baseCost: result.baseCost, shippingCost: result.shippingCost }
+      : null;
+  }
+
+  console.error("DB service pricing lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "pricing");
 }
