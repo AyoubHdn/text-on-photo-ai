@@ -1,5 +1,6 @@
 import { prisma } from "~/server/db";
 import type { ProductType } from "~/server/services/priceCalculator";
+import { pricingGetAvailabilityFromService } from "~/server/cloudflare/dbService";
 
 export async function isVariantAvailableInCountry({
   productType,
@@ -11,6 +12,14 @@ export async function isVariantAvailableInCountry({
   countryCode: string;
 }) {
   const normalizedCountryCode = countryCode.trim().toUpperCase();
+
+  if (process.env.DB_VARIANT_AVAILABILITY_BACKEND === "service") {
+    return pricingGetAvailabilityFromService({
+      productType,
+      variantId,
+      countryCode: normalizedCountryCode,
+    });
+  }
 
   const cached = await prisma.productVariantAvailabilityCache.findUnique({
     where: {
