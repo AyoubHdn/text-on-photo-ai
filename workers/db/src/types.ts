@@ -82,6 +82,57 @@ export interface OrdersTrackingErrorResponse {
   code: DbErrorCode;
 }
 
+export interface AuthGetUserInput {
+  userId: string;
+}
+
+export interface AuthUserDto {
+  id: string;
+  name: string | null;
+  email: string | null;
+  emailVerified: string | null;
+  image: string | null;
+}
+
+export interface AuthGetUserResponse {
+  found: true;
+  user: AuthUserDto;
+}
+
+export interface AuthGetUserNotFoundResponse {
+  found: false;
+}
+
+export interface AuthGetUserErrorResponse {
+  ok: false;
+  code: DbErrorCode;
+}
+
+export interface AuthGetSessionAndUserInput {
+  sessionToken: string;
+}
+
+export interface AuthSessionDto {
+  sessionToken: string;
+  userId: string;
+  expires: string;
+}
+
+export interface AuthGetSessionAndUserResponse {
+  found: true;
+  session: AuthSessionDto;
+  user: AuthUserDto;
+}
+
+export interface AuthGetSessionAndUserNotFoundResponse {
+  found: false;
+}
+
+export interface AuthGetSessionAndUserErrorResponse {
+  ok: false;
+  code: DbErrorCode;
+}
+
 export type DbErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"

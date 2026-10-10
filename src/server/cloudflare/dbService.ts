@@ -32,6 +32,35 @@ export type OrdersTrackingResult =
   | { found: false }
   | { ok: false; code: DbErrorCode };
 
+export type AuthUserResult =
+  | {
+      found: true;
+      user: {
+        id: string;
+        name: string | null;
+        email: string | null;
+        emailVerified: string | null;
+        image: string | null;
+      };
+    }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
+export type AuthSessionAndUserResult =
+  | {
+      found: true;
+      session: { sessionToken: string; userId: string; expires: string };
+      user: {
+        id: string;
+        name: string | null;
+        email: string | null;
+        emailVerified: string | null;
+        image: string | null;
+      };
+    }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
 type DbServiceBinding = {
   pricingGetAvailability(input: {
     productType: ProductType;
@@ -48,6 +77,8 @@ type DbServiceBinding = {
     countryCode: string;
   }): Promise<PricingVariantFilterResult>;
   ordersGetTracking(input: { orderId: string }): Promise<OrdersTrackingResult>;
+  authGetUser(input: { userId: string }): Promise<AuthUserResult>;
+  authGetSessionAndUser(input: { sessionToken: string }): Promise<AuthSessionAndUserResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -62,13 +93,15 @@ export class DbServiceRequestError extends Error {
 
   constructor(
     code: DbErrorCode,
-    operation: "availability" | "pricing" | "orders" = "availability",
+    operation: "availability" | "pricing" | "orders" | "auth" = "availability",
   ) {
     super(
       operation === "pricing"
         ? "Unable to load product pricing."
         : operation === "orders"
           ? "Unable to load order tracking."
+          : operation === "auth"
+            ? "Unable to load authentication data."
           : "Unable to check product availability.",
     );
     this.name = "DbServiceRequestError";
@@ -167,4 +200,28 @@ export async function ordersGetTrackingFromService(input: {
 
   console.error("DB service order tracking lookup failed", result.code);
   throw new DbServiceRequestError(result.code, "orders");
+}
+
+export async function authGetUserFromService(input: { userId: string }) {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding }).DB_SERVICE;
+  if (!dbService) throw new DbServiceConfigurationError();
+  const result = await dbService.authGetUser(input);
+  if ("found" in result) return result.found ? result.user : null;
+  console.error("DB service auth user lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function authGetSessionAndUserFromService(input: { sessionToken: string }) {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding }).DB_SERVICE;
+  if (!dbService) throw new DbServiceConfigurationError();
+  const result = await dbService.authGetSessionAndUser(input);
+  if ("found" in result) {
+    return result.found ? { session: result.session, user: result.user } : null;
+  }
+  console.error("DB service auth session lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "auth");
 }

@@ -20,6 +20,14 @@ import type {
   OrdersTrackingResponse,
   OrdersTrackingNotFoundResponse,
   OrdersTrackingErrorResponse,
+  AuthGetUserInput,
+  AuthGetUserResponse,
+  AuthGetUserNotFoundResponse,
+  AuthGetUserErrorResponse,
+  AuthGetSessionAndUserInput,
+  AuthGetSessionAndUserResponse,
+  AuthGetSessionAndUserNotFoundResponse,
+  AuthGetSessionAndUserErrorResponse,
 } from "./types";
 
 export default class DbService extends WorkerEntrypoint<Env> {
@@ -202,6 +210,94 @@ export default class DbService extends WorkerEntrypoint<Env> {
       };
     } catch (error) {
       console.error("Order tracking lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async authGetUser(
+    input: AuthGetUserInput,
+  ): Promise<AuthGetUserResponse | AuthGetUserNotFoundResponse | AuthGetUserErrorResponse> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          image: true,
+        },
+      });
+      if (!user) return { found: false };
+      return {
+        found: true,
+        user: {
+          ...user,
+          emailVerified: user.emailVerified?.toISOString() ?? null,
+        },
+      };
+    } catch (error) {
+      console.error("Auth user lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async authGetSessionAndUser(
+    input: AuthGetSessionAndUserInput,
+  ): Promise<
+    | AuthGetSessionAndUserResponse
+    | AuthGetSessionAndUserNotFoundResponse
+    | AuthGetSessionAndUserErrorResponse
+  > {
+    const sessionToken = input?.sessionToken?.trim();
+    if (!sessionToken || sessionToken.length > 512) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const session = await prisma.session.findUnique({
+        where: { sessionToken },
+        select: {
+          sessionToken: true,
+          userId: true,
+          expires: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              emailVerified: true,
+              image: true,
+            },
+          },
+        },
+      });
+      if (!session) return { found: false };
+      return {
+        found: true,
+        session: {
+          sessionToken: session.sessionToken,
+          userId: session.userId,
+          expires: session.expires.toISOString(),
+        },
+        user: {
+          ...session.user,
+          emailVerified: session.user.emailVerified?.toISOString() ?? null,
+        },
+      };
+    } catch (error) {
+      console.error("Auth session lookup failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally {
       await prisma.$disconnect();
