@@ -61,6 +61,8 @@ export type AuthSessionAndUserResult =
   | { found: false }
   | { ok: false; code: DbErrorCode };
 
+export type AuthUserByAccountResult = AuthUserResult;
+
 type DbServiceBinding = {
   pricingGetAvailability(input: {
     productType: ProductType;
@@ -79,6 +81,8 @@ type DbServiceBinding = {
   ordersGetTracking(input: { orderId: string }): Promise<OrdersTrackingResult>;
   authGetUser(input: { userId: string }): Promise<AuthUserResult>;
   authGetSessionAndUser(input: { sessionToken: string }): Promise<AuthSessionAndUserResult>;
+  authGetUserByEmail(input: { email: string }): Promise<AuthUserResult>;
+  authGetUserByAccount(input: { provider: string; providerAccountId: string }): Promise<AuthUserByAccountResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -223,5 +227,30 @@ export async function authGetSessionAndUserFromService(input: { sessionToken: st
     return result.found ? { session: result.session, user: result.user } : null;
   }
   console.error("DB service auth session lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function authGetUserByEmailFromService(input: { email: string }) {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding }).DB_SERVICE;
+  if (!dbService) throw new DbServiceConfigurationError();
+  const result = await dbService.authGetUserByEmail(input);
+  if ("found" in result) return result.found ? result.user : null;
+  console.error("DB service auth email lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function authGetUserByAccountFromService(input: {
+  provider: string;
+  providerAccountId: string;
+}) {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding }).DB_SERVICE;
+  if (!dbService) throw new DbServiceConfigurationError();
+  const result = await dbService.authGetUserByAccount(input);
+  if ("found" in result) return result.found ? result.user : null;
+  console.error("DB service auth account lookup failed", result.code);
   throw new DbServiceRequestError(result.code, "auth");
 }

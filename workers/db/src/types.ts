@@ -108,6 +108,23 @@ export interface AuthGetUserErrorResponse {
   code: DbErrorCode;
 }
 
+export interface AuthGetUserByEmailInput {
+  email: string;
+}
+
+export type AuthGetUserByEmailResponse = AuthGetUserResponse;
+export type AuthGetUserByEmailNotFoundResponse = AuthGetUserNotFoundResponse;
+export type AuthGetUserByEmailErrorResponse = AuthGetUserErrorResponse;
+
+export interface AuthGetUserByAccountInput {
+  provider: string;
+  providerAccountId: string;
+}
+
+export type AuthGetUserByAccountResponse = AuthGetUserResponse;
+export type AuthGetUserByAccountNotFoundResponse = AuthGetUserNotFoundResponse;
+export type AuthGetUserByAccountErrorResponse = AuthGetUserErrorResponse;
+
 export interface AuthGetSessionAndUserInput {
   sessionToken: string;
 }

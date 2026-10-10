@@ -24,6 +24,14 @@ import type {
   AuthGetUserResponse,
   AuthGetUserNotFoundResponse,
   AuthGetUserErrorResponse,
+  AuthGetUserByEmailInput,
+  AuthGetUserByEmailResponse,
+  AuthGetUserByEmailNotFoundResponse,
+  AuthGetUserByEmailErrorResponse,
+  AuthGetUserByAccountInput,
+  AuthGetUserByAccountResponse,
+  AuthGetUserByAccountNotFoundResponse,
+  AuthGetUserByAccountErrorResponse,
   AuthGetSessionAndUserInput,
   AuthGetSessionAndUserResponse,
   AuthGetSessionAndUserNotFoundResponse,
@@ -298,6 +306,65 @@ export default class DbService extends WorkerEntrypoint<Env> {
       };
     } catch (error) {
       console.error("Auth session lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async authGetUserByEmail(
+    input: AuthGetUserByEmailInput,
+  ): Promise<AuthGetUserByEmailResponse | AuthGetUserByEmailNotFoundResponse | AuthGetUserByEmailErrorResponse> {
+    const email = input?.email?.trim();
+    if (!email || email.length > 320) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, name: true, email: true, emailVerified: true, image: true },
+      });
+      if (!user) return { found: false };
+      return {
+        found: true,
+        user: { ...user, emailVerified: user.emailVerified?.toISOString() ?? null },
+      };
+    } catch (error) {
+      console.error("Auth email lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async authGetUserByAccount(
+    input: AuthGetUserByAccountInput,
+  ): Promise<AuthGetUserByAccountResponse | AuthGetUserByAccountNotFoundResponse | AuthGetUserByAccountErrorResponse> {
+    const provider = input?.provider?.trim();
+    const providerAccountId = input?.providerAccountId?.trim();
+    if (!provider || provider.length > 100 || !providerAccountId || providerAccountId.length > 512) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const account = await prisma.account.findUnique({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+        select: {
+          user: {
+            select: { id: true, name: true, email: true, emailVerified: true, image: true },
+          },
+        },
+      });
+      if (!account) return { found: false };
+      return {
+        found: true,
+        user: { ...account.user, emailVerified: account.user.emailVerified?.toISOString() ?? null },
+      };
+    } catch (error) {
+      console.error("Auth account lookup failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally {
       await prisma.$disconnect();
