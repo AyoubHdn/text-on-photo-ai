@@ -1,6 +1,7 @@
 import Head from "next/head";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { prisma } from "~/server/db";
+import { ordersGetTrackingFromService } from "~/server/cloudflare/dbService";
 
 function resolveCarrierTrackingHome(carrier: string | null) {
   const normalized = carrier?.trim().toLowerCase() ?? "";
@@ -21,12 +22,24 @@ export const getServerSideProps: GetServerSideProps<{
     return { notFound: true };
   }
 
-  const order = await prisma.productOrder.findUnique({
-    where: { id: orderId },
-    include: { printfulOrder: true },
-  });
+  const trackingData =
+    process.env.DB_ORDER_TRACKING_BACKEND === "service"
+      ? await ordersGetTrackingFromService({ orderId })
+      : await (async () => {
+          const order = await prisma.productOrder.findUnique({
+            where: { id: orderId },
+            include: { printfulOrder: true },
+          });
+          return order?.printfulOrder
+            ? {
+                trackingUrl: order.printfulOrder.trackingUrl ?? null,
+                trackingNumber: order.printfulOrder.trackingNumber ?? null,
+                trackingCarrier: order.printfulOrder.trackingCarrier ?? null,
+              }
+            : null;
+        })();
 
-  const directTrackingUrl = order?.printfulOrder?.trackingUrl?.trim();
+  const directTrackingUrl = trackingData?.trackingUrl?.trim();
   if (directTrackingUrl) {
     return {
       redirect: {
@@ -39,9 +52,9 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       orderId,
-      trackingNumber: order?.printfulOrder?.trackingNumber ?? null,
-      trackingCarrier: order?.printfulOrder?.trackingCarrier ?? null,
-      carrierTrackingHome: resolveCarrierTrackingHome(order?.printfulOrder?.trackingCarrier ?? null),
+      trackingNumber: trackingData?.trackingNumber ?? null,
+      trackingCarrier: trackingData?.trackingCarrier ?? null,
+      carrierTrackingHome: resolveCarrierTrackingHome(trackingData?.trackingCarrier ?? null),
     },
   };
 };

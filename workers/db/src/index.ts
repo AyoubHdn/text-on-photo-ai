@@ -16,6 +16,10 @@ import type {
   PricingVariantFilterInput,
   PricingVariantFilterResponse,
   PricingVariantFilterErrorResponse,
+  OrdersTrackingInput,
+  OrdersTrackingResponse,
+  OrdersTrackingNotFoundResponse,
+  OrdersTrackingErrorResponse,
 } from "./types";
 
 export default class DbService extends WorkerEntrypoint<Env> {
@@ -160,6 +164,44 @@ export default class DbService extends WorkerEntrypoint<Env> {
       };
     } catch (error) {
       console.error("Variant filter lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async ordersGetTracking(
+    input: OrdersTrackingInput,
+  ): Promise<OrdersTrackingResponse | OrdersTrackingNotFoundResponse | OrdersTrackingErrorResponse> {
+    const orderId = input?.orderId?.trim();
+    if (!orderId || orderId.length > 128) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const order = await prisma.productOrder.findUnique({
+        where: { id: orderId },
+        select: {
+          printfulOrder: {
+            select: {
+              trackingUrl: true,
+              trackingNumber: true,
+              trackingCarrier: true,
+            },
+          },
+        },
+      });
+
+      if (!order) return { found: false };
+      return {
+        found: true,
+        trackingUrl: order.printfulOrder?.trackingUrl ?? null,
+        trackingNumber: order.printfulOrder?.trackingNumber ?? null,
+        trackingCarrier: order.printfulOrder?.trackingCarrier ?? null,
+      };
+    } catch (error) {
+      console.error("Order tracking lookup failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally {
       await prisma.$disconnect();

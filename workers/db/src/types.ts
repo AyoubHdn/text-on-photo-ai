@@ -62,6 +62,26 @@ export interface PricingVariantFilterErrorResponse {
   code: DbErrorCode;
 }
 
+export interface OrdersTrackingInput {
+  orderId: string;
+}
+
+export interface OrdersTrackingResponse {
+  found: true;
+  trackingUrl: string | null;
+  trackingNumber: string | null;
+  trackingCarrier: string | null;
+}
+
+export interface OrdersTrackingNotFoundResponse {
+  found: false;
+}
+
+export interface OrdersTrackingErrorResponse {
+  ok: false;
+  code: DbErrorCode;
+}
+
 export type DbErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"

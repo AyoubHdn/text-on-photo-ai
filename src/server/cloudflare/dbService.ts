@@ -22,6 +22,16 @@ export type PricingVariantFilterResult =
   | { allowedVariantIds: number[]; allowedSizeKeys: string[] }
   | { ok: false; code: DbErrorCode };
 
+export type OrdersTrackingResult =
+  | {
+      found: true;
+      trackingUrl: string | null;
+      trackingNumber: string | null;
+      trackingCarrier: string | null;
+    }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
 type DbServiceBinding = {
   pricingGetAvailability(input: {
     productType: ProductType;
@@ -37,6 +47,7 @@ type DbServiceBinding = {
     productType: ProductType;
     countryCode: string;
   }): Promise<PricingVariantFilterResult>;
+  ordersGetTracking(input: { orderId: string }): Promise<OrdersTrackingResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -51,12 +62,14 @@ export class DbServiceRequestError extends Error {
 
   constructor(
     code: DbErrorCode,
-    operation: "availability" | "pricing" = "availability",
+    operation: "availability" | "pricing" | "orders" = "availability",
   ) {
     super(
       operation === "pricing"
         ? "Unable to load product pricing."
-        : "Unable to check product availability.",
+        : operation === "orders"
+          ? "Unable to load order tracking."
+          : "Unable to check product availability.",
     );
     this.name = "DbServiceRequestError";
     this.code = code;
@@ -125,4 +138,33 @@ export async function pricingGetVariantFilterDataFromService(input: {
 
   console.error("DB service variant filter lookup failed", result.code);
   throw new DbServiceRequestError(result.code, "pricing");
+}
+
+export async function ordersGetTrackingFromService(input: {
+  orderId: string;
+}): Promise<{
+  trackingUrl: string | null;
+  trackingNumber: string | null;
+  trackingCarrier: string | null;
+} | null> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding })
+    .DB_SERVICE;
+
+  if (!dbService) throw new DbServiceConfigurationError();
+
+  const result = await dbService.ordersGetTracking(input);
+  if ("found" in result) {
+    return result.found
+      ? {
+          trackingUrl: result.trackingUrl,
+          trackingNumber: result.trackingNumber,
+          trackingCarrier: result.trackingCarrier,
+        }
+      : null;
+  }
+
+  console.error("DB service order tracking lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "orders");
 }
