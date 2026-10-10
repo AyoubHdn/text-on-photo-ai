@@ -62,6 +62,11 @@ export type AuthSessionAndUserResult =
   | { ok: false; code: DbErrorCode };
 
 export type AuthUserByAccountResult = AuthUserResult;
+type AuthWriteResult = { ok: false; code: DbErrorCode };
+type AuthUserWriteResult = { user: NonNullable<Extract<AuthUserResult, { found: true }>['user']> } | AuthWriteResult;
+type AuthAccountWriteResult = { account: Record<string, unknown> } | AuthWriteResult;
+type AuthSessionWriteResult = { session: { sessionToken: string; userId: string; expires: string } } | AuthWriteResult;
+type AuthVerificationWriteResult = { token: { identifier: string; token: string; expires: string } | null } | AuthWriteResult;
 
 type DbServiceBinding = {
   pricingGetAvailability(input: {
@@ -83,6 +88,16 @@ type DbServiceBinding = {
   authGetSessionAndUser(input: { sessionToken: string }): Promise<AuthSessionAndUserResult>;
   authGetUserByEmail(input: { email: string }): Promise<AuthUserResult>;
   authGetUserByAccount(input: { provider: string; providerAccountId: string }): Promise<AuthUserByAccountResult>;
+  authCreateUser(input: { name: string | null; email: string; emailVerified: string | null; image: string | null }): Promise<AuthUserWriteResult>;
+  authUpdateUser(input: { id: string; name?: string | null; email?: string; emailVerified?: string | null; image?: string | null }): Promise<AuthUserWriteResult>;
+  authDeleteUser(input: { userId: string }): Promise<AuthUserWriteResult>;
+  authLinkAccount(input: Record<string, unknown>): Promise<AuthAccountWriteResult>;
+  authUnlinkAccount(input: { provider: string; providerAccountId: string }): Promise<AuthAccountWriteResult>;
+  authCreateSession(input: { sessionToken: string; userId: string; expires: string }): Promise<AuthSessionWriteResult>;
+  authUpdateSession(input: { sessionToken: string; userId?: string; expires?: string }): Promise<AuthSessionWriteResult>;
+  authDeleteSession(input: { sessionToken: string }): Promise<AuthSessionWriteResult>;
+  authCreateVerificationToken(input: { identifier: string; token: string; expires: string }): Promise<AuthVerificationWriteResult>;
+  authUseVerificationToken(input: { identifier: string; token: string }): Promise<AuthVerificationWriteResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -253,4 +268,69 @@ export async function authGetUserByAccountFromService(input: {
   if ("found" in result) return result.found ? result.user : null;
   console.error("DB service auth account lookup failed", result.code);
   throw new DbServiceRequestError(result.code, "auth");
+}
+
+async function getDbService(): Promise<DbServiceBinding> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding }).DB_SERVICE;
+  if (!dbService) throw new DbServiceConfigurationError();
+  return dbService;
+}
+
+function throwAuthWriteError(result: { ok: false; code: DbErrorCode }): never {
+  console.error("DB service auth write failed", result.code);
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function authCreateUserFromService(input: { name: string | null; email: string; emailVerified: string | null; image: string | null }) {
+  const result = await (await getDbService()).authCreateUser(input);
+  if ("user" in result) return result.user;
+  return throwAuthWriteError(result);
+}
+export async function authUpdateUserFromService(input: { id: string; name?: string | null; email?: string; emailVerified?: string | null; image?: string | null }) {
+  const result = await (await getDbService()).authUpdateUser(input);
+  if ("user" in result) return result.user;
+  return throwAuthWriteError(result);
+}
+export async function authDeleteUserFromService(input: { userId: string }) {
+  const result = await (await getDbService()).authDeleteUser(input);
+  if ("user" in result) return result.user;
+  return throwAuthWriteError(result);
+}
+export async function authLinkAccountFromService(input: Record<string, unknown>) {
+  const result = await (await getDbService()).authLinkAccount(input);
+  if ("account" in result) return result.account;
+  return throwAuthWriteError(result);
+}
+export async function authUnlinkAccountFromService(input: { provider: string; providerAccountId: string }) {
+  const result = await (await getDbService()).authUnlinkAccount(input);
+  if ("account" in result) return result.account;
+  return throwAuthWriteError(result);
+}
+export async function authCreateSessionFromService(input: { sessionToken: string; userId: string; expires: Date }) {
+  const result = await (await getDbService()).authCreateSession({ ...input, expires: input.expires.toISOString() });
+  if ("session" in result) return { ...result.session, expires: new Date(result.session.expires) };
+  return throwAuthWriteError(result);
+}
+export async function authUpdateSessionFromService(input: { sessionToken: string; userId?: string; expires?: Date }) {
+  const result = await (await getDbService()).authUpdateSession({ ...input, expires: input.expires?.toISOString() });
+  if ("session" in result) return { ...result.session, expires: new Date(result.session.expires) };
+  return throwAuthWriteError(result);
+}
+export async function authDeleteSessionFromService(input: { sessionToken: string }) {
+  const result = await (await getDbService()).authDeleteSession(input);
+  if ("session" in result) return { ...result.session, expires: new Date(result.session.expires) };
+  return throwAuthWriteError(result);
+}
+export async function authCreateVerificationTokenFromService(input: { identifier: string; token: string; expires: Date }) {
+  const result = await (await getDbService()).authCreateVerificationToken({ ...input, expires: input.expires.toISOString() });
+  if ("token" in result) return result.token ? { ...result.token, expires: new Date(result.token.expires) } : null;
+  return throwAuthWriteError(result);
+}
+export async function authUseVerificationTokenFromService(input: { identifier: string; token: string }) {
+  const result = await (await getDbService()).authUseVerificationToken(input);
+  if ("token" in result) return result.token ? { ...result.token, expires: new Date(result.token.expires) } : null;
+  if (result.code === "NOT_FOUND") return null;
+  return throwAuthWriteError(result);
 }

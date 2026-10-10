@@ -125,6 +125,58 @@ export type AuthGetUserByAccountResponse = AuthGetUserResponse;
 export type AuthGetUserByAccountNotFoundResponse = AuthGetUserNotFoundResponse;
 export type AuthGetUserByAccountErrorResponse = AuthGetUserErrorResponse;
 
+export interface AuthCreateUserInput {
+  name: string | null;
+  email: string;
+  emailVerified: string | null;
+  image: string | null;
+}
+export interface AuthUpdateUserInput {
+  id: string;
+  name?: string | null;
+  email?: string;
+  emailVerified?: string | null;
+  image?: string | null;
+}
+export interface AuthAccountInput {
+  userId: string;
+  type: string;
+  provider: string;
+  providerAccountId: string;
+  refresh_token?: string | null;
+  access_token?: string | null;
+  expires_at?: number | null;
+  token_type?: string | null;
+  scope?: string | null;
+  id_token?: string | null;
+  session_state?: string | null;
+}
+export interface AuthSessionInput {
+  sessionToken: string;
+  userId: string;
+  expires: string;
+}
+export interface AuthUpdateSessionInput {
+  sessionToken: string;
+  userId?: string;
+  expires?: string;
+}
+export interface AuthVerificationTokenInput {
+  identifier: string;
+  token: string;
+  expires: string;
+}
+export interface AuthUseVerificationTokenInput {
+  identifier: string;
+  token: string;
+}
+export interface AuthWriteErrorResponse { ok: false; code: DbErrorCode }
+export interface AuthUserWriteResponse { user: AuthUserDto }
+export interface AuthAccountWriteResponse { account: AuthAccountInput }
+export interface AuthSessionWriteResponse { session: AuthSessionDto }
+export interface AuthVerificationTokenDto { identifier: string; token: string; expires: string }
+export interface AuthVerificationTokenWriteResponse { token: AuthVerificationTokenDto | null }
+
 export interface AuthGetSessionAndUserInput {
   sessionToken: string;
 }
