@@ -18,6 +18,10 @@ export type PricingCachedCostsResult =
   | { found: false }
   | { ok: false; code: DbErrorCode };
 
+export type PricingVariantFilterResult =
+  | { allowedVariantIds: number[]; allowedSizeKeys: string[] }
+  | { ok: false; code: DbErrorCode };
+
 type DbServiceBinding = {
   pricingGetAvailability(input: {
     productType: ProductType;
@@ -29,6 +33,10 @@ type DbServiceBinding = {
     sizeKey: string;
     countryCode: string;
   }): Promise<PricingCachedCostsResult>;
+  pricingGetVariantFilterData(input: {
+    productType: ProductType;
+    countryCode: string;
+  }): Promise<PricingVariantFilterResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -98,5 +106,23 @@ export async function pricingGetCachedCostsFromService(input: {
   }
 
   console.error("DB service pricing lookup failed", result.code);
+  throw new DbServiceRequestError(result.code, "pricing");
+}
+
+export async function pricingGetVariantFilterDataFromService(input: {
+  productType: ProductType;
+  countryCode: string;
+}): Promise<{ allowedVariantIds: number[]; allowedSizeKeys: string[] }> {
+  const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+  const { env } = await getCloudflareContext({ async: true });
+  const dbService = (env as unknown as { DB_SERVICE?: DbServiceBinding })
+    .DB_SERVICE;
+
+  if (!dbService) throw new DbServiceConfigurationError();
+
+  const result = await dbService.pricingGetVariantFilterData(input);
+  if ("allowedVariantIds" in result) return result;
+
+  console.error("DB service variant filter lookup failed", result.code);
   throw new DbServiceRequestError(result.code, "pricing");
 }

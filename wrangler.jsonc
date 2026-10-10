@@ -7,7 +7,8 @@
   "workers_dev": true,
   "vars": {
     "DB_VARIANT_AVAILABILITY_BACKEND": "service",
-    "DB_PRODUCT_PRICING_BACKEND": "service"
+    "DB_PRODUCT_PRICING_BACKEND": "service",
+    "DB_PRINTFUL_VARIANT_CACHE_BACKEND": "service"
   },
   "services": [
     {

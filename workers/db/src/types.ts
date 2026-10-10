@@ -47,6 +47,21 @@ export interface PricingCachedCostsErrorResponse {
   code: DbErrorCode;
 }
 
+export interface PricingVariantFilterInput {
+  productType: string;
+  countryCode: string;
+}
+
+export interface PricingVariantFilterResponse {
+  allowedVariantIds: number[];
+  allowedSizeKeys: string[];
+}
+
+export interface PricingVariantFilterErrorResponse {
+  ok: false;
+  code: DbErrorCode;
+}
+
 export type DbErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"

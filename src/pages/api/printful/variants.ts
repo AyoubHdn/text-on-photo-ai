@@ -7,6 +7,7 @@ import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { prisma } from "~/server/db";
 import { normalizePricingSizeKey } from "~/server/services/productPricingSizeKeys";
 import { printfulRequest } from "~/server/printful/client";
+import { pricingGetVariantFilterDataFromService } from "~/server/cloudflare/dbService";
 
 async function fetchLegacyProductVariants(printfulProductId: number) {
   const data = await printfulRequest<{
@@ -71,29 +72,34 @@ export default async function handler(
     let allowedVariantIds: Set<number> | null = null;
     let allowedSizeKeys: Set<string> | null = null;
     if (normalizedCountry) {
-      const [cachedPricing, cachedAvailability] = await Promise.all([
-        prisma.productPricingCache.findMany({
-          where: {
-            productType: productKey,
-            countryCode: normalizedCountry,
-          },
-          select: {
-            sizeKey: true,
-          },
-        }),
-        prisma.productVariantAvailabilityCache.findMany({
-          where: {
-            productType: productKey,
-            countryCode: normalizedCountry,
-          },
-          select: {
-            variantId: true,
-          },
-        }),
-      ]);
+      if (process.env.DB_PRINTFUL_VARIANT_CACHE_BACKEND === "service") {
+        const filterData = await pricingGetVariantFilterDataFromService({
+          productType: productKey,
+          countryCode: normalizedCountry,
+        });
+        allowedSizeKeys = new Set(filterData.allowedSizeKeys);
+        allowedVariantIds = new Set(filterData.allowedVariantIds);
+      } else {
+        const [cachedPricing, cachedAvailability] = await Promise.all([
+          prisma.productPricingCache.findMany({
+            where: {
+              productType: productKey,
+              countryCode: normalizedCountry,
+            },
+            select: { sizeKey: true },
+          }),
+          prisma.productVariantAvailabilityCache.findMany({
+            where: {
+              productType: productKey,
+              countryCode: normalizedCountry,
+            },
+            select: { variantId: true },
+          }),
+        ]);
 
-      allowedSizeKeys = new Set(cachedPricing.map((entry) => entry.sizeKey));
-      allowedVariantIds = new Set(cachedAvailability.map((entry) => entry.variantId));
+        allowedSizeKeys = new Set(cachedPricing.map((entry) => entry.sizeKey));
+        allowedVariantIds = new Set(cachedAvailability.map((entry) => entry.variantId));
+      }
     }
 
     const variants = sourceVariants

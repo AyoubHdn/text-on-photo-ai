@@ -13,6 +13,9 @@ import type {
   PricingCachedCostsResponse,
   PricingCachedCostsNotFoundResponse,
   PricingCachedCostsErrorResponse,
+  PricingVariantFilterInput,
+  PricingVariantFilterResponse,
+  PricingVariantFilterErrorResponse,
 } from "./types";
 
 export default class DbService extends WorkerEntrypoint<Env> {
@@ -118,6 +121,45 @@ export default class DbService extends WorkerEntrypoint<Env> {
       };
     } catch (error) {
       console.error("Pricing cost lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  async pricingGetVariantFilterData(
+    input: PricingVariantFilterInput,
+  ): Promise<PricingVariantFilterResponse | PricingVariantFilterErrorResponse> {
+    const productType = input?.productType?.trim();
+    const countryCode = input?.countryCode?.trim().toUpperCase();
+
+    if (
+      !productType ||
+      productType.length > 100 ||
+      !/^[A-Z]{2}$/.test(countryCode)
+    ) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+
+    const prisma = this.createPrisma();
+    try {
+      const [cachedPricing, cachedAvailability] = await Promise.all([
+        prisma.productPricingCache.findMany({
+          where: { productType, countryCode },
+          select: { sizeKey: true },
+        }),
+        prisma.productVariantAvailabilityCache.findMany({
+          where: { productType, countryCode },
+          select: { variantId: true },
+        }),
+      ]);
+
+      return {
+        allowedSizeKeys: cachedPricing.map((entry) => entry.sizeKey),
+        allowedVariantIds: cachedAvailability.map((entry) => entry.variantId),
+      };
+    } catch (error) {
+      console.error("Variant filter lookup failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally {
       await prisma.$disconnect();
