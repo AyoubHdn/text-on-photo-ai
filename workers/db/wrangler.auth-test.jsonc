@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "namedesignai-db-auth-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "82d5c021a9cf4b6db58abb4ba7f25842"
+    }
+  ]
+}
