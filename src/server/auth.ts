@@ -15,6 +15,11 @@ import {
   recordDigitalArtInterest,
   type DigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
+import {
+  runAuthCreateUserEvent,
+  runAuthSignInEvent,
+  shouldUseServiceAuthBackend,
+} from "~/server/auth/eventOrchestrator";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -269,6 +274,19 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
   events: {
     signIn: async ({ user }) => {
       if (user.email) {
+        if (shouldUseServiceAuthBackend()) {
+          try {
+            await runAuthSignInEvent({
+              user: { id: user.id, email: user.email, name: user.name },
+              detection: detectPaidTrafficFromRequest(req),
+              interest: detectDigitalArtInterestFromRequest(req).interest,
+            });
+          } catch (err) {
+            console.error("Error updating auth event state on signIn:", err);
+          }
+          return;
+        }
+
         try {
           const paidDetection = detectPaidTrafficFromRequest(req);
           const digitalArtInterestDetection =
@@ -330,6 +348,19 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
     },
     createUser: async ({ user }) => {
       if (user.email) {
+        if (shouldUseServiceAuthBackend()) {
+          try {
+            await runAuthCreateUserEvent({
+              user: { id: user.id, email: user.email, name: user.name },
+              detection: detectPaidTrafficFromRequest(req),
+              interest: detectDigitalArtInterestFromRequest(req).interest,
+            });
+          } catch (err) {
+            console.error("Error updating auth event state on createUser:", err);
+          }
+          return;
+        }
+
         try {
           const paidDetection = detectPaidTrafficFromRequest(req);
           const digitalArtInterestDetection =
