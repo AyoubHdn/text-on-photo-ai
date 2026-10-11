@@ -20,6 +20,7 @@ import {
   runAuthSignInEvent,
   shouldUseServiceAuthBackend,
 } from "~/server/auth/eventOrchestrator";
+import { ServiceAdapter } from "~/server/auth/serviceAdapter";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -212,6 +213,10 @@ function detectDigitalArtInterestFromRequest(
   };
 }
 
+function createDatabaseAuthAdapter() {
+  return shouldUseServiceAuthBackend() ? ServiceAdapter() : PrismaAdapter(prisma);
+}
+
 export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
   callbacks: {
     session({ session, user }) {
@@ -238,7 +243,7 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
       return baseUrl;
     },
   },
-  adapter: PrismaAdapter(prisma),
+  adapter: createDatabaseAuthAdapter(),
   providers: [
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
