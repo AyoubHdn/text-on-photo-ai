@@ -48,7 +48,29 @@ import type {
   AuthAccountWriteResponse,
   AuthSessionWriteResponse,
   AuthVerificationTokenWriteResponse,
+  AuthFinalizeEventInput,
+  AuthFinalizeEventResult,
+  AuthEventSyncState,
+  DigitalArtInterest,
 } from "./types";
+
+const AUTH_INTERESTS = new Set<DigitalArtInterest>(["name_art", "arabic_name_art", "couples_art"]);
+const SOURCE_PAGE_INTEREST: Record<string, DigitalArtInterest> = {
+  "name-art-generator": "name_art",
+  "arabic-calligraphy-generator": "arabic_name_art",
+  "couples-art-generator": "couples_art",
+};
+
+function normalizeAuthInterest(value: unknown): DigitalArtInterest | null {
+  return typeof value === "string" && AUTH_INTERESTS.has(value as DigitalArtInterest) ? value as DigitalArtInterest : null;
+}
+
+function interestFromMetadata(metadata: unknown): DigitalArtInterest | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
+  const sourcePage = (metadata as { sourcePage?: unknown }).sourcePage;
+  if (typeof sourcePage !== "string") return null;
+  return SOURCE_PAGE_INTEREST[sourcePage.trim().toLowerCase()] ?? null;
+}
 
 export default class DbService extends WorkerEntrypoint<Env> {
   // The service is intended for RPC bindings; direct HTTP access is disabled.
@@ -478,6 +500,98 @@ export default class DbService extends WorkerEntrypoint<Env> {
     try { const token = await prisma.verificationToken.delete({ where: { identifier_token: input } }); return { token: { ...token, expires: token.expires.toISOString() } }; }
     catch (error) { const code = (error as { code?: string }).code === "P2025" ? "NOT_FOUND" : "INTERNAL_DB_ERROR"; return { ok: false, code }; }
     finally { await prisma.$disconnect(); }
+  }
+
+  async authFinalizeSignIn(input: AuthFinalizeEventInput): Promise<AuthFinalizeEventResult> {
+    return this.finalizeAuthEventState(input);
+  }
+
+  async authFinalizeNewUser(input: AuthFinalizeEventInput): Promise<AuthFinalizeEventResult> {
+    return this.finalizeAuthEventState(input);
+  }
+
+  private async finalizeAuthEventState(input: AuthFinalizeEventInput): Promise<AuthFinalizeEventResult> {
+    if (!input || typeof input.userId !== "string" || !input.userId.trim() || input.userId.length > 128 || typeof input.markPaidTraffic !== "boolean" || (input.digitalArtInterest !== null && !AUTH_INTERESTS.has(input.digitalArtInterest))) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+    const prisma = this.createPrisma();
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const current = await tx.user.findUnique({
+          where: { id: input.userId.trim() },
+          select: {
+            email: true,
+            name: true,
+            credits: true,
+            plan: true,
+            paidTrafficUser: true,
+            hasGeneratedDesign: true,
+            hasVisitedCheckout: true,
+            firstDigitalArtInterest: true,
+            latestDigitalArtInterest: true,
+          },
+        });
+        if (!current) return { found: false };
+
+        let firstInterest = normalizeAuthInterest(current.firstDigitalArtInterest);
+        let latestInterest = normalizeAuthInterest(current.latestDigitalArtInterest);
+        if (!firstInterest && !latestInterest && input.digitalArtInterest) {
+          const icons = await tx.icon.findMany({
+            where: { userId: input.userId.trim() },
+            orderBy: { createdAt: "asc" },
+            select: { metadata: true },
+          });
+          for (const icon of icons) {
+            const interest = interestFromMetadata(icon.metadata);
+            if (!interest) continue;
+            if (!firstInterest) firstInterest = interest;
+            latestInterest = interest;
+          }
+        }
+
+        const shouldUpdate = input.markPaidTraffic || Boolean(input.digitalArtInterest);
+        const finalUser = shouldUpdate
+          ? await tx.user.update({
+              where: { id: input.userId.trim() },
+              data: {
+                ...(input.markPaidTraffic ? { paidTrafficUser: true } : {}),
+                ...(input.digitalArtInterest ? {
+                  firstDigitalArtInterest: firstInterest ?? input.digitalArtInterest,
+                  latestDigitalArtInterest: input.digitalArtInterest,
+                } : {}),
+              },
+              select: {
+                email: true,
+                name: true,
+                credits: true,
+                plan: true,
+                paidTrafficUser: true,
+                hasGeneratedDesign: true,
+                hasVisitedCheckout: true,
+                firstDigitalArtInterest: true,
+                latestDigitalArtInterest: true,
+              },
+            })
+          : current;
+
+        const syncState: AuthEventSyncState = {
+          email: finalUser.email,
+          name: finalUser.name,
+          credits: finalUser.credits.toString(),
+          plan: finalUser.plan,
+          paidTrafficUser: finalUser.paidTrafficUser,
+          hasGeneratedDesign: finalUser.hasGeneratedDesign,
+          hasVisitedCheckout: finalUser.hasVisitedCheckout,
+          firstDigitalArtInterest: input.digitalArtInterest ? (normalizeAuthInterest(finalUser.firstDigitalArtInterest) ?? firstInterest ?? input.digitalArtInterest) : (normalizeAuthInterest(finalUser.firstDigitalArtInterest) ?? firstInterest),
+          latestDigitalArtInterest: input.digitalArtInterest ? input.digitalArtInterest : (normalizeAuthInterest(finalUser.latestDigitalArtInterest) ?? latestInterest),
+        };
+        return { found: true, syncState };
+      });
+    } catch (error) {
+      return this.mapWriteError(error, "Auth event state finalization failed");
+    } finally {
+      await prisma.$disconnect();
+    }
   }
 
   private createPrisma() {

@@ -177,6 +177,30 @@ export interface AuthSessionWriteResponse { session: AuthSessionDto }
 export interface AuthVerificationTokenDto { identifier: string; token: string; expires: string }
 export interface AuthVerificationTokenWriteResponse { token: AuthVerificationTokenDto | null }
 
+export type DigitalArtInterest = "name_art" | "arabic_name_art" | "couples_art";
+export interface AuthFinalizeEventInput {
+  userId: string;
+  markPaidTraffic: boolean;
+  digitalArtInterest: DigitalArtInterest | null;
+}
+export interface AuthEventSyncState {
+  email: string | null;
+  name: string | null;
+  credits: string;
+  plan: "None" | "Starter" | "Pro" | "Elite";
+  paidTrafficUser: boolean;
+  hasGeneratedDesign: boolean;
+  hasVisitedCheckout: boolean;
+  firstDigitalArtInterest: DigitalArtInterest | null;
+  latestDigitalArtInterest: DigitalArtInterest | null;
+}
+export interface AuthFinalizeEventResponse {
+  found: true;
+  syncState: AuthEventSyncState;
+}
+export interface AuthFinalizeEventNotFoundResponse { found: false }
+export type AuthFinalizeEventResult = AuthFinalizeEventResponse | AuthFinalizeEventNotFoundResponse | AuthWriteErrorResponse;
+
 export interface AuthGetSessionAndUserInput {
   sessionToken: string;
 }

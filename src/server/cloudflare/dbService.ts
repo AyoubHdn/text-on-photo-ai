@@ -67,6 +67,18 @@ type AuthUserWriteResult = { user: NonNullable<Extract<AuthUserResult, { found: 
 type AuthAccountWriteResult = { account: Record<string, unknown> } | AuthWriteResult;
 type AuthSessionWriteResult = { session: { sessionToken: string; userId: string; expires: string } } | AuthWriteResult;
 type AuthVerificationWriteResult = { token: { identifier: string; token: string; expires: string } | null } | AuthWriteResult;
+export type AuthEventSyncState = {
+  email: string | null;
+  name: string | null;
+  credits: string;
+  plan: "None" | "Starter" | "Pro" | "Elite";
+  paidTrafficUser: boolean;
+  hasGeneratedDesign: boolean;
+  hasVisitedCheckout: boolean;
+  firstDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null;
+  latestDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null;
+};
+type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | { found: false } | AuthWriteResult;
 
 type DbServiceBinding = {
   pricingGetAvailability(input: {
@@ -98,6 +110,8 @@ type DbServiceBinding = {
   authDeleteSession(input: { sessionToken: string }): Promise<AuthSessionWriteResult>;
   authCreateVerificationToken(input: { identifier: string; token: string; expires: string }): Promise<AuthVerificationWriteResult>;
   authUseVerificationToken(input: { identifier: string; token: string }): Promise<AuthVerificationWriteResult>;
+  authFinalizeSignIn(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }): Promise<AuthFinalizeEventResult>;
+  authFinalizeNewUser(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }): Promise<AuthFinalizeEventResult>;
 };
 
 export class DbServiceConfigurationError extends Error {
@@ -333,4 +347,18 @@ export async function authUseVerificationTokenFromService(input: { identifier: s
   if ("token" in result) return result.token ? { ...result.token, expires: new Date(result.token.expires) } : null;
   if (result.code === "NOT_FOUND") return null;
   return throwAuthWriteError(result);
+}
+
+async function finalizeAuthEventFromService(method: "authFinalizeSignIn" | "authFinalizeNewUser", input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }) {
+  const result = await (await getDbService())[method](input);
+  if ("found" in result) return result;
+  return throwAuthWriteError(result);
+}
+
+export function authFinalizeSignInFromService(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }) {
+  return finalizeAuthEventFromService("authFinalizeSignIn", input);
+}
+
+export function authFinalizeNewUserFromService(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }) {
+  return finalizeAuthEventFromService("authFinalizeNewUser", input);
 }
