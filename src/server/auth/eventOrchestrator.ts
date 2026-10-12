@@ -38,6 +38,29 @@ const defaultDependencies: AuthEventDependencies = {
   updateMauticContact,
 };
 
+const suppressedExternalSyncDependencies: AuthEventDependencies = {
+  updateMauticContact: async () => {
+    console.log("AUTH_TEST external sync suppressed");
+  },
+};
+
+/**
+ * Select the external-sync dependency for service-backed auth events.
+ *
+ * The no-op mode is intentionally gated by both the service backend and an
+ * explicit test-only setting. Node/Vercel and the legacy event path always
+ * retain the real Mautic dependency.
+ */
+export function getAuthEventDependencies(): AuthEventDependencies {
+  if (
+    shouldUseServiceAuthBackend() &&
+    process.env.AUTH_EXTERNAL_SYNC_MODE === "noop"
+  ) {
+    return suppressedExternalSyncDependencies;
+  }
+  return defaultDependencies;
+}
+
 function creditsForMautic(value: string): string {
   // The existing Mautic helper accepts a string and applies its existing
   // Decimal formatting/preview-balance rules without losing precision.
@@ -148,7 +171,7 @@ export function runAuthSignInEvent(params: {
   return runServiceEvent({
     ...params,
     kind: "signIn",
-    dependencies: params.dependencies ?? defaultDependencies,
+    dependencies: params.dependencies ?? getAuthEventDependencies(),
   });
 }
 
@@ -161,6 +184,6 @@ export function runAuthCreateUserEvent(params: {
   return runServiceEvent({
     ...params,
     kind: "createUser",
-    dependencies: params.dependencies ?? defaultDependencies,
+    dependencies: params.dependencies ?? getAuthEventDependencies(),
   });
 }
