@@ -6,8 +6,6 @@ import { prisma } from "~/server/db";
 import { PRINTFUL_PRODUCTS } from "~/server/printful/products";
 import { createMockupTask } from "~/server/printful/mockup";
 import { pollMockupTask } from "~/server/printful/pollMockup";
-import { convertWebpToPngAndUpload } from "~/server/image/convertWebpToPng";
-import { generateTshirtPrintImage } from "~/server/printful/generateTshirtPrintImage";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-02-24.acacia",
@@ -81,6 +79,8 @@ export const checkoutRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const { convertWebpToPngAndUpload } = await import("~/server/image/convertWebpToPng");
+      const { generateTshirtPrintImage } = await import("~/server/printful/generateTshirtPrintImage");
       const order = await prisma.productOrder.findFirst({
         where: {
           id: input.orderId,

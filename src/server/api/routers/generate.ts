@@ -31,9 +31,12 @@ import {
 } from "~/server/mautic/digitalArtInterest";
 import { buildRamadanMugV2Prompt } from "~/server/prompts/ramadanMugV2Prompt";
 import { createHash, randomUUID } from "crypto";
-import { extractCoupleMugSidePreviews } from "~/server/image/extractCoupleMugSidePreviews";
 import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
-import sharp from "sharp";
+
+async function loadSharp() {
+  const module = await import("sharp");
+  return module.default;
+}
 
 const s3 = new AWS.S3({
   credentials: {
@@ -649,6 +652,7 @@ async function prepareFlux2ProReferenceImage(params: {
   }
 
   const sourceBuffer = await response.buffer();
+  const sharp = await loadSharp();
   const processedBuffer = await sharp(sourceBuffer)
     .rotate()
     .resize({
@@ -1057,7 +1061,7 @@ async function storeGeneratedAsset(params: {
 }) {
   const normalizedBuffer =
     params.contentType === "image/png"
-      ? await sharp(params.buffer)
+      ? await (await loadSharp())(params.buffer)
           .png({ quality: 100 })
           .withMetadata({ density: 300 })
           .toBuffer()
@@ -1560,7 +1564,7 @@ export const generateRouter = createTRPCRouter({
               });
             }
 
-            const wrapBuffer = await sharp(Buffer.from(wrapBaseImage, "base64"))
+            const wrapBuffer = await (await loadSharp())(Buffer.from(wrapBaseImage, "base64"))
               .resize({
                 width: mugConfig.areaWidth,
                 height: mugConfig.areaHeight,
@@ -1571,7 +1575,7 @@ export const generateRouter = createTRPCRouter({
               .toBuffer();
 
             const { herSideBuffer, hisSideBuffer } =
-              await extractCoupleMugSidePreviews({
+              await (await import("~/server/image/extractCoupleMugSidePreviews")).extractCoupleMugSidePreviews({
                 wrapBuffer,
               });
 
