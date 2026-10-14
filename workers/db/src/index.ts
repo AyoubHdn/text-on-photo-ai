@@ -6,6 +6,10 @@ import type {
   DiagnosticResponse,
   Env,
   HealthResponse,
+  UserReadInput,
+  UserCreditsResult,
+  UserCreditUpgradeStateResult,
+  UserPaidTrafficFunnelStateResult,
   PricingAvailabilityInput,
   PricingAvailabilityErrorResponse,
   PricingAvailabilityResponse,
@@ -93,6 +97,45 @@ export default class DbService extends WorkerEntrypoint<Env> {
     } finally {
       await prisma.$disconnect();
     }
+  }
+
+  async userGetCredits(input: UserReadInput): Promise<UserCreditsResult> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { credits: true } });
+      return user ? { found: true, credits: user.credits.toString() } : { found: false };
+    } catch (error) {
+      console.error("User credits lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async userGetCreditUpgradeState(input: UserReadInput): Promise<UserCreditUpgradeStateResult> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true, hasGeneratedDesign: true } });
+      return user ? { found: true, plan: user.plan, hasGeneratedDesign: Boolean(user.hasGeneratedDesign) } : { found: false };
+    } catch (error) {
+      console.error("User credit upgrade lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async userGetPaidTrafficFunnelState(input: UserReadInput): Promise<UserPaidTrafficFunnelStateResult> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { paidTrafficUser: true, paidTrafficFreeCreditsGranted: true, paidTrafficFreePreviewUsed: true, hasGeneratedDesign: true, hasVisitedCheckout: true } });
+      return user ? { found: true, paidTrafficUser: Boolean(user.paidTrafficUser), paidTrafficFreeCreditsGranted: Boolean(user.paidTrafficFreeCreditsGranted), paidTrafficFreePreviewUsed: Boolean(user.paidTrafficFreePreviewUsed), hasGeneratedDesign: Boolean(user.hasGeneratedDesign), hasVisitedCheckout: Boolean(user.hasVisitedCheckout) } : { found: false };
+    } catch (error) {
+      console.error("Paid traffic funnel lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
   }
 
   async pricingGetAvailability(

@@ -11,6 +11,20 @@ export interface DiagnosticResponse {
   ok: true;
 }
 
+export interface UserReadInput { userId: string }
+export type UserCreditsResult =
+  | { found: true; credits: string }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+export type UserCreditUpgradeStateResult =
+  | { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; hasGeneratedDesign: boolean }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+export type UserPaidTrafficFunnelStateResult =
+  | { found: true; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean; paidTrafficFreePreviewUsed: boolean; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
 export interface PricingAvailabilityInput {
   productType: string;
   variantId: number;

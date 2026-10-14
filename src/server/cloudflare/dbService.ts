@@ -81,6 +81,9 @@ export type AuthEventSyncState = {
 type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | { found: false } | AuthWriteResult;
 
 type DbServiceBinding = {
+  userGetCredits(input: { userId: string }): Promise<UserCreditsResult>;
+  userGetCreditUpgradeState(input: { userId: string }): Promise<UserCreditUpgradeStateResult>;
+  userGetPaidTrafficFunnelState(input: { userId: string }): Promise<UserPaidTrafficFunnelStateResult>;
   pricingGetAvailability(input: {
     productType: ProductType;
     variantId: number;
@@ -114,6 +117,10 @@ type DbServiceBinding = {
   authFinalizeNewUser(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }): Promise<AuthFinalizeEventResult>;
 };
 
+type UserCreditsResult = { found: true; credits: string } | { found: false } | { ok: false; code: DbErrorCode };
+type UserCreditUpgradeStateResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; hasGeneratedDesign: boolean } | { found: false } | { ok: false; code: DbErrorCode };
+type UserPaidTrafficFunnelStateResult = { found: true; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean; paidTrafficFreePreviewUsed: boolean; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean } | { found: false } | { ok: false; code: DbErrorCode };
+
 export class DbServiceConfigurationError extends Error {
   constructor() {
     super("Database service is not configured.");
@@ -140,6 +147,28 @@ export class DbServiceRequestError extends Error {
     this.name = "DbServiceRequestError";
     this.code = code;
   }
+}
+
+async function userReadService(): Promise<DbServiceBinding> {
+  return getDbService();
+}
+
+export async function userGetCreditsFromService(input: { userId: string }): Promise<number> {
+  const result = await (await userReadService()).userGetCredits(input);
+  if ("found" in result) return result.found ? Number(result.credits) : 0;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function userGetCreditUpgradeStateFromService(input: { userId: string }) {
+  const result = await (await userReadService()).userGetCreditUpgradeState(input);
+  if ("found" in result) return result.found ? result : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function userGetPaidTrafficFunnelStateFromService(input: { userId: string }) {
+  const result = await (await userReadService()).userGetPaidTrafficFunnelState(input);
+  if ("found" in result) return result.found ? result : null;
+  throw new DbServiceRequestError(result.code, "auth");
 }
 
 export async function pricingGetAvailabilityFromService(input: {

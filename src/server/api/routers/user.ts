@@ -9,6 +9,9 @@ import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
+import { userGetCreditsFromService, userGetCreditUpgradeStateFromService, userGetPaidTrafficFunnelStateFromService } from "~/server/cloudflare/dbService";
+
+const shouldUseServiceUserReads = () => process.env.DB_USER_READS_BACKEND === "service";
 
 export const userRouter = createTRPCRouter({
   syncPreferredLocale: protectedProcedure
@@ -39,6 +42,7 @@ export const userRouter = createTRPCRouter({
     }),
   getCredits: protectedProcedure
     .query(async ({ ctx }) => {
+      if (shouldUseServiceUserReads()) return userGetCreditsFromService({ userId: ctx.session.user.id });
       const user = await ctx.prisma.user.findUnique({
         where: {
           id: ctx.session.user.id,
@@ -47,6 +51,10 @@ export const userRouter = createTRPCRouter({
       return user?.credits ? Number(user.credits) : 0;
     }),
   getCreditUpgradeState: protectedProcedure.query(async ({ ctx }) => {
+    if (shouldUseServiceUserReads()) {
+      const user = await userGetCreditUpgradeStateFromService({ userId: ctx.session.user.id });
+      return { hasPurchasedCreditsBefore: user ? user.plan !== "None" : true, hasGeneratedBefore: Boolean(user?.hasGeneratedDesign) };
+    }
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
       select: {
@@ -61,6 +69,10 @@ export const userRouter = createTRPCRouter({
     };
   }),
   getPaidTrafficFunnelState: protectedProcedure.query(async ({ ctx }) => {
+    if (shouldUseServiceUserReads()) {
+      const user = await userGetPaidTrafficFunnelStateFromService({ userId: ctx.session.user.id });
+      return { isPaidTrafficUser: Boolean(user?.paidTrafficUser), paidTrafficFreeCreditsGranted: Boolean(user?.paidTrafficFreeCreditsGranted), paidTrafficFreePreviewUsed: Boolean(user?.paidTrafficFreePreviewUsed), hasGeneratedDesign: Boolean(user?.hasGeneratedDesign), hasVisitedCheckout: Boolean(user?.hasVisitedCheckout) };
+    }
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
       select: {
