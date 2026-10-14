@@ -3,6 +3,9 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { Plan } from "@prisma/client";
+import { iconGetIconsForUserFromService, iconGetCommunityIconsFromService, iconGetPopularPaidIconsFromService } from "~/server/cloudflare/dbService";
+
+const shouldUseServiceIconReads = () => process.env.DB_ICON_READS_BACKEND === "service";
 
 const EXCLUDED_COMMUNITY_SOURCE_PAGES = [
   "couple-name-mug-v1",
@@ -16,6 +19,11 @@ export const iconRouter = createTRPCRouter({
   getIconsForUser: protectedProcedure
     .query(async ({ ctx }) => {
         const userId = ctx.session.user.id;
+        if (shouldUseServiceIconReads()) {
+          const userWithIcons = await iconGetIconsForUserFromService({ userId });
+          if (!userWithIcons) throw new TRPCError({ code: "NOT_FOUND", message: "User not found." });
+          return { icons: userWithIcons.icons, userPlan: userWithIcons.plan, isSubscriber: userWithIcons.plan !== Plan.None };
+        }
         
         // Fetch both the icons and the user's subscription plan in one efficient database call
         const userWithIcons = await ctx.prisma.user.findUnique({
@@ -44,6 +52,7 @@ export const iconRouter = createTRPCRouter({
   // --- END: UPGRADED PROCEDURE ---
 
   getCommunityIcons: publicProcedure.query(async({ctx}) => {
+      if (shouldUseServiceIconReads()) return iconGetCommunityIconsFromService();
       const icons = await ctx.prisma.icon.findMany({
         where: {
           isPublic: true,
@@ -118,6 +127,7 @@ export const iconRouter = createTRPCRouter({
     })
   )
   .query(async ({ ctx, input }) => {
+    if (shouldUseServiceIconReads()) return iconGetPopularPaidIconsFromService({ limit: input.limit });
     const icons = await ctx.prisma.icon.findMany({
       where: {
         isPublic: true,

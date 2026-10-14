@@ -6,6 +6,10 @@ import type {
   DiagnosticResponse,
   Env,
   HealthResponse,
+  IconDto,
+  IconUserReadResult,
+  IconListResult,
+  PopularIconListResult,
   UserReadInput,
   UserCreditsResult,
   UserCreditUpgradeStateResult,
@@ -97,6 +101,44 @@ export default class DbService extends WorkerEntrypoint<Env> {
     } finally {
       await prisma.$disconnect();
     }
+  }
+
+  async iconGetIconsForUser(input: { userId: string }): Promise<IconUserReadResult> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true, icons: { orderBy: { createdAt: "desc" } } } });
+      if (!user) return { found: false };
+      return { found: true, plan: user.plan, icons: user.icons.map((icon) => ({ ...icon, createdAt: icon.createdAt.toISOString(), backgroundRemovedAt: icon.backgroundRemovedAt?.toISOString() ?? null })) };
+    } catch (error) {
+      console.error("User icon lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async iconGetCommunityIcons(): Promise<IconListResult> {
+    const prisma = this.createPrisma();
+    try {
+      const icons = await prisma.icon.findMany({ where: { isPublic: true, NOT: ["couple-name-mug-v1", "couple-avatar-name-mug-v1", "couple-names-only-mug-v1"].map((sourcePage) => ({ metadata: { path: ["sourcePage"], equals: sourcePage } })) }, take: 50, orderBy: { createdAt: "desc" } });
+      return { icons: icons.map((icon) => ({ ...icon, createdAt: icon.createdAt.toISOString(), backgroundRemovedAt: icon.backgroundRemovedAt?.toISOString() ?? null })) };
+    } catch (error) {
+      console.error("Community icon lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async iconGetPopularPaidIcons(input: { limit: number }): Promise<PopularIconListResult> {
+    const limit = input?.limit;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 30) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const icons = await prisma.icon.findMany({ where: { isPublic: true, NOT: ["couple-name-mug-v1", "couple-avatar-name-mug-v1", "couple-names-only-mug-v1"].map((sourcePage) => ({ metadata: { path: ["sourcePage"], equals: sourcePage } })), User: { plan: { not: "None" } } }, orderBy: { createdAt: "desc" }, take: limit, select: { id: true, prompt: true, metadata: true } });
+      return { icons };
+    } catch (error) {
+      console.error("Popular icon lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
   }
 
   async userGetCredits(input: UserReadInput): Promise<UserCreditsResult> {

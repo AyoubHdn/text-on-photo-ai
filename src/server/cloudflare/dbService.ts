@@ -81,6 +81,9 @@ export type AuthEventSyncState = {
 type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | { found: false } | AuthWriteResult;
 
 type DbServiceBinding = {
+  iconGetIconsForUser(input: { userId: string }): Promise<IconUserReadResult>;
+  iconGetCommunityIcons(): Promise<IconListResult>;
+  iconGetPopularPaidIcons(input: { limit: number }): Promise<PopularIconListResult>;
   userGetCredits(input: { userId: string }): Promise<UserCreditsResult>;
   userGetCreditUpgradeState(input: { userId: string }): Promise<UserCreditUpgradeStateResult>;
   userGetPaidTrafficFunnelState(input: { userId: string }): Promise<UserPaidTrafficFunnelStateResult>;
@@ -117,6 +120,11 @@ type DbServiceBinding = {
   authFinalizeNewUser(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }): Promise<AuthFinalizeEventResult>;
 };
 
+type IconDto = { id: string; prompt: string | null; userId: string | null; createdAt: string; isPublic: boolean; metadata: unknown; transparentImageUrl: string | null; backgroundRemovedAt: string | null };
+type IconUserReadResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; icons: IconDto[] } | { found: false } | { ok: false; code: DbErrorCode };
+type IconListResult = { icons: IconDto[] } | { ok: false; code: DbErrorCode };
+type PopularIconListResult = { icons: Array<{ id: string; prompt: string | null; metadata: unknown }> } | { ok: false; code: DbErrorCode };
+
 type UserCreditsResult = { found: true; credits: string } | { found: false } | { ok: false; code: DbErrorCode };
 type UserCreditUpgradeStateResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; hasGeneratedDesign: boolean } | { found: false } | { ok: false; code: DbErrorCode };
 type UserPaidTrafficFunnelStateResult = { found: true; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean; paidTrafficFreePreviewUsed: boolean; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean } | { found: false } | { ok: false; code: DbErrorCode };
@@ -151,6 +159,25 @@ export class DbServiceRequestError extends Error {
 
 async function userReadService(): Promise<DbServiceBinding> {
   return getDbService();
+}
+
+function restoreIcon(icon: IconDto) {
+  return { ...icon, createdAt: new Date(icon.createdAt), backgroundRemovedAt: icon.backgroundRemovedAt ? new Date(icon.backgroundRemovedAt) : null };
+}
+export async function iconGetIconsForUserFromService(input: { userId: string }) {
+  const result = await (await getDbService()).iconGetIconsForUser(input);
+  if ("found" in result) return result.found ? { ...result, icons: result.icons.map(restoreIcon) } : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+export async function iconGetCommunityIconsFromService() {
+  const result = await (await getDbService()).iconGetCommunityIcons();
+  if ("icons" in result) return result.icons.map(restoreIcon);
+  throw new DbServiceRequestError(result.code, "auth");
+}
+export async function iconGetPopularPaidIconsFromService(input: { limit: number }) {
+  const result = await (await getDbService()).iconGetPopularPaidIcons(input);
+  if ("icons" in result) return result.icons;
+  throw new DbServiceRequestError(result.code, "auth");
 }
 
 export async function userGetCreditsFromService(input: { userId: string }): Promise<number> {

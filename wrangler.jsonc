@@ -8,6 +8,7 @@
   "vars": {
     "DB_AUTH_BACKEND": "service",
     "DB_USER_READS_BACKEND": "service",
+    "DB_ICON_READS_BACKEND": "service",
     "AUTH_EXTERNAL_SYNC_MODE": "noop",
     "DATABASE_URL": "postgresql://invalid:invalid@db.invalid:5432/invalid",
     "NEXTAUTH_URL": "https://namedesignai-cloudflare-staging.hdnstudio.workers.dev",

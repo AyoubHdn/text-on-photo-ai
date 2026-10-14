@@ -11,6 +11,14 @@ export interface DiagnosticResponse {
   ok: true;
 }
 
+export interface IconDto {
+  id: string; prompt: string | null; userId: string | null; createdAt: string;
+  isPublic: boolean; metadata: unknown; transparentImageUrl: string | null; backgroundRemovedAt: string | null;
+}
+export type IconUserReadResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; icons: IconDto[] } | { found: false } | { ok: false; code: DbErrorCode };
+export type IconListResult = { icons: IconDto[] } | { ok: false; code: DbErrorCode };
+export type PopularIconListResult = { icons: Array<{ id: string; prompt: string | null; metadata: unknown }> } | { ok: false; code: DbErrorCode };
+
 export interface UserReadInput { userId: string }
 export type UserCreditsResult =
   | { found: true; credits: string }
