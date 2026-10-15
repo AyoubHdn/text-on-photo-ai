@@ -18,6 +18,8 @@ export interface IconDto {
 export type IconUserReadResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; icons: IconDto[] } | { found: false } | { ok: false; code: DbErrorCode };
 export type IconListResult = { icons: IconDto[] } | { ok: false; code: DbErrorCode };
 export type PopularIconListResult = { icons: Array<{ id: string; prompt: string | null; metadata: unknown }> } | { ok: false; code: DbErrorCode };
+export type IconWriteResult = { icon: IconDto } | { ok: false; code: DbErrorCode };
+export type IconClaimResult = { success: true; claimed: boolean } | { ok: false; code: DbErrorCode };
 
 export interface UserReadInput { userId: string }
 export type UserCreditsResult =

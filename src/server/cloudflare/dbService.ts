@@ -84,6 +84,8 @@ type DbServiceBinding = {
   iconGetIconsForUser(input: { userId: string }): Promise<IconUserReadResult>;
   iconGetCommunityIcons(): Promise<IconListResult>;
   iconGetPopularPaidIcons(input: { limit: number }): Promise<PopularIconListResult>;
+  iconUpdateVisibility(input: { userId: string; iconId: string; isPublic: boolean }): Promise<IconWriteResult>;
+  iconClaimGuestRamadanMugV2Design(input: { userId: string; iconId: string }): Promise<IconClaimResult>;
   userGetCredits(input: { userId: string }): Promise<UserCreditsResult>;
   userGetCreditUpgradeState(input: { userId: string }): Promise<UserCreditUpgradeStateResult>;
   userGetPaidTrafficFunnelState(input: { userId: string }): Promise<UserPaidTrafficFunnelStateResult>;
@@ -124,6 +126,8 @@ type IconDto = { id: string; prompt: string | null; userId: string | null; creat
 type IconUserReadResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; icons: IconDto[] } | { found: false } | { ok: false; code: DbErrorCode };
 type IconListResult = { icons: IconDto[] } | { ok: false; code: DbErrorCode };
 type PopularIconListResult = { icons: Array<{ id: string; prompt: string | null; metadata: unknown }> } | { ok: false; code: DbErrorCode };
+type IconWriteResult = { icon: IconDto } | { ok: false; code: DbErrorCode };
+type IconClaimResult = { success: true; claimed: boolean } | { ok: false; code: DbErrorCode };
 
 type UserCreditsResult = { found: true; credits: string } | { found: false } | { ok: false; code: DbErrorCode };
 type UserCreditUpgradeStateResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; hasGeneratedDesign: boolean } | { found: false } | { ok: false; code: DbErrorCode };
@@ -177,6 +181,16 @@ export async function iconGetCommunityIconsFromService() {
 export async function iconGetPopularPaidIconsFromService(input: { limit: number }) {
   const result = await (await getDbService()).iconGetPopularPaidIcons(input);
   if ("icons" in result) return result.icons;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+export async function iconUpdateVisibilityFromService(input: { userId: string; iconId: string; isPublic: boolean }) {
+  const result = await (await getDbService()).iconUpdateVisibility(input);
+  if ("icon" in result) return restoreIcon(result.icon);
+  throw new DbServiceRequestError(result.code, "auth");
+}
+export async function iconClaimGuestRamadanMugV2DesignFromService(input: { userId: string; iconId: string }) {
+  const result = await (await getDbService()).iconClaimGuestRamadanMugV2Design(input);
+  if ("success" in result) return result;
   throw new DbServiceRequestError(result.code, "auth");
 }
 

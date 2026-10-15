@@ -3,9 +3,18 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { Plan } from "@prisma/client";
-import { iconGetIconsForUserFromService, iconGetCommunityIconsFromService, iconGetPopularPaidIconsFromService } from "~/server/cloudflare/dbService";
+import { DbServiceRequestError, iconGetIconsForUserFromService, iconGetCommunityIconsFromService, iconGetPopularPaidIconsFromService, iconUpdateVisibilityFromService, iconClaimGuestRamadanMugV2DesignFromService } from "~/server/cloudflare/dbService";
 
 const shouldUseServiceIconReads = () => process.env.DB_ICON_READS_BACKEND === "service";
+const shouldUseServiceIconWrites = () => process.env.DB_ICON_WRITES_BACKEND === "service";
+
+function throwIconServiceError(error: unknown, message = "This design cannot be claimed."): never {
+  if (error instanceof DbServiceRequestError) {
+    if (error.code === "NOT_FOUND") throw new TRPCError({ code: "NOT_FOUND", message: "Design not found." });
+    if (error.code === "FORBIDDEN") throw new TRPCError({ code: "FORBIDDEN", message });
+  }
+  throw error;
+}
 
 const EXCLUDED_COMMUNITY_SOURCE_PAGES = [
   "couple-name-mug-v1",
@@ -82,6 +91,10 @@ export const iconRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      if (shouldUseServiceIconWrites()) {
+        try { return await iconUpdateVisibilityFromService({ ...input, userId }); }
+        catch (error) { return throwIconServiceError(error, input.isPublic ? "You are not authorized to edit this icon." : "You must have a subscription to make designs private."); }
+      }
 
       // Find the user first to check their subscription status
       const user = await ctx.prisma.user.findUnique({
@@ -164,6 +177,15 @@ export const iconRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (shouldUseServiceIconWrites()) {
+        try { return await iconClaimGuestRamadanMugV2DesignFromService({ ...input, userId: ctx.session.user.id }); }
+        catch (error) {
+          if (error instanceof DbServiceRequestError && error.code === "NOT_FOUND") {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Design not found." });
+          }
+          return throwIconServiceError(error);
+        }
+      }
       const icon = await ctx.prisma.icon.findUnique({
         where: { id: input.iconId },
         select: {

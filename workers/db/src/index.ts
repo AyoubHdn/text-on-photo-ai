@@ -9,6 +9,8 @@ import type {
   IconDto,
   IconUserReadResult,
   IconListResult,
+  IconWriteResult,
+  IconClaimResult,
   PopularIconListResult,
   UserReadInput,
   UserCreditsResult,
@@ -137,6 +139,51 @@ export default class DbService extends WorkerEntrypoint<Env> {
       return { icons };
     } catch (error) {
       console.error("Popular icon lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async iconUpdateVisibility(input: { userId: string; iconId: string; isPublic: boolean }): Promise<IconWriteResult> {
+    const userId = input?.userId?.trim();
+    const iconId = input?.iconId?.trim();
+    if (!userId || userId.length > 128 || !iconId || iconId.length > 128 || typeof input?.isPublic !== "boolean") {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+    const prisma = this.createPrisma();
+    try {
+      const icon = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({ where: { id: userId }, select: { plan: true } });
+        if (user?.plan === "None" && input.isPublic === false) return { error: "FORBIDDEN" as const };
+        const owned = await tx.icon.findFirst({ where: { id: iconId, userId } });
+        if (!owned) return { error: "FORBIDDEN" as const };
+        return { value: await tx.icon.update({ where: { id: iconId }, data: { isPublic: input.isPublic } }) };
+      });
+      if ("error" in icon) return { ok: false, code: "FORBIDDEN" };
+      return { icon: { ...icon.value, createdAt: icon.value.createdAt.toISOString(), backgroundRemovedAt: icon.value.backgroundRemovedAt?.toISOString() ?? null } };
+    } catch (error) {
+      console.error("Icon visibility update failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async iconClaimGuestRamadanMugV2Design(input: { userId: string; iconId: string }): Promise<IconClaimResult> {
+    const userId = input?.userId?.trim();
+    const iconId = input?.iconId?.trim();
+    if (!userId || userId.length > 128 || !iconId || iconId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const icon = await prisma.icon.findUnique({ where: { id: iconId }, select: { userId: true, metadata: true } });
+      if (!icon) return { ok: false, code: "NOT_FOUND" };
+      if (icon.userId === userId) return { success: true, claimed: false };
+      const sourcePage = icon.metadata && typeof icon.metadata === "object" && "sourcePage" in icon.metadata ? (icon.metadata as { sourcePage?: string }).sourcePage : undefined;
+      if (icon.userId !== null || sourcePage !== "ramadan-mug-v2") return { ok: false, code: "FORBIDDEN" };
+      const claimed = await prisma.icon.updateMany({ where: { id: iconId, userId: null, metadata: { path: ["sourcePage"], equals: "ramadan-mug-v2" } }, data: { userId } });
+      if (claimed.count === 1) return { success: true, claimed: true };
+      const after = await prisma.icon.findUnique({ where: { id: iconId }, select: { userId: true } });
+      if (after?.userId === userId) return { success: true, claimed: false };
+      return { ok: false, code: "FORBIDDEN" };
+    } catch (error) {
+      console.error("Guest icon claim failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally { await prisma.$disconnect(); }
   }
