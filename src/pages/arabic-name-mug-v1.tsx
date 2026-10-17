@@ -13,6 +13,7 @@ import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { api } from "~/utils/api";
+import { PHYSICAL_COMMERCE_ENABLED } from "~/config/physicalCommerce";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type PreviewVariant = "original" | "transparent";
@@ -730,6 +731,7 @@ const ArabicNameMugV1Page: NextPage = () => {
   };
 
   const goStep7 = async () => {
+    if (!PHYSICAL_COMMERCE_ENABLED) return;
     if (previewLockRef.current || busyPreview) return;
     const previewImageUrl = selectedDesign;
     const previewKey = selectedPreviewKey;
@@ -785,6 +787,7 @@ const ArabicNameMugV1Page: NextPage = () => {
   };
 
   const checkout = async () => {
+    if (!PHYSICAL_COMMERCE_ENABLED) return;
     if (!selectedDesign || !selectedMockupUrl) {
       setErr("Preview is required before checkout.");
       return;
@@ -1379,13 +1382,15 @@ const ArabicNameMugV1Page: NextPage = () => {
                 </div>
               </div>
 
-              <button onClick={() => void goStep7()} className={PRIMARY_BUTTON_CLASS}>
-                Preview My Mug
-              </button>
+              {PHYSICAL_COMMERCE_ENABLED && (
+                <button onClick={() => void goStep7()} className={PRIMARY_BUTTON_CLASS}>
+                  Preview My Mug
+                </button>
+              )}
             </section>
           )}
 
-          {step === 7 && busyPreview && (
+          {PHYSICAL_COMMERCE_ENABLED && step === 7 && busyPreview && (
             <section className="flex min-h-[65vh] flex-col items-center justify-center text-center">
               <div className={`${SURFACE_CARD_CLASS} w-full`}>
                 <h2 className="text-3xl font-bold text-slate-950">
@@ -1460,7 +1465,7 @@ const ArabicNameMugV1Page: NextPage = () => {
             </section>
           )}
 
-          {step === 7 && !busyPreview && (
+          {PHYSICAL_COMMERCE_ENABLED && step === 7 && !busyPreview && (
             <section className="space-y-4">
               <div className={SURFACE_CARD_CLASS}>
                 <h2 className="text-3xl font-bold text-slate-950">Preview Your Personalized Mug</h2>

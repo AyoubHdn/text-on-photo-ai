@@ -16,6 +16,7 @@ import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { ProductNudgeBlock } from "~/component/Nudge/ProductNudgeBlock";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
+import { PHYSICAL_COMMERCE_ENABLED } from "~/config/physicalCommerce";
 import {
   CANDLE_VARIANT_INFO,
   CANVAS_VARIANT_INFO,
@@ -116,6 +117,8 @@ export function ProductPreviewModal({
   transparentImageUrl: initialTransparentImageUrl = null,
   useTransparent: initialUseTransparent = false,
 }: Props) {
+  if (!PHYSICAL_COMMERCE_ENABLED) return null;
+
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [mockupUrl, setMockupUrl] = useState<string | null>(null);
   const [useTransparent, setUseTransparent] = useState(false);

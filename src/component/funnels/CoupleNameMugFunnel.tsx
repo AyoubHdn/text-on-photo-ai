@@ -14,6 +14,7 @@ import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { api } from "~/utils/api";
+import { PHYSICAL_COMMERCE_ENABLED } from "~/config/physicalCommerce";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type LockedDisplayStep = 1 | 2 | 3 | 4 | 5 | 6;
@@ -825,6 +826,7 @@ export function CoupleNameMugFunnel({
   };
 
   const goStep7 = async () => {
+    if (!PHYSICAL_COMMERCE_ENABLED) return;
     if (previewLockRef.current || busyPreview) return;
     if (!selectedDesign) {
       setErr("Generate your design first.");
@@ -898,6 +900,7 @@ export function CoupleNameMugFunnel({
   };
 
   const checkout = async () => {
+    if (!PHYSICAL_COMMERCE_ENABLED) return;
     if (!selectedDesign || !selectedMockupUrl) {
       setErr("Preview is required before checkout.");
       return;
@@ -1060,7 +1063,7 @@ export function CoupleNameMugFunnel({
             )}
             <div className="mt-4 grid grid-cols-1 gap-3">
               <button
-                onClick={() => setStep(hasPreviewForSelectedDesign ? 7 : 6)}
+                onClick={() => setStep(PHYSICAL_COMMERCE_ENABLED && hasPreviewForSelectedDesign ? 7 : 6)}
                 className={PRIMARY_BUTTON_CLASS}
               >
                 Continue with my design
@@ -1633,9 +1636,11 @@ export function CoupleNameMugFunnel({
         </div>
 
         <div className="mt-5 grid gap-3">
-          <button onClick={() => void goStep7()} className={PRIMARY_BUTTON_CLASS}>
-            Generate Mug Preview
-          </button>
+          {PHYSICAL_COMMERCE_ENABLED && (
+            <button onClick={() => void goStep7()} className={PRIMARY_BUTTON_CLASS}>
+              Generate Mug Preview
+            </button>
+          )}
         </div>
       </div>
     </section>
@@ -1772,13 +1777,15 @@ export function CoupleNameMugFunnel({
         )}
 
         <div className="mt-5 grid gap-3">
-          <button
-            onClick={() => void checkout()}
-            disabled={busyPreview || busyCheckout || !selectedMockupUrl}
-            className={PRIMARY_BUTTON_CLASS}
-          >
-            {busyCheckout ? "Starting Checkout..." : "Continue To Checkout"}
-          </button>
+          {PHYSICAL_COMMERCE_ENABLED && (
+            <button
+              onClick={() => void checkout()}
+              disabled={busyPreview || busyCheckout || !selectedMockupUrl}
+              className={PRIMARY_BUTTON_CLASS}
+            >
+              {busyCheckout ? "Starting Checkout..." : "Continue To Checkout"}
+            </button>
+          )}
         </div>
       </div>
     </section>
@@ -1840,7 +1847,7 @@ export function CoupleNameMugFunnel({
           {step === 4 && renderStep3()}
           {step === 5 && renderStep4()}
           {step === 6 && renderStep6()}
-          {step === 7 && renderStep7()}
+          {PHYSICAL_COMMERCE_ENABLED && step === 7 && renderStep7()}
 
           {err && (
             <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
