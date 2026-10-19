@@ -16,7 +16,7 @@ type Recipient =
   | "My Father"
   | "My Mother"
   | "Someone Special";
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type Variant = "original" | "transparent";
 type Saved = {
   step: Step;
@@ -31,16 +31,12 @@ type Saved = {
   generatedRecipient?: Recipient | "";
   generatedName?: string;
   generatedStyleId?: string;
-  mockupOriginal: string | null;
-  mockupTransparent: string | null;
-  email: string;
 };
 
 const STORAGE_KEY = "ramadan-mug-v2:funnel:v4";
 const PENDING_REGEN_KEY = "ramadan-mug-v2:pending-regenerate";
 const CLAIMED_DESIGN_KEY = "ramadan-mug-v2:claimed-design-id";
 const REGEN_CREDITS = 4;
-const MUG_VARIANT_ID = 1320;
 const RECIPIENTS: Recipient[] = [
   "My Husband",
   "My Wife",
@@ -55,7 +51,6 @@ const STEP_NAMES: Record<Step, string> = {
   4: "style",
   5: "generation",
   6: "variant",
-  7: "checkout",
 };
 const STEP_TITLES: Record<Step, string> = {
   1: "Start",
@@ -64,7 +59,6 @@ const STEP_TITLES: Record<Step, string> = {
   4: "Choose Style",
   5: "Generating Design",
   6: "Choose Version",
-  7: "Mug Preview",
 };
 const DESIGN_LOADING_STEPS = [
   "Generating your design",
@@ -76,22 +70,6 @@ const DESIGN_PROGRESS_SEQUENCE = [
   12, 14, 17, 20, 23, 25, 28, 31, 34, 38, 42, 46, 50, 55, 60, 65, 69, 73, 77,
   81, 84, 87, 89, 91, 93, 94, 95,
 ] as const;
-const PREVIEW_PROGRESS_SEQUENCE = [
-  12, 15, 19, 24, 29, 34, 39, 45, 51, 57, 63, 69, 74, 79, 83, 87, 91, 94, 96,
-] as const;
-const PREVIEW_TESTIMONIAL_IMAGES = [
-  { name: "Ahmed", thumbnail: "/images/products/Ahmed.webp" },
-  { name: "Yusuf", thumbnail: "/images/products/Yusuf.webp" },
-  { name: "Omar", thumbnail: "/images/products/Omar.webp" },
-  { name: "Ramadan", thumbnail: "/images/products/Ramadan.webp" },
-] as const;
-const PREVIEW_TESTIMONIALS = [
-  "He smiled the moment he opened it. The quality is amazing.",
-  "Beautiful print, fast shipping, and the name design felt truly personal.",
-  "It looked even better in person. Perfect Ramadan gift.",
-] as const;
-
-const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const imageIdFromUrl = (u: string) => {
   try {
     const x = new URL(u);
@@ -111,9 +89,6 @@ const RamadanMugV2Page: NextPage = () => {
   const credits = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const genGuest = api.generate.generateGuestDesign.useMutation();
   const genIcon = api.generate.generateIcon.useMutation();
-  const capturePaidTrafficLead = api.user.capturePaidTrafficLead.useMutation();
-  const createOrder = api.productOrder.createPendingOrder.useMutation();
-  const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
   const claimGuestDesign = api.icons.claimGuestRamadanMugV2Design.useMutation();
 
   const [step, setStep] = useState<Step>(1);
@@ -125,17 +100,11 @@ const RamadanMugV2Page: NextPage = () => {
   const [variant, setVariant] = useState<Variant>("original");
   const [hasFree, setHasFree] = useState(false);
   const [freeGenerationUsed, setFreeGenerationUsed] = useState(false);
-  const [mockupOriginal, setMockupOriginal] = useState<string | null>(null);
-  const [mockupTransparent, setMockupTransparent] = useState<string | null>(null);
   const [generatedRecipient, setGeneratedRecipient] = useState<Recipient | "">("");
   const [generatedName, setGeneratedName] = useState("");
   const [generatedStyleId, setGeneratedStyleId] = useState("");
-  const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
   const [busyDesign, setBusyDesign] = useState(false);
-  const [busyPreview, setBusyPreview] = useState(false);
-  const [busyCheckout, setBusyCheckout] = useState(false);
-  const [progress, setProgress] = useState(8);
   const [designLoadingStage, setDesignLoadingStage] = useState(0);
   const [designLoadingProgress, setDesignLoadingProgress] = useState(12);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -147,10 +116,7 @@ const RamadanMugV2Page: NextPage = () => {
   const pendingStyleAfterSignInRef = useRef<string | null>(null);
   const pendingStyleUnlockRegenRef = useRef(false);
   const generationLockRef = useRef(false);
-  const previewLockRef = useRef(false);
   const inFlightGenerationRef = useRef<Promise<void> | null>(null);
-  const lastCapturedLeadEmailRef = useRef<string | null>(null);
-  const lastCapturedCheckoutLeadEmailRef = useRef<string | null>(null);
   const viewedRef = useRef(false);
 
   const style = useMemo(
@@ -160,8 +126,6 @@ const RamadanMugV2Page: NextPage = () => {
   const hasSavedDesign = Boolean(designUrl || transparentUrl);
   const selectedDesign =
     variant === "transparent" && transparentUrl ? transparentUrl : designUrl;
-  const selectedMockup =
-    variant === "transparent" ? mockupTransparent : mockupOriginal;
   const isPaidTraffic = useMemo(() => {
     const c =
       typeof router.query.utm_campaign === "string"
@@ -208,29 +172,6 @@ const RamadanMugV2Page: NextPage = () => {
     }, 250);
   };
 
-  const fireMetaStandardEvent = (
-    eventName: "InitiateCheckout" | "Purchase",
-    params: Record<string, unknown>,
-  ) => {
-    const fireMeta = () => {
-      const maybeFbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-      if (typeof maybeFbq !== "function") return false;
-      maybeFbq("track", eventName, params);
-      return true;
-    };
-
-    if (typeof window === "undefined") return;
-    if (fireMeta()) return;
-
-    let attempts = 0;
-    const retryTimer = window.setInterval(() => {
-      attempts += 1;
-      if (fireMeta() || attempts >= 20) {
-        window.clearInterval(retryTimer);
-      }
-    }, 250);
-  };
-
   const fireEvent = (event: string, extra?: Record<string, unknown>) => {
     const payload = { ...trackBase, ...(extra ?? {}) };
     trackEvent(event, payload);
@@ -251,25 +192,15 @@ const RamadanMugV2Page: NextPage = () => {
       setVariant(s.variant ?? "original");
       setHasFree(Boolean(s.hasFree));
       setFreeGenerationUsed(Boolean(s.freeGenerationUsed ?? s.hasFree));
-      setMockupOriginal(s.mockupOriginal ?? null);
-      setMockupTransparent(s.mockupTransparent ?? null);
       setGeneratedRecipient(s.generatedRecipient ?? s.recipient ?? "");
       setGeneratedName(s.generatedName ?? s.name ?? "");
       setGeneratedStyleId(s.generatedStyleId ?? s.styleId ?? "");
-      setEmail(s.email ?? "");
     } catch {
       // ignore invalid stored state
     } finally {
       setHasHydratedSavedState(true);
     }
   }, []);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    const sessionEmail = session?.user?.email?.trim() ?? "";
-    if (!sessionEmail) return;
-    setEmail(sessionEmail);
-  }, [isLoggedIn, session?.user?.email]);
 
   useEffect(() => {
     if (!hasHydratedSavedState) return;
@@ -286,9 +217,6 @@ const RamadanMugV2Page: NextPage = () => {
       generatedRecipient,
       generatedName,
       generatedStyleId,
-      mockupOriginal,
-      mockupTransparent,
-      email,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   }, [
@@ -305,9 +233,6 @@ const RamadanMugV2Page: NextPage = () => {
     generatedRecipient,
     generatedName,
     generatedStyleId,
-    mockupOriginal,
-    mockupTransparent,
-    email,
   ]);
 
   useEffect(() => {
@@ -344,25 +269,6 @@ const RamadanMugV2Page: NextPage = () => {
   useEffect(() => {
     if (step === 5 && !busyDesign && designUrl) setStep(6);
   }, [step, busyDesign, designUrl]);
-
-  useEffect(() => {
-    if (!busyPreview) {
-      setProgress(8);
-      return;
-    }
-    setProgress(PREVIEW_PROGRESS_SEQUENCE[0]);
-    let idx = 0;
-    const t = window.setInterval(() => {
-      idx += 1;
-      const next = PREVIEW_PROGRESS_SEQUENCE[idx];
-      if (typeof next === "number") {
-        setProgress(next);
-        return;
-      }
-      window.clearInterval(t);
-    }, 2400);
-    return () => window.clearInterval(t);
-  }, [busyPreview]);
 
   useEffect(() => {
     if (!busyDesign) {
@@ -441,51 +347,6 @@ const RamadanMugV2Page: NextPage = () => {
     setRecipient(nextRecipient);
     setErr("");
   };
-
-  const capturePaidTrafficLeadIfNeeded = async (
-    rawEmail: string,
-    stage: "lead" | "checkout",
-    checkoutResumeUrl?: string,
-  ) => {
-    if (isLoggedIn) return;
-
-    const normalizedEmail = rawEmail.trim().toLowerCase();
-    if (!emailOk(normalizedEmail)) return;
-
-    const dedupeRef =
-      stage === "checkout" ? lastCapturedCheckoutLeadEmailRef : lastCapturedLeadEmailRef;
-    if (dedupeRef.current === normalizedEmail && !checkoutResumeUrl) return;
-
-    try {
-      await capturePaidTrafficLead.mutateAsync({
-        email: normalizedEmail,
-        sourcePage: "ramadan-mug-v2",
-        promotedProduct: "mug",
-        checkoutResumeUrl,
-        hasGeneratedDesign: true,
-        hasVisitedCheckout: stage === "checkout",
-      });
-      dedupeRef.current = normalizedEmail;
-      if (stage === "checkout") {
-        lastCapturedLeadEmailRef.current = normalizedEmail;
-      }
-    } catch (err) {
-      console.error("Failed to capture paid traffic lead email:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (step !== 7 || isLoggedIn) return;
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!emailOk(normalizedEmail)) return;
-    if (lastCapturedLeadEmailRef.current === normalizedEmail) return;
-
-    const timer = window.setTimeout(() => {
-      void capturePaidTrafficLeadIfNeeded(normalizedEmail, "lead");
-    }, 700);
-
-    return () => window.clearTimeout(timer);
-  }, [email, isLoggedIn, step]);
 
   const selectStyle = (nextStyleId: string) => {
     if (generationLockRef.current || busyDesign) {
@@ -578,8 +439,6 @@ const RamadanMugV2Page: NextPage = () => {
         setVariant(nextTransparent ? "transparent" : "original");
         setHasFree(true);
         setFreeGenerationUsed(true);
-        setMockupOriginal(null);
-        setMockupTransparent(null);
         setGeneratedRecipient((recipient || "Someone Special") as Recipient);
         setGeneratedName(name.trim());
         setGeneratedStyleId(styleId);
@@ -668,72 +527,21 @@ const RamadanMugV2Page: NextPage = () => {
   }, [resumeRegenPending, isLoggedIn, credits.isLoading, credits.data]);
 
   useEffect(() => {
-    const shouldBlockBack = busyDesign || busyPreview;
+    const shouldBlockBack = busyDesign;
 
     router.beforePopState(() => !shouldBlockBack);
 
     return () => {
       router.beforePopState(() => true);
     };
-  }, [router, busyDesign, busyPreview]);
-
-  const makePreview = async () => {
-    if (!selectedDesign) throw new Error("No selected design");
-    const r = await fetch("/api/printful/preview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productKey: "mug",
-        imageUrl: selectedDesign,
-        variantId: MUG_VARIANT_ID,
-        previewMode: "two-side",
-        paidTrafficUser: true,
-      }),
-    });
-    const d = (await r.json()) as { mockupUrl?: string; error?: string };
-    if (!r.ok || !d.mockupUrl) {
-      throw new Error(d.error || "Unable to generate mug preview");
-    }
-    return d.mockupUrl;
-  };
-
-  const goStep7 = async () => {
-    if (previewLockRef.current || busyPreview) {
-      return;
-    }
-    if (!selectedDesign) {
-      setErr("Choose a design version first.");
-      return;
-    }
-    setErr("");
-    setStep(7);
-    setProgress(8);
-    const cached = variant === "transparent" ? mockupTransparent : mockupOriginal;
-    if (cached) return;
-    try {
-      previewLockRef.current = true;
-      setBusyPreview(true);
-      const m = await makePreview();
-      setProgress(100);
-      if (variant === "transparent") setMockupTransparent(m);
-      else setMockupOriginal(m);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Unable to generate preview");
-      setStep(6);
-    } finally {
-      setBusyPreview(false);
-      previewLockRef.current = false;
-    }
-  };
+  }, [router, busyDesign]);
 
   const goBack = () => {
-    if (generationLockRef.current || previewLockRef.current || busyDesign || busyPreview) {
+    if (generationLockRef.current || busyDesign) {
       return;
     }
     setStep((currentStep) =>
-      currentStep === 7
-        ? 6
-        : currentStep === 6
+      currentStep === 6
         ? 4
         : currentStep === 5
         ? 4
@@ -743,78 +551,6 @@ const RamadanMugV2Page: NextPage = () => {
         ? 2
         : 1,
     );
-  };
-
-  const checkout = async () => {
-    if (!selectedDesign || !selectedMockup) {
-      setErr("Preview is required before checkout.");
-      return;
-    }
-    if (!emailOk(email)) {
-      setErr("Enter a valid email address.");
-      return;
-    }
-    setErr("");
-    setBusyCheckout(true);
-    try {
-      const order = await createOrder.mutateAsync({
-        productKey: "mug",
-        variantId: MUG_VARIANT_ID,
-        variantName: "White Glossy Mug 11 oz",
-        size: "11 oz",
-        imageUrl: selectedDesign,
-        mockupUrl: selectedMockup,
-        pricingVariant: "11 oz",
-        previewMode: "two-side",
-        previewVariantId: MUG_VARIANT_ID,
-        isBackgroundRemoved: variant === "transparent",
-        snapshotVariantId: MUG_VARIANT_ID,
-        snapshotSize: "11 oz",
-        snapshotColor: "White",
-        snapshotPrintPosition: "two-side",
-        snapshotBackgroundRemoved: variant === "transparent",
-        shippingCountry: "US",
-        funnelSource: "paid-traffic-offer",
-      });
-      const checkoutResumeUrl = `${window.location.origin}/checkout?orderId=${encodeURIComponent(
-        order.orderId,
-      )}&sourcePage=${encodeURIComponent("ramadan-mug-v2")}&generator=${encodeURIComponent(
-        "ramadan-mug-v2",
-      )}${
-        order.accessToken
-          ? `&accessToken=${encodeURIComponent(order.accessToken)}`
-          : ""
-      }`;
-      await capturePaidTrafficLeadIfNeeded(email, "checkout", checkoutResumeUrl);
-      if (!isLoggedIn) {
-        try {
-          await captureCheckoutEmail.mutateAsync({
-            orderId: order.orderId,
-            accessToken: order.accessToken ?? undefined,
-            email: email.trim().toLowerCase(),
-            sourcePage: "ramadan-mug-v2",
-            promotedProduct: "mug",
-          });
-        } catch (captureErr) {
-          console.error("Failed to capture Ramadan mug checkout email:", captureErr);
-        }
-      }
-      const payload = { ...trackBase, value: 0, currency: "USD" };
-      trackEvent("begin_checkout", payload);
-      await router.push(
-        `/checkout?orderId=${encodeURIComponent(order.orderId)}&sourcePage=${encodeURIComponent(
-          "ramadan-mug-v2",
-        )}&generator=${encodeURIComponent("ramadan-mug-v2")}${
-          order.accessToken
-            ? `&accessToken=${encodeURIComponent(order.accessToken)}`
-            : ""
-        }`,
-      );
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Unable to start checkout.");
-    } finally {
-      setBusyCheckout(false);
-    }
   };
 
   const progressPct =
@@ -888,7 +624,7 @@ const RamadanMugV2Page: NextPage = () => {
             <button
               type="button"
               onClick={goBack}
-              disabled={busyDesign || busyPreview}
+              disabled={busyDesign}
               className="mb-4 rounded-xl border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
               Back
@@ -969,7 +705,7 @@ const RamadanMugV2Page: NextPage = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => setStep(selectedMockup ? 7 : 6)}
+                    onClick={() => setStep(6)}
                     className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
                   >
                     Continue with my design
@@ -1214,117 +950,11 @@ const RamadanMugV2Page: NextPage = () => {
                 </button>
               </div>
               <button
-                onClick={() => void goStep7()}
+                onClick={() => setStep(6)}
                 className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white"
               >
-                See Mug Preview
+                Continue with my digital design
               </button>
-            </section>
-          )}
-
-          {step === 7 && !busyPreview && (
-            <section>
-              <h2 className="text-2xl font-bold">Preview Your Personalized Mug</h2>
-              <div className="mt-4 rounded-2xl border p-3">
-                {selectedMockup ? (
-                  <img
-                    src={selectedMockup}
-                    alt="Mug preview"
-                    className="w-full rounded-xl"
-                  />
-                ) : (
-                  <div className="h-52 rounded-xl bg-gray-100" />
-                )}
-              </div>
-              <p className="mt-3 text-sm text-gray-600">
-                This is how your mug will look when printed.
-              </p>
-              <div className="mt-3 rounded-2xl border bg-[#FFFBEB] p-4 text-sm">
-                <p className="font-semibold">Mug details</p>
-                <p>Size: 11 oz white glossy ceramic mug</p>
-                <p>High-quality ceramic mug</p>
-                <p>Dishwasher & microwave safe</p>
-                <p>Printed with premium inks</p>
-                <p>Print mode: Two-side wrap</p>
-              </div>
-              {!isLoggedIn && (
-                <>
-                  <label className="mt-4 block text-sm font-semibold">Email</label>
-                  <input
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setErr("");
-                    }}
-                    onBlur={() => {
-                      void capturePaidTrafficLeadIfNeeded(email, "lead");
-                    }}
-                    placeholder="you@example.com"
-                    className="mt-1 w-full rounded-2xl border border-gray-300 px-4 py-4"
-                  />
-                </>
-              )}
-              <button
-                disabled={busyCheckout || !selectedMockup}
-                onClick={() => void checkout()}
-                className="mt-6 w-full rounded-2xl bg-brand-600 px-4 py-4 font-semibold text-white disabled:opacity-50"
-              >
-                {busyCheckout ? "Loading checkout..." : "Continue to Secure Checkout →"}
-              </button>
-              <p className="mt-3 text-center text-xs text-gray-500">
-                Secure payment powered by Stripe
-              </p>
-              <p className="mt-2 text-center text-sm font-medium text-[#7C5A00]">
-                Perfect gift before Eid.
-              </p>
-            </section>
-          )}
-
-          {step === 7 && busyPreview && (
-            <section className="flex min-h-[65vh] flex-col items-center justify-center">
-              <h2 className="text-2xl font-bold">Generating your mug preview...</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                While we prepare the mockup, here are reviews from other customers.
-              </p>
-              <div className="mt-4 w-full rounded-2xl border p-4">
-                <div className="mb-2 flex justify-between text-xs">
-                  <span>Preparing preview</span>
-                  <span>{progress}%</span>
-                </div>
-                <div className="h-3 rounded-full bg-gray-200">
-                  <div
-                    className="h-3 rounded-full bg-brand-600"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-              <div className="mt-6 w-full overflow-hidden rounded-3xl border border-gray-200 bg-white py-4 shadow-sm">
-                <div className="preview-review-track flex w-max gap-4 px-4">
-                  {[...PREVIEW_TESTIMONIAL_IMAGES, ...PREVIEW_TESTIMONIAL_IMAGES].map(
-                    (item, index) => (
-                      <div
-                        key={`${item.name}-${index}`}
-                        className="w-48 shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-[#FFFBEB]"
-                      >
-                        <img
-                          src={item.thumbnail}
-                          alt={`Customer review for ${item.name}`}
-                          className="h-36 w-full object-cover"
-                        />
-                        <div className="px-3 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-600">
-                            Review
-                          </p>
-                          <p className="mt-2 text-sm font-medium text-[#111111]">
-                            &ldquo;{PREVIEW_TESTIMONIALS[index % PREVIEW_TESTIMONIALS.length]}&rdquo;
-                          </p>
-                          <p className="mt-2 text-xs text-gray-500">{item.name}</p>
-                        </div>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
             </section>
           )}
 
@@ -1430,20 +1060,6 @@ const RamadanMugV2Page: NextPage = () => {
             </div>
           </div>
         )}
-        <style jsx>{`
-          .preview-review-track {
-            animation: preview-review-scroll 40s linear infinite;
-          }
-
-          @keyframes preview-review-scroll {
-            0% {
-              transform: translateX(0);
-            }
-            100% {
-              transform: translateX(-50%);
-            }
-          }
-        `}</style>
       </main>
     </>
   );
