@@ -45,8 +45,6 @@ const server = z.object({
   CPX_SECURITY_HASH: z.string(),
   CPX_APP_ID: z.string(),
   IPAPI_KEY: z.string(),
-  PRINTFUL_API_KEY: z.string(),
-  PRINTFUL_WEBHOOK_SECRET: z.string().optional(),
   META_PIXEL_ID: z.string(),
   META_ACCESS_TOKEN: z.string(),
 });
@@ -109,8 +107,6 @@ const processEnv = {
   CPX_SECURITY_HASH: process.env.CPX_SECURITY_HASH,
   CPX_APP_ID: process.env.CPX_APP_ID,
   IPAPI_KEY: process.env.IPAPI_KEY,
-  PRINTFUL_API_KEY: process.env.PRINTFUL_API_KEY,
-  PRINTFUL_WEBHOOK_SECRET: process.env.PRINTFUL_WEBHOOK_SECRET,
   META_PIXEL_ID: process.env.META_PIXEL_ID,
   META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
   // Add more client-side env vars here

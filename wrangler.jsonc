@@ -14,10 +14,6 @@
     "DATABASE_URL": "postgresql://invalid:invalid@db.invalid:5432/invalid",
     "NEXTAUTH_URL": "https://namedesignai-cloudflare-staging.hdnstudio.workers.dev",
     "HOST_NAME": "https://namedesignai-cloudflare-staging.hdnstudio.workers.dev",
-    "DB_VARIANT_AVAILABILITY_BACKEND": "service",
-    "DB_PRODUCT_PRICING_BACKEND": "service",
-    "DB_PRINTFUL_VARIANT_CACHE_BACKEND": "service",
-    "DB_ORDER_TRACKING_BACKEND": "service"
   },
   "services": [
     {

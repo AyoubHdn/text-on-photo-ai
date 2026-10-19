@@ -1,5 +1,3 @@
-import type { ProductType } from "~/server/services/priceCalculator";
-
 type DbErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"
@@ -80,30 +78,14 @@ export type AuthEventSyncState = {
 };
 type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | { found: false } | AuthWriteResult;
 
-type DbServiceBinding = {
+  type DbServiceBinding = {
   iconGetIconsForUser(input: { userId: string }): Promise<IconUserReadResult>;
   iconGetCommunityIcons(): Promise<IconListResult>;
   iconGetPopularPaidIcons(input: { limit: number }): Promise<PopularIconListResult>;
   iconUpdateVisibility(input: { userId: string; iconId: string; isPublic: boolean }): Promise<IconWriteResult>;
-  iconClaimGuestRamadanMugV2Design(input: { userId: string; iconId: string }): Promise<IconClaimResult>;
   userGetCredits(input: { userId: string }): Promise<UserCreditsResult>;
   userGetCreditUpgradeState(input: { userId: string }): Promise<UserCreditUpgradeStateResult>;
   userGetPaidTrafficFunnelState(input: { userId: string }): Promise<UserPaidTrafficFunnelStateResult>;
-  pricingGetAvailability(input: {
-    productType: ProductType;
-    variantId: number;
-    countryCode: string;
-  }): Promise<PricingAvailabilityResult>;
-  pricingGetCachedCosts(input: {
-    productType: ProductType;
-    sizeKey: string;
-    countryCode: string;
-  }): Promise<PricingCachedCostsResult>;
-  pricingGetVariantFilterData(input: {
-    productType: ProductType;
-    countryCode: string;
-  }): Promise<PricingVariantFilterResult>;
-  ordersGetTracking(input: { orderId: string }): Promise<OrdersTrackingResult>;
   authGetUser(input: { userId: string }): Promise<AuthUserResult>;
   authGetSessionAndUser(input: { sessionToken: string }): Promise<AuthSessionAndUserResult>;
   authGetUserByEmail(input: { email: string }): Promise<AuthUserResult>;
@@ -127,7 +109,6 @@ type IconUserReadResult = { found: true; plan: "None" | "Starter" | "Pro" | "Eli
 type IconListResult = { icons: IconDto[] } | { ok: false; code: DbErrorCode };
 type PopularIconListResult = { icons: Array<{ id: string; prompt: string | null; metadata: unknown }> } | { ok: false; code: DbErrorCode };
 type IconWriteResult = { icon: IconDto } | { ok: false; code: DbErrorCode };
-type IconClaimResult = { success: true; claimed: boolean } | { ok: false; code: DbErrorCode };
 
 type UserCreditsResult = { found: true; credits: string } | { found: false } | { ok: false; code: DbErrorCode };
 type UserCreditUpgradeStateResult = { found: true; plan: "None" | "Starter" | "Pro" | "Elite"; hasGeneratedDesign: boolean } | { found: false } | { ok: false; code: DbErrorCode };
@@ -188,12 +169,6 @@ export async function iconUpdateVisibilityFromService(input: { userId: string; i
   if ("icon" in result) return restoreIcon(result.icon);
   throw new DbServiceRequestError(result.code, "auth");
 }
-export async function iconClaimGuestRamadanMugV2DesignFromService(input: { userId: string; iconId: string }) {
-  const result = await (await getDbService()).iconClaimGuestRamadanMugV2Design(input);
-  if ("success" in result) return result;
-  throw new DbServiceRequestError(result.code, "auth");
-}
-
 export async function userGetCreditsFromService(input: { userId: string }): Promise<number> {
   const result = await (await userReadService()).userGetCredits(input);
   if ("found" in result) return result.found ? Number(result.credits) : 0;
@@ -212,6 +187,7 @@ export async function userGetPaidTrafficFunnelStateFromService(input: { userId: 
   throw new DbServiceRequestError(result.code, "auth");
 }
 
+/* Abandoned physical-commerce DB helpers retained only in history.
 export async function pricingGetAvailabilityFromService(input: {
   productType: ProductType;
   variantId: number;
@@ -305,6 +281,7 @@ export async function ordersGetTrackingFromService(input: {
   throw new DbServiceRequestError(result.code, "orders");
 }
 
+*/
 export async function authGetUserFromService(input: { userId: string }) {
   const { getCloudflareContext } = await import("@opennextjs/cloudflare");
   const { env } = await getCloudflareContext({ async: true });

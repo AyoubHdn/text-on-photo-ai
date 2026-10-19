@@ -27,38 +27,7 @@ export type FunnelContext = {
   country: string | null;
 };
 
-const ROUTE_OVERRIDES: Record<string, FunnelOverride> = {
-  "arabic-name-mug-v1": {
-    funnel: "arabic_name_mug_v1",
-    niche: "arabic_name_gift",
-    product_type: "physical_product",
-    traffic_type: "paid",
-  },
-  "couple-name-mug-v1": {
-    funnel: "couple_name_mug_v1",
-    niche: "romantic",
-    product_type: "physical_product",
-    traffic_type: "paid",
-  },
-  "couple-avatar-name-mug-v1": {
-    funnel: "couple_avatar_name_mug_v1",
-    niche: "romantic",
-    product_type: "physical_product",
-    traffic_type: "paid",
-  },
-  "couple-names-only-mug-v1": {
-    funnel: "couple_names_only_mug_v1",
-    niche: "romantic",
-    product_type: "physical_product",
-    traffic_type: "paid",
-  },
-  "ramadan-mug-men": {
-    funnel: "ramadan_mug_men",
-    niche: "muslim_men_usa",
-    product_type: "physical_product",
-    traffic_type: "paid",
-  },
-};
+const ROUTE_OVERRIDES: Record<string, FunnelOverride> = {};
 
 function normalize(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
@@ -92,23 +61,11 @@ function inferSourcePage(options: FunnelContextOptions): string {
 
 function inferFunnel(sourcePage: string, query: FunnelContextOptions["query"]): string {
   const page = normalize(sourcePage);
-  if (page.includes("ramadan-mug")) {
-    const segment = normalize(
-      getQueryValue(query, "niche") ??
-        getQueryValue(query, "segment") ??
-        getQueryValue(query, "audience"),
-    );
-    if (segment.includes("men") || segment.includes("male")) {
-      return "ramadan_mug_men";
-    }
-    return "ramadan_mug_women";
-  }
   if (page.includes("arabic-calligraphy-generator")) return "arabic_generator";
   if (page.includes("couples-name-art-generator") || page.includes("couples-art-generator")) {
     return "couples_generator";
   }
   if (page.includes("name-art-generator")) return "name_art_generator";
-  if (page.includes("checkout") || page.includes("order/success")) return "checkout_flow";
   if (page.includes("buy-credits") || page.includes("success")) return "credits_flow";
   return "unknown";
 }
@@ -170,7 +127,6 @@ function inferProductType(options: FunnelContextOptions, sourcePage: string): st
   }
 
   const page = normalize(sourcePage);
-  if (page.includes("checkout") || page.includes("order/success")) return "physical_product";
   if (page.includes("buy-credits") || page.includes("success")) return "credits";
   return "digital_design";
 }

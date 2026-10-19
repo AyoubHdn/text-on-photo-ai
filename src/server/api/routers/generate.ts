@@ -12,26 +12,15 @@ import AWS from "aws-sdk";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { Readable } from "stream";
-import { ARABIC_NAME_MUG_V1_STYLES } from "~/config/arabicNameMugV1Styles";
-import {
-  getCoupleNameMugV1Style,
-  type CoupleNameMugMode,
-  type CoupleNameMugStyleId,
-} from "~/config/coupleNameMugV1Style";
-import { RAMADAN_MUG_V2_STYLES } from "~/config/ramadanMugV2Styles";
 import {
   getArabicTierByModel,
   isArabicGeneratorSourcePage,
 } from "~/config/arabicGenerator";
-import { buildArabicNameMugPrompt } from "~/lib/arabicNameMugPrompt";
-import { buildCoupleNameMugWrapPrompt } from "~/lib/coupleNameMugPrompt";
 import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
-import { buildRamadanMugV2Prompt } from "~/server/prompts/ramadanMugV2Prompt";
 import { createHash, randomUUID } from "crypto";
-import { MUG_PRINT_CONFIG } from "~/server/printful/printAreas";
 
 async function loadSharp() {
   const module = await import("sharp");
@@ -1089,6 +1078,8 @@ async function storeGeneratedAsset(params: {
 }
 
 export const generateRouter = createTRPCRouter({
+  /* Legacy experimental procedures removed from runtime. */
+  /*
   generateGuestDesign: publicProcedure
     .input(
       z.object({
@@ -1695,6 +1686,7 @@ export const generateRouter = createTRPCRouter({
         wrapUrl: imageUrls[2] ?? null,
       };
     }),
+  */
   generateIcon: publicProcedure
     .input(
       z.object({
@@ -1726,11 +1718,7 @@ export const generateRouter = createTRPCRouter({
       const sourcePage = (input.sourcePage ?? "").trim().toLowerCase();
       const isArabicGeneratorRequest = isArabicGeneratorSourcePage(sourcePage);
       const arabicTier = getArabicTierByModel(input.model);
-      const isRamadanGuestSource =
-        sourcePage === "ramadan-mug" || sourcePage === "ramadan-mug-men";
-      const isEligibleGuestGeneration = !userId && input.paidTrafficUser && isRamadanGuestSource;
-
-      if (!userId && !isEligibleGuestGeneration) {
+      if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Sign in is required for this generator.",

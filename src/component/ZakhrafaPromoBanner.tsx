@@ -47,10 +47,7 @@ export function ZakhrafaPromoBanner() {
     return null;
   }
 
-  const bottomPosition =
-    router.pathname === "/ramadan-mug-v2"
-      ? "bottom-[calc(env(safe-area-inset-bottom)+6rem)]"
-      : "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]";
+  const bottomPosition = "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]";
 
   return (
     <aside

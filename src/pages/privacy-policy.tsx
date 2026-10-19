@@ -144,7 +144,7 @@ const PrivacyPolicy: React.FC = () => {
                 <strong>Stripe</strong> for payment processing.
               </li>
               <li>
-                <strong>Printful</strong> for product preview generation, fulfillment, and shipping
+                third-party storage providers for digital asset delivery
                 operations.
               </li>
               <li>

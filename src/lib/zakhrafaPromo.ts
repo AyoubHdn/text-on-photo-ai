@@ -1,7 +1,6 @@
 const ARABIC_NAME_PAGE_PREFIXES = [
   "/arabic-calligraphy",
   "/ar/arabic-calligraphy",
-  "/arabic-name-mug-v1",
 ] as const;
 
 export function isArabicNamePage(pathname: string): boolean {

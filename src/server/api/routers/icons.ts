@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { Plan } from "@prisma/client";
-import { DbServiceRequestError, iconGetIconsForUserFromService, iconGetCommunityIconsFromService, iconGetPopularPaidIconsFromService, iconUpdateVisibilityFromService, iconClaimGuestRamadanMugV2DesignFromService } from "~/server/cloudflare/dbService";
+import { DbServiceRequestError, iconGetIconsForUserFromService, iconGetCommunityIconsFromService, iconGetPopularPaidIconsFromService, iconUpdateVisibilityFromService } from "~/server/cloudflare/dbService";
 
 const shouldUseServiceIconReads = () => process.env.DB_ICON_READS_BACKEND === "service";
 const shouldUseServiceIconWrites = () => process.env.DB_ICON_WRITES_BACKEND === "service";
@@ -170,60 +170,4 @@ export const iconRouter = createTRPCRouter({
     return icons;
   }),
 
-  claimGuestRamadanMugV2Design: protectedProcedure
-    .input(
-      z.object({
-        iconId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (shouldUseServiceIconWrites()) {
-        try { return await iconClaimGuestRamadanMugV2DesignFromService({ ...input, userId: ctx.session.user.id }); }
-        catch (error) {
-          if (error instanceof DbServiceRequestError && error.code === "NOT_FOUND") {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Design not found." });
-          }
-          return throwIconServiceError(error);
-        }
-      }
-      const icon = await ctx.prisma.icon.findUnique({
-        where: { id: input.iconId },
-        select: {
-          id: true,
-          userId: true,
-          metadata: true,
-        },
-      });
-
-      if (!icon) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Design not found." });
-      }
-
-      if (icon.userId === ctx.session.user.id) {
-        return { success: true, claimed: false };
-      }
-
-      const sourcePage =
-        icon.metadata &&
-        typeof icon.metadata === "object" &&
-        "sourcePage" in icon.metadata
-          ? (icon.metadata as { sourcePage?: string }).sourcePage
-          : undefined;
-
-      if (icon.userId !== null || sourcePage !== "ramadan-mug-v2") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "This design cannot be claimed.",
-        });
-      }
-
-      await ctx.prisma.icon.update({
-        where: { id: input.iconId },
-        data: {
-          userId: ctx.session.user.id,
-        },
-      });
-
-      return { success: true, claimed: true };
-    }),
 });

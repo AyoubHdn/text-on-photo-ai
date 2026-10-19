@@ -10,7 +10,6 @@ import type {
   IconUserReadResult,
   IconListResult,
   IconWriteResult,
-  IconClaimResult,
   PopularIconListResult,
   UserReadInput,
   UserCreditsResult,
@@ -166,28 +165,6 @@ export default class DbService extends WorkerEntrypoint<Env> {
     } finally { await prisma.$disconnect(); }
   }
 
-  async iconClaimGuestRamadanMugV2Design(input: { userId: string; iconId: string }): Promise<IconClaimResult> {
-    const userId = input?.userId?.trim();
-    const iconId = input?.iconId?.trim();
-    if (!userId || userId.length > 128 || !iconId || iconId.length > 128) return { ok: false, code: "INVALID_INPUT" };
-    const prisma = this.createPrisma();
-    try {
-      const icon = await prisma.icon.findUnique({ where: { id: iconId }, select: { userId: true, metadata: true } });
-      if (!icon) return { ok: false, code: "NOT_FOUND" };
-      if (icon.userId === userId) return { success: true, claimed: false };
-      const sourcePage = icon.metadata && typeof icon.metadata === "object" && "sourcePage" in icon.metadata ? (icon.metadata as { sourcePage?: string }).sourcePage : undefined;
-      if (icon.userId !== null || sourcePage !== "ramadan-mug-v2") return { ok: false, code: "FORBIDDEN" };
-      const claimed = await prisma.icon.updateMany({ where: { id: iconId, userId: null, metadata: { path: ["sourcePage"], equals: "ramadan-mug-v2" } }, data: { userId } });
-      if (claimed.count === 1) return { success: true, claimed: true };
-      const after = await prisma.icon.findUnique({ where: { id: iconId }, select: { userId: true } });
-      if (after?.userId === userId) return { success: true, claimed: false };
-      return { ok: false, code: "FORBIDDEN" };
-    } catch (error) {
-      console.error("Guest icon claim failed", toSafeErrorResponse(error));
-      return { ok: false, code: "INTERNAL_DB_ERROR" };
-    } finally { await prisma.$disconnect(); }
-  }
-
   async userGetCredits(input: UserReadInput): Promise<UserCreditsResult> {
     const userId = input?.userId?.trim();
     if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
@@ -227,6 +204,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
     } finally { await prisma.$disconnect(); }
   }
 
+  /* Abandoned physical-commerce RPCs retained only in history.
   async pricingGetAvailability(
     input: PricingAvailabilityInput,
   ): Promise<PricingAvailabilityResponse | PricingAvailabilityErrorResponse> {
@@ -390,6 +368,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
     }
   }
 
+  */
   async authGetUser(
     input: AuthGetUserInput,
   ): Promise<AuthGetUserResponse | AuthGetUserNotFoundResponse | AuthGetUserErrorResponse> {

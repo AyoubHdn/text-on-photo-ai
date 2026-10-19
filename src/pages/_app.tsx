@@ -21,25 +21,6 @@ const PAID_TRAFFIC_SESSION_KEY = "isPaidTrafficUser";
 const PAID_TRAFFIC_SOURCE_PAGE_KEY = "paidTrafficSourcePage";
 const PAID_TRAFFIC_PROMOTED_PRODUCT_KEY = "paidTrafficPromotedProduct";
 
-const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
-  string,
-  { sourcePage: string; promotedProduct: string }
-> = {
-  "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
-  "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
-  "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
-  "/arabic-name-mug-v1": { sourcePage: "arabic-name-mug-v1", promotedProduct: "mug" },
-  "/couple-name-mug-v1": { sourcePage: "couple-name-mug-v1", promotedProduct: "mug" },
-  "/couple-avatar-name-mug-v1": {
-    sourcePage: "couple-avatar-name-mug-v1",
-    promotedProduct: "mug",
-  },
-  "/couple-names-only-mug-v1": {
-    sourcePage: "couple-names-only-mug-v1",
-    promotedProduct: "mug",
-  },
-};
-
 const GLOBAL_NOINDEX_PATHS = new Set([
   "/collection",
   "/buy-credits",
@@ -52,10 +33,6 @@ const GLOBAL_NOINDEX_PATHS = new Set([
   "/personalized-name-wall-art",
   "/arabic-name-gifts",
   "/couple-gifts",
-  "/arabic-name-mug-v1",
-  "/couple-name-mug-v1",
-  "/couple-avatar-name-mug-v1",
-  "/couple-names-only-mug-v1",
 ]);
 
 const MyApp: AppType<{ session: Session | null }> = ({
@@ -94,32 +71,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const isMarkingPaidTrafficUserRef = useRef(false);
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
   const isCancelPage = router.pathname === "/cancel";
-  const isRamadanMugRoute =
-    router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";
-  const isRamadanMugV2Route = router.pathname === "/ramadan-mug-v2";
-  const isArabicNameMugV1Route = router.pathname === "/arabic-name-mug-v1";
-  const isCoupleNameMugV1Route =
-    router.pathname === "/couple-name-mug-v1" ||
-    router.pathname === "/couple-avatar-name-mug-v1" ||
-    router.pathname === "/couple-names-only-mug-v1";
-  const [isRamadanMugV2PaidTraffic, setIsRamadanMugV2PaidTraffic] = useState(false);
-  const isRamadanAdLayout = isRamadanMugRoute && isPaidTrafficUser;
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const shouldNoindexRoute = GLOBAL_NOINDEX_PATHS.has(router.pathname);
 
   useEffect(() => {
     try {
-      if (router.pathname === "/ramadan-mug-v2") {
-        window.localStorage.setItem("last-generator", "ramadan-mug-v2");
-      } else if (router.pathname === "/arabic-name-mug-v1") {
-        window.localStorage.setItem("last-generator", "arabic-name-mug-v1");
-      } else if (
-        router.pathname === "/couple-name-mug-v1" ||
-        router.pathname === "/couple-avatar-name-mug-v1" ||
-        router.pathname === "/couple-names-only-mug-v1"
-      ) {
-        window.localStorage.setItem("last-generator", router.pathname.replace(/^\//, ""));
-      }
     } catch {
       // ignore storage errors
     }
@@ -136,11 +92,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
       const hasFbclid = params.has("fbclid");
       const hasGclid = params.has("gclid");
       const campaignTag = `${campaign} ${utmCampaign}`;
-      const isForcedPaidFunnel =
-        router.pathname === "/arabic-name-mug-v1" ||
-        router.pathname === "/couple-name-mug-v1" ||
-        router.pathname === "/couple-avatar-name-mug-v1" ||
-        router.pathname === "/couple-names-only-mug-v1";
       const isAdUser =
         source === "facebook" ||
         source === "instagram" ||
@@ -158,17 +109,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
         document.cookie = `paid_traffic_landing=${encodeURIComponent(
           `${window.location.pathname}${window.location.search}`,
         )}; Max-Age=1800; Path=/; SameSite=Lax`;
-        const offerMeta = PAID_TRAFFIC_PAGE_PRODUCT_MAP[router.pathname];
-        if (offerMeta) {
-          window.sessionStorage.setItem(
-            PAID_TRAFFIC_SOURCE_PAGE_KEY,
-            offerMeta.sourcePage,
-          );
-          window.sessionStorage.setItem(
-            PAID_TRAFFIC_PROMOTED_PRODUCT_KEY,
-            offerMeta.promotedProduct,
-          );
-        }
       }
     } catch {
       // ignore storage/query errors
@@ -177,19 +117,10 @@ const MyApp: AppType<{ session: Session | null }> = ({
       setIsPaidTrafficUser(
         window.sessionStorage.getItem(PAID_TRAFFIC_SESSION_KEY) === "true",
       );
-      const params = new URLSearchParams(window.location.search);
-      const utmCampaign = (params.get("utm_campaign") ?? "").toLowerCase();
-      const utmMedium = (params.get("utm_medium") ?? "").toLowerCase();
-      setIsRamadanMugV2PaidTraffic(
-        isRamadanMugV2Route &&
-          utmCampaign === "ramadan_mug_women" &&
-          utmMedium === "paid_social",
-      );
     } catch {
       setIsPaidTrafficUser(false);
-      setIsRamadanMugV2PaidTraffic(false);
     }
-  }, [isRamadanMugV2Route, router.asPath]);
+  }, [router.asPath]);
 
   useEffect(() => {
     if (!session?.user?.id || !isPaidTrafficUser) return;
@@ -283,32 +214,19 @@ const MyApp: AppType<{ session: Session | null }> = ({
       </noscript>
 
       {/* Main App */}
-      {isRamadanMugV2Route ? (
-        isRamadanMugV2PaidTraffic ? (
-          <Component {...pageProps} />
-        ) : (
-          <>
-            <Header minimal />
-            <Component {...pageProps} />
-          </>
-        )
-      ) : isArabicNameMugV1Route ? (
-        <Component {...pageProps} />
-      ) : isCoupleNameMugV1Route ? (
-        <Component {...pageProps} />
-      ) : isCancelPage ? (
+      {isCancelPage ? (
         <div className="min-h-screen flex flex-col">
-          <Header minimal={isRamadanAdLayout} />
+          <Header minimal />
           <main className="flex-grow">
             <Component {...pageProps} />
           </main>
-          <Footer minimal={isRamadanAdLayout} />
+          <Footer minimal />
         </div>
       ) : (
         <>
-          <Header minimal={isRamadanAdLayout} />
+          <Header />
           <Component {...pageProps} />
-          <Footer minimal={isRamadanAdLayout} />
+          <Footer />
         </>
       )}
       <ZakhrafaPromoBanner />
