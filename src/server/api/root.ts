@@ -5,8 +5,6 @@ import { checkoutRouter } from "~/server/api/routers/checkout";
 import { iconRouter } from "./routers/icons";
 import { mauticRouter } from "~/server/api/routers/mautic";
 import { s3Router } from "~/server/api/routers/s3";
-import { printfulCheckoutRouter } from "./routers/printfulCheckout";
-import { productOrderRouter } from "./routers/productOrder";
 
 /**
  * This is the primary router for your server.
@@ -20,8 +18,6 @@ export const appRouter = createTRPCRouter({
   icons: iconRouter,
   mautic: mauticRouter,
   s3: s3Router,
-  printfulCheckout: printfulCheckoutRouter,
-  productOrder: productOrderRouter,
 });
 
 // export type definition of API

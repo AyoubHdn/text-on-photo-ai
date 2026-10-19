@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "~/server/auth";
-import { prisma } from "~/server/db";
 
 export default async function handler(
   req: NextApiRequest,
@@ -25,29 +24,7 @@ export default async function handler(
     return res.status(400).json({ error: "Missing imageUrl" });
   }
 
-  if (paidTrafficUser) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        paidTrafficUser: true,
-        productOrders: {
-          where: {
-            funnelSource: { in: ["paid-traffic-offer", "ramadan-mug-ad"] },
-            status: { in: ["paid", "fulfilled"] },
-          },
-          select: { id: true },
-          take: 1,
-        },
-      },
-    });
-
-    const hasPurchasedPaidTrafficOffer = (user?.productOrders?.length ?? 0) > 0;
-    if (user?.paidTrafficUser && !hasPurchasedPaidTrafficOffer) {
-      return res.status(403).json({
-        error: "DOWNLOAD_DISABLED_FOR_PAID_TRAFFIC_FUNNEL",
-      });
-    }
-  }
+  void paidTrafficUser;
 
   const response = await fetch(imageUrl);
   if (!response.ok) {

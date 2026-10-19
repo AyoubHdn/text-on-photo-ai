@@ -1,6 +1,5 @@
 // pages/api/cron-sync.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { processDueDeliveredEmailSchedules } from "~/server/mautic/deliveryScheduler";
 import { syncAllContactsToMautic } from "~/server/mautic/syncContacts";
 import { isAuthorizedCronRequest } from "~/server/cron/authorizeCron";
 
@@ -10,7 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const deliveredResult = await processDueDeliveredEmailSchedules();
     const mauticSyncEnabled = req.query.mautic_sync === "1";
     const limitRaw = Array.isArray(req.query.mautic_limit)
       ? req.query.mautic_limit[0]
@@ -32,7 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         skipped: true,
         reason: "Pricing sync runs in dedicated cron shards.",
       },
-      deliveredEmails: deliveredResult,
       mauticSync: result ?? {
         skipped: true,
         reason: "Pass mautic_sync=1 to run contact sync in paginated mode",
