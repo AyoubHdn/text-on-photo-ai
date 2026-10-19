@@ -46,8 +46,6 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
   string,
   { sourcePage: string; promotedProduct: string }
 > = {
-  "/ramadan-mug": { sourcePage: "ramadan-mug", promotedProduct: "mug" },
-  "/ramadan-mug-men": { sourcePage: "ramadan-mug-men", promotedProduct: "mug" },
   "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
   "/couple-name-mug-v1": { sourcePage: "couple-name-mug-v1", promotedProduct: "mug" },
   "/couple-avatar-name-mug-v1": {
@@ -227,7 +225,7 @@ export const createAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
       return session;
     },
     redirect({ url, baseUrl }) {
-      // Allow safe in-site relative callback URLs like "/ramadan-mug?utm_source=facebook".
+      // Allow safe in-site relative callback URLs.
       if (url.startsWith("/")) {
         return `${baseUrl}${url}`;
       }

@@ -151,16 +151,6 @@ const config = {
         permanent: true,
       },
       {
-        source: "/ramadan-mug",
-        destination: "/ramadan-mug-v2",
-        permanent: true,
-      },
-      {
-        source: "/ramadan-mug-men",
-        destination: "/ramadan-mug-v2",
-        permanent: true,
-      },
-      {
         source: "/wedding-invitations",
         destination: "https://www.bloominvite.com/",
         permanent: true, // 301
