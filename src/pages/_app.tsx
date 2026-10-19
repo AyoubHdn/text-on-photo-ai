@@ -46,8 +46,6 @@ const GLOBAL_NOINDEX_PATHS = new Set([
   "/checkout",
   "/success",
   "/cancel",
-  "/order/success",
-  "/order/cancel",
   "/unlock/free-credit",
   "/unlock/result",
   "/personalized-name-mugs",
@@ -96,8 +94,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const hasMarkedPaidTrafficUserRef = useRef(false);
   const isMarkingPaidTrafficUserRef = useRef(false);
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
-  const isCancelPage =
-    router.pathname === "/cancel" || router.pathname === "/order/cancel";
+  const isCancelPage = router.pathname === "/cancel";
   const isCheckoutRoute = router.pathname === "/checkout";
   const isRamadanMugRoute =
     router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";

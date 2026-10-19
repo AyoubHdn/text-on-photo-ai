@@ -6,8 +6,6 @@ const ADSENSE_EXCLUDED_PATHS = new Set([
   "/checkout",
   "/success",
   "/cancel",
-  "/order/success",
-  "/order/cancel",
   "/unlock/free-credit",
   "/unlock/result",
   "/name-art-generator",

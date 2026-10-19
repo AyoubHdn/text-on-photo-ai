@@ -9,8 +9,6 @@ const EXCLUDED_PATHS = new Set([
   "/buy-credits",
   "/success",
   "/cancel",
-  "/order/success",
-  "/order/cancel",
   "/unlock/free-credit",
   "/unlock/result",
 ]);

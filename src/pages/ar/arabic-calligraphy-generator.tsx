@@ -26,7 +26,6 @@ import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
 import { LanguageSwitchLink } from "~/component/LanguageSwitchLink";
-import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
@@ -1194,14 +1193,6 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             pendingCreditActionRef.current = null;
             action?.();
           }}
-        />
-        <ProductPreviewModal
-          isOpen={!!previewProduct}
-          onClose={() => setPreviewProduct(null)}
-          productKey={previewProduct}
-          imageUrl={previewImage}
-          aspect={generatedAspect ?? "1:1"}
-          onCooldownStart={setPreviewCooldown}
         />
       </main>
     </>

@@ -23,7 +23,6 @@ import { FiEdit3, FiImage, FiShoppingBag } from "react-icons/fi";
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
-import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
 import { getFunnelContext } from "~/lib/tracking/funnel";
@@ -1027,16 +1026,6 @@ const RamadanMugMenPage: NextPage = () => {
             pendingCreditActionRef.current = null;
             action?.();
           }}
-        />
-        <ProductPreviewModal
-          isOpen={!!previewProduct}
-          onClose={() => setPreviewProduct(null)}
-          productKey={previewProduct}
-          imageUrl={previewImage}
-          aspect={generatedAspect ?? "1:1"}
-          onCooldownStart={setPreviewCooldown}
-          funnelMode={isRamadanAdUser ? "paid_traffic_offer" : "default"}
-          paidTrafficUser={isRamadanAdUser}
         />
       </main>
     </>

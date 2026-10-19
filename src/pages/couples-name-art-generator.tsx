@@ -18,7 +18,6 @@ import {
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ShareModal } from '~/component/ShareModal';
-import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { trackEvent } from "~/lib/ga";
@@ -1271,14 +1270,6 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
             pendingCreditActionRef.current = null;
             action?.();
           }}
-        />
-        <ProductPreviewModal
-          isOpen={!!previewProduct}
-          onClose={() => setPreviewProduct(null)}
-          productKey={previewProduct}
-          imageUrl={previewImage}
-          aspect={generatedAspect ?? "1:1"}
-          onCooldownStart={setPreviewCooldown}
         />
       </main>
     </>

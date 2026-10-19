@@ -18,7 +18,6 @@ import {
 import { useRouter } from "next/router";
 import { ShareModal } from '~/component/ShareModal';
 import Link from "next/link";
-import { ProductPreviewModal } from "~/component/printful/ProductPreviewModal";
 import { SeoHead } from "~/component/SeoHead";
 import { trackGA, trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
@@ -1416,20 +1415,6 @@ const NameArtGeneratorPage: NextPage = () => {
             action?.();
           }}
         />
-
-        {/* HIDDEN W1: ProductPreviewModal — re-enable with the section above */}
-        {false && (
-        <ProductPreviewModal
-          isOpen={!!previewProduct}
-          onClose={() => setPreviewProduct(null)}
-          productKey={previewProduct}
-          imageUrl={previewImage}
-          aspect={generatedAspect ?? selectedAspectRatio}
-          onCooldownStart={setPreviewCooldown}
-          transparentImageUrl={previewImageInfo.transparentImageUrl}
-          useTransparent={previewImageInfo.useTransparent}
-        />
-        )}
 
       </main>
     </>
