@@ -13,7 +13,6 @@ import { trackEvent } from "~/lib/ga";
 import { createGenerationRequestId } from "~/lib/generationRequest";
 import { getFunnelContext } from "~/lib/tracking/funnel";
 import { api } from "~/utils/api";
-import { PHYSICAL_COMMERCE_ENABLED } from "~/config/physicalCommerce";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type PreviewVariant = "original" | "transparent";
@@ -27,13 +26,6 @@ type SavedState = {
   transparentUrl: string | null;
   useTransparentDesign: boolean;
   hasFree: boolean;
-  email: string;
-  mockupOriginal?: string | null;
-  mockupTransparent?: string | null;
-  originalMockupUrl?: string | null;
-  transparentMockupUrl?: string | null;
-  mockupUrl?: string | null;
-  mockupSourceUrl?: string | null;
   freeGenerationUsed?: boolean;
   generatedGiftIntent?: ArabicNameMugGiftIntent | "";
   generatedName?: string;
@@ -43,7 +35,6 @@ type SavedState = {
 const SOURCE_PAGE = "arabic-name-mug-v1";
 const STORAGE_KEY = `${SOURCE_PAGE}:funnel:v1`;
 const REGEN_CREDITS = 4;
-const MUG_VARIANT_ID = 1320;
 const GIFT_INTENTS: ArabicNameMugGiftIntent[] = [
   "Me",
   "My Husband",
@@ -85,7 +76,6 @@ const DESIGN_LOADING_STEPS = [
 const DESIGN_PROGRESS_SEQUENCE = [
   12, 16, 21, 27, 34, 41, 49, 57, 65, 72, 79, 85, 90, 94, 97,
 ] as const;
-const PREVIEW_PROGRESS_SEQUENCE = [12, 18, 26, 35, 46, 58, 69, 79, 88, 94, 98] as const;
 const SURFACE_CARD_CLASS = "rounded-2xl border border-gray-200 bg-[#F8F8F8] p-4 shadow-sm";
 const WHITE_CARD_CLASS = "rounded-2xl border border-gray-200 bg-white p-4 shadow-sm";
 const PRIMARY_BUTTON_CLASS =
@@ -218,7 +208,6 @@ const PREVIEW_SOCIAL_PROOF_COPY: Record<ArabicNameMugGiftIntent, string> = {
     "Buyers coming through this flow usually want a gift that feels personal, polished, and easy to order.",
 };
 
-const emailOk = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 const getDesignStepProgress = (stepIndex: number, overallProgress: number) => {
   const stepSize = 100 / DESIGN_LOADING_STEPS.length;
@@ -245,9 +234,6 @@ const ArabicNameMugV1Page: NextPage = () => {
   const credits = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
   const genGuest = api.generate.generatePaidMugGuestDesign.useMutation();
   const genIcon = api.generate.generateIcon.useMutation();
-  const capturePaidTrafficLead = api.user.capturePaidTrafficLead.useMutation();
-  const createOrder = api.productOrder.createPendingOrder.useMutation();
-  const captureCheckoutEmail = api.productOrder.captureCheckoutEmail.useMutation();
 
   const [step, setStep] = useState<Step>(1);
   const [giftIntent, setGiftIntent] = useState<ArabicNameMugGiftIntent | "">("");
@@ -258,28 +244,19 @@ const ArabicNameMugV1Page: NextPage = () => {
   const [useTransparentDesign, setUseTransparentDesign] = useState(true);
   const [hasFree, setHasFree] = useState(false);
   const [freeGenerationUsed, setFreeGenerationUsed] = useState(false);
-  const [mockupOriginal, setMockupOriginal] = useState<string | null>(null);
-  const [mockupTransparent, setMockupTransparent] = useState<string | null>(null);
   const [generatedGiftIntent, setGeneratedGiftIntent] = useState<
     ArabicNameMugGiftIntent | ""
   >("");
   const [generatedName, setGeneratedName] = useState("");
   const [generatedStyleId, setGeneratedStyleId] = useState("");
-  const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
   const [busyDesign, setBusyDesign] = useState(false);
-  const [busyPreview, setBusyPreview] = useState(false);
-  const [busyCheckout, setBusyCheckout] = useState(false);
-  const [progress, setProgress] = useState(8);
   const [designLoadingProgress, setDesignLoadingProgress] = useState(12);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [hasHydratedSavedState, setHasHydratedSavedState] = useState(false);
 
   const generationLockRef = useRef(false);
-  const previewLockRef = useRef(false);
   const inFlightGenerationRef = useRef<Promise<void> | null>(null);
-  const lastCapturedLeadEmailRef = useRef<string | null>(null);
-  const lastCapturedCheckoutLeadEmailRef = useRef<string | null>(null);
   const viewedRef = useRef(false);
   const retryRef = useRef<null | (() => void)>(null);
 
@@ -292,11 +269,6 @@ const ArabicNameMugV1Page: NextPage = () => {
     useTransparentDesign && transparentUrl ? transparentUrl : originalDesign;
   const hasSavedDesign = Boolean(designUrl || transparentUrl);
   const hasTransparentOption = Boolean(transparentUrl);
-  const selectedPreviewKey: PreviewVariant =
-    useTransparentDesign && transparentUrl ? "transparent" : "original";
-  const selectedMockupUrl =
-    selectedPreviewKey === "transparent" ? mockupTransparent : mockupOriginal;
-  const hasPreviewForSelectedDesign = Boolean(selectedMockupUrl);
   const isBackgroundRemoved = Boolean(useTransparentDesign && transparentUrl);
   const effectiveGiftIntent = giftIntent || "Someone Special";
   const intentCopy = GIFT_INTENT_COPY[effectiveGiftIntent];
@@ -305,9 +277,6 @@ const ArabicNameMugV1Page: NextPage = () => {
   const guestFreeDesignLocked = guestFreeDesignUsed && hasSavedDesign;
   const lockedGiftIntent = generatedGiftIntent || giftIntent;
   const lockedName = generatedName || name;
-  const previewTestimonialIntent = lockedGiftIntent || effectiveGiftIntent;
-  const previewTestimonials = PREVIEW_TESTIMONIALS[previewTestimonialIntent];
-  const previewSocialProofCopy = PREVIEW_SOCIAL_PROOF_COPY[previewTestimonialIntent];
   const trackBase = useMemo(
     () => ({
       ...getFunnelContext({
@@ -381,33 +350,15 @@ const ArabicNameMugV1Page: NextPage = () => {
       setUseTransparentDesign(saved.useTransparentDesign ?? Boolean(saved.transparentUrl));
       setHasFree(Boolean(saved.hasFree));
       setFreeGenerationUsed(Boolean(saved.freeGenerationUsed ?? saved.hasFree));
-      const legacyOriginalMockup =
-        saved.mockupUrl && saved.mockupSourceUrl === saved.designUrl ? saved.mockupUrl : null;
-      const legacyTransparentMockup =
-        saved.mockupUrl && saved.mockupSourceUrl === saved.transparentUrl
-          ? saved.mockupUrl
-          : null;
-      setMockupOriginal(saved.mockupOriginal ?? saved.originalMockupUrl ?? legacyOriginalMockup ?? null);
-      setMockupTransparent(
-        saved.mockupTransparent ?? saved.transparentMockupUrl ?? legacyTransparentMockup ?? null,
-      );
       setGeneratedGiftIntent(saved.generatedGiftIntent ?? saved.giftIntent ?? "");
       setGeneratedName(saved.generatedName ?? saved.name ?? "");
       setGeneratedStyleId(saved.generatedStyleId ?? saved.styleId ?? "");
-      setEmail(saved.email ?? "");
     } catch {
       // ignore invalid stored state
     } finally {
       setHasHydratedSavedState(true);
     }
   }, []);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    const sessionEmail = session?.user?.email?.trim() ?? "";
-    if (!sessionEmail) return;
-    setEmail(sessionEmail);
-  }, [isLoggedIn, session?.user?.email]);
 
   useEffect(() => {
     if (!hasHydratedSavedState) return;
@@ -421,9 +372,6 @@ const ArabicNameMugV1Page: NextPage = () => {
       useTransparentDesign,
       hasFree,
       freeGenerationUsed,
-      email,
-      mockupOriginal,
-      mockupTransparent,
       generatedGiftIntent,
       generatedName,
       generatedStyleId,
@@ -440,19 +388,10 @@ const ArabicNameMugV1Page: NextPage = () => {
     useTransparentDesign,
     hasFree,
     freeGenerationUsed,
-    mockupOriginal,
-    mockupTransparent,
-    email,
     generatedGiftIntent,
     generatedName,
     generatedStyleId,
   ]);
-
-  useEffect(() => {
-    if (step !== 7 || busyPreview) return;
-    if (hasPreviewForSelectedDesign) return;
-    setStep(6);
-  }, [busyPreview, hasPreviewForSelectedDesign, step]);
 
   useEffect(() => {
     if (viewedRef.current) return;
@@ -488,40 +427,6 @@ const ArabicNameMugV1Page: NextPage = () => {
     };
   }, [busyDesign]);
 
-  useEffect(() => {
-    if (!busyPreview) {
-      setProgress(8);
-      return;
-    }
-
-    setProgress(PREVIEW_PROGRESS_SEQUENCE[0]);
-    let index = 0;
-    const timer = window.setInterval(() => {
-      index += 1;
-      const next = PREVIEW_PROGRESS_SEQUENCE[index];
-      if (typeof next === "number") {
-        setProgress(next);
-        return;
-      }
-      window.clearInterval(timer);
-    }, 1600);
-
-    return () => window.clearInterval(timer);
-  }, [busyPreview]);
-
-  useEffect(() => {
-    if (step !== 7 || isLoggedIn) return;
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!emailOk(normalizedEmail)) return;
-    if (lastCapturedLeadEmailRef.current === normalizedEmail) return;
-
-    const timer = window.setTimeout(() => {
-      void capturePaidTrafficLeadIfNeeded(normalizedEmail, "lead");
-    }, 700);
-
-    return () => window.clearTimeout(timer);
-  }, [email, isLoggedIn, step]);
-
   const removeBg = async (url: string) => {
     const imageId = imageIdFromUrl(url);
     const response = await fetch("/api/image/remove-background", {
@@ -552,8 +457,6 @@ const ArabicNameMugV1Page: NextPage = () => {
     setTransparentUrl(null);
     setUseTransparentDesign(true);
     setHasFree(false);
-    setMockupOriginal(null);
-    setMockupTransparent(null);
   };
 
   const showGuestFreeDesignLockedError = (message: string) => {
@@ -570,38 +473,6 @@ const ArabicNameMugV1Page: NextPage = () => {
 
     setGiftIntent(nextGiftIntent);
     setErr("");
-  };
-
-  const capturePaidTrafficLeadIfNeeded = async (
-    rawEmail: string,
-    stage: "lead" | "checkout",
-    checkoutResumeUrl?: string,
-  ) => {
-    if (isLoggedIn) return;
-
-    const normalizedEmail = rawEmail.trim().toLowerCase();
-    if (!emailOk(normalizedEmail)) return;
-
-    const dedupeRef =
-      stage === "checkout" ? lastCapturedCheckoutLeadEmailRef : lastCapturedLeadEmailRef;
-    if (dedupeRef.current === normalizedEmail && !checkoutResumeUrl) return;
-
-    try {
-      await capturePaidTrafficLead.mutateAsync({
-        email: normalizedEmail,
-        sourcePage: SOURCE_PAGE,
-        promotedProduct: "mug",
-        checkoutResumeUrl,
-        hasGeneratedDesign: true,
-        hasVisitedCheckout: stage === "checkout",
-      });
-      dedupeRef.current = normalizedEmail;
-      if (stage === "checkout") {
-        lastCapturedLeadEmailRef.current = normalizedEmail;
-      }
-    } catch (captureErr) {
-      console.error("Failed to capture Arabic name mug lead email:", captureErr);
-    }
   };
 
   const runGeneration = async (paid: boolean) => {
@@ -678,8 +549,6 @@ const ArabicNameMugV1Page: NextPage = () => {
         setUseTransparentDesign(Boolean(nextTransparent));
         setHasFree(true);
         setFreeGenerationUsed(true);
-        setMockupOriginal(null);
-        setMockupTransparent(null);
         setGeneratedGiftIntent(effectiveGiftIntent);
         setGeneratedName(name.trim());
         setGeneratedStyleId(styleId);
@@ -709,72 +578,13 @@ const ArabicNameMugV1Page: NextPage = () => {
     }
   };
 
-  const makePreview = async (imageUrl: string) => {
-    const response = await fetch("/api/printful/preview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productKey: "mug",
-        imageUrl,
-        variantId: MUG_VARIANT_ID,
-        previewMode: "two-side",
-        paidTrafficUser: true,
-      }),
-    });
-    const data = (await response.json()) as { mockupUrl?: string; error?: string };
-
-    if (!response.ok || !data.mockupUrl) {
-      throw new Error(data.error || "Unable to generate mug preview");
-    }
-
-    return data.mockupUrl;
-  };
-
-  const goStep7 = async () => {
-    if (!PHYSICAL_COMMERCE_ENABLED) return;
-    if (previewLockRef.current || busyPreview) return;
-    const previewImageUrl = selectedDesign;
-    const previewKey = selectedPreviewKey;
-
-    if (!previewImageUrl) {
-      setErr("Generate your design first.");
-      return;
-    }
-
-    setErr("");
-    setStep(7);
-    setProgress(8);
-    const cached = previewKey === "transparent" ? mockupTransparent : mockupOriginal;
-    if (cached) return;
-
-    try {
-      previewLockRef.current = true;
-      setBusyPreview(true);
-      const nextMockup = await makePreview(previewImageUrl);
-      setProgress(100);
-      if (previewKey === "transparent") {
-        setMockupTransparent(nextMockup);
-      } else {
-        setMockupOriginal(nextMockup);
-      }
-    } catch (previewErr) {
-      setErr(previewErr instanceof Error ? previewErr.message : "Unable to generate preview");
-      setStep(6);
-    } finally {
-      setBusyPreview(false);
-      previewLockRef.current = false;
-    }
-  };
-
   const goBack = () => {
-    if (generationLockRef.current || previewLockRef.current || busyDesign || busyPreview) {
+    if (generationLockRef.current || busyDesign) {
       return;
     }
 
     setStep((currentStep) =>
-      currentStep === 7
-        ? 6
-        : currentStep === 6
+      currentStep === 6
         ? 4
         : currentStep === 5
         ? 4
@@ -784,81 +594,6 @@ const ArabicNameMugV1Page: NextPage = () => {
         ? 2
         : 1,
     );
-  };
-
-  const checkout = async () => {
-    if (!PHYSICAL_COMMERCE_ENABLED) return;
-    if (!selectedDesign || !selectedMockupUrl) {
-      setErr("Preview is required before checkout.");
-      return;
-    }
-    if (!emailOk(email)) {
-      setErr("Enter a valid email address.");
-      return;
-    }
-
-    setErr("");
-    setBusyCheckout(true);
-
-    try {
-      const order = await createOrder.mutateAsync({
-        productKey: "mug",
-        variantId: MUG_VARIANT_ID,
-        variantName: "White Glossy Mug 11 oz",
-        size: "11 oz",
-        imageUrl: selectedDesign,
-        mockupUrl: selectedMockupUrl,
-        pricingVariant: "11 oz",
-        previewMode: "two-side",
-        previewVariantId: MUG_VARIANT_ID,
-        isBackgroundRemoved,
-        snapshotVariantId: MUG_VARIANT_ID,
-        snapshotSize: "11 oz",
-        snapshotColor: "White",
-        snapshotPrintPosition: "two-side",
-        snapshotBackgroundRemoved: isBackgroundRemoved,
-        shippingCountry: "US",
-        funnelSource: "paid-traffic-offer",
-      });
-
-      const checkoutResumeUrl = `${window.location.origin}/checkout?orderId=${encodeURIComponent(
-        order.orderId,
-      )}&sourcePage=${encodeURIComponent(SOURCE_PAGE)}&generator=${encodeURIComponent(
-        SOURCE_PAGE,
-      )}${order.accessToken ? `&accessToken=${encodeURIComponent(order.accessToken)}` : ""}`;
-
-      await capturePaidTrafficLeadIfNeeded(email, "checkout", checkoutResumeUrl);
-
-      if (!isLoggedIn) {
-        try {
-          await captureCheckoutEmail.mutateAsync({
-            orderId: order.orderId,
-            accessToken: order.accessToken ?? undefined,
-            email: email.trim().toLowerCase(),
-            sourcePage: SOURCE_PAGE,
-            promotedProduct: "mug",
-          });
-        } catch (captureErr) {
-          console.error("Failed to capture Arabic name mug checkout email:", captureErr);
-        }
-      }
-
-      const payload = { ...trackBase, value: 0, currency: "USD" };
-      trackEvent("begin_checkout", payload);
-      fireMetaCustomEvent("begin_checkout", payload);
-
-      await router.push(
-        `/checkout?orderId=${encodeURIComponent(order.orderId)}&sourcePage=${encodeURIComponent(
-          SOURCE_PAGE,
-        )}&generator=${encodeURIComponent(SOURCE_PAGE)}${
-          order.accessToken ? `&accessToken=${encodeURIComponent(order.accessToken)}` : ""
-        }`,
-      );
-    } catch (checkoutErr) {
-      setErr(checkoutErr instanceof Error ? checkoutErr.message : "Unable to start checkout.");
-    } finally {
-      setBusyCheckout(false);
-    }
   };
 
   const progressPct =
@@ -919,7 +654,7 @@ const ArabicNameMugV1Page: NextPage = () => {
             <button
               type="button"
               onClick={goBack}
-              disabled={busyDesign || busyPreview}
+              disabled={busyDesign}
               className="mb-4 inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Back
@@ -971,7 +706,7 @@ const ArabicNameMugV1Page: NextPage = () => {
                     <p className="mt-1 text-sm text-gray-600">{intentCopy}</p>
                     <div className="mt-4 grid grid-cols-1 gap-3">
                       <button
-                        onClick={() => setStep(hasPreviewForSelectedDesign ? 7 : 6)}
+                        onClick={() => setStep(6)}
                         className={PRIMARY_BUTTON_CLASS}
                       >
                         Continue with my design
@@ -1382,151 +1117,6 @@ const ArabicNameMugV1Page: NextPage = () => {
                 </div>
               </div>
 
-              {PHYSICAL_COMMERCE_ENABLED && (
-                <button onClick={() => void goStep7()} className={PRIMARY_BUTTON_CLASS}>
-                  Preview My Mug
-                </button>
-              )}
-            </section>
-          )}
-
-          {PHYSICAL_COMMERCE_ENABLED && step === 7 && busyPreview && (
-            <section className="flex min-h-[65vh] flex-col items-center justify-center text-center">
-              <div className={`${SURFACE_CARD_CLASS} w-full`}>
-                <h2 className="text-3xl font-bold text-slate-950">
-                  Preview Your Personalized Mug
-                </h2>
-                <p className="mt-2 text-sm text-gray-600">
-                  We&apos;re preparing your custom mug preview.
-                </p>
-                <div className="mt-6 h-3 rounded-full bg-gray-200">
-                  <div
-                    className="h-3 rounded-full bg-brand-600 transition-all duration-700"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <p className="mt-3 text-sm text-gray-500">{progress}% complete</p>
-
-                <div className="mt-6 overflow-hidden rounded-3xl border border-amber-100 bg-[linear-gradient(180deg,#fff8eb_0%,#ffffff_100%)] p-4 text-left">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
-                        Loved by gift buyers
-                      </div>
-                      <p className="mt-2 text-sm text-slate-700">{previewSocialProofCopy}</p>
-                    </div>
-                    <div className="rounded-full border border-amber-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-700">
-                      Real feedback
-                    </div>
-                  </div>
-
-                  <div className="mt-4 overflow-hidden">
-                    <div className="arabic-name-mug-preview-review-track flex w-max gap-4 px-1">
-                      {[...previewTestimonials, ...previewTestimonials].map((testimonial, index) => {
-                        const reviewImage =
-                          PREVIEW_TESTIMONIAL_IMAGES[index % PREVIEW_TESTIMONIAL_IMAGES.length] ??
-                          PREVIEW_TESTIMONIAL_IMAGES[0]!;
-
-                        return (
-                          <article
-                            key={`${testimonial.author}-${index}`}
-                            className="w-[16.5rem] flex-none overflow-hidden rounded-2xl border border-white bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
-                          >
-                            <div className="bg-[#f8fafc] p-2">
-                              <img
-                                src={reviewImage.src}
-                                alt={reviewImage.alt}
-                                className="h-44 w-full rounded-xl object-cover"
-                              />
-                            </div>
-                            <div className="px-4 py-4">
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-600">
-                                Verified order
-                              </div>
-                              <p className="mt-3 text-sm leading-6 text-slate-700">
-                                &ldquo;{testimonial.quote}&rdquo;
-                              </p>
-                              <div className="mt-4 border-t border-slate-100 pt-3">
-                                <div className="text-sm font-semibold text-slate-900">
-                                  {testimonial.author}
-                                </div>
-                                <div className="mt-1 text-xs text-slate-500">
-                                  {testimonial.detail}
-                                </div>
-                              </div>
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {PHYSICAL_COMMERCE_ENABLED && step === 7 && !busyPreview && (
-            <section className="space-y-4">
-              <div className={SURFACE_CARD_CLASS}>
-                <h2 className="text-3xl font-bold text-slate-950">Preview Your Personalized Mug</h2>
-                <p className="mt-2 text-sm text-gray-600">
-                  This is how your custom mug will look when printed.
-                </p>
-
-                <div className={`${WHITE_CARD_CLASS} mt-4 overflow-hidden`}>
-                  {selectedMockupUrl ? (
-                    <img
-                      src={selectedMockupUrl}
-                      alt="Personalized Arabic name mug preview"
-                      className="w-full rounded-xl"
-                    />
-                  ) : (
-                    <div className="h-64 rounded-xl bg-[#F8F8F8]" />
-                  )}
-                </div>
-
-                <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-4 text-sm text-brand-900">
-                  <div className="font-semibold text-slate-900">{intentCopy}</div>
-                  <div className="mt-3 space-y-2">
-                    <p>Personalized Arabic calligraphy design</p>
-                    <p>Free shipping included</p>
-                    <p>Printed only after you order</p>
-                  </div>
-                </div>
-              </div>
-
-              {!isLoggedIn && (
-                <div className={WHITE_CARD_CLASS}>
-                  <label className="text-sm font-semibold text-slate-900">Email</label>
-                  <input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => {
-                      setEmail(event.target.value);
-                      setErr("");
-                    }}
-                    onBlur={() => {
-                      void capturePaidTrafficLeadIfNeeded(email, "lead");
-                    }}
-                    placeholder="you@example.com"
-                    className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-4 text-base text-slate-900 placeholder:text-gray-400"
-                  />
-                </div>
-              )}
-
-              <button
-                disabled={busyCheckout || !hasPreviewForSelectedDesign}
-                onClick={() => void checkout()}
-                className={PRIMARY_BUTTON_CLASS}
-              >
-                {busyCheckout ? "Loading checkout..." : "Continue to Secure Checkout"}
-              </button>
-
-              <p className="text-center text-xs text-gray-500">
-                Secure payment powered by Stripe
-              </p>
             </section>
           )}
 
