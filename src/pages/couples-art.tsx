@@ -32,7 +32,7 @@ const galleryTabs = [
 
 const relatedLinks = [
   {
-    href: "/couples-art/products",
+    href: "/couple-name-mug-v1",
     label: "Couples Art Products",
     description:
       "Compare romantic mugs, shirts, and wall art made specifically from couples art.",
@@ -66,12 +66,12 @@ const relatedLinks = [
       "Read the supporting blog content for gift intent, decor use cases, and keepsake ideas.",
   },
   {
-    href: "/couples-art/products/mugs",
+    href: "/couple-name-mug-v1",
     label: "Couples Art Mugs",
     description: "Turn couple name art into daily-use romantic mugs.",
   },
   {
-    href: "/couples-art/products/wall-art",
+    href: "/couple-name-mug-v1",
     label: "Couples Art Wall Art",
     description: "Make couple name art the centerpiece of a shared space.",
   },

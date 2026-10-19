@@ -5,7 +5,6 @@ const STORAGE_KEY = "exit_intent_dismissed";
 
 // Pages where the modal should never appear
 const EXCLUDED_PATHS = new Set([
-  "/checkout",
   "/buy-credits",
   "/success",
   "/cancel",

@@ -96,19 +96,19 @@ const CoupleGiftsPage: NextPage = () => {
             "Often the strongest output when the relationship design should live in a shared room or home.",
         },
         {
-          href: "/couples-art/products",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Products",
           description:
             "Compare romantic mugs, shirts, and wall art made from couple name artwork.",
         },
         {
-          href: "/couples-art/products/wall-art",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Wall Art",
           description:
             "Best when the couple gift should become an anniversary, wedding, or shared-home print.",
         },
         {
-          href: "/couples-art/products/mugs",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Mugs",
           description:
             "Best when the couple design should become a practical daily-use gift.",

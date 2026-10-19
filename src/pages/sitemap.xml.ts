@@ -36,16 +36,6 @@ const getPriority = (rawPage: string) => {
   ]);
 
   if (primaryLandingPages.has(page)) return "0.9";
-  if (/^\/(name-art|arabic-calligraphy|couples-art)\/products$/.test(page)) {
-    return "0.8";
-  }
-  if (
-    /^\/(name-art|arabic-calligraphy|couples-art)\/products\/(mugs|shirts|wall-art)$/.test(
-      page
-    )
-  ) {
-    return "0.7";
-  }
   if (
     page === "/community" ||
     page === "/name-art/styles" ||
@@ -126,7 +116,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     "/arabic-calligraphy/styles",
     "/couples-art",
     "/couples-art/styles",
-    "/products",
     "/personalized-gifts",
     ...STYLE_PRODUCT_SEO_PATHS,
     "/privacy-policy",

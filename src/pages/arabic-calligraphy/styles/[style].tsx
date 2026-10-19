@@ -64,7 +64,7 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
             path: pagePath,
             itemPaths: [
               "/arabic-calligraphy-generator",
-              "/arabic-calligraphy/products",
+              "/arabic-calligraphy-generator",
               "/personalized-gifts",
             ],
           }),
@@ -166,10 +166,10 @@ const ArabicStylePage: NextPage<ArabicStylePageProps> = ({
             )}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
-                { href: "/arabic-calligraphy/products/mugs", label: "Mug" },
-                { href: "/arabic-calligraphy/products/shirts", label: "Shirt" },
+                { href: "/arabic-calligraphy-generator", label: "Generate" },
+                { href: "/arabic-calligraphy-generator", label: "Generate" },
                 {
-                  href: "/arabic-calligraphy/products/wall-art",
+                  href: "/arabic-calligraphy-generator",
                   label: "Wall art",
                 },
               ].map((item) => (

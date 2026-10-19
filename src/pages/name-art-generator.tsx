@@ -1326,7 +1326,7 @@ const NameArtGeneratorPage: NextPage = () => {
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="font-semibold text-slate-900">More Products</h4>
-              <Link href="/name-art/products" className="text-sm font-medium text-brand-700 hover:underline">
+              <Link href="/name-art" className="text-sm font-medium text-brand-700 hover:underline">
                 View all name art products →
               </Link>
             </div>
@@ -1334,7 +1334,7 @@ const NameArtGeneratorPage: NextPage = () => {
               {GENERATOR_PRODUCT_THUMBNAILS.default.filter((p) => p.key !== "mug").map((p) => (
                 <Link
                   key={p.key}
-                  href="/name-art/products"
+                  href="/name-art"
                   className="group overflow-hidden rounded-xl border border-cream-200 bg-white shadow-sm transition hover:border-brand-300 hover:shadow-md"
                 >
                   <div className="aspect-video overflow-hidden">

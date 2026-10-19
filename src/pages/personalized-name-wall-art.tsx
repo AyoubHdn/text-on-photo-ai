@@ -96,19 +96,19 @@ const PersonalizedNameWallArtPage: NextPage = () => {
             "Good next step when the wall art concept is tied to weddings, anniversaries, or shared spaces.",
         },
         {
-          href: "/name-art/products/wall-art",
+          href: "/name-art",
           label: "Name Art Wall Art",
           description:
             "Use this when the wall art is specifically built from personalized name art.",
         },
         {
-          href: "/arabic-calligraphy/products/wall-art",
+          href: "/arabic-calligraphy-generator",
           label: "Arabic Name Art Wall Art",
           description:
             "Use this for Arabic calligraphy prints and Arabic-name decor intent.",
         },
         {
-          href: "/couples-art/products/wall-art",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Wall Art",
           description:
             "Use this for romantic two-name prints, anniversary art, and wedding keepsakes.",

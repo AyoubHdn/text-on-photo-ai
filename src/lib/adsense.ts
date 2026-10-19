@@ -3,7 +3,6 @@ export const ADSENSE_PUBLISHER_ID = "ca-pub-1557966465534942";
 const ADSENSE_EXCLUDED_PATHS = new Set([
   "/collection",
   "/buy-credits",
-  "/checkout",
   "/success",
   "/cancel",
   "/unlock/free-credit",
@@ -18,7 +17,6 @@ const ADSENSE_EXCLUDED_PATHS = new Set([
 
 const ADSENSE_EXCLUDED_PREFIXES = [
   "/api/",
-  "/track/",
 ];
 
 export function getAdSenseClientId() {

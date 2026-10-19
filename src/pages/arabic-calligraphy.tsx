@@ -66,7 +66,7 @@ const arabicFaqs = [
 
 const productLinks = [
   {
-    href: "/arabic-calligraphy/products",
+    href: "/arabic-calligraphy-generator",
     title: "Arabic Name Art Products",
     description:
       "Compare Arabic calligraphy mugs, shirts, and wall art before choosing the final product format.",
@@ -78,7 +78,7 @@ const productLinks = [
       "Use Arabic calligraphy artwork as the starting point for gift-ready products and keepsakes.",
   },
   {
-    href: "/arabic-calligraphy/products/wall-art",
+    href: "/arabic-calligraphy-generator",
     title: "Arabic Name Art Wall Art",
     description:
       "Frame a calligraphy-inspired design as decor for homes, offices, celebrations, and memorial keepsakes.",

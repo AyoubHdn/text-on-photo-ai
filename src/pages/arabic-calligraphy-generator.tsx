@@ -1129,7 +1129,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             )}
 
             {/* HIDDEN W1 — products/mug section: mug nudge, Custom Mug card, More Products
-                links to /arabic-calligraphy/products. Orphaned physical page; render suppressed.
+                legacy product links; orphaned physical section remains suppressed.
             <section ref={productsSectionRef} className="mt-10 scroll-mt-20">
               (nudge banner "Your art is ready to print!", Custom Mug card, More Products grid)
             </section>

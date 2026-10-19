@@ -78,55 +78,55 @@ const PersonalizedGiftsPage: NextPage = () => {
       ]}
       relatedLinks={[
         {
-          href: "/name-art/products/mugs",
+          href: "/name-art",
           label: "Name Art Mugs",
           description:
             "Daily-use mug gifts built from personalized name art and readable artwork.",
         },
         {
-          href: "/name-art/products/shirts",
+          href: "/name-art",
           label: "Name Art Shirts",
           description:
             "Wearable name art for bolder typography, nicknames, and event-ready gifts.",
         },
         {
-          href: "/name-art/products/wall-art",
+          href: "/name-art",
           label: "Name Art Wall Art",
           description:
             "Decor-ready prints and posters made from personalized name designs.",
         },
         {
-          href: "/arabic-calligraphy/products/mugs",
+          href: "/arabic-calligraphy-generator",
           label: "Arabic Name Art Mugs",
           description:
             "Practical mug gifts using Arabic calligraphy-inspired name artwork.",
         },
         {
-          href: "/arabic-calligraphy/products/shirts",
+          href: "/arabic-calligraphy-generator",
           label: "Arabic Name Art Shirts",
           description:
             "Wearable Arabic lettering and calligraphy-led custom apparel.",
         },
         {
-          href: "/arabic-calligraphy/products/wall-art",
+          href: "/arabic-calligraphy-generator",
           label: "Arabic Name Art Wall Art",
           description:
             "Framed prints and posters for Arabic name art, decor, and keepsakes.",
         },
         {
-          href: "/couples-art/products/mugs",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Mugs",
           description:
             "Romantic daily-use mugs made from two-name couple artwork.",
         },
         {
-          href: "/couples-art/products/shirts",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Shirts",
           description:
             "Matching and romantic apparel for couples, anniversaries, and events.",
         },
         {
-          href: "/couples-art/products/wall-art",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Wall Art",
           description:
             "Shared-home decor, anniversary prints, and wedding keepsakes from couple art.",
@@ -159,9 +159,9 @@ const PersonalizedGiftsPage: NextPage = () => {
             "No. These pages help you choose the right product direction, then guide you to the matching generator or category page to create the artwork.",
         },
         {
-          question: "When should I use /products instead of this page?",
+          question: "When should I use the name-art generator instead of this page?",
           answer:
-            "Use this page when you want ideas by occasion or recipient. Use /products when you already know you want to browse the product catalog directly.",
+            "Use this page when you want ideas by occasion or recipient, or use the name-art generator to create a digital design.",
         },
       ]}
       breadcrumbs={[

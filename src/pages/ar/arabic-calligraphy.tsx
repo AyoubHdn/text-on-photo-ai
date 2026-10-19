@@ -94,11 +94,10 @@ const arabicFaqs = [
   },
 ];
 
-/* HIDDEN W1 — productLinks: links to /arabic-calligraphy/products, /personalized-gifts,
-   /arabic-calligraphy/products/wall-art — orphaned physical pages, not linked from this page.
+/* HIDDEN legacy productLinks retained only as historical source context.
 const productLinks = [
   {
-    href: "/arabic-calligraphy/products",
+    href: "/arabic-calligraphy-generator",
     title: "منتجات الخط العربي",
     description:
       "استكشف كيف تتحول كتابة الخط العربي بالذكاء الاصطناعي إلى منتجات قابلة للطباعة والعرض.",
@@ -110,7 +109,7 @@ const productLinks = [
       "استخدم تصميمات الخط العربي في هدايا جاهزة للمناسبات الشخصية والعائلية والرسمية.",
   },
   {
-    href: "/arabic-calligraphy/products/wall-art",
+    href: "/arabic-calligraphy-generator",
     title: "لوحات الخط العربي",
     description:
       "حوّل الاسم أو العبارة إلى لوحة زخرفة خط عربي تناسب الديكور أو الإهداء أو الهوية البصرية.",
@@ -423,8 +422,7 @@ const ArabicCalligraphyLandingArabicPage: NextPage = () => {
           </div>
         </section>
 
-        {/* HIDDEN W1 — "خطواتك التالية" section: linked to /arabic-calligraphy/products,
-            /personalized-gifts, /arabic-calligraphy/products/wall-art. Orphaned physical pages.
+        {/* HIDDEN legacy product section; orphaned and not rendered.
         <section className="bg-cream-50 py-24">
           <div className="container mx-auto px-4">
             <div className="mb-12 max-w-3xl">

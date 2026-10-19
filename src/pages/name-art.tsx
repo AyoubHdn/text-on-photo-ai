@@ -39,19 +39,19 @@ const galleryTabs = [
 
 const productLinks = [
   {
-    href: "/name-art/products/wall-art",
+    href: "/name-art",
     label: "Name Art Wall Art",
     description:
       "Turn personalized name art into decor-ready prints for bedrooms, nurseries, offices, and gifts.",
   },
   {
-    href: "/name-art/products/mugs",
+    href: "/name-art",
     label: "Name Art Mugs",
     description:
       "Create daily-use mug gifts built from the same personalized name artwork.",
   },
   {
-    href: "/name-art/products/shirts",
+    href: "/name-art",
     label: "Name Art Shirts",
     description:
       "Use bold or playful name art styles on wearable products without losing the name-first intent.",
@@ -379,7 +379,7 @@ const NameArtLandingPage: NextPage = () => {
                 Looking for ideas beyond name art styles? Browse all{" "}
                 <Link href="/personalized-gifts" className="font-medium text-indigo-600 hover:underline">personalized gifts</Link>{" "}
                 or explore our full{" "}
-                <Link href="/products" className="font-medium text-indigo-600 hover:underline">product catalog</Link>.
+                <Link href="/name-art" className="font-medium text-indigo-600 hover:underline">name-art generator</Link>.
               </p>
             </div>
           </div>

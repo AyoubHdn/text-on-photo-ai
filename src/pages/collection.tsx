@@ -180,10 +180,10 @@ const CollectionPage: NextPage = () => {
 
                 <div className="border-t border-cream-200 p-2">
                   <Link
-                    href="/products"
+                    href="/name-art"
                     className="mb-2 block rounded-md bg-brand-600 px-3 py-2 text-center text-xs font-semibold text-white transition hover:bg-brand-700"
                   >
-                    Print on Products
+                    Create Digital Artwork
                   </Link>
 
                   <VisibilityToggle

@@ -43,7 +43,6 @@ const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
 const GLOBAL_NOINDEX_PATHS = new Set([
   "/collection",
   "/buy-credits",
-  "/checkout",
   "/success",
   "/cancel",
   "/unlock/free-credit",
@@ -95,7 +94,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const isMarkingPaidTrafficUserRef = useRef(false);
   const markPaidTrafficUser = api.user.markPaidTrafficUser.useMutation();
   const isCancelPage = router.pathname === "/cancel";
-  const isCheckoutRoute = router.pathname === "/checkout";
   const isRamadanMugRoute =
     router.pathname === "/ramadan-mug" || router.pathname === "/ramadan-mug-men";
   const isRamadanMugV2Route = router.pathname === "/ramadan-mug-v2";
@@ -305,14 +303,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
             <Component {...pageProps} />
           </main>
           <Footer minimal={isRamadanAdLayout} />
-        </div>
-      ) : isCheckoutRoute ? (
-        <div className="min-h-screen bg-white text-slate-900">
-          <Header minimal />
-          <main>
-            <Component {...pageProps} />
-          </main>
-          <Footer minimal forceLight />
         </div>
       ) : (
         <>

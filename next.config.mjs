@@ -116,26 +116,6 @@ const config = {
         permanent: true,
       },
       {
-        source: "/arabic-name-art/products",
-        destination: "/arabic-calligraphy/products",
-        permanent: true,
-      },
-      {
-        source: "/ar/arabic-name-art/products",
-        destination: "/arabic-calligraphy/products",
-        permanent: true,
-      },
-      {
-        source: "/arabic-name-art/products/:product",
-        destination: "/arabic-calligraphy/products/:product",
-        permanent: true,
-      },
-      {
-        source: "/ar/arabic-name-art/products/:product",
-        destination: "/arabic-calligraphy/products/:product",
-        permanent: true,
-      },
-      {
         source: "/couples-art-generator",
         destination: "/couples-name-art-generator",
         permanent: true,

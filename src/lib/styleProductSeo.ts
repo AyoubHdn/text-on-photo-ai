@@ -223,7 +223,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     slug: "name-art",
     label: "Name Art",
     baseHref: "/name-art",
-    productsHref: "/name-art/products",
+    productsHref: "/name-art",
     generatorHref: "/name-art-generator",
     generatorLabel: "Create name art",
     styleGalleryHref: "/name-art/styles",
@@ -542,7 +542,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     slug: "arabic-calligraphy",
     label: "Arabic Name Art",
     baseHref: "/arabic-calligraphy",
-    productsHref: "/arabic-calligraphy/products",
+    productsHref: "/arabic-calligraphy-generator",
     generatorHref: "/arabic-calligraphy-generator",
     generatorLabel: "Create Arabic name art",
     styleGalleryHref: "/arabic-calligraphy/styles",
@@ -861,7 +861,7 @@ const STYLE_CONFIGS: Record<StyleProductHubSlug, StyleBaseConfig> = {
     slug: "couples-art",
     label: "Couples Art",
     baseHref: "/couples-art",
-    productsHref: "/couples-art/products",
+    productsHref: "/couple-name-mug-v1",
     generatorHref: "/couples-name-art-generator",
     generatorLabel: "Create couples art",
     styleGalleryHref: "/couples-art/styles",
@@ -1195,7 +1195,7 @@ const getProductImage = (styleSlug: StyleProductHubSlug, productSlug: StyleProdu
 };
 
 const getProductHref = (styleSlug: StyleProductHubSlug, productSlug: StyleProductSlug) =>
-  `/${styleSlug}/products/${productSlug}`;
+  `/${styleSlug}`;
 
 const getSiblingProductCards = (
   styleSlug: StyleProductHubSlug,

@@ -64,7 +64,7 @@ const CouplesStylePage: NextPage<CouplesStylePageProps> = ({
             path: pagePath,
             itemPaths: [
               "/couples-name-art-generator",
-              "/couples-art/products",
+              "/couple-name-mug-v1",
               "/personalized-gifts",
             ],
           }),
@@ -166,9 +166,9 @@ const CouplesStylePage: NextPage<CouplesStylePageProps> = ({
             )}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
-                { href: "/couples-art/products/mugs", label: "Mug" },
-                { href: "/couples-art/products/shirts", label: "Shirt" },
-                { href: "/couples-art/products/wall-art", label: "Wall art" },
+                { href: "/couple-name-mug-v1", label: "Generate" },
+                { href: "/couple-name-mug-v1", label: "Generate" },
+                { href: "/couple-name-mug-v1", label: "Generate" },
               ].map((item) => (
                 <Link
                   key={item.href}

@@ -96,19 +96,19 @@ const CustomNameShirtsPage: NextPage = () => {
             "Use this when the apparel idea is part of a broader anniversary or relationship gift set.",
         },
         {
-          href: "/name-art/products/shirts",
+          href: "/name-art",
           label: "Name Art Shirts",
           description:
             "Use this when the shirt is specifically built from a personalized name art design.",
         },
         {
-          href: "/arabic-calligraphy/products/shirts",
+          href: "/arabic-calligraphy-generator",
           label: "Arabic Name Art Shirts",
           description:
             "Use this for Arabic calligraphy shirts and wearable Arabic-name artwork.",
         },
         {
-          href: "/couples-art/products/shirts",
+          href: "/couple-name-mug-v1",
           label: "Couples Art Shirts",
           description:
             "Use this for matching couple shirts and romantic two-name apparel.",
@@ -140,9 +140,9 @@ const CustomNameShirtsPage: NextPage = () => {
             "Yes. Couple-focused artwork can work on matching or coordinated shirts if the final layout is readable and balanced.",
         },
         {
-          question: "When should I use /products instead of this page?",
+          question: "When should I use the name-art generator instead of this page?",
           answer:
-            "Use this page when you want shirt-specific ideas and guidance. Use /products when you already know you want to browse the product catalog directly.",
+            "Use this page for shirt-specific ideas and guidance, or use the name-art generator to create a digital design.",
         },
       ]}
       breadcrumbs={[
