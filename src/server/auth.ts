@@ -42,22 +42,6 @@ type DigitalArtInterestDetection = {
   sourcePath?: string;
 };
 
-const PAID_TRAFFIC_PAGE_PRODUCT_MAP: Record<
-  string,
-  { sourcePage: string; promotedProduct: string }
-> = {
-  "/ramadan-mug-v2": { sourcePage: "ramadan-mug-v2", promotedProduct: "mug" },
-  "/couple-name-mug-v1": { sourcePage: "couple-name-mug-v1", promotedProduct: "mug" },
-  "/couple-avatar-name-mug-v1": {
-    sourcePage: "couple-avatar-name-mug-v1",
-    promotedProduct: "mug",
-  },
-  "/couple-names-only-mug-v1": {
-    sourcePage: "couple-names-only-mug-v1",
-    promotedProduct: "mug",
-  },
-};
-
 const DIGITAL_ART_INTEREST_PATH_MAP: Record<string, DigitalArtInterest> = {
   "/name-art": "name_art",
   "/name-art-generator": "name_art",
@@ -135,12 +119,6 @@ function detectPaidTrafficFromRequest(req?: NextApiRequest): PaidTrafficDetectio
     parseQueryCandidate(callbackUrlFromCookie),
     parseQueryCandidate(paidLandingCookie),
   ];
-  const pathSources = [
-    parsePathCandidate(callbackUrlFromQuery),
-    parsePathCandidate(callbackUrlFromCookie),
-    parsePathCandidate(paidLandingCookie),
-  ];
-
   let source = "";
   let utmSource = "";
   let utmCampaign = "";
@@ -168,13 +146,8 @@ function detectPaidTrafficFromRequest(req?: NextApiRequest): PaidTrafficDetectio
     signals.push(`utm_campaign:${utmCampaign}`);
   }
 
-  const firstPath = pathSources.find(Boolean) ?? null;
-  const offerMeta = firstPath ? PAID_TRAFFIC_PAGE_PRODUCT_MAP[firstPath] : undefined;
-
   return {
     isPaid: signals.length > 0,
-    sourcePage: offerMeta?.sourcePage,
-    promotedProduct: offerMeta?.promotedProduct,
     signals,
   };
 }

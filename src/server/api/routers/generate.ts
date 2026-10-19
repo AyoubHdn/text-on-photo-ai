@@ -20,12 +20,7 @@ import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
-import { createHash, randomUUID } from "crypto";
-
-async function loadSharp() {
-  const module = await import("sharp");
-  return module.default;
-}
+import { createHash } from "crypto";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -36,8 +31,6 @@ const s3 = new AWS.S3({
 });
 
 const BUCKET_NAME = env.NEXT_PUBLIC_S3_BUCKET_NAME;
-const TRUSTED_S3_HOST = `${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com`;
-
 const replicate = new Replicate({
   auth: env.REPLICATE_API_TOKEN,
 });
@@ -80,18 +73,6 @@ const GENERATION_REQUEST_WAIT_TIMEOUT_MS =
   Math.max(DEFAULT_GENERATION_TIMEOUT_MS, NANO_BANANA_MAX_ATTEMPT_TIMEOUT_MS) +
   10000;
 const GENERATION_REQUEST_POLL_INTERVAL_MS = 500;
-const GUEST_GENERATION_WINDOW_MS = 10 * 60 * 1000;
-const GUEST_GENERATION_MAX_REQUESTS = 5;
-const GUEST_GENERATION_DEDUP_TTL_MS = 2 * 60 * 1000;
-const GENERATION_REQUEST_IN_FLIGHT_TTL_MS = 3 * 60 * 1000;
-const guestGenerationRateLimitMap = new Map<
-  string,
-  { count: number; resetAt: number }
->();
-const guestGenerationInFlightMap = new Map<
-  string,
-  { promise: Promise<string>; expiresAt: number }
->();
 const generationRequestInFlightMap = new Map<
   string,
   { promise: Promise<string[]>; expiresAt: number }
@@ -121,36 +102,6 @@ type GenerateImagesResult = {
   imagesBase64: string[];
   predictionId: string | null;
 };
-
-function isTrustedAssetUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "https:" && parsed.hostname === TRUSTED_S3_HOST;
-  } catch {
-    return false;
-  }
-}
-
-function getS3PublicUrl(key: string) {
-  return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${key}`;
-}
-
-async function uploadS3Buffer(params: {
-  key: string;
-  body: Buffer;
-  contentType: string;
-}) {
-  await s3
-    .putObject({
-      Bucket: BUCKET_NAME,
-      Key: params.key,
-      Body: params.body,
-      ContentType: params.contentType,
-    })
-    .promise();
-
-  return getS3PublicUrl(params.key);
-}
 
 function hashValue(value: string) {
   return createHash("sha256").update(value).digest("hex");
@@ -220,43 +171,6 @@ function getOrCreateGenerationRequestPromise(
   });
 
   return promise;
-}
-
-function getClientIp(
-  req: { headers?: Record<string, string | string[] | undefined> } | undefined,
-) {
-  const forwarded = req?.headers?.["x-forwarded-for"];
-  const candidate =
-    typeof forwarded === "string"
-      ? forwarded.split(",")[0]
-      : Array.isArray(forwarded)
-      ? forwarded[0]
-      : undefined;
-  return candidate?.trim() || "unknown";
-}
-
-function enforceGuestGenerationRateLimit(key: string) {
-  const now = Date.now();
-  const existing = guestGenerationRateLimitMap.get(key);
-  if (!existing || now >= existing.resetAt) {
-    guestGenerationRateLimitMap.set(key, {
-      count: 1,
-      resetAt: now + GUEST_GENERATION_WINDOW_MS,
-    });
-    return;
-  }
-
-  if (existing.count >= GUEST_GENERATION_MAX_REQUESTS) {
-    throw new TRPCError({
-      code: "TOO_MANY_REQUESTS",
-      message: "Rate limit exceeded. Please try again in a few minutes.",
-    });
-  }
-
-  guestGenerationRateLimitMap.set(key, {
-    count: existing.count + 1,
-    resetAt: existing.resetAt,
-  });
 }
 
 function normalizeGenerationErrorMessage(error: unknown): string {
@@ -545,47 +459,6 @@ async function executeIdempotentGenerationRequest(
   );
 }
 
-function getGuestGenerationRequestKey(params: {
-  sourcePage?: string;
-  ip: string;
-  name: string;
-  style: string;
-  recipient: string;
-}) {
-  return [
-    (params.sourcePage ?? "ramadan-mug-v2").trim().toLowerCase(),
-    params.ip.trim().toLowerCase(),
-    params.name.trim().toLowerCase(),
-    params.style.trim().toLowerCase(),
-    params.recipient.trim().toLowerCase(),
-  ].join(":");
-}
-
-function getOrCreateGuestGenerationPromise(
-  key: string,
-  factory: () => Promise<string>,
-): Promise<string> {
-  const now = Date.now();
-  const existing = guestGenerationInFlightMap.get(key);
-  if (existing && existing.expiresAt > now) {
-    return existing.promise;
-  }
-
-  const promise = factory().finally(() => {
-    const current = guestGenerationInFlightMap.get(key);
-    if (current?.promise === promise) {
-      guestGenerationInFlightMap.delete(key);
-    }
-  });
-
-  guestGenerationInFlightMap.set(key, {
-    promise,
-    expiresAt: now + GUEST_GENERATION_DEDUP_TTL_MS,
-  });
-
-  return promise;
-}
-
 function isPngOutputModel(model: string) {
   return (
     model === "ideogram-ai/ideogram-v2-turbo" ||
@@ -625,44 +498,6 @@ function clampCustomSizeToMaxWidth(
     width: maxWidth,
     height: Math.max(1, Math.round(size.height * scale)),
   };
-}
-
-async function prepareFlux2ProReferenceImage(params: {
-  sourceUrl: string;
-  generationRequestId: string;
-  slot: "her" | "his";
-}) {
-  const response = await fetch(params.sourceUrl);
-  if (!response.ok) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: `Failed to fetch reference image from ${params.sourceUrl}`,
-    });
-  }
-
-  const sourceBuffer = await response.buffer();
-  const sharp = await loadSharp();
-  const processedBuffer = await sharp(sourceBuffer)
-    .rotate()
-    .resize({
-      width: 1280,
-      height: 1280,
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .jpeg({
-      quality: 86,
-      mozjpeg: true,
-    })
-    .toBuffer();
-
-  const key = `reference-images/couple-mug/flux-2-pro/${params.generationRequestId}_${params.slot}_${randomUUID()}.jpg`;
-
-  return uploadS3Buffer({
-    key,
-    body: processedBuffer,
-    contentType: "image/jpeg",
-  });
 }
 
 function pickClosestAspectRatioForKlein(size: GenerationCustomSize) {
@@ -1039,43 +874,6 @@ const generateImages = async (
     predictionId,
   };
 };
-
-async function storeGeneratedAsset(params: {
-  prisma: PrismaClient;
-  prompt: string;
-  userId: string | null;
-  metadata: Record<string, unknown>;
-  buffer: Buffer;
-  contentType: string;
-}) {
-  const normalizedBuffer =
-    params.contentType === "image/png"
-      ? await (await loadSharp())(params.buffer)
-          .png({ quality: 100 })
-          .withMetadata({ density: 300 })
-          .toBuffer()
-      : params.buffer;
-
-  const icon = await params.prisma.icon.create({
-    data: {
-      prompt: params.prompt,
-      userId: params.userId ?? undefined,
-      isPublic: false,
-      metadata: params.metadata as Prisma.InputJsonValue,
-    },
-  });
-
-  await s3
-    .putObject({
-      Bucket: BUCKET_NAME,
-      Body: normalizedBuffer,
-      Key: icon.id,
-      ContentType: params.contentType,
-    })
-    .promise();
-
-  return getS3PublicUrl(icon.id);
-}
 
 export const generateRouter = createTRPCRouter({
   /* Legacy experimental procedures removed from runtime. */

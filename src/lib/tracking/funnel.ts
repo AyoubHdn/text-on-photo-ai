@@ -80,8 +80,7 @@ function inferNiche(funnel: string): string | null {
 
 function inferTrafficType(options: FunnelContextOptions): TrafficType {
   const orderSource = normalize(options.orderFunnelSource ?? undefined);
-  const hasPaidOrderSource =
-    orderSource.includes("paid-traffic") || orderSource.includes("ramadan-mug-ad");
+  const hasPaidOrderSource = orderSource.includes("paid-traffic");
 
   const source = normalize(getQueryValue(options.query, "source"));
   const utmSource = normalize(getQueryValue(options.query, "utm_source"));
