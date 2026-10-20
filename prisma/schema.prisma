@@ -108,6 +108,11 @@ model GenerationRequest {
     promptHash          String
     inputHash           String
     status              String   @default("started")
+    numberOfImages      Int?
+    aspectRatio         String?
+    processingStartedAt DateTime?
+    leaseExpiresAt      DateTime?
+    processingAttemptId String?
     predictionId        String?
     creditsCharged      Decimal? @db.Decimal(10, 2)
     resultImageUrls     Json?

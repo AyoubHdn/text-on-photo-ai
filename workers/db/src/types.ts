@@ -2,6 +2,110 @@ export interface Env {
   HYPERDRIVE: Hyperdrive;
 }
 
+export interface GenerationStartInput {
+  generationRequestId: string;
+  userId: string;
+  sourcePage: string | null;
+  requestType: string;
+  model: string;
+  promptHash: string;
+  inputHash: string;
+  numberOfImages: number;
+  aspectRatio: string;
+  creditsCharged: string;
+}
+
+export interface GenerationJobDto {
+  generationRequestId: string;
+  userId: string;
+  status: "started" | "processing" | "completed" | "failed";
+  model: string;
+  sourcePage: string | null;
+  numberOfImages: number;
+  aspectRatio: string;
+  creditsCharged: string | null;
+  remainingCredits: string | null;
+  imageUrls: string[];
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  processingStartedAt: string | null;
+  leaseExpiresAt: string | null;
+  outputIconIds: string[];
+}
+
+export type GenerationStartResult =
+  | { outcome: "CREATED"; job: GenerationJobDto }
+  | { outcome: "EXISTING"; job: GenerationJobDto }
+  | { ok: false; code: DbErrorCode };
+
+export interface GenerationClaimInput {
+  generationRequestId: string;
+  processingAttemptId: string;
+  leaseSeconds: number;
+}
+export type GenerationClaimResult =
+  | { outcome: "CLAIMED"; job: GenerationJobDto }
+  | { outcome: "ALREADY_CLAIMED"; job: GenerationJobDto }
+  | { outcome: "TERMINAL"; job: GenerationJobDto }
+  | { ok: false; code: DbErrorCode };
+
+export interface GenerationPredictionInput {
+  generationRequestId: string;
+  processingAttemptId: string;
+  predictionId: string;
+}
+export type GenerationPredictionResult =
+  | { outcome: "UPDATED" | "NOOP" }
+  | { ok: false; code: DbErrorCode };
+
+export interface GenerationStatusInput {
+  generationRequestId: string;
+  userId: string;
+}
+export type GenerationStatusResult =
+  | { found: true; job: GenerationJobDto }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
+export interface GenerationOutputDescriptor {
+  iconId: string;
+  s3Key: string;
+  imageUrl: string;
+  prompt: string | null;
+  metadata: unknown;
+  isPublic?: boolean;
+}
+export interface GenerationFinalizeSuccessInput {
+  generationRequestId: string;
+  processingAttemptId: string;
+  predictionId?: string | null;
+  outputs: GenerationOutputDescriptor[];
+  digitalArtInterest?: DigitalArtInterest | null;
+}
+export type GenerationFinalizeSuccessResult =
+  | { outcome: "COMPLETED" | "TERMINAL_NOOP"; job: GenerationJobDto }
+  | { ok: false; code: DbErrorCode };
+
+export interface GenerationFinalizeFailureInput {
+  generationRequestId: string;
+  processingAttemptId: string;
+  errorMessage: string;
+}
+export type GenerationFinalizeFailureResult =
+  | { outcome: "FAILED" | "TERMINAL_NOOP"; job: GenerationJobDto }
+  | { ok: false; code: DbErrorCode };
+
+export interface GenerationFailIfUnclaimedInput {
+  generationRequestId: string;
+  errorMessage: string;
+}
+export interface GenerationFailIfStaleInput {
+  generationRequestId: string;
+  errorMessage: string;
+}
+export type GenerationFailureTransitionResult = GenerationFinalizeFailureResult;
+
 export interface HealthResponse {
   ok: true;
   service: "namedesignai-db";
@@ -255,6 +359,7 @@ export type DbErrorCode =
   | "CONFLICT"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
+  | "INSUFFICIENT_CREDITS"
   | "DEPENDENCY_UNAVAILABLE"
   | "INTERNAL_DB_ERROR";
 

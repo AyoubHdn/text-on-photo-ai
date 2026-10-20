@@ -1,5 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient, Prisma } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { DbServiceError, toSafeErrorResponse } from "./errors";
 import type {
@@ -61,6 +61,20 @@ import type {
   AuthFinalizeEventResult,
   AuthEventSyncState,
   DigitalArtInterest,
+  GenerationStartInput,
+  GenerationStartResult,
+  GenerationClaimInput,
+  GenerationClaimResult,
+  GenerationPredictionInput,
+  GenerationPredictionResult,
+  GenerationStatusInput,
+  GenerationStatusResult,
+  GenerationFinalizeSuccessInput,
+  GenerationFinalizeSuccessResult,
+  GenerationFinalizeFailureInput,
+  GenerationFinalizeFailureResult,
+  GenerationFailIfUnclaimedInput,
+  GenerationFailIfStaleInput,
 } from "./types";
 
 const AUTH_INTERESTS = new Set<DigitalArtInterest>(["name_art", "arabic_name_art", "couples_art"]);
@@ -704,6 +718,149 @@ export default class DbService extends WorkerEntrypoint<Env> {
       await prisma.$disconnect();
     }
   }
+
+  async generationStartOrGetAndReserve(input: GenerationStartInput): Promise<GenerationStartResult> {
+    if (!this.validGenerationInput(input)) return { ok: false, code: "INVALID_INPUT" };
+    let charged: Prisma.Decimal;
+    try { charged = new Prisma.Decimal(input.creditsCharged); } catch { return { ok: false, code: "INVALID_INPUT" }; }
+    if (charged.lessThan(0) || !Number.isFinite(Number(charged.toString()))) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const existing = await prisma.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+      if (existing) return await this.generationExistingResult(prisma, existing, input);
+      try {
+        const result = await prisma.$transaction(async (tx) => {
+          const again = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+          if (again) return { existing: again };
+          const updated = await tx.user.updateMany({ where: { id: input.userId, credits: { gte: charged } }, data: { credits: { decrement: charged }, hasGeneratedDesign: true } });
+          if (updated.count !== 1) {
+            const user = await tx.user.findUnique({ where: { id: input.userId }, select: { id: true } });
+            throw new DbServiceError(user ? "INSUFFICIENT_CREDITS" : "NOT_FOUND");
+          }
+          const created = await tx.generationRequest.create({ data: { generationRequestId: input.generationRequestId, userId: input.userId, sourcePage: input.sourcePage, requestType: input.requestType, model: input.model, promptHash: input.promptHash, inputHash: input.inputHash, status: "started", numberOfImages: input.numberOfImages, aspectRatio: input.aspectRatio, creditsCharged: charged } });
+          return { created };
+        });
+        if ("existing" in result) return await this.generationExistingResult(prisma, result.existing, input);
+        const balance = await prisma.user.findUnique({ where: { id: input.userId }, select: { credits: true } });
+        return { outcome: "CREATED", job: this.generationJob(result.created, balance?.credits ?? null) };
+      } catch (error) {
+        if ((error as { code?: string }).code === "P2002") {
+          const raced = await prisma.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+          if (raced) return await this.generationExistingResult(prisma, raced, input);
+        }
+        if (error instanceof DbServiceError) return { ok: false, code: error.code as any };
+        throw error;
+      }
+    } catch (error) { console.error("Generation reservation failed", error, toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationClaimExecution(input: GenerationClaimInput): Promise<GenerationClaimResult> {
+    if (!input?.generationRequestId || !input.processingAttemptId || !Number.isInteger(input.leaseSeconds) || input.leaseSeconds < 30 || input.leaseSeconds > 900) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const now = new Date(); const leaseExpiresAt = new Date(now.getTime() + input.leaseSeconds * 1000);
+      const claimed = await prisma.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: "started" }, data: { status: "processing", processingAttemptId: input.processingAttemptId, processingStartedAt: now, leaseExpiresAt } });
+      const request = await prisma.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+      if (!request) return { ok: false, code: "NOT_FOUND" };
+      if (claimed.count === 1) return { outcome: "CLAIMED", job: this.generationJob(request, null) };
+      if (request.status === "processing") return { outcome: "ALREADY_CLAIMED", job: this.generationJob(request, null) };
+      return { outcome: "TERMINAL", job: this.generationJob(request, null) };
+    } catch (error) { console.error("Generation claim failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationSetPredictionId(input: GenerationPredictionInput): Promise<GenerationPredictionResult> {
+    if (!input?.generationRequestId || !input.processingAttemptId || !input.predictionId) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try { const updated = await prisma.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: "processing", processingAttemptId: input.processingAttemptId }, data: { predictionId: input.predictionId } }); return { outcome: updated.count === 1 ? "UPDATED" : "NOOP" }; }
+    catch (error) { console.error("Generation prediction update failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationGetStatus(input: GenerationStatusInput): Promise<GenerationStatusResult> {
+    if (!input?.generationRequestId || !input.userId) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try { const request = await prisma.generationRequest.findFirst({ where: { generationRequestId: input.generationRequestId, userId: input.userId } }); return request ? { found: true, job: this.generationJob(request, null) } : { found: false }; }
+    catch (error) { console.error("Generation status lookup failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationFinalizeSuccess(input: GenerationFinalizeSuccessInput): Promise<GenerationFinalizeSuccessResult> {
+    if (!input?.generationRequestId || !input.processingAttemptId || !Array.isArray(input.outputs) || input.outputs.length === 0) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} FOR UPDATE`;
+        const request = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+        if (!request) throw new DbServiceError("NOT_FOUND");
+        if (request.status === "completed" || request.status === "failed") return { outcome: "TERMINAL_NOOP" as const, request };
+        if (request.status !== "processing" || request.processingAttemptId !== input.processingAttemptId) throw new DbServiceError("CONFLICT");
+        const expected = request.numberOfImages ?? input.outputs.length; if (input.outputs.length !== expected) throw new DbServiceError("INVALID_INPUT");
+        for (const [index, output] of input.outputs.entries()) {
+          const expectedId = `${request.generationRequestId}-${index}`;
+          if (output.iconId !== expectedId || output.s3Key !== expectedId || !output.imageUrl) throw new DbServiceError("INVALID_INPUT");
+          await tx.icon.create({ data: { id: output.iconId, userId: request.userId, prompt: output.prompt, isPublic: output.isPublic ?? true, metadata: (output.metadata ?? {}) as Prisma.InputJsonValue } });
+        }
+        const interest = input.digitalArtInterest ?? SOURCE_PAGE_INTEREST[request.sourcePage ?? ""];
+        if (request.userId && interest) await tx.user.update({ where: { id: request.userId }, data: { latestDigitalArtInterest: interest } });
+        const updated = await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { status: "completed", resultImageUrls: input.outputs.map((o) => o.imageUrl), predictionId: input.predictionId ?? undefined, completedAt: new Date(), processingAttemptId: null, processingStartedAt: null, leaseExpiresAt: null } });
+        return { outcome: "COMPLETED" as const, request: updated };
+      });
+      return { outcome: result.outcome, job: this.generationJob(result.request, null) };
+    } catch (error) { if (error instanceof DbServiceError) return { ok: false, code: error.code as any }; console.error("Generation success finalization failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationFinalizeFailure(input: GenerationFinalizeFailureInput): Promise<GenerationFinalizeFailureResult> { return this.failGeneration(input.generationRequestId, input.errorMessage, "processing", input.processingAttemptId); }
+  async generationFailIfUnclaimed(input: GenerationFailIfUnclaimedInput): Promise<GenerationFinalizeFailureResult> { return this.failGeneration(input.generationRequestId, input.errorMessage, "started"); }
+
+  async generationFailIfStale(input: GenerationFailIfStaleInput): Promise<GenerationFinalizeFailureResult> {
+    if (!input?.generationRequestId) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} FOR UPDATE`;
+        const request = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+        if (!request) throw new DbServiceError("NOT_FOUND");
+        const stale = request.status === "started" ? request.createdAt.getTime() < Date.now() - 15 * 60 * 1000 : request.status === "processing" && !!request.leaseExpiresAt && request.leaseExpiresAt.getTime() < Date.now();
+        if (!stale || request.status === "completed" || request.status === "failed") return { outcome: "TERMINAL_NOOP" as const, request };
+        const transition = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: request.status, processingAttemptId: request.processingAttemptId }, data: { status: "failed", errorMessage: input.errorMessage.slice(0, 1000), failedAt: new Date(), processingAttemptId: null, processingStartedAt: null, leaseExpiresAt: null } });
+        if (transition.count !== 1) return { outcome: "TERMINAL_NOOP" as const, request };
+        const updated = await tx.generationRequest.findUniqueOrThrow({ where: { generationRequestId: input.generationRequestId } });
+        if (request.userId && request.creditsCharged) await tx.user.update({ where: { id: request.userId }, data: { credits: { increment: request.creditsCharged } } });
+        return { outcome: "FAILED" as const, request: updated };
+      });
+      return { outcome: result.outcome, job: this.generationJob(result.request, null) };
+    } catch (error) { if (error instanceof DbServiceError) return { ok: false, code: error.code as any }; console.error("Stale generation reconciliation failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+
+  private async failGeneration(generationRequestId: string, errorMessage: string, status: "started" | "processing", attemptId?: string): Promise<GenerationFinalizeFailureResult> {
+    if (!generationRequestId || !errorMessage || (status === "processing" && !attemptId)) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "GenerationRequest" WHERE "generationRequestId" = ${generationRequestId} FOR UPDATE`;
+        const request = await tx.generationRequest.findUnique({ where: { generationRequestId } });
+        if (!request) throw new DbServiceError("NOT_FOUND");
+        if (request.status === "completed" || request.status === "failed") return { outcome: "TERMINAL_NOOP" as const, request };
+        if (request.status !== status || (status === "processing" && request.processingAttemptId !== attemptId)) throw new DbServiceError("CONFLICT");
+        const transition = await tx.generationRequest.updateMany({ where: { generationRequestId, status, ...(status === "processing" ? { processingAttemptId: attemptId } : {}) }, data: { status: "failed", errorMessage: errorMessage.slice(0, 1000), failedAt: new Date(), processingAttemptId: null, processingStartedAt: null, leaseExpiresAt: null } });
+        if (transition.count !== 1) return { outcome: "TERMINAL_NOOP" as const, request };
+        const updated = await tx.generationRequest.findUniqueOrThrow({ where: { generationRequestId } });
+        if (request.userId && request.creditsCharged) await tx.user.update({ where: { id: request.userId }, data: { credits: { increment: request.creditsCharged } } });
+        return { outcome: "FAILED" as const, request: updated };
+      });
+      return { outcome: result.outcome, job: this.generationJob(result.request, null) };
+    } catch (error) { if (error instanceof DbServiceError) return { ok: false, code: error.code as any }; console.error("Generation failure finalization failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  private validGenerationInput(input: GenerationStartInput): boolean { return !!input && /^[A-Za-z0-9_-]{1,120}$/.test(input.generationRequestId) && !!input.userId && (input.sourcePage === null || typeof input.sourcePage === "string") && !!input.requestType && !!input.model && !!input.promptHash && !!input.inputHash && Number.isInteger(input.numberOfImages) && input.numberOfImages > 0 && input.numberOfImages <= 10 && !!input.aspectRatio; }
+  private async generationExistingResult(prisma: PrismaClient, request: any, input: GenerationStartInput): Promise<GenerationStartResult> { if (request.userId !== input.userId || request.promptHash !== input.promptHash || request.inputHash !== input.inputHash) return { ok: false, code: "CONFLICT" }; const balance = await prisma.user.findUnique({ where: { id: input.userId }, select: { credits: true } }); return { outcome: "EXISTING", job: this.generationJob(request, balance?.credits ?? null) }; }
+  private generationJob(request: any, remainingCredits: Prisma.Decimal | null): any { const count = request.numberOfImages ?? 0; return { generationRequestId: request.generationRequestId, userId: request.userId, status: request.status, model: request.model, sourcePage: request.sourcePage ?? null, numberOfImages: count, aspectRatio: request.aspectRatio ?? "", creditsCharged: request.creditsCharged?.toString() ?? null, remainingCredits: remainingCredits?.toString() ?? null, imageUrls: Array.isArray(request.resultImageUrls) ? request.resultImageUrls as string[] : [], errorMessage: request.errorMessage ?? null, createdAt: request.createdAt.toISOString(), updatedAt: request.updatedAt.toISOString(), processingStartedAt: request.processingStartedAt?.toISOString() ?? null, leaseExpiresAt: request.leaseExpiresAt?.toISOString() ?? null, outputIconIds: Array.from({ length: count }, (_, index) => `${request.generationRequestId}-${index}`) }; }
 
   private createPrisma() {
     const adapter = new PrismaPg({

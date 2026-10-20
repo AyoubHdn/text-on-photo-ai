@@ -1488,7 +1488,7 @@ export const generateRouter = createTRPCRouter({
   generateIcon: publicProcedure
     .input(
       z.object({
-        generationRequestId: z.string().trim().min(1).max(120),
+        generationRequestId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,120}$/),
         prompt: z.string(),
         numberOfImages: z.number().min(1).max(10),
         aspectRatio: z.enum(ASPECT_RATIO_VALUES).default("1:1"),
@@ -1588,91 +1588,6 @@ export const generateRouter = createTRPCRouter({
         inputHash,
       };
 
-      if (isEligibleGuestGeneration) {
-        if (input.model !== "google/nano-banana-pro" || input.numberOfImages !== 1) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "This offer supports one Nano Banana generation per request.",
-          });
-        }
-        const imageUrls = await executeIdempotentGenerationRequest(
-          {
-            prisma: ctx.prisma,
-            ...logContext,
-          },
-          async ({ updatePredictionId }) => {
-            try {
-              const generated = await generateImages(
-                input.prompt,
-                1,
-                input.aspectRatio,
-                input.model,
-                undefined,
-                {
-                  logContext,
-                  onPredictionCreated: updatePredictionId,
-                },
-              );
-
-              const createdIcons = await Promise.all(
-                generated.imagesBase64.map(async (image: string) => {
-                  const icon = await ctx.prisma.icon.create({
-                    data: {
-                      prompt: input.prompt,
-                      userId: null,
-                      metadata: {
-                        aspectRatio: input.aspectRatio ?? null,
-                        model: input.model,
-                        category: input.metadata?.category ?? null,
-                        subcategory: input.metadata?.subcategory ?? null,
-                        communityAlt: input.metadata?.communityAlt ?? null,
-                        communityTitle: input.metadata?.communityTitle ?? null,
-                        sourcePage: input.sourcePage ?? null,
-                        paidTrafficUser: true,
-                      },
-                    },
-                  });
-
-                  await s3
-                    .putObject({
-                      Bucket: BUCKET_NAME,
-                      Body: Buffer.from(image, "base64"),
-                      Key: icon.id,
-                      ContentEncoding: "base64",
-                      ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp",
-                    })
-                    .promise();
-
-                  return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${icon.id}`;
-                }),
-              );
-
-              return {
-                imageUrls: createdIcons,
-                predictionId: generated.predictionId,
-              };
-            } catch (guestGenerationError) {
-              if (guestGenerationError instanceof TRPCError) {
-                throw guestGenerationError;
-              }
-              if (guestGenerationError instanceof Error) {
-                throw new TRPCError({
-                  code: "INTERNAL_SERVER_ERROR",
-                  message: normalizeGenerationErrorMessage(guestGenerationError),
-                });
-              }
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Generation failed. Please try again.",
-              });
-            }
-          },
-        );
-
-        return imageUrls.map((imageUrl) => ({
-          imageUrl,
-        }));
-      }
       const authedUserId = userId as string;
 
       // Calculate total credits needed (Decimal-safe)

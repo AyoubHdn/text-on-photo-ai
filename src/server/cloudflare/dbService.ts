@@ -4,6 +4,7 @@ type DbErrorCode =
   | "CONFLICT"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
+  | "INSUFFICIENT_CREDITS"
   | "DEPENDENCY_UNAVAILABLE"
   | "INTERNAL_DB_ERROR";
 
@@ -76,6 +77,11 @@ export type AuthEventSyncState = {
   firstDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null;
   latestDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null;
 };
+export type GenerationJobResult = { generationRequestId: string; userId: string; status: "started" | "processing" | "completed" | "failed"; model: string; sourcePage: string | null; numberOfImages: number; aspectRatio: string; creditsCharged: string | null; remainingCredits: string | null; imageUrls: string[]; errorMessage: string | null; createdAt: string; updatedAt: string; processingStartedAt: string | null; leaseExpiresAt: string | null; outputIconIds: string[] };
+export type GenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: GenerationJobResult } | { ok: false; code: DbErrorCode };
+export type GenerationClaimResult = { outcome: "CLAIMED" | "ALREADY_CLAIMED" | "TERMINAL"; job: GenerationJobResult } | { ok: false; code: DbErrorCode };
+export type GenerationStatusResult = { found: true; job: GenerationJobResult } | { found: false } | { ok: false; code: DbErrorCode };
+export type GenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: GenerationJobResult } | { ok: false; code: DbErrorCode };
 type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | { found: false } | AuthWriteResult;
 
   type DbServiceBinding = {
@@ -102,6 +108,14 @@ type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | 
   authUseVerificationToken(input: { identifier: string; token: string }): Promise<AuthVerificationWriteResult>;
   authFinalizeSignIn(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }): Promise<AuthFinalizeEventResult>;
   authFinalizeNewUser(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }): Promise<AuthFinalizeEventResult>;
+  generationStartOrGetAndReserve(input: Record<string, unknown>): Promise<GenerationStartResult>;
+  generationClaimExecution(input: { generationRequestId: string; processingAttemptId: string; leaseSeconds: number }): Promise<GenerationClaimResult>;
+  generationSetPredictionId(input: { generationRequestId: string; processingAttemptId: string; predictionId: string }): Promise<{ outcome: "UPDATED" | "NOOP" } | { ok: false; code: DbErrorCode }>;
+  generationGetStatus(input: { generationRequestId: string; userId: string }): Promise<GenerationStatusResult>;
+  generationFinalizeSuccess(input: Record<string, unknown>): Promise<GenerationTransitionResult>;
+  generationFinalizeFailure(input: { generationRequestId: string; processingAttemptId: string; errorMessage: string }): Promise<GenerationTransitionResult>;
+  generationFailIfUnclaimed(input: { generationRequestId: string; errorMessage: string }): Promise<GenerationTransitionResult>;
+  generationFailIfStale(input: { generationRequestId: string; errorMessage: string }): Promise<GenerationTransitionResult>;
 };
 
 type IconDto = { id: string; prompt: string | null; userId: string | null; createdAt: string; isPublic: boolean; metadata: unknown; transparentImageUrl: string | null; backgroundRemovedAt: string | null };
