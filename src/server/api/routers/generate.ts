@@ -4,7 +4,8 @@ import { TRPCError } from "@trpc/server";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import fetch from "node-fetch";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { generationGetStatusFromService } from "~/server/cloudflare/dbService";
 import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
@@ -1779,5 +1780,12 @@ export const generateRouter = createTRPCRouter({
       return imageUrls.map((imageUrl) => ({
         imageUrl,
       }));
+    }),
+  getGenerationStatus: protectedProcedure
+    .input(z.object({ generationRequestId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,120}$/) }))
+    .query(async ({ ctx, input }) => {
+      const result = await generationGetStatusFromService({ generationRequestId: input.generationRequestId, userId: ctx.session.user.id });
+      if ("ok" in result) throw new TRPCError({ code: result.code === "NOT_FOUND" ? "NOT_FOUND" : "INTERNAL_SERVER_ERROR", message: "Unable to load generation status" });
+      return result.found ? result.job : null;
     }),
 });
