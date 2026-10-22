@@ -182,3 +182,57 @@ jobs:
             exit 1
           fi
           du -sh .open-next 2>/dev/null || true
+
+      - name: Scan OpenNext bundle for secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sensitive_files=$(find .open-next -type f \( \
+            -name '.env' -o -name '.env.*' -o \
+            -name '.dev.vars' -o -name '.dev.vars.*' -o \
+            -path '*/.aws/credentials' -o -path '*/.aws/config' -o \
+            -iname 'credentials' -o -iname 'credentials.*' -o \
+            -iname 'aws-credentials*' -o -iname 'aws_credentials*' -o \
+            -iname '*cloudflare*token*' -o -iname '*cloudflare*credential*' -o \
+            -iname 'wrangler*.json' -o -iname 'wrangler*.jsonc' -o \
+            -path '*/.wrangler/*' -o -name '*.xml' \
+          \) -print)
+          if [[ -n "$sensitive_files" ]]; then
+            echo 'Sensitive-looking files found in .open-next; refusing artifact upload'
+            exit 1
+          fi
+
+          is_placeholder() {
+            case "$1" in
+              ci-*|*_ci_only|price_ci_*|postgresql://ci_*|https://mautic.invalid|https://namedesignai-cloudflare-staging.workers.dev)
+                return 0
+                ;;
+              *)
+                return 1
+                ;;
+            esac
+          }
+
+          while IFS='=' read -r variable value; do
+            case "$variable" in
+              DATABASE_URL|*_SECRET|*_SECRET_KEY|*_TOKEN|*_PASSWORD|*_ACCESS_KEY|*_ACCESS_KEY_ID|AWS_*|CLOUDFLARE_*|CF_*)
+                if [[ ${#value} -ge 12 ]] && ! is_placeholder "$value"; then
+                  if grep -RIlF -- "$value" .open-next >/dev/null 2>&1; then
+                    echo "Environment secret-like value detected in .open-next for variable $variable"
+                    exit 1
+                  fi
+                fi
+                ;;
+            esac
+          done < <(env)
+
+          echo 'OpenNext secret/config scan passed without printing secret values'
+
+      - name: Upload OpenNext bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: namedesignai-open-next-bd0541e
+          path: .open-next/**
+          if-no-files-found: error
+          retention-days: 3
