@@ -51,10 +51,18 @@ jobs:
       NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID: ci-slot
 
     steps:
-      - name: Check out pinned application commit
+      - name: Check out migration branch
         uses: actions/checkout@v4
         with:
-          ref: bd0541e1e782fe182f8afc193008251262f11f4f4
+          ref: migration/cloudflare-staging
+          fetch-depth: 0
+
+      - name: Pin reviewed application commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach bd0541e1e782fe182f8afc193008251262f11f4f4
+          test "$(git rev-parse HEAD)" = "bd0541e1e782fe182f8afc193008251262f11f4f4"
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
