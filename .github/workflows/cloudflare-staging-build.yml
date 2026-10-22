@@ -51,10 +51,10 @@ jobs:
       NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID: ci-slot
 
     steps:
-      - name: Check out staging branch
+      - name: Check out pinned application commit
         uses: actions/checkout@v4
         with:
-          ref: migration/cloudflare-staging
+          ref: bd0541e1e782fe182f8afc193008251262f11f4f4
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -69,15 +69,52 @@ jobs:
         run: npm run build
 
       - name: Build OpenNext Cloudflare worker
-        run: npm run cloudflare:build
+        run: npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
+
+      - name: Verify OpenNext bundle and source safety
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -s .open-next/worker.js
+          echo "OpenNext bundle verified: .open-next/worker.js is non-empty"
+
+          grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
+          grep -Fq 'const imageUrls = await executeIdempotentGenerationRequest' src/server/api/routers/generate.ts
+          if rg -n 'invokeGenerationLambda' src/server/api src/pages; then
+            echo 'Unexpected active user-facing Lambda dispatch reference found'
+            exit 1
+          fi
+          echo 'Source safety verified: generateIcon remains synchronous and has no active user-facing Lambda dispatch'
+
+      - name: Wrangler dry-run and staging binding checks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-dry-run.log 2>&1
+
+          grep -Fq '"name": "namedesignai-cloudflare-staging"' wrangler.jsonc
+          grep -Fq '"binding": "DB_SERVICE"' wrangler.jsonc
+          grep -Fq '"service": "namedesignai-db-staging"' wrangler.jsonc
+          grep -Fq '"GENERATION_LAMBDA_REGION": "us-east-1"' wrangler.jsonc
+          grep -Fq '"GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging"' wrangler.jsonc
+          if rg -n 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842' wrangler.jsonc; then
+            echo 'Isolated DB Worker or Hyperdrive reference found in the staging root config'
+            exit 1
+          fi
+
+          echo 'Wrangler dry-run succeeded'
+          echo 'Verified staging bindings: DB_SERVICE=namedesignai-db-staging, Lambda region=us-east-1, Lambda function=namedesignai-generation-staging'
 
       - name: Report safe build sizes
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -f .open-next/worker.js ]]; then
+          if [[ -s .open-next/worker.js ]]; then
             stat -c 'worker.js bytes: %s' .open-next/worker.js
           else
-            echo 'worker.js was not generated'
+            echo 'worker.js was not generated or is empty'
+            exit 1
           fi
           du -sh .open-next 2>/dev/null || true
