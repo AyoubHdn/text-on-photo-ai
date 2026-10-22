@@ -61,8 +61,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git checkout --detach bd0541e1e782fe182f8afc193008251262f11f4f4
-          test "$(git rev-parse HEAD)" = "bd0541e1e782fe182f8afc193008251262f11f4f4"
+          git checkout --detach bd0541e1e782fe182f8afc193008251262f11f4f
+          test "$(git rev-parse HEAD)" = "bd0541e1e782fe182f8afc193008251262f11f4f"
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
