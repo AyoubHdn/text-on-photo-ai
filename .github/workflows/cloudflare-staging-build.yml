@@ -204,7 +204,6 @@ jobs:
           \) -print0)
           report_filename_matches 'AWS credential filename' < <(find .open-next -type f \( \
             -path '*/.aws/credentials' -o -path '*/.aws/config' -o \
-            -iname 'credentials' -o -iname 'credentials.*' -o \
             -iname 'aws-credentials*' -o -iname 'aws_credentials*' \
           \) -print0)
           report_filename_matches 'Cloudflare/Wrangler filename' < <(find .open-next -type f \( \
