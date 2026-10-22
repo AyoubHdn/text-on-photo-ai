@@ -188,18 +188,34 @@ jobs:
         run: |
           set -euo pipefail
 
-          sensitive_files=$(find .open-next -type f \( \
+          sensitive_match=0
+          report_filename_matches() {
+            local category="$1"
+            while IFS= read -r -d '' file; do
+              local relative_path="${file#.open-next/}"
+              echo "Sensitive-looking path: ${relative_path} [category: ${category}]"
+              sensitive_match=1
+            done
+          }
+
+          report_filename_matches 'env/dev-vars' < <(find .open-next -type f \( \
             -name '.env' -o -name '.env.*' -o \
-            -name '.dev.vars' -o -name '.dev.vars.*' -o \
+            -name '.dev.vars' -o -name '.dev.vars.*' \
+          \) -print0)
+          report_filename_matches 'AWS credential filename' < <(find .open-next -type f \( \
             -path '*/.aws/credentials' -o -path '*/.aws/config' -o \
             -iname 'credentials' -o -iname 'credentials.*' -o \
-            -iname 'aws-credentials*' -o -iname 'aws_credentials*' -o \
+            -iname 'aws-credentials*' -o -iname 'aws_credentials*' \
+          \) -print0)
+          report_filename_matches 'Cloudflare/Wrangler filename' < <(find .open-next -type f \( \
             -iname '*cloudflare*token*' -o -iname '*cloudflare*credential*' -o \
             -iname 'wrangler*.json' -o -iname 'wrangler*.jsonc' -o \
-            -path '*/.wrangler/*' -o -name '*.xml' \
-          \) -print)
-          if [[ -n "$sensitive_files" ]]; then
-            echo 'Sensitive-looking files found in .open-next; refusing artifact upload'
+            -path '*/.wrangler/*' \
+          \) -print0)
+          report_filename_matches 'XML filename' < <(find .open-next -type f -name '*.xml' -print0)
+
+          if [[ "$sensitive_match" -ne 0 ]]; then
+            echo 'Sensitive-looking paths found in .open-next; refusing artifact upload'
             exit 1
           fi
 
