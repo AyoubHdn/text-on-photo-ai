@@ -201,11 +201,13 @@ export async function userGetPaidTrafficFunnelStateFromService(input: { userId: 
   throw new DbServiceRequestError(result.code, "auth");
 }
 
+export async function generationStartOrGetAndReserveFromService(input: Record<string, unknown>) { return (await getDbService()).generationStartOrGetAndReserve(input); }
 export async function generationClaimExecutionFromService(input: { generationRequestId: string; processingAttemptId: string; leaseSeconds: number }) { return (await getDbService()).generationClaimExecution(input); }
 export async function generationSetPredictionIdFromService(input: { generationRequestId: string; processingAttemptId: string; predictionId: string }) { return (await getDbService()).generationSetPredictionId(input); }
 export async function generationGetStatusFromService(input: { generationRequestId: string; userId: string }) { return (await getDbService()).generationGetStatus(input); }
 export async function generationFinalizeSuccessFromService(input: Record<string, unknown>) { return (await getDbService()).generationFinalizeSuccess(input); }
 export async function generationFinalizeFailureFromService(input: { generationRequestId: string; processingAttemptId: string; errorMessage: string }) { return (await getDbService()).generationFinalizeFailure(input); }
+export async function generationFailIfUnclaimedFromService(input: { generationRequestId: string; errorMessage: string }) { return (await getDbService()).generationFailIfUnclaimed(input); }
 
 /* Abandoned physical-commerce DB helpers retained only in history.
 export async function pricingGetAvailabilityFromService(input: {

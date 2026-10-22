@@ -19,7 +19,7 @@ export async function executeGeneration(job: GenerationJobPayload, root: RootCli
       const key = job.outputIds[index]!;
       await storage.putObject({ key, bytes: output.bytes, contentType: output.contentType });
       const publicUrl = (storage as unknown as { publicUrl?: (value: string) => string }).publicUrl;
-      descriptors.push({ id: key, url: publicUrl ? publicUrl(key) : key, contentType: output.contentType, width: output.width, height: output.height });
+      descriptors.push({ id: key, url: publicUrl ? publicUrl.call(storage, key) : key, contentType: output.contentType, width: output.width, height: output.height });
     }
     await root.success(job, descriptors, result.predictionId);
     return { outcome: "COMPLETED", providerCalls: 1 };

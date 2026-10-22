@@ -41,6 +41,13 @@ async function bytesFromOutput(output: unknown): Promise<ProviderOutput> {
   if (output instanceof ArrayBuffer) return { bytes: new Uint8Array(output), contentType: "application/octet-stream" };
   if (output instanceof Blob) return { bytes: new Uint8Array(await output.arrayBuffer()), contentType: output.type || "application/octet-stream" };
   if (output && typeof output === "object" && "url" in output && typeof (output as { url?: unknown }).url === "string") return bytesFromUrl((output as { url: string }).url);
+  if (output && typeof output === "object" && "blob" in output && typeof (output as { blob?: unknown }).blob === "function") {
+    const blob = await (output as { blob: () => Promise<Blob> }).blob();
+    return {
+      bytes: new Uint8Array(await blob.arrayBuffer()),
+      contentType: blob.type?.split(";", 1)[0] || "application/octet-stream",
+    };
+  }
   if (output && typeof (output as { getReader?: unknown }).getReader === "function") {
     const reader = (output as ReadableStream<Uint8Array>).getReader();
     const chunks: Uint8Array[] = [];
