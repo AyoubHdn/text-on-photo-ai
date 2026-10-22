@@ -79,6 +79,57 @@ jobs:
       - name: Build OpenNext Cloudflare worker
         run: npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
 
+      - name: Inspect data-uri-to-buffer packaging
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const packageJsonPath = path.join('node_modules', 'data-uri-to-buffer', 'package.json');
+          if (!fs.existsSync(packageJsonPath)) {
+            throw new Error('data-uri-to-buffer is missing from node_modules');
+          }
+
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+          const packageModule = await import('data-uri-to-buffer');
+          if (typeof packageModule.default !== 'function') {
+            throw new Error('data-uri-to-buffer is not importable as a callable module');
+          }
+          console.log(`data-uri-to-buffer installed and importable: ${packageJson.version}`);
+
+          const emittedPaths = [];
+          const emittedReferences = [];
+          const walk = (directory) => {
+            for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+              const entryPath = path.join(directory, entry.name);
+              if (entry.isDirectory()) {
+                walk(entryPath);
+                continue;
+              }
+              if (entryPath.includes('data-uri-to-buffer')) emittedPaths.push(entryPath);
+              if (!/\.(?:js|mjs|cjs|json)$/.test(entry.name)) continue;
+              const stat = fs.statSync(entryPath);
+              if (stat.size > 20 * 1024 * 1024) continue;
+              const contents = fs.readFileSync(entryPath, 'utf8');
+              if (contents.includes('data-uri-to-buffer') || contents.includes('dataUriToBuffer')) {
+                emittedReferences.push(entryPath);
+              }
+            }
+          };
+          walk('.open-next');
+
+          console.log(`OpenNext emitted package paths: ${emittedPaths.length}`);
+          for (const emittedPath of emittedPaths.slice(0, 20)) console.log(`  ${emittedPath}`);
+          console.log(`OpenNext emitted package references: ${emittedReferences.length}`);
+          for (const emittedReference of emittedReferences.slice(0, 20)) console.log(`  ${emittedReference}`);
+          if (emittedPaths.length === 0 && emittedReferences.length === 0) {
+            console.log('No separate data-uri-to-buffer output was emitted; the successful bundle may have inlined or pruned this transitive dependency.');
+          }
+          NODE
+
       - name: Verify OpenNext bundle and source safety
         shell: bash
         run: |
@@ -89,7 +140,7 @@ jobs:
 
           grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
           grep -Fq 'const imageUrls = await executeIdempotentGenerationRequest' src/server/api/routers/generate.ts
-          if rg -n 'invokeGenerationLambda' src/server/api src/pages; then
+          if grep -RInF -- 'invokeGenerationLambda' src/server/api src/pages; then
             echo 'Unexpected active user-facing Lambda dispatch reference found'
             exit 1
           fi
@@ -100,14 +151,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-dry-run.log 2>&1
+          if ! npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-dry-run.log 2>&1; then
+            echo 'Wrangler dry-run failed:'
+            cat wrangler-dry-run.log
+            exit 1
+          fi
+          cat wrangler-dry-run.log
 
           grep -Fq '"name": "namedesignai-cloudflare-staging"' wrangler.jsonc
           grep -Fq '"binding": "DB_SERVICE"' wrangler.jsonc
           grep -Fq '"service": "namedesignai-db-staging"' wrangler.jsonc
           grep -Fq '"GENERATION_LAMBDA_REGION": "us-east-1"' wrangler.jsonc
           grep -Fq '"GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging"' wrangler.jsonc
-          if rg -n 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842' wrangler.jsonc; then
+          if grep -nE 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842' wrangler.jsonc; then
             echo 'Isolated DB Worker or Hyperdrive reference found in the staging root config'
             exit 1
           fi
