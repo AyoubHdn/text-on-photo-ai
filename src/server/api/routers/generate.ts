@@ -33,6 +33,7 @@ import {
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
 import { createHash } from "crypto";
+import { assertAsyncGenerationEnabled } from "~/server/generation/asyncGate";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -1819,6 +1820,8 @@ export const generateRouter = createTRPCRouter({
   generateIconAsync: protectedProcedure
     .input(generationInputSchema)
     .mutation(async ({ ctx, input }) => {
+      assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);
+
       const preparation = prepareGenerationRequest(
         input,
         ctx.session.user.id,
