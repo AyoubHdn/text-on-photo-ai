@@ -57,8 +57,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git checkout --detach bd0541e1e782fe182f8afc193008251262f11f4f
-          test "$(git rev-parse HEAD)" = "bd0541e1e782fe182f8afc193008251262f11f4f"
+          git checkout --detach 2d87e5a9dc3d79f365f2f44be217f7d51b9a4976
+          test "$(git rev-parse HEAD)" = "2d87e5a9dc3d79f365f2f44be217f7d51b9a4976"
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
@@ -68,6 +68,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --include=dev
+
+      - name: Run async orchestration mock tests
+        run: npm run test:generation:async
+
+      - name: Run Lambda mocked tests
+        run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
 
       - name: Build Next.js application
         run: npm run build
@@ -164,11 +170,24 @@ jobs:
 
           grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
           grep -Fq 'const imageUrls = await executeIdempotentGenerationRequest' src/server/api/routers/generate.ts
-          if grep -RInF -- 'invokeGenerationLambda' src/server/api src/pages; then
-            echo 'Unexpected active user-facing Lambda dispatch reference found'
+          grep -Fq 'generateIconAsync: protectedProcedure' src/server/api/routers/generate.ts
+          grep -Fq 'ASYNC_GENERATION_FEATURE_ENABLED = false as const' src/lib/asyncGeneration.ts
+          for page in \
+            src/pages/name-art-generator.tsx \
+            src/pages/arabic-calligraphy-generator.tsx \
+            src/pages/ar/arabic-calligraphy-generator.tsx \
+            src/pages/couples-name-art-generator.tsx; do
+            grep -Fq 'api.generate.generateIcon.useMutation' "$page"
+          done
+          if grep -RInE -- 'useAsyncGeneration|generateIconAsync' src/pages src/component; then
+            echo 'Async generation hook/procedure is active from a normal page or component'
             exit 1
           fi
-          echo 'Source safety verified: generateIcon remains synchronous and has no active user-facing Lambda dispatch'
+          if grep -RInF -- 'invokeGenerationLambda' src/pages src/component; then
+            echo 'User-facing page/component invokes Lambda directly'
+            exit 1
+          fi
+          echo 'Source safety verified: synchronous generateIcon remains active, async path is separate and disabled, and no normal page activates it'
 
       - name: Wrangler dry-run and staging binding checks
         shell: bash
@@ -271,7 +290,7 @@ jobs:
       - name: Upload OpenNext bundle
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-real-public-env-bd0541e
+          name: namedesignai-open-next-async-disabled-2d87e5a
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
