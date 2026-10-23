@@ -57,8 +57,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git checkout --detach 2d87e5a9dc3d79f365f2f44be217f7d51b9a4976
-          test "$(git rev-parse HEAD)" = "2d87e5a9dc3d79f365f2f44be217f7d51b9a4976"
+          git checkout --detach a1a8767dfb414320720d6dcf1eb280aa50a1c323
+          test "$(git rev-parse HEAD)" = "a1a8767dfb414320720d6dcf1eb280aa50a1c323"
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
@@ -71,6 +71,9 @@ jobs:
 
       - name: Run async orchestration mock tests
         run: npm run test:generation:async
+
+      - name: Run server async gate tests
+        run: node --experimental-strip-types tests/server-async-generation-gate.test.mjs
 
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
@@ -171,6 +174,10 @@ jobs:
           grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
           grep -Fq 'const imageUrls = await executeIdempotentGenerationRequest' src/server/api/routers/generate.ts
           grep -Fq 'generateIconAsync: protectedProcedure' src/server/api/routers/generate.ts
+          grep -Fq 'ASYNC_GENERATION_ENABLED' src/env.mjs
+          grep -Fq 'assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);' src/server/api/routers/generate.ts
+          grep -Fq '"ASYNC_GENERATION_ENABLED": "false"' wrangler.jsonc
+          awk '/generateIconAsync: protectedProcedure/ { in_async = 1 } /getGenerationStatus: protectedProcedure/ { in_async = 0 } in_async && /assertAsyncGenerationEnabled\(env\.ASYNC_GENERATION_ENABLED\)/ { gate = NR } in_async && /const preparation = prepareGenerationRequest/ { preparation = NR } END { exit !(gate > 0 && preparation > 0 && gate < preparation) }' src/server/api/routers/generate.ts
           grep -Fq 'ASYNC_GENERATION_FEATURE_ENABLED = false as const' src/lib/asyncGeneration.ts
           for page in \
             src/pages/name-art-generator.tsx \
@@ -187,7 +194,7 @@ jobs:
             echo 'User-facing page/component invokes Lambda directly'
             exit 1
           fi
-          echo 'Source safety verified: synchronous generateIcon remains active, async path is separate and disabled, and no normal page activates it'
+          echo 'Source safety verified: synchronous generateIcon remains active, client/server async gates are disabled, and no normal page activates async generation'
 
       - name: Wrangler dry-run and staging binding checks
         shell: bash
@@ -290,7 +297,7 @@ jobs:
       - name: Upload OpenNext bundle
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-async-disabled-2d87e5a
+          name: namedesignai-open-next-async-server-disabled-a1a8767
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
