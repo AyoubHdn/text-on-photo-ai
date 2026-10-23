@@ -15,10 +15,9 @@ jobs:
     timeout-minutes: 30
     env:
       NODE_ENV: production
-      SKIP_ENV_VALIDATION: "1"
       DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai
       NEXTAUTH_SECRET: ci-nextauth-secret
-      NEXTAUTH_URL: https://namedesignai-cloudflare-staging.workers.dev
+      NEXTAUTH_URL: https://namedesignai-cloudflare-staging.hdnstudio.workers.dev
       GOOGLE_CLIENT_ID: ci-google-client-id
       GOOGLE_CLIENT_SECRET: ci-google-client-secret
       REPLICATE_API_TOKEN: ci-replicate-token
@@ -26,7 +25,7 @@ jobs:
       ACCESS_KEY_ID: ci-access-key
       SECRET_ACCESS_KEY: ci-secret-key
       STRIPE_SECRET_KEY: sk_test_ci_only
-      HOST_NAME: https://namedesignai-cloudflare-staging.workers.dev
+      HOST_NAME: https://namedesignai-cloudflare-staging.hdnstudio.workers.dev
       STRIPE_WEB_HOOK_SECRET: whsec_ci_only
       PRICE_ID_STARTER: price_ci_starter
       PRICE_ID_PRO: price_ci_pro
@@ -43,12 +42,9 @@ jobs:
       PRINTFUL_WEBHOOK_SECRET: ci-printful-webhook-secret
       META_PIXEL_ID: ci-meta-pixel-id
       META_ACCESS_TOKEN: ci-meta-access-token
-      NEXT_PUBLIC_STRIPE_KEY: pk_test_ci_only
-      NEXT_PUBLIC_S3_REGION: us-east-1
-      NEXT_PUBLIC_S3_BUCKET_NAME: ci-namedesignai-bucket
-      NEXT_PUBLIC_META_PIXEL_ID: ci-meta-pixel-id
-      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ca-pub-ci-only
-      NEXT_PUBLIC_ADSENSE_CONTENT_SLOT_ID: ci-slot
+      NEXT_PUBLIC_STRIPE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
+      NEXT_PUBLIC_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION }}
+      NEXT_PUBLIC_S3_BUCKET_NAME: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_NAME }}
 
     steps:
       - name: Check out migration branch
@@ -78,6 +74,34 @@ jobs:
 
       - name: Build OpenNext Cloudflare worker
         run: npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
+
+      - name: Verify real public build inputs and remove CI placeholders
+        shell: bash
+        env:
+          EXPECTED_STRIPE: ${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
+          EXPECTED_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION }}
+          EXPECTED_S3_BUCKET: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+
+          for name in EXPECTED_STRIPE EXPECTED_S3_REGION EXPECTED_S3_BUCKET; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Missing required GitHub Actions secret for $name"
+              exit 1
+            fi
+          done
+
+          for placeholder in pk_test_ci_only ci-namedesignai-bucket ci-meta-pixel-id ca-pub-ci-only ci-slot; do
+            if grep -RIlF -- "$placeholder" .open-next >/dev/null 2>&1; then
+              echo "Legacy CI public placeholder found in .open-next"
+              exit 1
+            fi
+          done
+
+          grep -RIlF -- "$EXPECTED_STRIPE" .open-next >/dev/null
+          grep -RIlF -- "$EXPECTED_S3_REGION" .open-next >/dev/null
+          grep -RIlF -- "$EXPECTED_S3_BUCKET" .open-next >/dev/null
+          echo "Real public build values are present; legacy CI public placeholders are absent"
 
       - name: Inspect data-uri-to-buffer packaging
         shell: bash
@@ -247,7 +271,7 @@ jobs:
       - name: Upload OpenNext bundle
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-bd0541e
+          name: namedesignai-open-next-real-public-env-bd0541e
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
