@@ -1,3 +1,5 @@
+import type { AsyncDigitalArtInterest, AsyncIconMetadata } from "./asyncPayload";
+
 export const GENERATION_REQUEST_ID_PATTERN = /^[A-Za-z0-9_-]{1,120}$/;
 
 export type AsyncGenerationJob = {
@@ -18,9 +20,18 @@ export type GenerationReservation =
   | { outcome: "CREATED" | "EXISTING"; job: AsyncGenerationJob }
   | { ok: false; code: string };
 
-export type AsyncGenerationDispatchPayload = Record<string, unknown> & {
+export type AsyncGenerationDispatchPayload = {
+  jobVersion: 1;
   generationRequestId: string;
   processingAttemptId: string;
+  model: string;
+  prompt: string;
+  numberOfImages: number;
+  aspectRatio: string;
+  outputIds: string[];
+  callbackUrl: string;
+  iconMetadata: AsyncIconMetadata;
+  digitalArtInterest: AsyncDigitalArtInterest | null;
 };
 
 export type AsyncGenerationOrchestrationResult =
@@ -45,7 +56,7 @@ export function toPublicGenerationStatus(job: AsyncGenerationJob): PublicGenerat
 export async function reserveAndDispatchGeneration(options: {
   reserve: (input: Record<string, unknown>) => Promise<GenerationReservation>;
   reserveInput: Record<string, unknown>;
-  payloadBase: Record<string, unknown> & { generationRequestId: string };
+  payloadBase: Omit<AsyncGenerationDispatchPayload, "processingAttemptId">;
   createProcessingAttemptId: () => string;
   dispatch: (payload: AsyncGenerationDispatchPayload) => Promise<void>;
   failIfUnclaimed: (input: { generationRequestId: string; errorMessage: string }) => Promise<unknown>;

@@ -87,6 +87,22 @@ export type GenerationFinalizeSuccessResult =
   | { outcome: "COMPLETED" | "TERMINAL_NOOP"; job: GenerationJobDto }
   | { ok: false; code: DbErrorCode };
 
+export interface GenerationMauticSyncInput {
+  userId: string;
+}
+export interface GenerationMauticSyncState {
+  email: string | null;
+  name: string | null;
+  credits: string;
+  hasGeneratedDesign: boolean;
+  firstDigitalArtInterest: DigitalArtInterest | null;
+  latestDigitalArtInterest: DigitalArtInterest | null;
+}
+export type GenerationMauticSyncStateResult =
+  | { found: true; state: GenerationMauticSyncState }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
 export interface GenerationFinalizeFailureInput {
   generationRequestId: string;
   processingAttemptId: string;

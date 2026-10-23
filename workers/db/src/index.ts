@@ -71,6 +71,8 @@ import type {
   GenerationStatusResult,
   GenerationFinalizeSuccessInput,
   GenerationFinalizeSuccessResult,
+  GenerationMauticSyncInput,
+  GenerationMauticSyncStateResult,
   GenerationFinalizeFailureInput,
   GenerationFinalizeFailureResult,
   GenerationFailIfUnclaimedInput,
@@ -786,6 +788,41 @@ export default class DbService extends WorkerEntrypoint<Env> {
     finally { await prisma.$disconnect(); }
   }
 
+  async generationGetMauticSyncState(input: GenerationMauticSyncInput): Promise<GenerationMauticSyncStateResult> {
+    if (!input?.userId) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: input.userId },
+        select: {
+          email: true,
+          name: true,
+          credits: true,
+          hasGeneratedDesign: true,
+          firstDigitalArtInterest: true,
+          latestDigitalArtInterest: true,
+        },
+      });
+      if (!user) return { found: false };
+      return {
+        found: true,
+        state: {
+          email: user.email,
+          name: user.name,
+          credits: user.credits.toString(),
+          hasGeneratedDesign: user.hasGeneratedDesign,
+          firstDigitalArtInterest: normalizeAuthInterest(user.firstDigitalArtInterest),
+          latestDigitalArtInterest: normalizeAuthInterest(user.latestDigitalArtInterest),
+        },
+      };
+    } catch (error) {
+      console.error("Generation Mautic sync state lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
   async generationFinalizeSuccess(input: GenerationFinalizeSuccessInput): Promise<GenerationFinalizeSuccessResult> {
     if (!input?.generationRequestId || !input.processingAttemptId || !Array.isArray(input.outputs) || input.outputs.length === 0) return { ok: false, code: "INVALID_INPUT" };
     const prisma = this.createPrisma();
@@ -802,8 +839,18 @@ export default class DbService extends WorkerEntrypoint<Env> {
           if (output.iconId !== expectedId || output.s3Key !== expectedId || !output.imageUrl) throw new DbServiceError("INVALID_INPUT");
           await tx.icon.create({ data: { id: output.iconId, userId: request.userId, prompt: output.prompt, isPublic: output.isPublic ?? true, metadata: (output.metadata ?? {}) as Prisma.InputJsonValue } });
         }
-        const interest = input.digitalArtInterest ?? SOURCE_PAGE_INTEREST[request.sourcePage ?? ""];
-        if (request.userId && interest) await tx.user.update({ where: { id: request.userId }, data: { latestDigitalArtInterest: interest } });
+        const explicitInterest = input.digitalArtInterest ? normalizeAuthInterest(input.digitalArtInterest) : null;
+        if (input.digitalArtInterest && !explicitInterest) throw new DbServiceError("INVALID_INPUT");
+        const interest = explicitInterest ?? SOURCE_PAGE_INTEREST[request.sourcePage ?? ""];
+        if (request.userId && interest) {
+          await tx.$executeRaw`
+            UPDATE "User"
+            SET
+              "firstDigitalArtInterest" = COALESCE("firstDigitalArtInterest", ${interest}),
+              "latestDigitalArtInterest" = ${interest}
+            WHERE "id" = ${request.userId}
+          `;
+        }
         const updated = await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { status: "completed", resultImageUrls: input.outputs.map((o) => o.imageUrl), predictionId: input.predictionId ?? undefined, completedAt: new Date(), processingAttemptId: null, processingStartedAt: null, leaseExpiresAt: null } });
         return { outcome: "COMPLETED" as const, request: updated };
       });

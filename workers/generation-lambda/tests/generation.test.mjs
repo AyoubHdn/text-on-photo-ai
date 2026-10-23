@@ -1,9 +1,10 @@
+// @ts-nocheck
 import assert from "node:assert/strict";
 import { executeGeneration } from "../src/handler.ts";
 import { MockGenerationProvider } from "../src/provider.ts";
 import { InMemoryGenerationStorage } from "../src/storage.ts";
 import { signGenerationMessage, verifyGenerationSignature, NonceReplayGuard } from "../src/security.ts";
-const job = (id = "test-job", count = 1) => ({ jobVersion: 1, generationRequestId: id, processingAttemptId: "attempt-1", model: "black-forest-labs/flux-schnell", prompt: "test", numberOfImages: count, aspectRatio: "1:1", outputIds: Array.from({length: count}, (_, i) => `${id}-${i}`), callbackUrl: "https://root.invalid/api/internal/generation/callback" });
+const job = (id = "test-job", count = 1) => ({ jobVersion: 1, generationRequestId: id, processingAttemptId: "attempt-1", model: "black-forest-labs/flux-schnell", prompt: "test", numberOfImages: count, aspectRatio: "1:1", iconMetadata: { aspectRatio: "1:1", model: "flux-schnell", category: null, subcategory: null, communityAlt: null, communityTitle: null, sourcePage: "name-art-generator" }, digitalArtInterest: "name_art", outputIds: Array.from({length: count}, (_, i) => `${id}-${i}`), callbackUrl: "https://root.invalid/api/internal/generation/callback" });
 const root = (calls) => ({ claim: async () => { calls.claim++; return { outcome: "CLAIMED" }; }, setPredictionId: async () => ({ outcome: "UPDATED" }), success: async (_j, outputs) => { calls.success++; calls.outputs = outputs; }, failure: async () => { calls.failure++; } });
 const calls = { claim: 0, success: 0, failure: 0, outputs: [] }; const storage = new InMemoryGenerationStorage(); const provider = new MockGenerationProvider();
 assert.equal((await executeGeneration(job("success"), root(calls), provider, storage)).outcome, "COMPLETED"); assert.equal(provider.calls, 1); assert.deepEqual([...storage.objects.keys()], ["success-0"]); assert.equal(calls.success, 1);

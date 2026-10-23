@@ -34,6 +34,7 @@ import {
 } from "~/server/mautic/digitalArtInterest";
 import { createHash } from "crypto";
 import { assertAsyncGenerationEnabled } from "~/server/generation/asyncGate";
+import { syncAsyncGenerationMauticForUser } from "~/server/generation/asyncMautic";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -1870,6 +1871,7 @@ export const generateRouter = createTRPCRouter({
         "google/nano-banana-pro": "google/nano-banana-pro",
         "google/nano-banana-2": "google/nano-banana-2",
       }[input.model];
+      if (!providerModel) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid model selected" });
       const reserveInput = {
         generationRequestId: input.generationRequestId,
         userId: ctx.session.user.id,
@@ -1883,7 +1885,7 @@ export const generateRouter = createTRPCRouter({
         creditsCharged: preparation.totalCredits.toString(),
       };
       const payloadBase = {
-        jobVersion: 1,
+        jobVersion: 1 as const,
         generationRequestId: input.generationRequestId,
         model: providerModel,
         prompt: input.prompt,
@@ -1894,7 +1896,15 @@ export const generateRouter = createTRPCRouter({
           (_, index) => `${input.generationRequestId}-${index}`,
         ),
         callbackUrl,
-        metadata: input.metadata ?? null,
+        iconMetadata: {
+          aspectRatio: input.aspectRatio ?? null,
+          model: input.model,
+          category: input.metadata?.category ?? null,
+          subcategory: input.metadata?.subcategory ?? null,
+          communityAlt: input.metadata?.communityAlt ?? null,
+          communityTitle: input.metadata?.communityTitle ?? null,
+          sourcePage: input.sourcePage ?? null,
+        },
         digitalArtInterest:
           getDigitalArtInterestFromSourcePage(input.sourcePage) ?? null,
       };
@@ -1915,7 +1925,11 @@ export const generateRouter = createTRPCRouter({
               throw new Error(`GENERATION_LAMBDA_DISPATCH_FAILED_${response.status}`);
             }
           },
-          failIfUnclaimed: generationFailIfUnclaimedFromService,
+          failIfUnclaimed: async (failureInput) => {
+            const transition = await generationFailIfUnclaimedFromService(failureInput);
+            if ("job" in transition) await syncAsyncGenerationMauticForUser(transition.job.userId);
+            return transition;
+          },
         });
       } catch (error) {
         console.error(

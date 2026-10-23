@@ -8,6 +8,7 @@
     "cloudflare:build": "npm run blog:generate && opennextjs-cloudflare build",
     "cloudflare:preview": "wrangler dev",
     "test:generation:async": "node --experimental-strip-types --test tests/async-generation-orchestration.test.mjs",
+    "test:generation:parity": "node --experimental-strip-types --test tests/async-generation-parity.test.mjs",
     "db-worker:generate": "prisma generate",
     "db-worker:dry-run": "wrangler deploy --dry-run --config workers/db/wrangler.jsonc --outdir .dry-run",
     "db-worker:dev": "wrangler dev --config workers/db/wrangler.jsonc",

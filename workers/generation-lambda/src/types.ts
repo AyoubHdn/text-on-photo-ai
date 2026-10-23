@@ -6,6 +6,29 @@ export const SUPPORTED_MODELS = new Set([
   "google/nano-banana-pro",
   "google/nano-banana-2",
 ]);
+export const SUPPORTED_APP_MODELS = new Set([
+  "flux-schnell",
+  "flux-dev",
+  "ideogram-ai/ideogram-v2-turbo",
+  "google/nano-banana-pro",
+  "google/nano-banana-2",
+]);
+export const DIGITAL_ART_INTERESTS = new Set([
+  "name_art",
+  "arabic_name_art",
+  "couples_art",
+]);
+
+export type DigitalArtInterest = "name_art" | "arabic_name_art" | "couples_art";
+export interface GenerationIconMetadata {
+  aspectRatio: string | null;
+  model: string;
+  category: string | null;
+  subcategory: string | null;
+  communityAlt: string | null;
+  communityTitle: string | null;
+  sourcePage: string | null;
+}
 
 export interface GenerationJobPayload {
   jobVersion: 1;
@@ -17,6 +40,8 @@ export interface GenerationJobPayload {
   aspectRatio: string;
   outputIds: string[];
   callbackUrl: string;
+  iconMetadata: GenerationIconMetadata;
+  digitalArtInterest: DigitalArtInterest | null;
 }
 
 export interface ProviderOutput { bytes: Uint8Array; contentType: string; width?: number; height?: number; }
