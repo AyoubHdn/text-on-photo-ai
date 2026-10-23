@@ -5,7 +5,18 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
-import { generationGetStatusFromService } from "~/server/cloudflare/dbService";
+import {
+  generationFailIfUnclaimedFromService,
+  generationGetStatusFromService,
+  generationStartOrGetAndReserveFromService,
+} from "~/server/cloudflare/dbService";
+import { invokeGenerationLambda } from "~/server/generation/lambdaInvoke";
+import {
+  isValidGenerationRequestId,
+  reserveAndDispatchGeneration,
+  toPublicGenerationStatus,
+  type AsyncGenerationDispatchPayload,
+} from "~/server/generation/asyncOrchestration";
 import Replicate from "replicate";
 import { env } from "~/env.mjs";
 import { b64Image } from "~/data/b64Image";
@@ -40,6 +51,30 @@ const ASPECT_RATIO_VALUES = ["1:1", "4:5", "3:2", "16:9", "21:9"] as const;
 type AspectRatioValue = (typeof ASPECT_RATIO_VALUES)[number];
 type GenerationAspectRatio = AspectRatioValue | "match_input_image";
 type GenerationCustomSize = { width: number; height: number };
+const generationInputSchema = z.object({
+  generationRequestId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,120}$/),
+  prompt: z.string(),
+  numberOfImages: z.number().min(1).max(10),
+  aspectRatio: z.enum(ASPECT_RATIO_VALUES).default("1:1"),
+  model: z.enum([
+    "flux-schnell",
+    "flux-dev",
+    "ideogram-ai/ideogram-v2-turbo",
+    "google/nano-banana-pro",
+    "google/nano-banana-2",
+  ]),
+  metadata: z
+    .object({
+      category: z.string().optional(),
+      subcategory: z.string().optional(),
+      communityAlt: z.string().optional(),
+      communityTitle: z.string().optional(),
+    })
+    .optional(),
+  paidTrafficUser: z.boolean().optional(),
+  sourcePage: z.string().optional(),
+});
+type GenerationInput = z.infer<typeof generationInputSchema>;
 const FLUX_2_PRO_MAX_WIDTH = 1440;
 const FLUX_2_DEV_MAX_WIDTH = 1440;
 const FLUX_2_KLEIN_SUPPORTED_ASPECT_RATIOS = [
@@ -484,6 +519,103 @@ function isSingleOutputModel(model: string) {
     model === "google/nano-banana-pro" ||
     model === "google/nano-banana-2"
   );
+}
+
+function prepareGenerationRequest(
+  input: GenerationInput,
+  userId: string | null | undefined,
+  requestType: string,
+) {
+  const sourcePage = (input.sourcePage ?? "").trim().toLowerCase();
+  const isArabicGeneratorRequest = isArabicGeneratorSourcePage(sourcePage);
+  const arabicTier = getArabicTierByModel(input.model);
+
+  if (!userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Sign in is required for this generator.",
+    });
+  }
+
+  if (isArabicGeneratorRequest && !arabicTier) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Invalid Arabic model selected.",
+    });
+  }
+
+  if (!isArabicGeneratorRequest && input.model === "google/nano-banana-2") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "This model is only available for Arabic generation.",
+    });
+  }
+
+  const defaultModelConfig = {
+    "flux-schnell": { credits: 1 },
+    "flux-dev": { credits: 3 },
+    "ideogram-ai/ideogram-v2-turbo": { credits: 5 },
+    "google/nano-banana-pro": { credits: 6 },
+    "google/nano-banana-2": { credits: 3 },
+  } as const;
+
+  const modelConfig =
+    isArabicGeneratorRequest && arabicTier
+      ? { credits: arabicTier.credits }
+      : defaultModelConfig[input.model];
+
+  if (!modelConfig) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Invalid model selected",
+    });
+  }
+
+  const effectiveNumberOfImages = isSingleOutputModel(input.model)
+    ? 1
+    : input.numberOfImages;
+  const promptHash = hashValue(input.prompt);
+  const inputHash = hashValue(
+    JSON.stringify({
+      aspectRatio: input.aspectRatio,
+      metadata: {
+        category: input.metadata?.category ?? null,
+        subcategory: input.metadata?.subcategory ?? null,
+        communityAlt: input.metadata?.communityAlt ?? null,
+        communityTitle: input.metadata?.communityTitle ?? null,
+      },
+      model: input.model,
+      numberOfImages: effectiveNumberOfImages,
+      paidTrafficUser: Boolean(input.paidTrafficUser),
+      prompt: input.prompt,
+      sourcePage: input.sourcePage ?? null,
+      userId: userId ?? null,
+    }),
+  );
+
+  const logContext: GenerationLogContext = {
+    generationRequestId: input.generationRequestId,
+    userId,
+    sourcePage: input.sourcePage ?? null,
+    requestType,
+    model: input.model,
+    promptHash,
+    inputHash,
+  };
+
+  const totalCredits = new Prisma.Decimal(modelConfig.credits).times(
+    new Prisma.Decimal(effectiveNumberOfImages),
+  );
+
+  return {
+    sourcePage,
+    modelConfig,
+    effectiveNumberOfImages,
+    promptHash,
+    inputHash,
+    logContext,
+    totalCredits,
+  };
 }
 
 function clampCustomSizeToMaxWidth(
@@ -1487,114 +1619,17 @@ export const generateRouter = createTRPCRouter({
     }),
   */
   generateIcon: publicProcedure
-    .input(
-      z.object({
-        generationRequestId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,120}$/),
-        prompt: z.string(),
-        numberOfImages: z.number().min(1).max(10),
-        aspectRatio: z.enum(ASPECT_RATIO_VALUES).default("1:1"),
-        model: z.enum([
-          "flux-schnell",
-          "flux-dev",
-          "ideogram-ai/ideogram-v2-turbo",
-          "google/nano-banana-pro",
-          "google/nano-banana-2",
-        ]),
-        metadata: z
-          .object({
-            category: z.string().optional(),
-            subcategory: z.string().optional(),
-            communityAlt: z.string().optional(),
-            communityTitle: z.string().optional(),
-          })
-          .optional(),
-        paidTrafficUser: z.boolean().optional(),
-        sourcePage: z.string().optional(),
-      })
-    )
+    .input(generationInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session?.user?.id;
-      const sourcePage = (input.sourcePage ?? "").trim().toLowerCase();
-      const isArabicGeneratorRequest = isArabicGeneratorSourcePage(sourcePage);
-      const arabicTier = getArabicTierByModel(input.model);
-      if (!userId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Sign in is required for this generator.",
-        });
-      }
-
-      if (isArabicGeneratorRequest && !arabicTier) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid Arabic model selected.",
-        });
-      }
-
-      if (!isArabicGeneratorRequest && input.model === "google/nano-banana-2") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "This model is only available for Arabic generation.",
-        });
-      }
-
-      const defaultModelConfig = {
-        "flux-schnell": { credits: 1 },
-        "flux-dev": { credits: 3 },
-        "ideogram-ai/ideogram-v2-turbo": { credits: 5 },
-        "google/nano-banana-pro": { credits: 6 },
-        "google/nano-banana-2": { credits: 3 },
-      } as const;
-
-      const modelConfig =
-        isArabicGeneratorRequest && arabicTier
-          ? { credits: arabicTier.credits }
-          : defaultModelConfig[input.model];
-
-      if (!modelConfig) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid model selected",
-        });
-      }
-
-      const effectiveNumberOfImages = isSingleOutputModel(input.model)
-        ? 1
-        : input.numberOfImages;
-      const promptHash = hashValue(input.prompt);
-      const inputHash = hashValue(
-        JSON.stringify({
-          aspectRatio: input.aspectRatio,
-          metadata: {
-            category: input.metadata?.category ?? null,
-            subcategory: input.metadata?.subcategory ?? null,
-            communityAlt: input.metadata?.communityAlt ?? null,
-            communityTitle: input.metadata?.communityTitle ?? null,
-          },
-          model: input.model,
-          numberOfImages: effectiveNumberOfImages,
-          paidTrafficUser: Boolean(input.paidTrafficUser),
-          prompt: input.prompt,
-          sourcePage: input.sourcePage ?? null,
-          userId: userId ?? null,
-        }),
-      );
-      const logContext: GenerationLogContext = {
-        generationRequestId: input.generationRequestId,
-        userId: userId ?? null,
-        sourcePage: input.sourcePage ?? null,
-        requestType: "generateIcon",
-        model: input.model,
-        promptHash,
-        inputHash,
-      };
+      const preparation = prepareGenerationRequest(input, userId, "generateIcon");
+      const {
+        effectiveNumberOfImages,
+        logContext,
+        totalCredits,
+      } = preparation;
 
       const authedUserId = userId as string;
-
-      // Calculate total credits needed (Decimal-safe)
-      const creditsPerImage = new Prisma.Decimal(modelConfig.credits);
-      const imageCount = new Prisma.Decimal(effectiveNumberOfImages);
-      const totalCredits = creditsPerImage.times(imageCount);
       const imageUrls = await executeIdempotentGenerationRequest(
         {
           prisma: ctx.prisma,
@@ -1781,11 +1816,144 @@ export const generateRouter = createTRPCRouter({
         imageUrl,
       }));
     }),
+  generateIconAsync: protectedProcedure
+    .input(generationInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const preparation = prepareGenerationRequest(
+        input,
+        ctx.session.user.id,
+        "generateIconAsync",
+      );
+      const lambdaRegion = env.GENERATION_LAMBDA_REGION;
+      const lambdaFunctionName = env.GENERATION_LAMBDA_FUNCTION_NAME;
+      const lambdaAccessKeyId = env.GENERATION_LAMBDA_ACCESS_KEY_ID;
+      const lambdaSecretAccessKey = env.GENERATION_LAMBDA_SECRET_ACCESS_KEY;
+
+      if (
+        !lambdaRegion ||
+        !lambdaFunctionName ||
+        !lambdaAccessKeyId ||
+        !lambdaSecretAccessKey
+      ) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Async generation is not configured.",
+        });
+      }
+      const lambdaConfig = {
+        region: lambdaRegion,
+        functionName: lambdaFunctionName,
+        accessKeyId: lambdaAccessKeyId,
+        secretAccessKey: lambdaSecretAccessKey,
+      };
+
+      let callbackUrl: string;
+      try {
+        callbackUrl = new URL(
+          "/api/internal/generation/callback",
+          env.HOST_NAME,
+        ).toString();
+      } catch {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Async generation callback is not configured.",
+        });
+      }
+
+      const providerModel = {
+        "flux-schnell": "black-forest-labs/flux-schnell",
+        "flux-dev": "black-forest-labs/flux-dev",
+        "ideogram-ai/ideogram-v2-turbo": "ideogram-ai/ideogram-v2-turbo",
+        "google/nano-banana-pro": "google/nano-banana-pro",
+        "google/nano-banana-2": "google/nano-banana-2",
+      }[input.model];
+      const reserveInput = {
+        generationRequestId: input.generationRequestId,
+        userId: ctx.session.user.id,
+        sourcePage: input.sourcePage ?? null,
+        requestType: "generateIconAsync",
+        model: input.model,
+        promptHash: preparation.promptHash,
+        inputHash: preparation.inputHash,
+        numberOfImages: preparation.effectiveNumberOfImages,
+        aspectRatio: input.aspectRatio,
+        creditsCharged: preparation.totalCredits.toString(),
+      };
+      const payloadBase = {
+        jobVersion: 1,
+        generationRequestId: input.generationRequestId,
+        model: providerModel,
+        prompt: input.prompt,
+        numberOfImages: preparation.effectiveNumberOfImages,
+        aspectRatio: input.aspectRatio,
+        outputIds: Array.from(
+          { length: preparation.effectiveNumberOfImages },
+          (_, index) => `${input.generationRequestId}-${index}`,
+        ),
+        callbackUrl,
+        metadata: input.metadata ?? null,
+        digitalArtInterest:
+          getDigitalArtInterestFromSourcePage(input.sourcePage) ?? null,
+      };
+
+      let result;
+      try {
+        result = await reserveAndDispatchGeneration({
+          reserve: generationStartOrGetAndReserveFromService,
+          reserveInput,
+          payloadBase,
+          createProcessingAttemptId: () => crypto.randomUUID(),
+          dispatch: async (payload: AsyncGenerationDispatchPayload) => {
+            const response = await invokeGenerationLambda(
+              lambdaConfig,
+              payload,
+            );
+            if (!response.ok) {
+              throw new Error(`GENERATION_LAMBDA_DISPATCH_FAILED_${response.status}`);
+            }
+          },
+          failIfUnclaimed: generationFailIfUnclaimedFromService,
+        });
+      } catch (error) {
+        console.error(
+          "Async generation dispatch failed",
+          error instanceof Error ? error.message : error,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to start generation.",
+        });
+      }
+
+      if (result.kind === "error") {
+        const code =
+          result.code === "INSUFFICIENT_CREDITS"
+            ? "BAD_REQUEST"
+            : result.code === "NOT_FOUND"
+              ? "NOT_FOUND"
+              : result.code === "CONFLICT"
+                ? "CONFLICT"
+                : "INTERNAL_SERVER_ERROR";
+        throw new TRPCError({
+          code,
+          message:
+            code === "BAD_REQUEST"
+              ? "You do not have enough credits"
+              : "Unable to start generation.",
+        });
+      }
+
+      return toPublicGenerationStatus(result.job);
+    }),
   getGenerationStatus: protectedProcedure
-    .input(z.object({ generationRequestId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,120}$/) }))
+    .input(
+      z.object({
+        generationRequestId: z.string().trim().refine(isValidGenerationRequestId),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const result = await generationGetStatusFromService({ generationRequestId: input.generationRequestId, userId: ctx.session.user.id });
       if ("ok" in result) throw new TRPCError({ code: result.code === "NOT_FOUND" ? "NOT_FOUND" : "INTERNAL_SERVER_ERROR", message: "Unable to load generation status" });
-      return result.found ? result.job : null;
+      return result.found ? toPublicGenerationStatus(result.job) : null;
     }),
 });
