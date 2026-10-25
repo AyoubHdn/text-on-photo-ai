@@ -3,7 +3,7 @@ name: Cloudflare staging build
 on:
   push:
     branches:
-      - migration/cloudflare-staging
+      - fix/async-callback-contract
   workflow_dispatch:
 
 permissions:
@@ -47,18 +47,19 @@ jobs:
       NEXT_PUBLIC_S3_BUCKET_NAME: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_NAME }}
 
     steps:
-      - name: Check out migration branch
+      - name: Check out triggering commit
         uses: actions/checkout@v4
         with:
-          ref: migration/cloudflare-staging
-          fetch-depth: 0
+          ref: ${{ github.sha }}
+          fetch-depth: 1
 
-      - name: Pin reviewed application commit
+      - name: Verify immutable checkout and record tested SHA
+        id: tested-sha
         shell: bash
         run: |
           set -euo pipefail
-          git checkout --detach 7acb80c7a2d451856969dbcffdc8976b8ac8749b
-          test "$(git rev-parse HEAD)" = "7acb80c7a2d451856969dbcffdc8976b8ac8749b"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
@@ -69,16 +70,26 @@ jobs:
       - name: Install dependencies
         run: npm ci --include=dev
 
+      - name: Generate Prisma client
+        run: npm run db-worker:generate
+
+      - name: Run recovery tests
+        run: node --experimental-strip-types --test tests/generation-recovery.test.mjs
+
       - name: Run async orchestration mock tests
         run: npm run test:generation:async
 
       - name: Run async parity mock tests
         run: npm run test:generation:parity
+
       - name: Run server async gate tests
         run: node --experimental-strip-types tests/server-async-generation-gate.test.mjs
 
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit --pretty false
 
       - name: Build Next.js application
         run: npm run build
@@ -97,21 +108,21 @@ jobs:
 
           for name in EXPECTED_STRIPE EXPECTED_S3_REGION EXPECTED_S3_BUCKET; do
             if [[ -z "${!name:-}" ]]; then
-              echo "Missing required GitHub Actions secret for $name"
+              echo "Missing required GitHub Actions secret for ${name}"
               exit 1
             fi
           done
 
           for placeholder in pk_test_ci_only ci-namedesignai-bucket ci-meta-pixel-id ca-pub-ci-only ci-slot; do
-            if grep -RIlF -- "$placeholder" .open-next >/dev/null 2>&1; then
+            if grep -RIlF -- "${placeholder}" .open-next >/dev/null 2>&1; then
               echo "Legacy CI public placeholder found in .open-next"
               exit 1
             fi
           done
 
-          grep -RIlF -- "$EXPECTED_STRIPE" .open-next >/dev/null
-          grep -RIlF -- "$EXPECTED_S3_REGION" .open-next >/dev/null
-          grep -RIlF -- "$EXPECTED_S3_BUCKET" .open-next >/dev/null
+          grep -RIlF -- "${EXPECTED_STRIPE}" .open-next >/dev/null
+          grep -RIlF -- "${EXPECTED_S3_REGION}" .open-next >/dev/null
+          grep -RIlF -- "${EXPECTED_S3_BUCKET}" .open-next >/dev/null
           echo "Real public build values are present; legacy CI public placeholders are absent"
 
       - name: Inspect data-uri-to-buffer packaging
@@ -171,7 +182,9 @@ jobs:
           set -euo pipefail
 
           test -s .open-next/worker.js
-          echo "OpenNext bundle verified: .open-next/worker.js is non-empty"
+          test -d .open-next/assets
+          test -d .open-next/server-functions
+          echo "OpenNext bundle verified"
 
           grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
           grep -Fq 'const imageUrls = await executeIdempotentGenerationRequest' src/server/api/routers/generate.ts
@@ -179,37 +192,47 @@ jobs:
           grep -Fq 'ASYNC_GENERATION_ENABLED' src/env.mjs
           grep -Fq 'assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);' src/server/api/routers/generate.ts
           grep -Fq '"ASYNC_GENERATION_ENABLED": "false"' wrangler.jsonc
-          awk '/generateIconAsync: protectedProcedure/ { in_async = 1 } /getGenerationStatus: protectedProcedure/ { in_async = 0 } in_async && /assertAsyncGenerationEnabled\(env\.ASYNC_GENERATION_ENABLED\)/ { gate = NR } in_async && /const preparation = prepareGenerationRequest/ { preparation = NR } END { exit !(gate > 0 && preparation > 0 && gate < preparation) }' src/server/api/routers/generate.ts
+          grep -Fq '"GENERATION_EXECUTION_SCOPE": "cloudflare-staging"' wrangler.jsonc
           grep -Fq 'ASYNC_GENERATION_FEATURE_ENABLED = false as const' src/lib/asyncGeneration.ts
           grep -Fq 'iconMetadata:' src/server/api/routers/generate.ts
           grep -Fq 'prompt: callback.prompt' 'src/pages/api/internal/generation/[operation].ts'
           grep -Fq 'digitalArtInterest: job.digitalArtInterest' workers/generation-lambda/src/callback.ts
-          grep -Fq 'COALESCE("firstDigitalArtInterest"' workers/db/src/index.ts
+          grep -Fq 'COALESCE(\"firstDigitalArtInterest\"' workers/db/src/index.ts
           grep -Fq 'syncAsyncGenerationMauticForUser' src/server/generation/asyncMautic.ts
+
+          awk '/generateIconAsync: protectedProcedure/ { in_async = 1 } /getGenerationStatus: protectedProcedure/ { in_async = 0 } in_async && /assertAsyncGenerationEnabled\(env\.ASYNC_GENERATION_ENABLED\)/ { gate = NR } in_async && /const preparation = prepareGenerationRequest/ { preparation = NR } END { exit !(gate > 0 && preparation > 0 && gate < preparation) }' src/server/api/routers/generate.ts
+
           for page in \
             src/pages/name-art-generator.tsx \
             src/pages/arabic-calligraphy-generator.tsx \
             src/pages/ar/arabic-calligraphy-generator.tsx \
             src/pages/couples-name-art-generator.tsx; do
-            grep -Fq 'api.generate.generateIcon.useMutation' "$page"
+            grep -Fq 'api.generate.generateIcon.useMutation' "${page}"
           done
+
           if grep -RInE -- 'useAsyncGeneration|generateIconAsync' src/pages src/component; then
             echo 'Async generation hook/procedure is active from a normal page or component'
             exit 1
           fi
+
           if grep -RInF -- 'invokeGenerationLambda' src/pages src/component; then
             echo 'User-facing page/component invokes Lambda directly'
             exit 1
           fi
-          echo 'Source safety verified: synchronous generateIcon remains active, client/server async gates are disabled, and no normal page activates async generation'
 
-      - name: Wrangler dry-run and staging binding checks
+          grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_SCOPE": "cloudflare-staging"' workers/db/wrangler.jsonc
+          grep -Fq 'GENERATION_RECOVERY_ENABLED' workers/db/src/index.ts
+          grep -Fq 'recoveryAttemptCount' workers/db/src/index.ts
+          echo 'Source safety verified: async and recovery remain disabled'
+
+      - name: Root Wrangler dry-run and staging binding checks
         shell: bash
         run: |
           set -euo pipefail
 
           if ! npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-dry-run.log 2>&1; then
-            echo 'Wrangler dry-run failed:'
+            echo 'Root Wrangler dry-run failed:'
             cat wrangler-dry-run.log
             exit 1
           fi
@@ -220,24 +243,43 @@ jobs:
           grep -Fq '"service": "namedesignai-db-staging"' wrangler.jsonc
           grep -Fq '"GENERATION_LAMBDA_REGION": "us-east-1"' wrangler.jsonc
           grep -Fq '"GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging"' wrangler.jsonc
+
           if grep -nE 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842' wrangler.jsonc; then
             echo 'Isolated DB Worker or Hyperdrive reference found in the staging root config'
             exit 1
           fi
 
-          echo 'Wrangler dry-run succeeded'
-          echo 'Verified staging bindings: DB_SERVICE=namedesignai-db-staging, Lambda region=us-east-1, Lambda function=namedesignai-generation-staging'
+          echo 'Root Wrangler dry-run succeeded'
+
+      - name: DB Worker Wrangler dry-run and binding checks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! npx wrangler deploy --config workers/db/wrangler.jsonc --dry-run --outdir .dry-run-db > db-worker-dry-run.log 2>&1; then
+            echo 'DB Worker Wrangler dry-run failed:'
+            cat db-worker-dry-run.log
+            exit 1
+          fi
+          cat db-worker-dry-run.log
+
+          grep -Fq '"name": "namedesignai-db-staging"' workers/db/wrangler.jsonc
+          grep -Fq '"id": "734191bc000c45088e62b987e790b206"' workers/db/wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_SCOPE": "cloudflare-staging"' workers/db/wrangler.jsonc
+
+          if grep -nE 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842|namedesignai-db-auth-test' workers/db/wrangler.jsonc; then
+            echo 'Isolated DB Worker or Hyperdrive reference found in the DB Worker config'
+            exit 1
+          fi
+
+          echo 'DB Worker dry-run succeeded; recovery remains disabled'
 
       - name: Report safe build sizes
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -s .open-next/worker.js ]]; then
-            stat -c 'worker.js bytes: %s' .open-next/worker.js
-          else
-            echo 'worker.js was not generated or is empty'
-            exit 1
-          fi
+          stat -c 'worker.js bytes: %s' .open-next/worker.js
           du -sh .open-next 2>/dev/null || true
 
       - name: Scan OpenNext bundle for secrets
@@ -270,7 +312,7 @@ jobs:
           \) -print0)
           report_filename_matches 'XML filename' < <(find .open-next -type f -name '*.xml' -print0)
 
-          if [[ "$sensitive_match" -ne 0 ]]; then
+          if [[ "${sensitive_match}" -ne 0 ]]; then
             echo 'Sensitive-looking paths found in .open-next; refusing artifact upload'
             exit 1
           fi
@@ -304,7 +346,7 @@ jobs:
       - name: Upload OpenNext bundle
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-async-parity-disabled-7acb80c
+          name: namedesignai-open-next-async-recovery-disabled-${{ steps.tested-sha.outputs.sha }}
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
