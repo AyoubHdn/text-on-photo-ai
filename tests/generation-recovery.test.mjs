@@ -119,14 +119,18 @@ test("candidate query is explicitly scoped and uses both stale branches", () => 
   assert.equal(staleBranches.length, 2);
   assert.equal(staleBranches[0]?.status, "started");
   assert.equal(staleBranches[1]?.status, "processing");
-  assert.equal(
-    staleBranches[0]?.createdAt?.lt?.toISOString(),
-    new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
-  );
-  assert.equal(
-    staleBranches[1]?.leaseExpiresAt?.lt?.toISOString(),
-    new Date(now.getTime() - 120 * 1000).toISOString(),
-  );
+  assert.deepEqual(staleBranches[0], {
+    status: "started",
+    createdAt: {
+      lt: new Date(now.getTime() - 15 * 60 * 1000),
+    },
+  });
+  assert.deepEqual(staleBranches[1], {
+    status: "processing",
+    leaseExpiresAt: {
+      lt: new Date(now.getTime() - 120 * 1000),
+    },
+  });
   assert.equal(retryBranches[0]?.recoveryNextAttemptAt, null);
 });
 
@@ -161,8 +165,10 @@ test("reconciliation is bounded, continues after an individual failure, and coun
       assert.equal(limit, 2);
       return [candidate({ generationRequestId: "one" }), candidate({ generationRequestId: "two" }), candidate({ generationRequestId: "three" })];
     },
-    /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
-    /** @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>} */
+    /**
+     * @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item
+     * @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>}
+     */
     reconcileOne: async (item) => {
       seen.push(item.generationRequestId);
       if (item.generationRequestId === "one") throw new Error("simulated candidate failure");
@@ -322,8 +328,10 @@ test("persistent retry state lets later five-minute runs pass a permanently fail
     assert.ok(entry);
     entry.nextAttemptAt = runNow + 60_000;
   };
-  /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
-  /** @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>} */
+  /**
+   * @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item
+   * @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>}
+   */
   const reconcileOne = async (item) => {
     processed.push(item.generationRequestId);
     if (item.generationRequestId === "one") throw new Error("persistent simulated failure");

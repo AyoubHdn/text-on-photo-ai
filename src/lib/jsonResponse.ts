@@ -6,12 +6,14 @@ export function getJsonString(
   value: Record<string, unknown>,
   key: string,
 ): string | undefined {
-  return typeof value[key] === "string" ? value[key] : undefined;
+  const field = value[key];
+  return typeof field === "string" ? field : undefined;
 }
 
 export function getJsonNumber(
   value: Record<string, unknown>,
   key: string,
 ): number | undefined {
-  return typeof value[key] === "number" ? value[key] : undefined;
+  const field = value[key];
+  return typeof field === "number" ? field : undefined;
 }
