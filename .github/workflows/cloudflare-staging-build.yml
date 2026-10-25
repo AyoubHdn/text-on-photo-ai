@@ -215,6 +215,7 @@ jobs:
         run: |
           set -euo pipefail
 
+          trap 'echo Source safety check failed at script line ${LINENO}: ${BASH_COMMAND} >&2' ERR
           test -s .open-next/worker.js
           test -d .open-next/assets
           test -d .open-next/server-functions
@@ -231,7 +232,7 @@ jobs:
           grep -Fq 'iconMetadata:' src/server/api/routers/generate.ts
           grep -Fq 'prompt: callback.prompt' 'src/pages/api/internal/generation/[operation].ts'
           grep -Fq 'digitalArtInterest: job.digitalArtInterest' workers/generation-lambda/src/callback.ts
-          grep -Fq 'COALESCE(\"firstDigitalArtInterest\"' workers/db/src/index.ts
+          grep -Fq 'COALESCE("firstDigitalArtInterest"' workers/db/src/index.ts
           grep -Fq 'syncAsyncGenerationMauticForUser' src/server/generation/asyncMautic.ts
 
           awk '/generateIconAsync: protectedProcedure/ { in_async = 1 } /getGenerationStatus: protectedProcedure/ { in_async = 0 } in_async && /assertAsyncGenerationEnabled\(env\.ASYNC_GENERATION_ENABLED\)/ { gate = NR } in_async && /const preparation = prepareGenerationRequest/ { preparation = NR } END { exit !(gate > 0 && preparation > 0 && gate < preparation) }' src/server/api/routers/generate.ts
@@ -256,7 +257,8 @@ jobs:
 
           grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
           grep -Fq '"GENERATION_RECOVERY_SCOPE": "cloudflare-staging"' workers/db/wrangler.jsonc
-          grep -Fq 'GENERATION_RECOVERY_ENABLED' workers/db/src/index.ts
+          grep -Fq 'scheduleGenerationRecovery(' workers/db/src/index.ts
+          grep -Fq 'if (env.GENERATION_RECOVERY_ENABLED !== "true" || !scope) return;' workers/db/src/recovery.ts
           grep -Fq 'recoveryAttemptCount' workers/db/src/index.ts
           echo 'Source safety verified: async and recovery remain disabled'
 
