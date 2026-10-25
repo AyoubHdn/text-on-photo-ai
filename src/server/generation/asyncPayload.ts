@@ -64,62 +64,70 @@ export function isAsyncIconMetadata(value: unknown): value is AsyncIconMetadata 
   );
 }
 
-export function parseAsyncGenerationSuccessCallback(
-  value: unknown,
-): AsyncGenerationSuccessCallback | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+export type AsyncGenerationSuccessCallbackValidation =
+  | { ok: true; value: AsyncGenerationSuccessCallback }
+  | { ok: false; reasons: string[] };
+
+function invalidCallback(...reasons: string[]): AsyncGenerationSuccessCallbackValidation {
+  return { ok: false, reasons };
+}
+
+export function validateAsyncGenerationSuccessCallback(value: unknown): AsyncGenerationSuccessCallbackValidation {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return invalidCallback("payload_not_object");
   const payload = value as Record<string, unknown>;
-  if (
-    payload.jobVersion !== 1 ||
-    payload.status !== "success" ||
-    typeof payload.generationRequestId !== "string" ||
-    typeof payload.processingAttemptId !== "string" ||
-    typeof payload.prompt !== "string" ||
-    !isAsyncIconMetadata(payload.iconMetadata) ||
-    (payload.digitalArtInterest !== null &&
-      !isAsyncDigitalArtInterest(payload.digitalArtInterest)) ||
-    !Array.isArray(payload.outputs)
-  ) {
-    return null;
-  }
-
-  const outputs: AsyncGenerationOutput[] = [];
-  for (const rawOutput of payload.outputs) {
-    if (!rawOutput || typeof rawOutput !== "object" || Array.isArray(rawOutput)) {
-      return null;
-    }
-    const output = rawOutput as Record<string, unknown>;
-    if (
-      typeof output.id !== "string" ||
-      typeof output.url !== "string" ||
-      typeof output.contentType !== "string" ||
-      (output.width !== undefined && !Number.isInteger(output.width)) ||
-      (output.height !== undefined && !Number.isInteger(output.height))
-    ) {
-      return null;
-    }
-    outputs.push({
-      id: output.id,
-      url: output.url,
-      contentType: output.contentType,
-      width: output.width as number | undefined,
-      height: output.height as number | undefined,
+  const reasons: string[] = [];
+  if (payload.jobVersion !== 1) reasons.push("jobVersion_invalid");
+  if (payload.status !== "success") reasons.push("status_invalid");
+  if (typeof payload.generationRequestId !== "string") reasons.push("generationRequestId_invalid");
+  if (typeof payload.processingAttemptId !== "string") reasons.push("processingAttemptId_invalid");
+  if (typeof payload.prompt !== "string") reasons.push("prompt_missing_or_invalid");
+  if (!isAsyncIconMetadata(payload.iconMetadata)) reasons.push("iconMetadata_missing_or_invalid");
+  if (payload.digitalArtInterest !== null && !isAsyncDigitalArtInterest(payload.digitalArtInterest)) reasons.push("digitalArtInterest_missing_or_invalid");
+  if (!Array.isArray(payload.outputs)) reasons.push("outputs_missing_or_invalid");
+  if (Array.isArray(payload.outputs)) {
+    payload.outputs.forEach((rawOutput, index) => {
+      if (!rawOutput || typeof rawOutput !== "object" || Array.isArray(rawOutput)) {
+        reasons.push("outputs[" + index + "]_not_object");
+        return;
+      }
+      const output = rawOutput as Record<string, unknown>;
+      if (typeof output.id !== "string") reasons.push("outputs[" + index + "].id_invalid");
+      if (typeof output.url !== "string") reasons.push("outputs[" + index + "].url_invalid");
+      if (typeof output.contentType !== "string") reasons.push("outputs[" + index + "].contentType_invalid");
+      if (output.width !== undefined && !Number.isInteger(output.width)) reasons.push("outputs[" + index + "].width_invalid");
+      if (output.height !== undefined && !Number.isInteger(output.height)) reasons.push("outputs[" + index + "].height_invalid");
     });
+    if (payload.outputs.length === 0) reasons.push("outputs_empty");
   }
-
-  if (outputs.length === 0) return null;
-  return {
+  if (reasons.length > 0) return invalidCallback(...reasons);
+  const outputs = (payload.outputs as Array<Record<string, unknown>>).map((output) => ({
+    id: output.id as string,
+    url: output.url as string,
+    contentType: output.contentType as string,
+    width: output.width as number | undefined,
+    height: output.height as number | undefined,
+  }));
+  return { ok: true, value: {
     jobVersion: 1,
-    generationRequestId: payload.generationRequestId,
-    processingAttemptId: payload.processingAttemptId,
+    generationRequestId: payload.generationRequestId as string,
+    processingAttemptId: payload.processingAttemptId as string,
     status: "success",
-    prompt: payload.prompt,
-    iconMetadata: payload.iconMetadata,
+    prompt: payload.prompt as string,
+    iconMetadata: payload.iconMetadata as AsyncIconMetadata,
     digitalArtInterest: payload.digitalArtInterest as AsyncDigitalArtInterest | null,
     predictionId: typeof payload.predictionId === "string" ? payload.predictionId : undefined,
     outputs,
-  };
+  }};
 }
+
+export function parseAsyncGenerationSuccessCallback(
+  value: unknown,
+): AsyncGenerationSuccessCallback | null {
+  const result = validateAsyncGenerationSuccessCallback(value);
+  return result.ok ? result.value : null;
+}
+
 export function applyAsyncDigitalArtInterestState(
   current: { first: AsyncDigitalArtInterest | null; latest: AsyncDigitalArtInterest | null },
   interest: AsyncDigitalArtInterest | null,

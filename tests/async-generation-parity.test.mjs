@@ -5,7 +5,9 @@ import test from "node:test";
 import {
   applyAsyncDigitalArtInterestState,
   parseAsyncGenerationSuccessCallback,
+  validateAsyncGenerationSuccessCallback,
 } from "../src/server/generation/asyncPayload.ts";
+import { buildSuccessCallbackPayload } from "../workers/generation-lambda/src/callback.ts";
 import {
   buildAsyncGenerationMauticContactInput,
   syncAsyncGenerationMauticStateBestEffort,
@@ -83,6 +85,50 @@ test("Mautic failure is best-effort and does not fail the transition", async () 
   const state = { email: "user@example.com", name: null, credits: "1", hasGeneratedDesign: true, firstDigitalArtInterest: null, latestDigitalArtInterest: "couples_art" };
   await assert.doesNotReject(() => syncAsyncGenerationMauticStateBestEffort(state, async () => { throw new Error("Mautic unavailable"); }));
   await assert.doesNotReject(() => syncAsyncGenerationMauticStateBestEffort(state, async () => ({ errors: [{ message: "Mautic rejected" }] })));
+});
+
+
+test("Lambda success serialization passes the root callback validator", () => {
+  const job = {
+    jobVersion: 1,
+    generationRequestId: "req_lambda",
+    processingAttemptId: "attempt_1",
+    prompt: "original prompt",
+    iconMetadata: {
+      aspectRatio: "1:1",
+      model: "flux-schnell",
+      category: null,
+      subcategory: null,
+      communityAlt: null,
+      communityTitle: null,
+      sourcePage: "couple-name-mug-v1",
+    },
+    digitalArtInterest: null,
+  };
+  const emitted = buildSuccessCallbackPayload(job, [
+    { id: "req_lambda-0", url: "https://s3.example/req_lambda-0", contentType: "image/webp" },
+  ]);
+  const serialized = JSON.parse(JSON.stringify(emitted));
+  const validation = validateAsyncGenerationSuccessCallback(serialized);
+  assert.equal(validation.ok, true);
+  assert.equal(serialized.prompt, job.prompt);
+  assert.deepEqual(serialized.iconMetadata, job.iconMetadata);
+  assert.equal(serialized.digitalArtInterest, null);
+
+  const legacyPayload = {
+    jobVersion: 1,
+    generationRequestId: job.generationRequestId,
+    processingAttemptId: job.processingAttemptId,
+    status: "success",
+    outputs: serialized.outputs,
+  };
+  const legacyValidation = validateAsyncGenerationSuccessCallback(legacyPayload);
+  assert.equal(legacyValidation.ok, false);
+  assert.deepEqual(legacyValidation.reasons.slice(0, 3), [
+    "prompt_missing_or_invalid",
+    "iconMetadata_missing_or_invalid",
+    "digitalArtInterest_missing_or_invalid",
+  ]);
 });
 
 test("invalid unsigned-shaped parity fields are rejected by callback validation", () => {

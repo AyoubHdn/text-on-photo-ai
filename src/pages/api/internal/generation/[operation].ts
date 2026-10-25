@@ -5,7 +5,7 @@ import {
   generationFinalizeSuccessFromService,
   generationSetPredictionIdFromService,
 } from "~/server/cloudflare/dbService";
-import { parseAsyncGenerationSuccessCallback } from "~/server/generation/asyncPayload";
+import { validateAsyncGenerationSuccessCallback } from "~/server/generation/asyncPayload";
 import { syncAsyncGenerationMauticForUser } from "~/server/generation/asyncMautic";
 import { acceptGenerationNonce, verifyGenerationRequest } from "~/server/generation/internalAuth";
 
@@ -58,8 +58,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         predictionId: input.predictionId,
       });
     } else if (operation === "callback" && input.status === "success") {
-      const callback = parseAsyncGenerationSuccessCallback(input);
-      if (!callback) return res.status(400).json({ error: "Invalid success callback payload" });
+      const validation = validateAsyncGenerationSuccessCallback(input);
+      if (!validation.ok) {
+        console.warn("Invalid async success callback payload", { reasons: validation.reasons });
+        return res.status(400).json({ error: "Invalid success callback payload" });
+      }
+      const callback = validation.value;
       result = await generationFinalizeSuccessFromService({
         generationRequestId: callback.generationRequestId,
         processingAttemptId: callback.processingAttemptId,
