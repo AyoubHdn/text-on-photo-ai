@@ -48,3 +48,5 @@ workers/db/generated/
 
 # AdSense verification file must be deployed from public/.
 !/public/ads.txt
+/worker-configuration.d.ts
+/workers/db/worker-configuration.d.ts

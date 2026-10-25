@@ -73,6 +73,11 @@ jobs:
       - name: Generate Prisma client
         run: npm run db-worker:generate
 
+      - name: Generate Cloudflare runtime types
+        run: |
+          npx wrangler types worker-configuration.d.ts --config wrangler.jsonc --include-runtime
+          npx wrangler types workers/db/worker-configuration.d.ts --config workers/db/wrangler.jsonc --include-runtime
+
       - name: Run recovery tests
         run: node --experimental-strip-types --test tests/generation-recovery.test.mjs
 
@@ -88,18 +93,35 @@ jobs:
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
 
-      - name: Run application TypeScript type check
-        run: npx tsc --project tsconfig.json --noEmit --pretty false
+      - name: Run all TypeScript typechecks
+        shell: bash
+        run: |
+          set +e
 
-      - name: Run Node test TypeScript type check
-        run: npx tsc --project tsconfig.node.json --noEmit --pretty false
+          npx tsc --project tsconfig.json --noEmit --pretty false > typecheck-application.log 2>&1
+          application_status=$?
 
-      - name: Run DB Worker TypeScript type check
-        run: npx tsc --project workers/db/tsconfig.json --noEmit --pretty false
+          npx tsc --project tsconfig.node.json --noEmit --pretty false > typecheck-node.log 2>&1
+          node_status=$?
 
-      - name: Run Lambda TypeScript type check
-        run: npx tsc --project workers/generation-lambda/tsconfig.json --noEmit --pretty false
+          npx tsc --project workers/db/tsconfig.json --noEmit --pretty false > typecheck-db.log 2>&1
+          db_status=$?
 
+          npx tsc --project workers/generation-lambda/tsconfig.json --noEmit --pretty false > typecheck-lambda.log 2>&1
+          lambda_status=$?
+
+          echo "===== application typecheck (exit ${application_status}) ====="
+          cat typecheck-application.log
+          echo "===== Node test typecheck (exit ${node_status}) ====="
+          cat typecheck-node.log
+          echo "===== DB Worker typecheck (exit ${db_status}) ====="
+          cat typecheck-db.log
+          echo "===== Lambda typecheck (exit ${lambda_status}) ====="
+          cat typecheck-lambda.log
+
+          if [[ ${application_status} -ne 0 || ${node_status} -ne 0 || ${db_status} -ne 0 || ${lambda_status} -ne 0 ]]; then
+            exit 1
+          fi
       - name: Build Next.js application
         run: npm run build
 
