@@ -10,5 +10,18 @@
       "binding": "HYPERDRIVE",
       "id": "734191bc000c45088e62b987e790b206"
     }
-  ]
+  ],
+  "vars": {
+    "GENERATION_RECOVERY_ENABLED": "false",
+    "GENERATION_RECOVERY_SCOPE": "cloudflare-staging",
+    "GENERATION_RECOVERY_BATCH_SIZE": "25",
+    "GENERATION_RECOVERY_MAX_MS": "2500",
+    "GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS": "120",
+    "GENERATION_RECOVERY_DB_TIMEOUT_MS": "1000",
+    "GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS": "250",
+    "GENERATION_RECOVERY_DB_MAX_WAIT_MS": "250"
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
 }

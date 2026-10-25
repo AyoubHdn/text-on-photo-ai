@@ -1,5 +1,13 @@
 export interface Env {
   HYPERDRIVE: Hyperdrive;
+  GENERATION_RECOVERY_ENABLED?: string;
+  GENERATION_RECOVERY_SCOPE?: string;
+  GENERATION_RECOVERY_BATCH_SIZE?: string;
+  GENERATION_RECOVERY_DB_TIMEOUT_MS?: string;
+  GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS?: string;
+  GENERATION_RECOVERY_DB_MAX_WAIT_MS?: string;
+  GENERATION_RECOVERY_MAX_MS?: string;
+  GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS?: string;
 }
 
 export interface GenerationStartInput {
@@ -7,6 +15,7 @@ export interface GenerationStartInput {
   userId: string;
   sourcePage: string | null;
   requestType: string;
+  executionScope?: string | null;
   model: string;
   promptHash: string;
   inputHash: string;
@@ -118,6 +127,11 @@ export interface GenerationFailIfUnclaimedInput {
 }
 export interface GenerationFailIfStaleInput {
   generationRequestId: string;
+  executionScope: string;
+  processingGraceSeconds?: number;
+  databaseTimeoutMs?: number;
+  databaseLockTimeoutMs?: number;
+  databaseMaxWaitMs?: number;
   errorMessage: string;
 }
 export type GenerationFailureTransitionResult = GenerationFinalizeFailureResult;

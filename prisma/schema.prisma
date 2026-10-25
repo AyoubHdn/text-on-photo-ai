@@ -104,6 +104,7 @@ model GenerationRequest {
     userId              String?
     sourcePage          String?
     requestType         String
+    executionScope      String?
     model               String
     promptHash          String
     inputHash           String
@@ -115,6 +116,9 @@ model GenerationRequest {
     processingAttemptId String?
     predictionId        String?
     creditsCharged      Decimal? @db.Decimal(10, 2)
+    recoveryAttemptCount Int?
+    recoveryNextAttemptAt DateTime?
+    recoveryLastError   String?
     resultImageUrls     Json?
     errorMessage        String?
     completedAt         DateTime?
@@ -124,6 +128,7 @@ model GenerationRequest {
 
     @@index([userId, createdAt])
     @@index([status, updatedAt])
+    @@index([requestType, executionScope, status, recoveryNextAttemptAt, createdAt], map: "GenerationRequest_async_recovery_idx")
 }
 
 model VerificationToken {

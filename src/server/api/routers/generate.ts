@@ -1822,6 +1822,13 @@ export const generateRouter = createTRPCRouter({
     .input(generationInputSchema)
     .mutation(async ({ ctx, input }) => {
       assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);
+      const executionScope = env.GENERATION_EXECUTION_SCOPE?.trim();
+      if (!executionScope) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Async generation scope is not configured.",
+        });
+      }
 
       const preparation = prepareGenerationRequest(
         input,
@@ -1877,6 +1884,7 @@ export const generateRouter = createTRPCRouter({
         userId: ctx.session.user.id,
         sourcePage: input.sourcePage ?? null,
         requestType: "generateIconAsync",
+        executionScope,
         model: input.model,
         promptHash: preparation.promptHash,
         inputHash: preparation.inputHash,

@@ -14,6 +14,7 @@
     "GENERATION_LAMBDA_REGION": "us-east-1",
     "GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging",
     "ASYNC_GENERATION_ENABLED": "false",
+    "GENERATION_EXECUTION_SCOPE": "cloudflare-staging",
     "DATABASE_URL": "postgresql://invalid:invalid@db.invalid:5432/invalid",
     "NEXTAUTH_URL": "https://namedesignai-cloudflare-staging.hdnstudio.workers.dev",
     "HOST_NAME": "https://namedesignai-cloudflare-staging.hdnstudio.workers.dev",

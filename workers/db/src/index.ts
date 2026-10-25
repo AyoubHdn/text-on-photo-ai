@@ -2,6 +2,24 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { PrismaClient, Prisma } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { DbServiceError, toSafeErrorResponse } from "./errors";
+import {
+  DEFAULT_PROCESSING_GRACE_SECONDS,
+  DEFAULT_RECOVERY_BATCH_SIZE,
+  DEFAULT_RECOVERY_MAX_MS,
+  GENERATION_ASYNC_REQUEST_TYPE,
+  DEFAULT_RECOVERY_DB_LOCK_TIMEOUT_MS,
+  DEFAULT_RECOVERY_DB_MAX_WAIT_MS,
+  DEFAULT_RECOVERY_DB_TIMEOUT_MS,
+  isStaleGenerationRequest,
+  isValidOptionalExecutionScope,
+  normalizeOptionalExecutionScope,
+  parseRecoveryPositiveInt,
+  recoveryBackoffSeconds,
+  recoveryDbTimeouts,
+  recoveryCandidateWhere,
+  runBoundedRecovery,
+} from "./recovery";
+import type { RecoveryDbTimeouts } from "./recovery";
 import type {
   DiagnosticResponse,
   Env,
@@ -101,6 +119,24 @@ export default class DbService extends WorkerEntrypoint<Env> {
   // The service is intended for RPC bindings; direct HTTP access is disabled.
   async fetch(): Promise<Response> {
     return new Response("Not Found", { status: 404 });
+  }
+
+  async scheduled(_controller: ScheduledController, _env: Env, ctx: ExecutionContext): Promise<void> {
+    const scope = this.env.GENERATION_RECOVERY_SCOPE?.trim();
+    if (this.env.GENERATION_RECOVERY_ENABLED !== "true" || !scope) return;
+    const batchSize = parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_BATCH_SIZE, DEFAULT_RECOVERY_BATCH_SIZE, 100);
+    const maxDurationMs = parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_MAX_MS, DEFAULT_RECOVERY_MAX_MS, 5000);
+    const processingGraceSeconds = parseRecoveryPositiveInt(
+      this.env.GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS,
+      DEFAULT_PROCESSING_GRACE_SECONDS,
+      900,
+    );
+    const dbTimeouts = recoveryDbTimeouts(
+      parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_DB_TIMEOUT_MS, DEFAULT_RECOVERY_DB_TIMEOUT_MS, 2000),
+      parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS, DEFAULT_RECOVERY_DB_LOCK_TIMEOUT_MS, 1000),
+      parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_DB_MAX_WAIT_MS, DEFAULT_RECOVERY_DB_MAX_WAIT_MS, 1000),
+    );
+    ctx.waitUntil(this.runGenerationRecovery(scope, batchSize, maxDurationMs, processingGraceSeconds, dbTimeouts));
   }
 
   async health(): Promise<HealthResponse> {
@@ -739,7 +775,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
             const user = await tx.user.findUnique({ where: { id: input.userId }, select: { id: true } });
             throw new DbServiceError(user ? "INSUFFICIENT_CREDITS" : "NOT_FOUND");
           }
-          const created = await tx.generationRequest.create({ data: { generationRequestId: input.generationRequestId, userId: input.userId, sourcePage: input.sourcePage, requestType: input.requestType, model: input.model, promptHash: input.promptHash, inputHash: input.inputHash, status: "started", numberOfImages: input.numberOfImages, aspectRatio: input.aspectRatio, creditsCharged: charged } });
+          const created = await tx.generationRequest.create({ data: { generationRequestId: input.generationRequestId, userId: input.userId, sourcePage: input.sourcePage, requestType: input.requestType, executionScope: normalizeOptionalExecutionScope(input.executionScope), model: input.model, promptHash: input.promptHash, inputHash: input.inputHash, status: "started", numberOfImages: input.numberOfImages, aspectRatio: input.aspectRatio, creditsCharged: charged } });
           return { created };
         });
         if ("existing" in result) return await this.generationExistingResult(prisma, result.existing, input);
@@ -863,26 +899,120 @@ export default class DbService extends WorkerEntrypoint<Env> {
   async generationFailIfUnclaimed(input: GenerationFailIfUnclaimedInput): Promise<GenerationFinalizeFailureResult> { return this.failGeneration(input.generationRequestId, input.errorMessage, "started"); }
 
   async generationFailIfStale(input: GenerationFailIfStaleInput): Promise<GenerationFinalizeFailureResult> {
-    if (!input?.generationRequestId) return { ok: false, code: "INVALID_INPUT" };
+    if (!input?.generationRequestId || !input.executionScope || !input.errorMessage) return { ok: false, code: "INVALID_INPUT" };
     const prisma = this.createPrisma();
+    const dbTimeouts = recoveryDbTimeouts(input.databaseTimeoutMs, input.databaseLockTimeoutMs, input.databaseMaxWaitMs);
     try {
       const result = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT set_config('statement_timeout', ${`${dbTimeouts.statementTimeoutMs}ms`}, true), set_config('lock_timeout', ${`${dbTimeouts.lockTimeoutMs}ms`}, true)`;
         await tx.$queryRaw`SELECT "id" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} FOR UPDATE`;
         const request = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
         if (!request) throw new DbServiceError("NOT_FOUND");
-        const stale = request.status === "started" ? request.createdAt.getTime() < Date.now() - 15 * 60 * 1000 : request.status === "processing" && !!request.leaseExpiresAt && request.leaseExpiresAt.getTime() < Date.now();
+        const now = new Date();
+        const stale = (!request.recoveryNextAttemptAt || request.recoveryNextAttemptAt <= now) && isStaleGenerationRequest(request, now, input.executionScope, input.processingGraceSeconds ?? DEFAULT_PROCESSING_GRACE_SECONDS);
         if (!stale || request.status === "completed" || request.status === "failed") return { outcome: "TERMINAL_NOOP" as const, request };
-        const transition = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: request.status, processingAttemptId: request.processingAttemptId }, data: { status: "failed", errorMessage: input.errorMessage.slice(0, 1000), failedAt: new Date(), processingAttemptId: null, processingStartedAt: null, leaseExpiresAt: null } });
+        const transition = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, requestType: GENERATION_ASYNC_REQUEST_TYPE, executionScope: input.executionScope, status: request.status, processingAttemptId: request.processingAttemptId }, data: { status: "failed", errorMessage: input.errorMessage.slice(0, 1000), failedAt: new Date(), processingAttemptId: null, processingStartedAt: null, leaseExpiresAt: null } });
         if (transition.count !== 1) return { outcome: "TERMINAL_NOOP" as const, request };
         const updated = await tx.generationRequest.findUniqueOrThrow({ where: { generationRequestId: input.generationRequestId } });
         if (request.userId && request.creditsCharged) await tx.user.update({ where: { id: request.userId }, data: { credits: { increment: request.creditsCharged } } });
         return { outcome: "FAILED" as const, request: updated };
-      });
+      }, { maxWait: dbTimeouts.maxWaitMs, timeout: dbTimeouts.statementTimeoutMs });
       return { outcome: result.outcome, job: this.generationJob(result.request, null) };
     } catch (error) { if (error instanceof DbServiceError) return { ok: false, code: error.code as any }; console.error("Stale generation reconciliation failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
     finally { await prisma.$disconnect(); }
   }
 
+
+  private async runGenerationRecovery(scope: string, batchSize: number, maxDurationMs: number, processingGraceSeconds: number, dbTimeouts: RecoveryDbTimeouts) {
+    const prisma = this.createPrisma();
+    try {
+      const candidateTime = new Date();
+      const result = await runBoundedRecovery({
+        batchSize,
+        maxDurationMs,
+        listCandidates: async (limit) => prisma.$transaction(async (tx) => {
+          await this.setRecoveryDbTimeouts(tx, dbTimeouts);
+          return tx.generationRequest.findMany({
+            where: recoveryCandidateWhere(candidateTime, scope, processingGraceSeconds),
+            orderBy: { createdAt: "asc" },
+            take: limit,
+            select: {
+              generationRequestId: true,
+              requestType: true,
+              executionScope: true,
+              status: true,
+              processingAttemptId: true,
+              createdAt: true,
+              leaseExpiresAt: true,
+              recoveryNextAttemptAt: true,
+            },
+          });
+        }, { maxWait: dbTimeouts.maxWaitMs, timeout: dbTimeouts.statementTimeoutMs }),
+        reconcileOne: async (candidate) => {
+          const transition = await this.generationFailIfStale({
+            generationRequestId: candidate.generationRequestId,
+            executionScope: scope,
+            processingGraceSeconds,
+            databaseTimeoutMs: dbTimeouts.statementTimeoutMs,
+            databaseLockTimeoutMs: dbTimeouts.lockTimeoutMs,
+            databaseMaxWaitMs: dbTimeouts.maxWaitMs,
+            errorMessage: "GENERATION_RECOVERY_STALE",
+          });
+          if ("ok" in transition) throw new Error(`RECOVERY_${transition.code}`);
+          return transition.outcome;
+        },
+        onError: async (candidate) => {
+          await this.markGenerationRecoveryFailure(candidate, scope, dbTimeouts);
+        },
+      });
+      if (result.examined > 0 || result.errors > 0) console.log("Generation recovery run complete", result);
+    } catch (error) {
+      console.error("Generation recovery run failed", toSafeErrorResponse(error));
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  private async setRecoveryDbTimeouts(tx: any, dbTimeouts: RecoveryDbTimeouts) {
+    await tx.$queryRaw`SELECT set_config('statement_timeout', ${`${dbTimeouts.statementTimeoutMs}ms`}, true), set_config('lock_timeout', ${`${dbTimeouts.lockTimeoutMs}ms`}, true)`;
+  }
+
+  private async markGenerationRecoveryFailure(candidate: any, scope: string, dbTimeouts: RecoveryDbTimeouts): Promise<void> {
+    const prisma = this.createPrisma();
+    try {
+      await prisma.$transaction(async (tx) => {
+        await this.setRecoveryDbTimeouts(tx, dbTimeouts);
+        await tx.$queryRaw`SELECT "id" FROM "GenerationRequest" WHERE "generationRequestId" = ${candidate.generationRequestId} FOR UPDATE`;
+        const request = await tx.generationRequest.findUnique({ where: { generationRequestId: candidate.generationRequestId } });
+        if (!request || request.requestType !== GENERATION_ASYNC_REQUEST_TYPE || request.executionScope !== scope) return;
+        if (request.status === "completed" || request.status === "failed") return;
+        if (request.status !== candidate.status || request.processingAttemptId !== candidate.processingAttemptId) return;
+        const attempt = (request.recoveryAttemptCount ?? 0) + 1;
+        const nextAttemptAt = new Date(Date.now() + recoveryBackoffSeconds(attempt) * 1000);
+        await tx.generationRequest.updateMany({
+          where: {
+            generationRequestId: candidate.generationRequestId,
+            requestType: GENERATION_ASYNC_REQUEST_TYPE,
+            executionScope: scope,
+            status: candidate.status,
+            processingAttemptId: candidate.processingAttemptId,
+          },
+          data: {
+            recoveryAttemptCount: attempt,
+            recoveryNextAttemptAt: nextAttemptAt,
+            recoveryLastError: "GENERATION_RECOVERY_RETRY",
+          },
+        });
+      }, { maxWait: dbTimeouts.maxWaitMs, timeout: dbTimeouts.statementTimeoutMs });
+    } catch (error) {
+      console.error("Generation recovery retry marker failed", {
+        generationRequestId: candidate.generationRequestId,
+        error: toSafeErrorResponse(error),
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
 
   private async failGeneration(generationRequestId: string, errorMessage: string, status: "started" | "processing", attemptId?: string): Promise<GenerationFinalizeFailureResult> {
     if (!generationRequestId || !errorMessage || (status === "processing" && !attemptId)) return { ok: false, code: "INVALID_INPUT" };
@@ -905,8 +1035,8 @@ export default class DbService extends WorkerEntrypoint<Env> {
     finally { await prisma.$disconnect(); }
   }
 
-  private validGenerationInput(input: GenerationStartInput): boolean { return !!input && /^[A-Za-z0-9_-]{1,120}$/.test(input.generationRequestId) && !!input.userId && (input.sourcePage === null || typeof input.sourcePage === "string") && !!input.requestType && !!input.model && !!input.promptHash && !!input.inputHash && Number.isInteger(input.numberOfImages) && input.numberOfImages > 0 && input.numberOfImages <= 10 && !!input.aspectRatio; }
-  private async generationExistingResult(prisma: PrismaClient, request: any, input: GenerationStartInput): Promise<GenerationStartResult> { if (request.userId !== input.userId || request.promptHash !== input.promptHash || request.inputHash !== input.inputHash) return { ok: false, code: "CONFLICT" }; const balance = await prisma.user.findUnique({ where: { id: input.userId }, select: { credits: true } }); return { outcome: "EXISTING", job: this.generationJob(request, balance?.credits ?? null) }; }
+  private validGenerationInput(input: GenerationStartInput): boolean { return !!input && /^[A-Za-z0-9_-]{1,120}$/.test(input.generationRequestId) && !!input.userId && (input.sourcePage === null || typeof input.sourcePage === "string") && input.requestType === GENERATION_ASYNC_REQUEST_TYPE && isValidOptionalExecutionScope(input.executionScope) && !!input.model && !!input.promptHash && !!input.inputHash && Number.isInteger(input.numberOfImages) && input.numberOfImages > 0 && input.numberOfImages <= 10 && !!input.aspectRatio; }
+  private async generationExistingResult(prisma: PrismaClient, request: any, input: GenerationStartInput): Promise<GenerationStartResult> { if (request.userId !== input.userId || request.promptHash !== input.promptHash || request.inputHash !== input.inputHash || request.requestType !== input.requestType) return { ok: false, code: "CONFLICT" }; const balance = await prisma.user.findUnique({ where: { id: input.userId }, select: { credits: true } }); return { outcome: "EXISTING", job: this.generationJob(request, balance?.credits ?? null) }; }
   private generationJob(request: any, remainingCredits: Prisma.Decimal | null): any { const count = request.numberOfImages ?? 0; return { generationRequestId: request.generationRequestId, userId: request.userId, status: request.status, model: request.model, sourcePage: request.sourcePage ?? null, numberOfImages: count, aspectRatio: request.aspectRatio ?? "", creditsCharged: request.creditsCharged?.toString() ?? null, remainingCredits: remainingCredits?.toString() ?? null, imageUrls: Array.isArray(request.resultImageUrls) ? request.resultImageUrls as string[] : [], errorMessage: request.errorMessage ?? null, createdAt: request.createdAt.toISOString(), updatedAt: request.updatedAt.toISOString(), processingStartedAt: request.processingStartedAt?.toISOString() ?? null, leaseExpiresAt: request.leaseExpiresAt?.toISOString() ?? null, outputIconIds: Array.from({ length: count }, (_, index) => `${request.generationRequestId}-${index}`) }; }
 
   private createPrisma() {
