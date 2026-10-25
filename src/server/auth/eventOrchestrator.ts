@@ -41,6 +41,7 @@ const defaultDependencies: AuthEventDependencies = {
 const suppressedExternalSyncDependencies: AuthEventDependencies = {
   updateMauticContact: async () => {
     console.log("AUTH_TEST external sync suppressed");
+    return { errors: [] };
   },
 };
 

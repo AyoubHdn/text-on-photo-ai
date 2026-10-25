@@ -11,11 +11,16 @@ import {
   recoveryCandidateWhere,
   recoveryDbTimeouts,
   runBoundedRecovery,
+  scheduleGenerationRecovery,
 } from "../workers/db/src/recovery.ts";
 
 const scope = "cloudflare-staging";
 const now = new Date("2026-10-24T12:00:00.000Z");
 
+/**
+ * @param {Partial<import("../workers/db/src/recovery.ts").RecoveryCandidate>} [overrides]
+ * @returns {import("../workers/db/src/recovery.ts").RecoveryCandidate}
+ */
 function candidate(overrides = {}) {
   return {
     generationRequestId: "recovery-test-001",
@@ -136,6 +141,7 @@ test("persistent backoff increases and caps retry delay", () => {
 });
 
 test("reconciliation is bounded, continues after an individual failure, and counts outcomes", async () => {
+  /** @type {string[]} */
   const seen = [];
   const result = await runBoundedRecovery({
     batchSize: 2,
@@ -144,6 +150,7 @@ test("reconciliation is bounded, continues after an individual failure, and coun
       assert.equal(limit, 2);
       return [candidate({ generationRequestId: "one" }), candidate({ generationRequestId: "two" }), candidate({ generationRequestId: "three" })];
     },
+    /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
     reconcileOne: async (item) => {
       seen.push(item.generationRequestId);
       if (item.generationRequestId === "one") throw new Error("simulated candidate failure");
@@ -234,38 +241,103 @@ test("success-versus-recovery and late callback races are modeled as terminal wi
   }
 });
 
-test("persistent retry state lets later scheduled runs progress past a failing candidate", async () => {
+test("scheduled handler skips disabled mode and uses the WorkerEntrypoint context", async () => {
+  let waitCount = 0;
+  /** @type {Promise<void> | undefined} */
+  let scheduledPromise;
+  /** @type {unknown[] | undefined} */
+  let receivedArgs;
+  /** @param {Promise<void>} promise */
+  const waitUntil = (promise) => {
+    waitCount += 1;
+    scheduledPromise = promise;
+  };
+  /** @param {...unknown} args */
+  const runRecovery = async (...args) => {
+    receivedArgs = args;
+  };
+
+  scheduleGenerationRecovery(
+    { GENERATION_RECOVERY_ENABLED: "false", GENERATION_RECOVERY_SCOPE: scope },
+    waitUntil,
+    runRecovery,
+  );
+  assert.equal(waitCount, 0);
+  assert.equal(receivedArgs, undefined);
+
+  scheduleGenerationRecovery(
+    {
+      GENERATION_RECOVERY_ENABLED: "true",
+      GENERATION_RECOVERY_SCOPE: scope,
+      GENERATION_RECOVERY_BATCH_SIZE: "3",
+      GENERATION_RECOVERY_MAX_MS: "2500",
+      GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS: "120",
+      GENERATION_RECOVERY_DB_TIMEOUT_MS: "1000",
+      GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS: "250",
+      GENERATION_RECOVERY_DB_MAX_WAIT_MS: "250",
+    },
+    waitUntil,
+    runRecovery,
+  );
+  assert.equal(waitCount, 1);
+  assert.ok(scheduledPromise);
+  await scheduledPromise;
+  assert.deepEqual(receivedArgs, [scope, 3, 2500, 120, {
+    statementTimeoutMs: 1000,
+    lockTimeoutMs: 250,
+    maxWaitMs: 250,
+  }]);
+});
+
+test("persistent retry state lets later five-minute runs pass a permanently failing candidate", async () => {
+  /** @type {Map<string, { nextAttemptAt: number | null }>} */
   const state = new Map([
     ["one", { nextAttemptAt: now.getTime() }],
     ["two", { nextAttemptAt: now.getTime() }],
   ]);
+  /** @type {string[]} */
+  const processed = [];
   let runNow = now.getTime();
   const listCandidates = async () => [...state.entries()]
-    .filter(([, item]) => item.nextAttemptAt <= runNow)
+    .filter(([, item]) => item.nextAttemptAt === null || item.nextAttemptAt <= runNow)
+    .sort(([, left], [, right]) => Number(left.nextAttemptAt === null) - Number(right.nextAttemptAt === null) || (left.nextAttemptAt ?? 0) - (right.nextAttemptAt ?? 0))
     .map(([generationRequestId]) => candidate({ generationRequestId }));
+  /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
   const markRetry = async (item) => {
-    state.get(item.generationRequestId).nextAttemptAt = runNow + 60_000;
+    const entry = state.get(item.generationRequestId);
+    assert.ok(entry);
+    entry.nextAttemptAt = runNow + 60_000;
   };
+  /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
+  const reconcileOne = async (item) => {
+    processed.push(item.generationRequestId);
+    if (item.generationRequestId === "one") throw new Error("persistent simulated failure");
+    state.delete(item.generationRequestId);
+    return "FAILED";
+  };
+
   const first = await runBoundedRecovery({
     batchSize: 1,
     maxDurationMs: 1000,
     listCandidates,
-    reconcileOne: async () => { throw new Error("persistent simulated failure"); },
+    reconcileOne,
     onError: markRetry,
   });
   assert.equal(first.errors, 1);
-  runNow += 60_000;
+  assert.deepEqual(processed, ["one"]);
+
+  // The real cron cadence is five minutes. Candidate one is retryable again,
+  // but the NULL retry timestamp on candidate two sorts first and makes progress.
+  runNow += 5 * 60_000;
   const second = await runBoundedRecovery({
     batchSize: 1,
     maxDurationMs: 1000,
     listCandidates,
-    reconcileOne: async (item) => {
-      assert.equal(item.generationRequestId, "one");
-      state.delete(item.generationRequestId);
-      return "FAILED";
-    },
+    reconcileOne,
     onError: markRetry,
   });
   assert.equal(second.failed, 1);
-  assert.equal(state.has("two"), true);
+  assert.deepEqual(processed, ["one", "two"]);
+  assert.equal(state.has("one"), true);
+  assert.equal(state.has("two"), false);
 });

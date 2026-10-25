@@ -1,3 +1,5 @@
+import type { Prisma } from "../generated/prisma/client";
+
 export const GENERATION_ASYNC_REQUEST_TYPE = "generateIconAsync" as const;
 export const UNCLAIMED_RECOVERY_AFTER_SECONDS = 15 * 60;
 export const DEFAULT_PROCESSING_GRACE_SECONDS = 120;
@@ -73,7 +75,11 @@ export function isStaleGenerationRequest(
     leaseExpiresAt < now.getTime() - processingGraceSeconds * 1000;
 }
 
-export function recoveryCandidateWhere(now: Date, executionScope: string, processingGraceSeconds = DEFAULT_PROCESSING_GRACE_SECONDS) {
+export function recoveryCandidateWhere(
+  now: Date,
+  executionScope: string,
+  processingGraceSeconds = DEFAULT_PROCESSING_GRACE_SECONDS,
+): Prisma.GenerationRequestWhereInput {
   return {
     requestType: GENERATION_ASYNC_REQUEST_TYPE,
     executionScope,
@@ -97,7 +103,7 @@ export function recoveryCandidateWhere(now: Date, executionScope: string, proces
         ],
       },
     ],
-  } as const;
+  };
 }
 
 export function parseRecoveryPositiveInt(value: string | undefined, fallback: number, maximum: number) {
@@ -105,6 +111,68 @@ export function parseRecoveryPositiveInt(value: string | undefined, fallback: nu
   return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, maximum) : fallback;
 }
 
+export type RecoveryScheduleEnv = {
+  GENERATION_RECOVERY_ENABLED?: string;
+  GENERATION_RECOVERY_SCOPE?: string;
+  GENERATION_RECOVERY_BATCH_SIZE?: string;
+  GENERATION_RECOVERY_MAX_MS?: string;
+  GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS?: string;
+  GENERATION_RECOVERY_DB_TIMEOUT_MS?: string;
+  GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS?: string;
+  GENERATION_RECOVERY_DB_MAX_WAIT_MS?: string;
+};
+
+export type RecoveryScheduleRunner = (
+  scope: string,
+  batchSize: number,
+  maxDurationMs: number,
+  processingGraceSeconds: number,
+  dbTimeouts: RecoveryDbTimeouts,
+) => Promise<void>;
+
+export function scheduleGenerationRecovery(
+  env: RecoveryScheduleEnv,
+  waitUntil: (promise: Promise<void>) => void,
+  runRecovery: RecoveryScheduleRunner,
+): void {
+  const scope = env.GENERATION_RECOVERY_SCOPE?.trim();
+  if (env.GENERATION_RECOVERY_ENABLED !== "true" || !scope) return;
+
+  const batchSize = parseRecoveryPositiveInt(
+    env.GENERATION_RECOVERY_BATCH_SIZE,
+    DEFAULT_RECOVERY_BATCH_SIZE,
+    100,
+  );
+  const maxDurationMs = parseRecoveryPositiveInt(
+    env.GENERATION_RECOVERY_MAX_MS,
+    DEFAULT_RECOVERY_MAX_MS,
+    5000,
+  );
+  const processingGraceSeconds = parseRecoveryPositiveInt(
+    env.GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS,
+    DEFAULT_PROCESSING_GRACE_SECONDS,
+    900,
+  );
+  const dbTimeouts = recoveryDbTimeouts(
+    parseRecoveryPositiveInt(
+      env.GENERATION_RECOVERY_DB_TIMEOUT_MS,
+      DEFAULT_RECOVERY_DB_TIMEOUT_MS,
+      2000,
+    ),
+    parseRecoveryPositiveInt(
+      env.GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS,
+      DEFAULT_RECOVERY_DB_LOCK_TIMEOUT_MS,
+      1000,
+    ),
+    parseRecoveryPositiveInt(
+      env.GENERATION_RECOVERY_DB_MAX_WAIT_MS,
+      DEFAULT_RECOVERY_DB_MAX_WAIT_MS,
+      1000,
+    ),
+  );
+
+  waitUntil(runRecovery(scope, batchSize, maxDurationMs, processingGraceSeconds, dbTimeouts));
+}
 export async function runBoundedRecovery(options: {
   listCandidates: (limit: number) => Promise<RecoveryCandidate[]>;
   reconcileOne: (candidate: RecoveryCandidate) => Promise<RecoveryOutcome>;

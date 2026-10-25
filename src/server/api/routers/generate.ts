@@ -111,6 +111,7 @@ const GENERATION_REQUEST_WAIT_TIMEOUT_MS =
   Math.max(DEFAULT_GENERATION_TIMEOUT_MS, NANO_BANANA_MAX_ATTEMPT_TIMEOUT_MS) +
   10000;
 const GENERATION_REQUEST_POLL_INTERVAL_MS = 500;
+const GENERATION_REQUEST_IN_FLIGHT_TTL_MS = 3 * 60 * 1000;
 const generationRequestInFlightMap = new Map<
   string,
   { promise: Promise<string[]>; expiresAt: number }

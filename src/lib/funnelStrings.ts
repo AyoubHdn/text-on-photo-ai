@@ -76,7 +76,8 @@ export function t(
   vars?: Record<string, string | number>,
 ): string {
   const entry = funnelStrings[key];
-  let str = locale === "ar" && entry.ar ? entry.ar : entry.en;
+  const arabic = "ar" in entry ? entry.ar : undefined;
+  let str = locale === "ar" && arabic ? arabic : entry.en;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       str = str.replaceAll(`{${k}}`, String(v));

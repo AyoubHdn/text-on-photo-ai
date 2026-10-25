@@ -73,6 +73,12 @@ const MyApp: AppType<{ session: Session | null }> = ({
   const isCancelPage = router.pathname === "/cancel";
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const shouldNoindexRoute = GLOBAL_NOINDEX_PATHS.has(router.pathname);
+  const isForcedPaidFunnel = new Set([
+    "/arabic-name-mug-v1",
+    "/couple-name-mug-v1",
+    "/couple-avatar-name-mug-v1",
+    "/couple-names-only-mug-v1",
+  ]).has(router.pathname);
 
   useEffect(() => {
     try {

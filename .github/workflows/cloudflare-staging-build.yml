@@ -88,8 +88,17 @@ jobs:
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
 
-      - name: Run TypeScript type check
-        run: npx tsc --noEmit --pretty false
+      - name: Run application TypeScript type check
+        run: npx tsc --project tsconfig.json --noEmit --pretty false
+
+      - name: Run Node test TypeScript type check
+        run: npx tsc --project tsconfig.node.json --noEmit --pretty false
+
+      - name: Run DB Worker TypeScript type check
+        run: npx tsc --project workers/db/tsconfig.json --noEmit --pretty false
+
+      - name: Run Lambda TypeScript type check
+        run: npx tsc --project workers/generation-lambda/tsconfig.json --noEmit --pretty false
 
       - name: Build Next.js application
         run: npm run build

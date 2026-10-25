@@ -18,6 +18,7 @@ import {
   recoveryDbTimeouts,
   recoveryCandidateWhere,
   runBoundedRecovery,
+  scheduleGenerationRecovery,
 } from "./recovery";
 import type { RecoveryDbTimeouts } from "./recovery";
 import type {
@@ -121,22 +122,13 @@ export default class DbService extends WorkerEntrypoint<Env> {
     return new Response("Not Found", { status: 404 });
   }
 
-  async scheduled(_controller: ScheduledController, _env: Env, ctx: ExecutionContext): Promise<void> {
-    const scope = this.env.GENERATION_RECOVERY_SCOPE?.trim();
-    if (this.env.GENERATION_RECOVERY_ENABLED !== "true" || !scope) return;
-    const batchSize = parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_BATCH_SIZE, DEFAULT_RECOVERY_BATCH_SIZE, 100);
-    const maxDurationMs = parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_MAX_MS, DEFAULT_RECOVERY_MAX_MS, 5000);
-    const processingGraceSeconds = parseRecoveryPositiveInt(
-      this.env.GENERATION_RECOVERY_PROCESSING_GRACE_SECONDS,
-      DEFAULT_PROCESSING_GRACE_SECONDS,
-      900,
+  async scheduled(_controller: ScheduledController): Promise<void> {
+    scheduleGenerationRecovery(
+      this.env,
+      (promise) => this.ctx.waitUntil(promise),
+      (scope, batchSize, maxDurationMs, processingGraceSeconds, dbTimeouts) =>
+        this.runGenerationRecovery(scope, batchSize, maxDurationMs, processingGraceSeconds, dbTimeouts),
     );
-    const dbTimeouts = recoveryDbTimeouts(
-      parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_DB_TIMEOUT_MS, DEFAULT_RECOVERY_DB_TIMEOUT_MS, 2000),
-      parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_DB_LOCK_TIMEOUT_MS, DEFAULT_RECOVERY_DB_LOCK_TIMEOUT_MS, 1000),
-      parseRecoveryPositiveInt(this.env.GENERATION_RECOVERY_DB_MAX_WAIT_MS, DEFAULT_RECOVERY_DB_MAX_WAIT_MS, 1000),
-    );
-    ctx.waitUntil(this.runGenerationRecovery(scope, batchSize, maxDurationMs, processingGraceSeconds, dbTimeouts));
   }
 
   async health(): Promise<HealthResponse> {
@@ -934,7 +926,8 @@ export default class DbService extends WorkerEntrypoint<Env> {
           await this.setRecoveryDbTimeouts(tx, dbTimeouts);
           return tx.generationRequest.findMany({
             where: recoveryCandidateWhere(candidateTime, scope, processingGraceSeconds),
-            orderBy: { createdAt: "asc" },
+            // PostgreSQL ASC places NULL retry timestamps first, so fresh candidates progress before retries.
+            orderBy: [{ recoveryNextAttemptAt: "asc" }, { createdAt: "asc" }],
             take: limit,
             select: {
               generationRequestId: true,

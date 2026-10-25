@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "tests/**/*.mjs",
+    "scripts/**/*.mjs",
+    "workers/generation-lambda/tests/**/*.mjs"
+  ],
+  "exclude": ["node_modules"]
+}
