@@ -93,6 +93,9 @@ jobs:
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
 
+
+      - name: Run JSON response guard tests
+        run: node --experimental-strip-types --test tests/json-response.test.mjs
       - name: Run all TypeScript typechecks
         shell: bash
         run: |

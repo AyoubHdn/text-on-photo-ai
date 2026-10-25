@@ -138,15 +138,40 @@ const merged = server.merge(client);
 /** @typedef {z.infer<typeof merged>} MergedOutput */
 /** @typedef {z.SafeParseReturnType<MergedInput, MergedOutput>} MergedSafeParseReturn */
 
-let env = /** @type {MergedOutput} */ (process.env);
+const isServer = typeof window === "undefined";
 
-if (!!process.env.SKIP_ENV_VALIDATION == false) {
-  const isServer = typeof window === "undefined";
+/**
+ * Keep client/server access protection in both the validated path and the
+ * explicit SKIP_ENV_VALIDATION escape hatch. The escape hatch intentionally
+ * skips parsing, but it does not make raw process.env the validated value.
+ *
+ * @param {Record<string, string | undefined>} values
+ * @returns {MergedOutput}
+ */
+function createEnvProxy(values) {
+  return new Proxy(
+    /** @type {MergedOutput} */ (/** @type {unknown} */ (values)),
+    {
+      get(target, prop) {
+        if (typeof prop !== "string") return undefined;
+        if (!isServer && !prop.startsWith("NEXT_PUBLIC_"))
+          throw new Error(
+            process.env.NODE_ENV === "production"
+              ? "❌ Attempted to access a server-side environment variable on the client"
+              : `❌ Attempted to access server-side environment variable '${prop}' on the client`,
+          );
+        return target[/** @type {keyof typeof target} */ (prop)];
+      },
+    },
+  );
+}
 
+/** @returns {MergedOutput} */
+function loadValidatedEnv() {
   const parsed = /** @type {MergedSafeParseReturn} */ (
     isServer
-      ? merged.safeParse(processEnv) // on server we can validate all env vars
-      : client.safeParse(processEnv) // on client we can only validate the ones that are exposed
+      ? merged.safeParse(processEnv)
+      : client.safeParse(processEnv)
   );
 
   if (parsed.success === false) {
@@ -157,20 +182,16 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
     throw new Error("Invalid environment variables");
   }
 
-  env = new Proxy(parsed.data, {
-    get(target, prop) {
-      if (typeof prop !== "string") return undefined;
-      // Throw a descriptive error if a server-side env var is accessed on the client
-      // Otherwise it would just be returning `undefined` and be annoying to debug
-      if (!isServer && !prop.startsWith("NEXT_PUBLIC_"))
-        throw new Error(
-          process.env.NODE_ENV === "production"
-            ? "❌ Attempted to access a server-side environment variable on the client"
-            : `❌ Attempted to access server-side environment variable '${prop}' on the client`,
-        );
-      return target[/** @type {keyof typeof target} */ (prop)];
-    },
-  });
+  return createEnvProxy(parsed.data);
 }
+
+/** @returns {MergedOutput} */
+function loadUnvalidatedEnv() {
+  return createEnvProxy(processEnv);
+}
+
+const env = process.env.SKIP_ENV_VALIDATION
+  ? loadUnvalidatedEnv()
+  : loadValidatedEnv();
 
 export { env };

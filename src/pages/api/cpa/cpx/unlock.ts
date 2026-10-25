@@ -1,3 +1,4 @@
+import { isJsonRecord } from "~/lib/jsonResponse";
 // src/pages/api/cpa/cpx/unlock.ts
 export const config = {
   runtime: "nodejs",
@@ -31,12 +32,14 @@ async function isVpnOrProxy(ip: string | null): Promise<boolean> {
     );
 
     const data = await res.json();
+    if (!isJsonRecord(data)) return false;
+    const company = isJsonRecord(data.company) ? data.company : undefined;
     return Boolean(
-      data?.is_vpn === true ||
-        data?.is_proxy === true ||
-        data?.is_tor === true ||
-        data?.is_datacenter === true ||
-        data?.company?.type === "hosting",
+      data.is_vpn === true ||
+        data.is_proxy === true ||
+        data.is_tor === true ||
+        data.is_datacenter === true ||
+        company?.type === "hosting",
     );
   } catch {
     return false;

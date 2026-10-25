@@ -1,3 +1,4 @@
+import { getJsonNumber, getJsonString, isJsonRecord } from "~/lib/jsonResponse";
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -47,35 +48,41 @@ export default function FreeCreditUnlock() {
       });
 
       const data = await res.json();
+      const payload = isJsonRecord(data) ? data : {};
+      const errorMessage = getJsonString(payload, "error");
+      const responseCode = getJsonString(payload, "code");
+      const retryAfterMinutes = getJsonNumber(payload, "retryAfterMinutes");
 
       if (res.status === 401) {
         setError("login_required");
         return;
       }
 
-      if (res.status === 403 && data?.error) {
-        setError(data.error);
+      if (res.status === 403 && errorMessage) {
+        setError(errorMessage);
         return;
       }
 
-      if (!res.ok && data?.code === "DAILY_LIMIT") {
+      if (!res.ok && responseCode === "DAILY_LIMIT") {
         setDailyLimitMessage(
-          data?.error ?? t("dailyLimitDefault", locale),
+          errorMessage ?? t("dailyLimitDefault", locale),
         );
         return;
       }
 
-      if (!res.ok && data?.retryAfterMinutes) {
-        setRetryAfter(data.retryAfterMinutes);
+      if (!res.ok && retryAfterMinutes) {
+        setRetryAfter(retryAfterMinutes);
         setError("cooldown");
         return;
       }
 
       if (!res.ok) {
-        throw new Error(data?.error || "Unlock failed");
+        throw new Error(errorMessage ?? "Unlock failed");
       }
 
-      window.location.href = data.redirectUrl;
+      const redirectUrl = getJsonString(payload, "redirectUrl");
+      if (!redirectUrl) throw new Error("Unlock failed");
+      window.location.href = redirectUrl;
     } catch (err) {
       setError((err as Error).message);
     } finally {

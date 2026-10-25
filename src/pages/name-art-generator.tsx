@@ -1,3 +1,4 @@
+import { getJsonString, isJsonRecord } from "~/lib/jsonResponse";
 // pages/name-art-generator.tsx
 import { type NextPage } from "next";
 import Image from "next/image";
@@ -798,11 +799,12 @@ const NameArtGeneratorPage: NextPage = () => {
       });
 
       const data = await res.json();
+      const payload = isJsonRecord(data) ? data : {};
       if (!res.ok) {
-        throw new Error(data?.error || "Background removal failed");
+        throw new Error(getJsonString(payload, "error") ?? "Background removal failed");
       }
 
-      const nextTransparentUrl = data?.transparentImageUrl as string | undefined;
+      const nextTransparentUrl = getJsonString(payload, "transparentImageUrl");
       if (!nextTransparentUrl) {
         throw new Error("Background removal failed");
       }
@@ -1421,4 +1423,3 @@ const NameArtGeneratorPage: NextPage = () => {
   );
 };
 export default NameArtGeneratorPage;
-

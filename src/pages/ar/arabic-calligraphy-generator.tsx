@@ -1,3 +1,4 @@
+import { getJsonString, isJsonRecord } from "~/lib/jsonResponse";
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 // src/pages/arabic-calligraphy-generator.tsx
@@ -749,9 +750,10 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Background removal failed");
+      const payload = isJsonRecord(data) ? data : {};
+      if (!res.ok) throw new Error(getJsonString(payload, "error") ?? "Background removal failed");
 
-      const nextTransparentUrl = data?.transparentImageUrl as string | undefined;
+      const nextTransparentUrl = getJsonString(payload, "transparentImageUrl");
       if (!nextTransparentUrl) throw new Error("Background removal failed");
 
       setTransparentUrls((prev) => ({ ...prev, [imageId]: nextTransparentUrl }));
@@ -1199,4 +1201,3 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   );
 };
 export default ArabicNameArtGeneratorPage;
-

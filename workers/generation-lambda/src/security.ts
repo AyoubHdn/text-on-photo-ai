@@ -1,25 +1,36 @@
-const encoder = new TextEncoder();
-const hex = (bytes: ArrayBuffer) => Array.from(new Uint8Array(bytes), (value) => value.toString(16).padStart(2, "0")).join("");
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export async function sha256Hex(value: string): Promise<string> {
-  return hex(await crypto.subtle.digest("SHA-256", encoder.encode(value)));
+  return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
-export async function signGenerationMessage(secret: string, timestamp: string, nonce: string, rawBody: string): Promise<string> {
+export async function signGenerationMessage(
+  secret: string,
+  timestamp: string,
+  nonce: string,
+  rawBody: string,
+): Promise<string> {
   const bodyHash = await sha256Hex(rawBody);
-  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return hex(await crypto.subtle.sign("HMAC", key, encoder.encode(`${timestamp}.${nonce}.${bodyHash}`)));
+  return createHmac("sha256", secret)
+    .update(`${timestamp}.${nonce}.${bodyHash}`, "utf8")
+    .digest("hex");
 }
 
-export async function verifyGenerationSignature(secret: string, timestamp: string, nonce: string, rawBody: string, signature: string, now = Date.now()): Promise<boolean> {
+export async function verifyGenerationSignature(
+  secret: string,
+  timestamp: string,
+  nonce: string,
+  rawBody: string,
+  signature: string,
+  now = Date.now(),
+): Promise<boolean> {
   if (!secret || !timestamp || !nonce || !/^[0-9]+$/.test(timestamp) || !/^[0-9a-f]{64}$/i.test(signature)) return false;
   const timestampMs = Number(timestamp);
   if (!Number.isSafeInteger(timestampMs) || Math.abs(now - timestampMs) > 5 * 60 * 1000) return false;
   const expected = await signGenerationMessage(secret, timestamp, nonce, rawBody);
-  const left = encoder.encode(expected.toLowerCase()); const right = encoder.encode(signature.toLowerCase());
-  if (left.length !== right.length) return false;
-  let difference = 0; for (let index = 0; index < left.length; index++) difference |= (left[index] ?? 0) ^ (right[index] ?? 0);
-  return difference === 0;
+  const left = Buffer.from(expected.toLowerCase(), "utf8");
+  const right = Buffer.from(signature.toLowerCase(), "utf8");
+  return left.length === right.length && timingSafeEqual(left, right);
 }
 
 export class NonceReplayGuard {

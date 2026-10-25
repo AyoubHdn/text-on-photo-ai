@@ -1,3 +1,4 @@
+import { getJsonString, isJsonRecord } from "~/lib/jsonResponse";
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
@@ -38,27 +39,29 @@ export default function FreeCreditResult() {
     fetch("/api/cpa/cpx/result", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        if (!data || data.error) {
+        if (!isJsonRecord(data) || getJsonString(data, "error")) {
           setResult("error");
           return;
         }
 
-        if (data.status === "approved") {
+        const status = getJsonString(data, "status");
+
+        if (status === "approved") {
           setResult("completed");
           return;
         }
 
-        if (data.status === "screenout") {
+        if (status === "screenout") {
           setResult("screenout_no_bonus");
           return;
         }
 
-        if (data.status === "rejected") {
+        if (status === "rejected") {
           setResult("rejected");
           return;
         }
 
-        if (data.status === "pending") {
+        if (status === "pending") {
           setResult("pending");
           return;
         }

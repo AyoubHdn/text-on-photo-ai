@@ -1,3 +1,4 @@
+import { getJsonString, isJsonRecord } from "~/lib/jsonResponse";
 import { type NextPage } from "next";
 import Image from "next/image";
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
@@ -811,11 +812,12 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
       });
 
       const data = await res.json();
+      const payload = isJsonRecord(data) ? data : {};
       if (!res.ok) {
-        throw new Error(data?.error || "Background removal failed");
+        throw new Error(getJsonString(payload, "error") ?? "Background removal failed");
       }
 
-      const nextTransparentUrl = data?.transparentImageUrl as string | undefined;
+      const nextTransparentUrl = getJsonString(payload, "transparentImageUrl");
       if (!nextTransparentUrl) throw new Error("Background removal failed");
 
       setTransparentUrls((prev) => ({ ...prev, [imageId]: nextTransparentUrl }));
@@ -1277,4 +1279,3 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
 };
 
 export default CouplesNameArtGeneratorPage;
-

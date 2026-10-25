@@ -104,19 +104,30 @@ test("candidate query is explicitly scoped and uses both stale branches", () => 
   const where = recoveryCandidateWhere(now, scope);
   assert.deepEqual(where.requestType, GENERATION_ASYNC_REQUEST_TYPE);
   assert.deepEqual(where.executionScope, scope);
-  assert.equal(where.AND.length, 2);
-  assert.equal(where.AND[0].OR.length, 2);
-  assert.equal(where.AND[0].OR[0].status, "started");
-  assert.equal(where.AND[0].OR[1].status, "processing");
+
+  const clauses = where.AND;
+  assert.ok(Array.isArray(clauses));
+  assert.equal(clauses.length, 2);
+  const staleClause = clauses[0];
+  const retryClause = clauses[1];
+  assert.ok(staleClause);
+  assert.ok(retryClause);
+  const staleBranches = staleClause.OR;
+  const retryBranches = retryClause.OR;
+  assert.ok(Array.isArray(staleBranches));
+  assert.ok(Array.isArray(retryBranches));
+  assert.equal(staleBranches.length, 2);
+  assert.equal(staleBranches[0]?.status, "started");
+  assert.equal(staleBranches[1]?.status, "processing");
   assert.equal(
-    where.AND[0].OR[0].createdAt.lt.toISOString(),
+    staleBranches[0]?.createdAt?.lt?.toISOString(),
     new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
   );
   assert.equal(
-    where.AND[0].OR[1].leaseExpiresAt.lt.toISOString(),
+    staleBranches[1]?.leaseExpiresAt?.lt?.toISOString(),
     new Date(now.getTime() - 120 * 1000).toISOString(),
   );
-  assert.equal(where.AND[1].OR[0].recoveryNextAttemptAt, null);
+  assert.equal(retryBranches[0]?.recoveryNextAttemptAt, null);
 });
 
 test("recovery database timeouts are bounded and recovery-only", () => {
@@ -151,6 +162,7 @@ test("reconciliation is bounded, continues after an individual failure, and coun
       return [candidate({ generationRequestId: "one" }), candidate({ generationRequestId: "two" }), candidate({ generationRequestId: "three" })];
     },
     /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
+    /** @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>} */
     reconcileOne: async (item) => {
       seen.push(item.generationRequestId);
       if (item.generationRequestId === "one") throw new Error("simulated candidate failure");
@@ -177,6 +189,7 @@ test("reconciliation stops when its execution budget is exhausted", async () => 
     maxDurationMs: 10,
     now: () => clock,
     listCandidates: async () => [candidate({ generationRequestId: "one" }), candidate({ generationRequestId: "two" })],
+    /** @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>} */
     reconcileOne: async () => {
       calls += 1;
       clock = 11;
@@ -191,6 +204,7 @@ test("reconciliation stops when its execution budget is exhausted", async () => 
 test("overlapping runs are safe when the authoritative transition is idempotent", async () => {
   let transitionCount = 0;
   let terminal = false;
+  /** @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>} */
   const reconcileOne = async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (terminal) return "TERMINAL_NOOP";
@@ -309,6 +323,7 @@ test("persistent retry state lets later five-minute runs pass a permanently fail
     entry.nextAttemptAt = runNow + 60_000;
   };
   /** @param {import("../workers/db/src/recovery.ts").RecoveryCandidate} item */
+  /** @returns {Promise<import("../workers/db/src/recovery.ts").RecoveryOutcome>} */
   const reconcileOne = async (item) => {
     processed.push(item.generationRequestId);
     if (item.generationRequestId === "one") throw new Error("persistent simulated failure");
