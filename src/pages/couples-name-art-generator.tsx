@@ -29,6 +29,8 @@ import {
   buildPromptImageAlt,
 } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
+import { asyncGenerationImages, isAsyncGenerationEnabledForUser } from "~/lib/asyncGeneration";
+import { useAsyncGeneration } from "~/hook/useAsyncGeneration";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
@@ -184,6 +186,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const generationSubmitLockRef = useRef(false);
+  const pendingGenerationRequestIdRef = useRef<string | null>(null);
   const firstNameFieldRef = useRef<HTMLDivElement>(null);
   const firstNameInputRef = useRef<HTMLInputElement>(null);
   const secondNameFieldRef = useRef<HTMLDivElement>(null);
@@ -204,6 +207,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
   const hasRestoredDraftRef = useRef(false);
   const restoredAuthDraftRef = useRef(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
+  const asyncGenerationEnabled = isAsyncGenerationEnabledForUser(isLoggedIn);
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
       try {
@@ -537,6 +541,61 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     signIn(undefined, { callbackUrl: getSignInCallbackUrl() }).catch(console.error);
   };
 
+  const handleAsyncCompleted = (imageUrls: readonly string[]) => {
+    const data = asyncGenerationImages(imageUrls);
+      setImagesUrl(data);
+      setGeneratedAspect(selectedAspectRatio);
+      setTransparentUrls({});
+      setUseTransparentMap({});
+      setRemovingBackgroundMap({});
+      setRemoveBgCreditAlertMap({});
+
+      const imagesCount = Number.parseInt(form.numberofImages, 10);
+      const perImageCredits = MODEL_CREDITS[selectedModel] ?? 1;
+      const creditsUsed =
+        perImageCredits * (Number.isFinite(imagesCount) && imagesCount > 0 ? imagesCount : 1);
+
+      trackEvent("generate_design", {
+        model: selectedModel,
+        credits_used: creditsUsed,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: creditsUsed,
+        ...funnelContext,
+      });
+
+      const firstImageUrl = data?.[0]?.imageUrl;
+      if (firstImageUrl) {
+        const saved: SavedDesign = {
+          imageUrl: firstImageUrl,
+          prompt: form.basePrompt
+            .replace(/\[NAME1\]/gi, form.name1)
+            .replace(/\[NAME2\]/gi, form.name2),
+          model: selectedModel,
+          createdAt: new Date().toISOString(),
+          hasBackgroundRemoved: false,
+        };
+        try {
+          window.localStorage.setItem(LAST_DESIGN_STORAGE_KEY, JSON.stringify(saved));
+        } catch {
+          // ignore storage errors
+        }
+      }
+    void creditsQuery.refetch();
+    pendingGenerationRequestIdRef.current = null;
+    generationSubmitLockRef.current = false;
+    setIsSubmittingGeneration(false);
+  };
+
+  const asyncGeneration = useAsyncGeneration({
+    enabled: asyncGenerationEnabled,
+    onCompleted: (status) => handleAsyncCompleted(status.imageUrls),
+    onFailed: (status) => {
+      pendingGenerationRequestIdRef.current = null;
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+      setError(status.errorMessage ?? "Generation failed. Your credits were refunded.");
+    },
+  });
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess: (data) => {
       setImagesUrl(data);
@@ -580,6 +639,7 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     onSettled: () => {
       generationSubmitLockRef.current = false;
       setIsSubmittingGeneration(false);
+      pendingGenerationRequestIdRef.current = null;
     },
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
@@ -601,7 +661,10 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     finalPrompt += ", beautiful romantic art, high resolution";
 
     return {
-      generationRequestId: createGenerationRequestId(),
+      generationRequestId:
+        asyncGenerationEnabled && pendingGenerationRequestIdRef.current
+          ? pendingGenerationRequestIdRef.current
+          : createGenerationRequestId(),
       prompt: finalPrompt,
       numberOfImages: Number.parseInt(form.numberofImages, 10),
       aspectRatio: selectedAspectRatio,
@@ -634,7 +697,18 @@ const CouplesNameArtGeneratorPage: NextPage = () => {
     generationSubmitLockRef.current = true;
     setIsSubmittingGeneration(true);
     setError("");
-    generateIcon.mutate(buildGenerationInput());
+    const input = buildGenerationInput();
+    if (asyncGenerationEnabled) {
+      pendingGenerationRequestIdRef.current = input.generationRequestId;
+      void asyncGeneration.start(input).catch((error: unknown) => {
+        asyncGeneration.reset();
+        setIsSubmittingGeneration(false);
+        generationSubmitLockRef.current = false;
+        setError(error instanceof Error ? error.message : "Unable to start generation.");
+      });
+      return;
+    }
+    generateIcon.mutate(input);
   };
 
   const scrollToSection = (

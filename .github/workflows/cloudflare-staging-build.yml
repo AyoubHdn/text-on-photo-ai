@@ -115,6 +115,9 @@ jobs:
       - name: Run server async gate tests
         run: node --experimental-strip-types tests/server-async-generation-gate.test.mjs
 
+      - name: Run async UI lifecycle tests
+        run: node --experimental-strip-types --test tests/async-generation-ui.test.mjs
+
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
 
@@ -269,10 +272,19 @@ jobs:
             grep -Fq 'api.generate.generateIcon.useMutation' "${page}"
           done
 
-          if grep -RInE -- 'useAsyncGeneration|generateIconAsync' src/pages src/component; then
-            echo 'Async generation hook/procedure is active from a normal page or component'
-            exit 1
-          fi
+          for page in \
+            src/pages/name-art-generator.tsx \
+            src/pages/arabic-calligraphy-generator.tsx \
+            src/pages/ar/arabic-calligraphy-generator.tsx \
+            src/pages/couples-name-art-generator.tsx; do
+            grep -Fq 'useAsyncGeneration' "${page}"
+            grep -Fq 'isAsyncGenerationEnabledForUser(isLoggedIn)' "${page}"
+            grep -Fq 'asyncGeneration.start(input)' "${page}"
+            if grep -Fq 'api.generate.generateIconAsync' "${page}"; then
+              echo "Normal page calls the async procedure directly: ${page}"
+              exit 1
+            fi
+          done
 
           if grep -RInF -- 'invokeGenerationLambda' src/pages src/component; then
             echo 'User-facing page/component invokes Lambda directly'

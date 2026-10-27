@@ -29,6 +29,8 @@ import {
   buildPromptImageAlt,
 } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
+import { asyncGenerationImages, isAsyncGenerationEnabledForUser } from "~/lib/asyncGeneration";
+import { useAsyncGeneration } from "~/hook/useAsyncGeneration";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
 import { GENERATOR_PRODUCT_THUMBNAILS } from "~/config/generatorProductThumbnails";
@@ -180,6 +182,7 @@ const NameArtGeneratorPage: NextPage = () => {
   const [creditUpgradeRequired, setCreditUpgradeRequired] = useState(0);
   const pendingCreditActionRef = useRef<null | (() => void)>(null);
   const generationSubmitLockRef = useRef(false);
+  const pendingGenerationRequestIdRef = useRef<string | null>(null);
   const nameFieldRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const styleSectionRef = useRef<HTMLDivElement>(null);
@@ -198,6 +201,7 @@ const NameArtGeneratorPage: NextPage = () => {
   const restoredAuthDraftRef = useRef(false);
   const [isSubmittingGeneration, setIsSubmittingGeneration] = useState(false);
   const creditsQuery = api.user.getCredits.useQuery(undefined, { enabled: isLoggedIn });
+  const asyncGenerationEnabled = isAsyncGenerationEnabledForUser(isLoggedIn);
   const digitalArtInterestIntent = api.user.recordDigitalArtInterestIntent.useMutation({
     onSuccess: () => {
       try {
@@ -523,6 +527,56 @@ const NameArtGeneratorPage: NextPage = () => {
     void signIn(undefined, { callbackUrl: getSignInCallbackUrl() });
   };
 
+  const handleAsyncCompleted = (imageUrls: readonly string[]) => {
+    const data = asyncGenerationImages(imageUrls);
+      setImagesUrl(data);
+      setGeneratedAspect(selectedAspectRatio);
+      setTransparentUrls({});
+      setUseTransparentMap({});
+      setRemovingBackgroundMap({});
+      setRemoveBgCreditAlertMap({});
+      const firstImageUrl = data?.[0]?.imageUrl;
+      if (firstImageUrl) {
+        const saved: SavedDesign = {
+          imageUrl: firstImageUrl,
+          prompt: form.basePrompt ? form.basePrompt.replace(/'Text'/gi, form.name) : form.name,
+          model: selectedModel,
+          createdAt: new Date().toISOString(),
+          hasBackgroundRemoved: false,
+        };
+        try {
+          window.localStorage.setItem(LAST_DESIGN_STORAGE_KEY, JSON.stringify(saved));
+        } catch {
+          // ignore storage errors
+        }
+      }
+      const imagesCount = Number.parseInt(form.numberofImages, 10);
+      const perImageCredits = MODEL_CREDITS[selectedModel] ?? 1;
+      const creditsUsed =
+        perImageCredits * (Number.isFinite(imagesCount) && imagesCount > 0 ? imagesCount : 1);
+      trackEvent("generate_design", {
+        model: selectedModel,
+        credits_used: creditsUsed,
+        user_credits_before_action: creditsQuery.data ?? null,
+        required_credits: creditsUsed,
+        ...funnelContext,
+      });
+    void creditsQuery.refetch();
+    pendingGenerationRequestIdRef.current = null;
+    generationSubmitLockRef.current = false;
+    setIsSubmittingGeneration(false);
+  };
+
+  const asyncGeneration = useAsyncGeneration({
+    enabled: asyncGenerationEnabled,
+    onCompleted: (status) => handleAsyncCompleted(status.imageUrls),
+    onFailed: (status) => {
+      pendingGenerationRequestIdRef.current = null;
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+      setError(status.errorMessage ?? "Generation failed. Your credits were refunded.");
+    },
+  });
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess: (data) => {
       setImagesUrl(data);
@@ -561,6 +615,7 @@ const NameArtGeneratorPage: NextPage = () => {
     onSettled: () => {
       generationSubmitLockRef.current = false;
       setIsSubmittingGeneration(false);
+      pendingGenerationRequestIdRef.current = null;
     },
     onError: (error) => {
       if (error.message.toLowerCase().includes("enough credits")) {
@@ -586,7 +641,10 @@ const NameArtGeneratorPage: NextPage = () => {
     finalPrompt += " designed to cover the entire screen, high resolution";
 
     return {
-      generationRequestId: createGenerationRequestId(),
+      generationRequestId:
+        asyncGenerationEnabled && pendingGenerationRequestIdRef.current
+          ? pendingGenerationRequestIdRef.current
+          : createGenerationRequestId(),
       prompt: finalPrompt,
       numberOfImages,
       aspectRatio: selectedAspectRatio,
@@ -617,7 +675,18 @@ const NameArtGeneratorPage: NextPage = () => {
     generationSubmitLockRef.current = true;
     setIsSubmittingGeneration(true);
     setError("");
-    generateIcon.mutate(buildGenerationInput());
+    const input = buildGenerationInput();
+    if (asyncGenerationEnabled) {
+      pendingGenerationRequestIdRef.current = input.generationRequestId;
+      void asyncGeneration.start(input).catch((error: unknown) => {
+        asyncGeneration.reset();
+        setIsSubmittingGeneration(false);
+        generationSubmitLockRef.current = false;
+        setError(error instanceof Error ? error.message : "Unable to start generation.");
+      });
+      return;
+    }
+    generateIcon.mutate(input);
   };
 
   const scrollToSection = (
