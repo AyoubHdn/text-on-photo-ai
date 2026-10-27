@@ -554,7 +554,7 @@ test("persistent retry backoff lets later candidates progress across bounded run
           },
         ],
       },
-      orderBy: [{ recoveryNextAttemptAt: "asc" }, { createdAt: "asc" }],
+      orderBy: [{ recoveryNextAttemptAt: { sort: "asc", nulls: "first" } }, { createdAt: "asc" }],
       take: limit,
       select: {
         generationRequestId: true,
