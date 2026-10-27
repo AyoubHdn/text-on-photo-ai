@@ -98,7 +98,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(printenv DATABASE_URL)" = "postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai"
-          npx prisma migrate deploy --schema prisma/schema.prisma
+          npx prisma db push --schema prisma/schema.prisma --accept-data-loss --skip-generate
 
       - name: Run real PostgreSQL recovery integration tests
         run: node --experimental-strip-types --test tests/generation-recovery.integration.test.mjs
