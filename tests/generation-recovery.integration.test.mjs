@@ -105,7 +105,8 @@ async function loadDbService() {
   try {
     await writeFile(bundlePath, output.contents);
     const module = await import(pathToFileURL(bundlePath).href);
-    return module.default ?? module;
+    const exported = module.default;
+    return exported?.default ?? exported ?? module;
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
