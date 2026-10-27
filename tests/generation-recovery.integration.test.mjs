@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { after, test } from "node:test";
+import { after, mock, test } from "node:test";
 import { createRequire } from "node:module";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -27,6 +27,12 @@ if (
 }
 
 const TEST_SCOPE = "cloudflare-staging";
+/**
+ * Node 22 supports Date controls at runtime; the installed Node typings only
+ * declare timer APIs, so keep the compatibility surface explicit and narrow.
+ * @type {{ enable(options: { apis: string[]; now: number }): void; setTime(time: number): void; reset(): void }}
+ */
+const recoveryClock = /** @type {{ enable(options: { apis: string[]; now: number }): void; setTime(time: number): void; reset(): void }} */ (/** @type {unknown} */ (mock.timers));
 const OTHER_SCOPE = "other-deployment";
 const prefix = "recovery-integration-" + Date.now();
 /** @type {string[]} */
@@ -44,6 +50,7 @@ globalThis.WorkerEntrypoint = class {
 
 /**
  * @typedef {{outcome: string, job?: object} | {ok: false, code: string}} DbResult
+ * @typedef {{generationRequestId: string, executionScope: string, processingGraceSeconds?: number, databaseTimeoutMs?: number, databaseLockTimeoutMs?: number, databaseMaxWaitMs?: number, errorMessage: string}} RecoveryTestInput
  * @typedef {import("../workers/db/src/recovery.ts").RecoveryCandidate} RecoveryCandidate
  * @typedef {import("../workers/db/src/recovery.ts").RecoveryDbTimeouts} RecoveryDbTimeouts
  */
@@ -61,7 +68,7 @@ globalThis.WorkerEntrypoint = class {
  * @property {(input: object) => Promise<GenerationClaimResult>} generationClaimExecution
  * @property {(input: object) => Promise<GenerationFinalizeSuccessResult>} generationFinalizeSuccess
  * @property {(input: object) => Promise<GenerationFinalizeFailureResult>} generationFinalizeFailure
- * @property {(input: object) => Promise<GenerationFinalizeFailureResult>} generationFailIfStale
+ * @property {(input: RecoveryTestInput) => Promise<GenerationFinalizeFailureResult>} generationFailIfStale
  * @property {(scope: string, batchSize: number, maxDurationMs: number, processingGraceSeconds: number, dbTimeouts: RecoveryDbTimeouts) => Promise<void>} runGenerationRecovery
  * @property {(candidate: RecoveryCandidate, scope: string, dbTimeouts: RecoveryDbTimeouts) => Promise<void>} markGenerationRecoveryFailure
  */
@@ -600,7 +607,7 @@ test("persistent retry backoff lets later candidates progress across bounded run
   assert.equal(firstAfterRun?.recoveryAttemptCount, 1);
   assert.ok(firstAfterRun?.recoveryNextAttemptAt);
 
-  const secondRun = await run(new Date(Date.now() + 30 * 1000));
+  const secondRun = await run(new Date(Date.now() + 5 * 60 * 1000));
   assert.equal(secondRun.examined, 1);
   assert.equal(secondRun.failed, 1);
   assert.equal((await requestRow(secondId))?.status, "failed");
@@ -608,5 +615,90 @@ test("persistent retry backoff lets later candidates progress across bounded run
   assert.equal(await credits(secondUserId), "10");
   assert.equal(await credits(firstUserId), "9");
   assert.equal(recoveryBackoffSeconds(1), 60);
+});
+
+test("real PostgreSQL recovery selects NULL retry timestamps first", async () => {
+  const instance = service();
+  const retryUserId = await createUser("retry-order");
+  const freshUserId = await createUser("fresh-order");
+  const laterFreshUserId = await createUser("fresh-later");
+  const retryId = nextRequestId("retry-order");
+  const freshId = nextRequestId("fresh-order");
+  const laterFreshId = nextRequestId("later-fresh");
+  await reserve(instance, retryId, retryUserId);
+  await reserve(instance, freshId, freshUserId);
+  await reserve(instance, laterFreshId, laterFreshUserId);
+
+  const baseNow = Date.now();
+  recoveryClock.enable({ apis: ["Date"], now: baseNow });
+  try {
+    await prisma.generationRequest.updateMany({
+      where: { generationRequestId: { in: [retryId, freshId, laterFreshId] } },
+      data: { createdAt: new Date(baseNow - 16 * 60 * 1000) },
+    });
+    await prisma.generationRequest.update({
+      where: { generationRequestId: laterFreshId },
+      data: { createdAt: new Date(baseNow) },
+    });
+    await prisma.generationRequest.update({
+      where: { generationRequestId: retryId },
+      data: {
+        recoveryAttemptCount: 1,
+        recoveryNextAttemptAt: new Date(baseNow - 1000),
+      },
+    });
+
+    const timeouts = recoveryDbTimeouts();
+    const originalRecovery = instance.generationFailIfStale.bind(instance);
+    /** @type {string[]} */
+    const selected = [];
+    instance.generationFailIfStale = async (input) => {
+    /** @param {RecoveryTestInput} input */
+      selected.push(input.generationRequestId);
+      return originalRecovery(input);
+    };
+
+    await instance["runGenerationRecovery"](TEST_SCOPE, 1, 2500, 120, timeouts);
+    assert.deepEqual(selected, [freshId]);
+    assert.equal((await requestRow(freshId))?.status, "failed");
+    assert.equal((await requestRow(retryId))?.status, "started");
+
+    recoveryClock.setTime(baseNow + 5 * 60 * 1000);
+    selected.length = 0;
+    instance.generationFailIfStale = async (input) => {
+    /** @param {RecoveryTestInput} input */
+      selected.push(input.generationRequestId);
+      if (input.generationRequestId === retryId) {
+        throw new Error("persistent-test-failure");
+      }
+      return originalRecovery(input);
+    };
+    await instance["runGenerationRecovery"](TEST_SCOPE, 1, 2500, 120, timeouts);
+    assert.deepEqual(selected, [retryId]);
+    assert.equal((await requestRow(retryId))?.status, "started");
+    assert.equal((await requestRow(retryId))?.recoveryAttemptCount, 2);
+
+    recoveryClock.setTime(baseNow + 10 * 60 * 1000);
+    selected.length = 0;
+    instance.generationFailIfStale = async (input) => {
+    /** @param {RecoveryTestInput} input */
+      selected.push(input.generationRequestId);
+      return originalRecovery(input);
+    };
+    await prisma.generationRequest.update({
+      where: { generationRequestId: laterFreshId },
+      data: {
+        createdAt: new Date(baseNow - 16 * 60 * 1000),
+        recoveryNextAttemptAt: null,
+      },
+    });
+    await instance["runGenerationRecovery"](TEST_SCOPE, 1, 2500, 120, timeouts);
+    assert.deepEqual(selected, [laterFreshId]);
+    assert.equal((await requestRow(laterFreshId))?.status, "failed");
+    assert.equal((await requestRow(retryId))?.status, "started");
+    assert.equal(recoveryBackoffSeconds(1), 60);
+  } finally {
+    recoveryClock.reset();
+  }
 });
 

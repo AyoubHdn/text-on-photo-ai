@@ -926,8 +926,8 @@ export default class DbService extends WorkerEntrypoint<Env> {
           await this.setRecoveryDbTimeouts(tx, dbTimeouts);
           return tx.generationRequest.findMany({
             where: recoveryCandidateWhere(candidateTime, scope, processingGraceSeconds),
-            // PostgreSQL ASC places NULL retry timestamps first, so fresh candidates progress before retries.
-            orderBy: [{ recoveryNextAttemptAt: "asc" }, { createdAt: "asc" }],
+            // Fresh candidates must progress before retryable failures; keep the secondary key deterministic.
+            orderBy: [{ recoveryNextAttemptAt: { sort: "asc", nulls: "first" } }, { createdAt: "asc" }],
             take: limit,
             select: {
               generationRequestId: true,
