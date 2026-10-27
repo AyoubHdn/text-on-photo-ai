@@ -60,6 +60,7 @@ jobs:
       NEXT_PUBLIC_STRIPE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
       NEXT_PUBLIC_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION }}
       NEXT_PUBLIC_S3_BUCKET_NAME: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_NAME }}
+      NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
 
     steps:
       - name: Check out triggering commit
@@ -117,6 +118,9 @@ jobs:
 
       - name: Run async UI lifecycle tests
         run: node --experimental-strip-types --test tests/async-generation-ui.test.mjs
+
+      - name: Run async hook lifecycle tests
+        run: node --experimental-strip-types --test tests/async-generation-hook.test.mjs
 
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
@@ -255,7 +259,9 @@ jobs:
           grep -Fq 'assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);' src/server/api/routers/generate.ts
           grep -Fq '"ASYNC_GENERATION_ENABLED": "false"' wrangler.jsonc
           grep -Fq '"GENERATION_EXECUTION_SCOPE": "cloudflare-staging"' wrangler.jsonc
-          grep -Fq 'ASYNC_GENERATION_FEATURE_ENABLED = false as const' src/lib/asyncGeneration.ts
+          grep -Fq 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED === "true"' src/lib/asyncGeneration.ts
+          grep -Fq 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED' src/env.mjs
+          grep -Fq '"NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED": "false"' wrangler.jsonc
           grep -Fq 'iconMetadata:' src/server/api/routers/generate.ts
           grep -Fq 'prompt: callback.prompt' 'src/pages/api/internal/generation/[operation].ts'
           grep -Fq 'digitalArtInterest: job.digitalArtInterest' workers/generation-lambda/src/callback.ts

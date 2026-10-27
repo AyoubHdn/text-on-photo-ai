@@ -29,7 +29,11 @@ import {
   buildPromptImageAlt,
 } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
-import { asyncGenerationImages, isAsyncGenerationEnabledForUser } from "~/lib/asyncGeneration";
+import {
+  asyncGenerationImages,
+  isAmbiguousAsyncSubmissionError,
+  isAsyncGenerationEnabledForUser,
+} from "~/lib/asyncGeneration";
 import { useAsyncGeneration } from "~/hook/useAsyncGeneration";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -143,6 +147,7 @@ const NameArtGeneratorPage: NextPage = () => {
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+  const userId = session?.user?.id ?? null;
   const router = useRouter();
 
   const [form, setForm] = useState({ name: "", basePrompt: "", numberofImages: "1" });
@@ -529,12 +534,13 @@ const NameArtGeneratorPage: NextPage = () => {
 
   const handleAsyncCompleted = (imageUrls: readonly string[]) => {
     const data = asyncGenerationImages(imageUrls);
-      setImagesUrl(data);
-      setGeneratedAspect(selectedAspectRatio);
-      setTransparentUrls({});
-      setUseTransparentMap({});
-      setRemovingBackgroundMap({});
-      setRemoveBgCreditAlertMap({});
+    setError("");
+    setImagesUrl(data);
+    setGeneratedAspect(selectedAspectRatio);
+    setTransparentUrls({});
+    setUseTransparentMap({});
+    setRemovingBackgroundMap({});
+    setRemoveBgCreditAlertMap({});
       const firstImageUrl = data?.[0]?.imageUrl;
       if (firstImageUrl) {
         const saved: SavedDesign = {
@@ -569,14 +575,38 @@ const NameArtGeneratorPage: NextPage = () => {
 
   const asyncGeneration = useAsyncGeneration({
     enabled: asyncGenerationEnabled,
+    userId,
+    sourcePage: SOURCE_PAGE,
     onCompleted: (status) => handleAsyncCompleted(status.imageUrls),
     onFailed: (status) => {
       pendingGenerationRequestIdRef.current = null;
       generationSubmitLockRef.current = false;
       setIsSubmittingGeneration(false);
+      void creditsQuery.refetch();
       setError(status.errorMessage ?? "Generation failed. Your credits were refunded.");
     },
+    onStatusError: () => {
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+      setError("We couldn't check the generation status. Please try checking again.");
+    },
   });
+  useEffect(() => {
+    pendingGenerationRequestIdRef.current = asyncGeneration.generationRequestId;
+  }, [asyncGeneration.generationRequestId]);
+  const previousAsyncUserIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      previousAsyncUserIdRef.current !== null &&
+      previousAsyncUserIdRef.current !== userId
+    ) {
+      pendingGenerationRequestIdRef.current = null;
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+      setError("");
+    }
+    previousAsyncUserIdRef.current = userId;
+  }, [userId]);
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess: (data) => {
       setImagesUrl(data);
@@ -675,13 +705,21 @@ const NameArtGeneratorPage: NextPage = () => {
     generationSubmitLockRef.current = true;
     setIsSubmittingGeneration(true);
     setError("");
+    if (asyncGenerationEnabled && pendingGenerationRequestIdRef.current) {
+      void asyncGeneration.resumeStatus();
+      return;
+    }
     const input = buildGenerationInput();
     if (asyncGenerationEnabled) {
       pendingGenerationRequestIdRef.current = input.generationRequestId;
       void asyncGeneration.start(input).catch((error: unknown) => {
-        asyncGeneration.reset();
         setIsSubmittingGeneration(false);
         generationSubmitLockRef.current = false;
+        if (isAmbiguousAsyncSubmissionError(error)) {
+          setError("We couldn't confirm the request started. Your status is being checked; you can resume checking without creating another request.");
+          return;
+        }
+        asyncGeneration.reset();
         setError(error instanceof Error ? error.message : "Unable to start generation.");
       });
       return;
@@ -1220,6 +1258,20 @@ const NameArtGeneratorPage: NextPage = () => {
                 </Link>
               )}
             </div>
+          )}
+          {asyncGeneration.canResumeStatus && (
+            <button
+              type="button"
+              className="mt-2 font-semibold text-brand-700 underline"
+              onClick={() => {
+                generationSubmitLockRef.current = true;
+                setIsSubmittingGeneration(true);
+                setError("");
+                void asyncGeneration.resumeStatus();
+              }}
+            >
+              Check generation status again
+            </button>
           )}
           {isCreditLocked && (
             <div className="rounded border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">

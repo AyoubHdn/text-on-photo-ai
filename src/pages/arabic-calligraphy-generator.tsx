@@ -33,7 +33,11 @@ import {
   buildPromptImageAlt,
 } from "~/lib/styleImageAlt";
 import { getFunnelContext } from "~/lib/tracking/funnel";
-import { asyncGenerationImages, isAsyncGenerationEnabledForUser } from "~/lib/asyncGeneration";
+import {
+  asyncGenerationImages,
+  isAmbiguousAsyncSubmissionError,
+  isAsyncGenerationEnabledForUser,
+} from "~/lib/asyncGeneration";
 import { useAsyncGeneration } from "~/hook/useAsyncGeneration";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
 import { CreditUpgradeModal } from "~/component/Credits/CreditUpgradeModal";
@@ -143,6 +147,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
   const hasTrackedViewRef = useRef(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+  const userId = session?.user?.id ?? null;
   const router = useRouter();
 
   const [form, setForm] = useState({ name: "", basePrompt: "" });
@@ -500,12 +505,13 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
   const handleAsyncCompleted = (imageUrls: readonly string[]) => {
     const data = asyncGenerationImages(imageUrls);
-      setImagesUrl(data);
-      setGeneratedAspect(selectedAspectRatio);
-      setTransparentUrls({});
-      setUseTransparentMap({});
-      setRemovingBackgroundMap({});
-      setRemoveBgCreditAlertMap({});
+    setError("");
+    setImagesUrl(data);
+    setGeneratedAspect(selectedAspectRatio);
+    setTransparentUrls({});
+    setUseTransparentMap({});
+    setRemovingBackgroundMap({});
+    setRemoveBgCreditAlertMap({});
       trackEvent("generate_design", {
         model: selectedModel,
         credits_used: MODEL_CREDITS[selectedModel],
@@ -537,14 +543,38 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
 
   const asyncGeneration = useAsyncGeneration({
     enabled: asyncGenerationEnabled,
+    userId,
+    sourcePage: SOURCE_PAGE,
     onCompleted: (status) => handleAsyncCompleted(status.imageUrls),
     onFailed: (status) => {
       pendingGenerationRequestIdRef.current = null;
       generationSubmitLockRef.current = false;
       setIsSubmittingGeneration(false);
+      void creditsQuery.refetch();
       setError(status.errorMessage ?? "Generation failed. Your credits were refunded.");
     },
+    onStatusError: () => {
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+      setError("تعذر التحقق من حالة التصميم. يمكنك إعادة المحاولة دون إنشاء طلب جديد.");
+    },
   });
+  useEffect(() => {
+    pendingGenerationRequestIdRef.current = asyncGeneration.generationRequestId;
+  }, [asyncGeneration.generationRequestId]);
+  const previousAsyncUserIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      previousAsyncUserIdRef.current !== null &&
+      previousAsyncUserIdRef.current !== userId
+    ) {
+      pendingGenerationRequestIdRef.current = null;
+      generationSubmitLockRef.current = false;
+      setIsSubmittingGeneration(false);
+      setError("");
+    }
+    previousAsyncUserIdRef.current = userId;
+  }, [userId]);
   const generateIcon = api.generate.generateIcon.useMutation({
     onSuccess: (data) => {
       setImagesUrl(data);
@@ -635,13 +665,21 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     generationSubmitLockRef.current = true;
     setIsSubmittingGeneration(true);
     setError("");
+    if (asyncGenerationEnabled && pendingGenerationRequestIdRef.current) {
+      void asyncGeneration.resumeStatus();
+      return;
+    }
     const input = buildGenerationInput();
     if (asyncGenerationEnabled) {
       pendingGenerationRequestIdRef.current = input.generationRequestId;
       void asyncGeneration.start(input).catch((error: unknown) => {
-        asyncGeneration.reset();
         setIsSubmittingGeneration(false);
         generationSubmitLockRef.current = false;
+        if (isAmbiguousAsyncSubmissionError(error)) {
+          setError("تعذر تأكيد بدء الطلب. جارٍ التحقق من حالته؛ يمكنك استئناف التحقق دون إنشاء طلب آخر.");
+          return;
+        }
+        asyncGeneration.reset();
         setError(error instanceof Error ? error.message : "Unable to start generation.");
       });
       return;
@@ -1085,6 +1123,20 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
             <div className="bg-red-500 text-white rounded p-4 text-xl mb-6">
               {error} {error.includes("credits") && <Link href="/buy-credits" className="underline font-bold ml-2">Buy Credits</Link>}
             </div>
+          )}
+          {asyncGeneration.canResumeStatus && (
+            <button
+              type="button"
+              className="mt-2 font-semibold text-brand-700 underline"
+              onClick={() => {
+                generationSubmitLockRef.current = true;
+                setIsSubmittingGeneration(true);
+                setError("");
+                void asyncGeneration.resumeStatus();
+              }}
+            >
+              Check generation status again
+            </button>
           )}
           
           {isCreditLocked && (
