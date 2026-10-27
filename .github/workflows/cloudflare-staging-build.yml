@@ -13,9 +13,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: namedesignai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d namedesignai"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       NODE_ENV: production
       DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai
+      RECOVERY_TEST_DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai
       NEXTAUTH_SECRET: ci-nextauth-secret
       NEXTAUTH_URL: https://namedesignai-cloudflare-staging.hdnstudio.workers.dev
       GOOGLE_CLIENT_ID: ci-google-client-id
@@ -78,6 +93,16 @@ jobs:
           npx wrangler types worker-configuration.d.ts --config wrangler.jsonc --include-runtime
           npx wrangler types workers/db/worker-configuration.d.ts --config workers/db/wrangler.jsonc --include-runtime
 
+      - name: Initialize disposable PostgreSQL schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(printenv DATABASE_URL)" = "postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai"
+          npx prisma migrate deploy --schema prisma/schema.prisma
+
+      - name: Run real PostgreSQL recovery integration tests
+        run: node --experimental-strip-types --test tests/generation-recovery.integration.test.mjs
+
       - name: Run recovery tests
         run: node --experimental-strip-types --test tests/generation-recovery.test.mjs
 
@@ -92,7 +117,6 @@ jobs:
 
       - name: Run Lambda mocked tests
         run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
-
 
       - name: Run JSON response guard tests
         run: node --experimental-strip-types --test tests/json-response.test.mjs
@@ -387,3 +411,4 @@ jobs:
           if-no-files-found: error
           retention-days: 3
           include-hidden-files: true
+
