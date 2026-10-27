@@ -3,7 +3,7 @@
  * server gate remains authoritative even if a client build enables this flag.
  */
 export const ASYNC_GENERATION_FEATURE_ENABLED =
-  process.env.NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED === "true";
+  String(process.env.NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED ?? "") === "true";
 
 const PENDING_ASYNC_GENERATION_STORAGE_PREFIX =
   "name-art:pending-async-generation:v1";

@@ -261,7 +261,7 @@ jobs:
           grep -Fq 'assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);' src/server/api/routers/generate.ts
           grep -Fq '"ASYNC_GENERATION_ENABLED": "false"' wrangler.jsonc
           grep -Fq '"GENERATION_EXECUTION_SCOPE": "cloudflare-staging"' wrangler.jsonc
-          grep -Fq 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED === "true"' src/lib/asyncGeneration.ts
+          grep -Fq 'String(process.env.NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED ?? "") === "true"' src/lib/asyncGeneration.ts
           grep -Fq 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED' src/env.mjs
           grep -Fq '"NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED": "false"' wrangler.jsonc
           grep -Fq 'iconMetadata:' src/server/api/routers/generate.ts
