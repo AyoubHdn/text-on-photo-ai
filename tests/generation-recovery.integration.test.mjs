@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
 import { createRequire } from "node:module";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -68,7 +72,7 @@ async function loadDbService() {
     entryPoints: ["workers/db/src/index.ts"],
     bundle: true,
     platform: "node",
-    format: "esm",
+    format: "cjs",
     target: "node22",
     write: false,
     plugins: [
@@ -94,10 +98,17 @@ async function loadDbService() {
   });
   const output = bundle.outputFiles[0];
   if (!output) throw new Error("DB Worker test bundle was empty");
-  const module = await import(
-    "data:text/javascript;base64," + Buffer.from(output.text).toString("base64")
+  const tempDir = await mkdtemp(
+    path.join(os.tmpdir(), "namedesignai-recovery-")
   );
-  return module.default;
+  const bundlePath = path.join(tempDir, "db-worker.cjs");
+  try {
+    await writeFile(bundlePath, output.contents);
+    const module = await import(pathToFileURL(bundlePath).href);
+    return module.default ?? module;
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 const DbService = await loadDbService();
