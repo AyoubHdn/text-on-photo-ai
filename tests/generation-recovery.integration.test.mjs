@@ -120,11 +120,11 @@ function outcomeOf(result) {
     typeof result !== "object" ||
     result === null ||
     !("outcome" in result) ||
-    typeof outcomeOf(result) !== "string"
+    typeof result.outcome !== "string"
   ) {
     throw new Error("Expected a DB transition outcome");
   }
-  return outcomeOf(result);
+  return result.outcome;
 }
 const { recoveryBackoffSeconds, recoveryDbTimeouts, runBoundedRecovery } =
   await import("../workers/db/src/recovery.ts");
