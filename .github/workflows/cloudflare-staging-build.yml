@@ -5,6 +5,12 @@ on:
     branches:
       - fix/async-callback-contract
   workflow_dispatch:
+    inputs:
+      enable_async_client:
+        description: Build the staging candidate with the authenticated async client path enabled
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -60,7 +66,7 @@ jobs:
       NEXT_PUBLIC_STRIPE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
       NEXT_PUBLIC_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION }}
       NEXT_PUBLIC_S3_BUCKET_NAME: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_NAME }}
-      NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
+      NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: ${{ inputs.enable_async_client == true && 'true' || 'false' }}
 
     steps:
       - name: Check out triggering commit
@@ -163,6 +169,18 @@ jobs:
 
       - name: Build OpenNext Cloudflare worker
         run: npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
+
+      - name: Verify explicit async client build variant
+        if: ${{ inputs.enable_async_client == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED}" = "true"
+          if ! grep -RIlE 'useAsyncGeneration|asyncGenerationEnabled|generateIconAsync' .open-next/assets >/dev/null 2>&1; then
+            echo 'Enabled async client implementation was not found in browser assets'
+            exit 1
+          fi
+          echo 'Explicit async client build variant verified'
 
       - name: Verify real public build inputs and remove CI placeholders
         shell: bash
@@ -426,7 +444,7 @@ jobs:
       - name: Upload OpenNext bundle
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-async-recovery-disabled-${{ steps.tested-sha.outputs.sha }}
+          name: namedesignai-open-next-async-${{ inputs.enable_async_client == true && 'client-enabled' || 'client-disabled' }}-${{ steps.tested-sha.outputs.sha }}
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
