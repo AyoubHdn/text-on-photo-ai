@@ -393,6 +393,20 @@ export type DbErrorCode =
   | "DEPENDENCY_UNAVAILABLE"
   | "INTERNAL_DB_ERROR";
 
+export type StripePurchasePlan = "Starter" | "Pro" | "Elite";
+export interface StripePurchaseInput {
+  eventId: string;
+  eventType: string;
+  stripeSessionId: string | null;
+  userId: string;
+  credits: number;
+  plan: StripePurchasePlan;
+}
+export type StripePurchaseResult =
+  | { outcome: "APPLIED"; updatedUser: { email: string | null; name: string | null; credits: string; plan: StripePurchasePlan } }
+  | { outcome: "DUPLICATE" }
+  | { ok: false; code: DbErrorCode };
+
 export interface DbErrorResponse {
   ok: false;
   code: DbErrorCode;

@@ -1,10 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { buffer } from "micro";
 import { Prisma } from "@prisma/client";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import { stripeFulfillPurchaseFromService } from "~/server/cloudflare/dbService";
+import { fulfillCreditPurchase } from "~/server/stripe/fulfillCreditPurchase";
+import { handleStripeWebhook } from "~/server/stripe/webhookHandler";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { sendMetaPurchaseEvent } from "~/server/meta/sendConversionEvent";
 
@@ -18,97 +20,63 @@ function getRequestIp(req: NextApiRequest): string | null {
   return req.socket?.remoteAddress ?? null;
 }
 
+async function fulfillPurchase(input: Parameters<typeof fulfillCreditPurchase>[1]) {
+  if (process.env.DB_STRIPE_BACKEND === "service") {
+    const result = await stripeFulfillPurchaseFromService(input);
+    if ("ok" in result) throw new Error(`Stripe purchase DB service failed: ${result.code}`);
+    if (result.outcome === "DUPLICATE") return result;
+    return {
+      outcome: "APPLIED" as const,
+      updatedUser: { ...result.updatedUser, credits: new Prisma.Decimal(result.updatedUser.credits) },
+    };
+  }
+  return fulfillCreditPurchase(prisma, input);
+}
+
 const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).end("Method Not Allowed");
   }
-  const buf = await buffer(req);
+
+  const rawBody = await buffer(req);
   const signature = req.headers["stripe-signature"];
-  if (typeof signature !== "string") return res.status(400).send("Missing Stripe signature");
-
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(buf, signature, env.STRIPE_WEB_HOOK_SECRET);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Webhook Error:", message);
-    return res.status(400).send(`Webhook Error: ${message}`);
-  }
-
-  if (event.type === "checkout.session.completed") {
-    const completedEvent = event.data.object;
-    const userId = completedEvent.metadata?.userId;
-    if (!userId) return res.json({ received: true });
-
-    let lineItems: Stripe.ApiList<Stripe.LineItem>;
-    try {
-      lineItems = await stripe.checkout.sessions.listLineItems(completedEvent.id);
-    } catch (error) {
-      console.error("Error fetching credit line items:", error);
-      return res.json({ received: true });
-    }
-
-    const priceId = lineItems.data[0]?.price?.id;
-    const creditsMap: Record<string, number> = {
-      [env.PRICE_ID_STARTER]: 20,
-      [env.PRICE_ID_PRO]: 50,
-      [env.PRICE_ID_ELITE]: 100,
-    };
-    const planMap: Record<number, "Starter" | "Pro" | "Elite"> = { 20: "Starter", 50: "Pro", 100: "Elite" };
-    const incrementCredits = priceId ? creditsMap[priceId] ?? 0 : 0;
-    const plan = planMap[incrementCredits];
-    if (!plan) return res.json({ received: true });
-
-    try {
-      const result = await prisma.$transaction(async (tx) => {
-        try {
-          await tx.stripeWebhookEvent.create({ data: { id: event.id, type: event.type, stripeSessionId: completedEvent.id, userId } });
-        } catch (error) {
-          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-            return { alreadyProcessed: true as const, updatedUser: null };
-          }
-          throw error;
-        }
-        const existingUser = await tx.user.findUnique({ where: { id: userId }, select: { credits: true } });
-        if (!existingUser) throw new Error("User not found for credits purchase.");
-        const updatedUser = await tx.user.update({
-          where: { id: userId },
-          data: { credits: new Prisma.Decimal(existingUser.credits).plus(incrementCredits), plan },
-          select: { email: true, name: true, credits: true, plan: true },
-        });
-        return { alreadyProcessed: false as const, updatedUser };
-      });
-
-      if (!result.alreadyProcessed && result.updatedUser) {
-        if (result.updatedUser.email) {
+  const result = await handleStripeWebhook(
+    rawBody,
+    typeof signature === "string" ? signature : null,
+    {
+      constructEvent: (body, signedPayload) => stripe.webhooks.constructEvent(body, signedPayload, env.STRIPE_WEB_HOOK_SECRET),
+      listLineItems: (sessionId) => stripe.checkout.sessions.listLineItems(sessionId),
+      fulfillPurchase,
+      priceIds: { starter: env.PRICE_ID_STARTER, pro: env.PRICE_ID_PRO, elite: env.PRICE_ID_ELITE },
+      afterCommit: async ({ event, session, result: applied }) => {
+        if (applied.updatedUser.email) {
           await updateMauticContact({
-            email: result.updatedUser.email,
-            name: result.updatedUser.name,
-            brand_specific_credits: result.updatedUser.credits,
-            brand_specific_plan: result.updatedUser.plan,
+            email: applied.updatedUser.email,
+            name: applied.updatedUser.name,
+            brand_specific_credits: applied.updatedUser.credits,
+            brand_specific_plan: applied.updatedUser.plan,
           }, "namedesignai");
         }
         const userAgent = req.headers["user-agent"];
         await sendMetaPurchaseEvent({
           eventId: event.id,
-          value: (completedEvent.amount_total ?? 0) / 100,
+          value: (session.amount_total ?? 0) / 100,
           currency: "USD",
           contentType: "credits",
           contentIds: ["credits"],
-          email: completedEvent.customer_details?.email ?? result.updatedUser.email ?? null,
-          externalId: userId,
-          fbp: completedEvent.metadata?.fbp ?? null,
-          fbc: completedEvent.metadata?.fbc ?? null,
+          email: session.customer_details?.email ?? applied.updatedUser.email ?? null,
+          externalId: session.metadata?.userId ?? null,
+          fbp: session.metadata?.fbp ?? null,
+          fbc: session.metadata?.fbc ?? null,
           clientIpAddress: getRequestIp(req),
           clientUserAgent: typeof userAgent === "string" ? userAgent : null,
         });
-      }
-    } catch (error) {
-      console.error("Error updating user credits or plan:", error);
-    }
-  }
-  return res.json({ received: true });
+      },
+    },
+  );
+
+  return res.status(result.status).json(result.body);
 };
 
 export default webhook;

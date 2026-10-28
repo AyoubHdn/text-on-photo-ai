@@ -67,6 +67,7 @@ jobs:
       NEXT_PUBLIC_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION }}
       NEXT_PUBLIC_S3_BUCKET_NAME: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_NAME }}
       NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: ${{ inputs.enable_async_client == true && 'true' || 'false' }}
+      DB_STRIPE_BACKEND: prisma
 
     steps:
       - name: Check out triggering commit
@@ -138,6 +139,12 @@ jobs:
 
       - name: Run JSON response guard tests
         run: node --experimental-strip-types --test tests/json-response.test.mjs
+
+      - name: Run Stripe webhook mocked tests
+        run: node --experimental-strip-types --test tests/stripe-webhook.test.mjs
+
+      - name: Run Stripe webhook PostgreSQL integration tests
+        run: node --experimental-strip-types --test tests/stripe-webhook.integration.test.mjs
       - name: Run all TypeScript typechecks
         shell: bash
         run: |

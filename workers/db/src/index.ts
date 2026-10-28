@@ -96,6 +96,8 @@ import type {
   GenerationFinalizeFailureResult,
   GenerationFailIfUnclaimedInput,
   GenerationFailIfStaleInput,
+  StripePurchaseInput,
+  StripePurchaseResult,
 } from "./types";
 
 const AUTH_INTERESTS = new Set<DigitalArtInterest>(["name_art", "arabic_name_art", "couples_art"]);
@@ -104,6 +106,11 @@ const SOURCE_PAGE_INTEREST: Record<string, DigitalArtInterest> = {
   "arabic-calligraphy-generator": "arabic_name_art",
   "couples-art-generator": "couples_art",
 };
+
+function persistedStripePlan(value: string): "Starter" | "Pro" | "Elite" {
+  if (value === "Starter" || value === "Pro" || value === "Elite") return value;
+  throw new DbServiceError("INTERNAL_DB_ERROR", "Stripe purchase plan was not persisted");
+}
 
 function normalizeAuthInterest(value: unknown): DigitalArtInterest | null {
   return typeof value === "string" && AUTH_INTERESTS.has(value as DigitalArtInterest) ? value as DigitalArtInterest : null;
@@ -244,6 +251,36 @@ export default class DbService extends WorkerEntrypoint<Env> {
       return user ? { found: true, paidTrafficUser: Boolean(user.paidTrafficUser), paidTrafficFreeCreditsGranted: Boolean(user.paidTrafficFreeCreditsGranted), paidTrafficFreePreviewUsed: Boolean(user.paidTrafficFreePreviewUsed), hasGeneratedDesign: Boolean(user.hasGeneratedDesign), hasVisitedCheckout: Boolean(user.hasVisitedCheckout) } : { found: false };
     } catch (error) {
       console.error("Paid traffic funnel lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async stripeFulfillPurchase(input: StripePurchaseInput): Promise<StripePurchaseResult> {
+    if (!input || !/^[A-Za-z0-9_:-]{1,255}$/.test(input.eventId) || !input.eventType || !input.userId || !Number.isInteger(input.credits) || input.credits <= 0 || !["Starter", "Pro", "Elite"].includes(input.plan)) {
+      return { ok: false, code: "INVALID_INPUT" };
+    }
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        try {
+          await tx.stripeWebhookEvent.create({ data: { id: input.eventId, type: input.eventType, stripeSessionId: input.stripeSessionId, userId: input.userId } });
+        } catch (error) {
+          if ((error as { code?: string }).code === "P2002") return { outcome: "DUPLICATE" as const };
+          throw error;
+        }
+        const updatedUser = await tx.user.update({
+          where: { id: input.userId },
+          data: { credits: { increment: input.credits }, plan: input.plan },
+          select: { email: true, name: true, credits: true, plan: true },
+        });
+        return { outcome: "APPLIED" as const, updatedUser: { ...updatedUser, plan: persistedStripePlan(updatedUser.plan) } };
+      });
+      if (result.outcome === "DUPLICATE") return result;
+      return { outcome: "APPLIED", updatedUser: { ...result.updatedUser, credits: result.updatedUser.credits.toString() } };
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code === "P2025") return { ok: false, code: "NOT_FOUND" };
+      console.error("Stripe purchase fulfillment failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally { await prisma.$disconnect(); }
   }

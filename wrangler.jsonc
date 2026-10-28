@@ -10,6 +10,7 @@
     "DB_USER_READS_BACKEND": "service",
     "DB_ICON_READS_BACKEND": "service",
     "DB_ICON_WRITES_BACKEND": "service",
+    "DB_STRIPE_BACKEND": "service",
     "AUTH_EXTERNAL_SYNC_MODE": "noop",
     "GENERATION_LAMBDA_REGION": "us-east-1",
     "GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging",

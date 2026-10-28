@@ -84,6 +84,12 @@ export type GenerationStatusResult = { found: true; job: GenerationJobResult } |
 export type GenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: GenerationJobResult } | { ok: false; code: DbErrorCode };
 export type GenerationMauticSyncState = { email: string | null; name: string | null; credits: string; hasGeneratedDesign: boolean; firstDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null; latestDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null };
 export type GenerationMauticSyncStateResult = { found: true; state: GenerationMauticSyncState } | { found: false } | { ok: false; code: DbErrorCode };
+export type StripePurchasePlan = "Starter" | "Pro" | "Elite";
+export type StripePurchaseInput = { eventId: string; eventType: string; stripeSessionId: string | null; userId: string; credits: number; plan: StripePurchasePlan };
+export type StripePurchaseResult =
+  | { outcome: "APPLIED"; updatedUser: { email: string | null; name: string | null; credits: string; plan: StripePurchasePlan } }
+  | { outcome: "DUPLICATE" }
+  | { ok: false; code: DbErrorCode };
 type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | { found: false } | AuthWriteResult;
 
   type DbServiceBinding = {
@@ -119,6 +125,7 @@ type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | 
   generationFinalizeFailure(input: { generationRequestId: string; processingAttemptId: string; errorMessage: string }): Promise<GenerationTransitionResult>;
   generationFailIfUnclaimed(input: { generationRequestId: string; errorMessage: string }): Promise<GenerationTransitionResult>;
   generationFailIfStale(input: { generationRequestId: string; errorMessage: string }): Promise<GenerationTransitionResult>;
+  stripeFulfillPurchase(input: StripePurchaseInput): Promise<StripePurchaseResult>;
 };
 
 type IconDto = { id: string; prompt: string | null; userId: string | null; createdAt: string; isPublic: boolean; metadata: unknown; transparentImageUrl: string | null; backgroundRemovedAt: string | null };
@@ -212,6 +219,7 @@ export async function generationGetMauticSyncStateFromService(input: { userId: s
 export async function generationFinalizeSuccessFromService(input: Record<string, unknown>) { return (await getDbService()).generationFinalizeSuccess(input); }
 export async function generationFinalizeFailureFromService(input: { generationRequestId: string; processingAttemptId: string; errorMessage: string }) { return (await getDbService()).generationFinalizeFailure(input); }
 export async function generationFailIfUnclaimedFromService(input: { generationRequestId: string; errorMessage: string }) { return (await getDbService()).generationFailIfUnclaimed(input); }
+export async function stripeFulfillPurchaseFromService(input: StripePurchaseInput): Promise<StripePurchaseResult> { return (await getDbService()).stripeFulfillPurchase(input); }
 
 /* Abandoned physical-commerce DB helpers retained only in history.
 export async function pricingGetAvailabilityFromService(input: {
