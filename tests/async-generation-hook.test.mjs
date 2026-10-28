@@ -96,7 +96,7 @@ const testGlobal = globalThis;
 
 /** @returns {GenerationMock} */
 function makeMock() {
-  /** @type {Map<string, MockResult>} */
+  /** @type {Map<string, MockResult | null>} */
   const results = new Map();
   /** @type {Map<string, Set<() => void>>} */
   const listeners = new Map();
@@ -279,7 +279,13 @@ test("definitive submission failure before reservation clears local state", asyn
   await settle();
   await assert.rejects(
     () => current().start(input("rejected-1")),
-    (error) => error?.message === "Rejected before reservation",
+    (error) =>
+      Boolean(
+        error &&
+          typeof error === "object" &&
+          "message" in error &&
+          error.message === "Rejected before reservation",
+      ),
   );
   await settle();
   assert.equal(current().generationRequestId, null);
