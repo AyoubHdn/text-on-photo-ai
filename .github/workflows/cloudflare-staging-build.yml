@@ -123,11 +123,14 @@ jobs:
         run: node --experimental-strip-types tests/server-async-generation-gate.test.mjs
 
       - name: Run async UI lifecycle tests
+        env:
+          NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
         run: node --experimental-strip-types --test tests/async-generation-ui.test.mjs
 
       - name: Run async hook lifecycle tests
         env:
           NODE_ENV: test
+          NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
         run: node --experimental-strip-types --test tests/async-generation-hook.test.mjs
 
       - name: Run Lambda mocked tests
@@ -449,4 +452,5 @@ jobs:
           if-no-files-found: error
           retention-days: 3
           include-hidden-files: true
+
 
