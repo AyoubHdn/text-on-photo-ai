@@ -12,7 +12,7 @@ process.env.NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED = "true";
 /**
  * @typedef {{generationRequestId: string, prompt: string, numberOfImages: number, aspectRatio: string, model: string, sourcePage: string}} RequestInput
  * @typedef {{kind: "error", error: Error} | {requestId: string, generationRequestId?: string, status: string, imageUrls?: string[], errorMessage?: string}} MockResult
- * @typedef {{start: (input: RequestInput) => Promise<unknown>, resumeStatus: () => Promise<unknown>, generationRequestId: string | null, canResumeStatus: boolean, pendingInput?: unknown}} HookState
+ * @typedef {{start: (input: RequestInput) => Promise<unknown>, resumeStatus: () => Promise<unknown>, retrySubmission: () => Promise<unknown>, generationRequestId: string | null, canResumeStatus: boolean, canRetrySubmission: boolean, pendingInput?: unknown}} HookState
  * @typedef {{submissions: RequestInput[], get: (id: string) => MockResult | null | undefined, set: (id: string, result: MockResult | null) => void, subscribe: (id: string, listener: () => void) => void, unsubscribe: (id: string, listener: () => void) => void, submit: (input: RequestInput) => Promise<MockResult>}} GenerationMock
  */
 
@@ -265,6 +265,48 @@ test("account change during submission cannot restore the old scoped request", a
   renderer.unmount();
 });
 
+test("stale rejected POST cannot clear a newer scoped request", async () => {
+  const mock = makeMock();
+  /** @type {(error: unknown) => void} */
+  let rejectFirst;
+  mock.submit = async (request) => {
+    mock.submissions.push(request);
+    if (request.generationRequestId === "stale-rejection-1") {
+      return new Promise((_, reject) => { rejectFirst = reject; });
+    }
+    mock.set(request.generationRequestId, {
+      requestId: request.generationRequestId,
+      status: "processing",
+    });
+    return {
+      requestId: request.generationRequestId,
+      generationRequestId: request.generationRequestId,
+      status: "started",
+    };
+  };
+  latestState = undefined;
+  const renderer = create(React.createElement(Harness, {
+    options: { enabled: true, userId: "user-stale-rejection", sourcePage: "name-art-generator" },
+    onRender: (value) => { latestState = value; },
+  }));
+  await settle();
+  const first = current().start(input("stale-rejection-1"));
+  await settle();
+  const second = current().start(input("newer-request-1"));
+  await act(async () => {
+    rejectFirst?.({ data: { code: "BAD_REQUEST", httpStatus: 400 }, message: "stale rejection" });
+    await assert.rejects(first, /obsolete/);
+    await second;
+  });
+  await settle();
+  assert.equal(current().generationRequestId, "newer-request-1");
+  assert.match(
+    testWindow.localStorage.getItem("name-art:pending-async-generation:v1:user-stale-rejection:name-art-generator") ?? "",
+    /newer-request-1/,
+  );
+  renderer.unmount();
+});
+
 test("definitive submission failure before reservation clears local state", async () => {
   const mock = makeMock();
   mock.submit = async (request) => {
@@ -295,7 +337,7 @@ test("definitive submission failure before reservation clears local state", asyn
   renderer.unmount();
 });
 
-test("repeated null status pauses and resumes the original request without resubmitting", async () => {
+test("repeated null status pauses and explicitly retries with the saved request", async () => {
   const mock = makeMock();
   latestState = undefined;
   let statusErrors = 0;
@@ -314,12 +356,14 @@ test("repeated null status pauses and resumes the original request without resub
   await settle();
   await settle();
   await settle();
-  assert.equal(current().canResumeStatus, true);
+  assert.equal(current().canRetrySubmission, true);
   assert.equal(statusErrors, 1);
-  const beforeResume = mock.submissions.length;
-  await act(async () => { await current().resumeStatus(); });
+  const beforeRetry = mock.submissions.length;
+  await act(async () => { await current().retrySubmission(); });
   await settle();
-  assert.equal(mock.submissions.length, beforeResume);
+  assert.equal(mock.submissions.length, beforeRetry + 1);
+  assert.equal(mock.submissions[1].generationRequestId, "null-status-1");
+  assert.equal(mock.submissions[1].prompt, "test");
   assert.equal(current().generationRequestId, "null-status-1");
   renderer.unmount();
 });

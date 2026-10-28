@@ -108,6 +108,17 @@ export function isAmbiguousAsyncSubmissionError(error: unknown) {
   );
 }
 
+export class ObsoleteAsyncGenerationOperationError extends Error {
+  constructor() {
+    super("Async generation operation is obsolete.");
+    this.name = "ObsoleteAsyncGenerationOperationError";
+  }
+}
+
+export function isObsoleteAsyncGenerationOperationError(error: unknown) {
+  return error instanceof ObsoleteAsyncGenerationOperationError;
+}
+
 export function isAsyncGenerationEnabledForUser(isAuthenticated: boolean) {
   return ASYNC_GENERATION_FEATURE_ENABLED && isAuthenticated;
 }

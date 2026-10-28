@@ -33,6 +33,7 @@ import {
   asyncGenerationImages,
   isAmbiguousAsyncSubmissionError,
   isAsyncGenerationEnabledForUser,
+  isObsoleteAsyncGenerationOperationError,
 } from "~/lib/asyncGeneration";
 import { useAsyncGeneration } from "~/hook/useAsyncGeneration";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
@@ -713,6 +714,7 @@ const NameArtGeneratorPage: NextPage = () => {
     if (asyncGenerationEnabled) {
       pendingGenerationRequestIdRef.current = input.generationRequestId;
       void asyncGeneration.start(input).catch((error: unknown) => {
+        if (isObsoleteAsyncGenerationOperationError(error)) return;
         setIsSubmittingGeneration(false);
         generationSubmitLockRef.current = false;
         if (isAmbiguousAsyncSubmissionError(error)) {
@@ -1259,7 +1261,7 @@ const NameArtGeneratorPage: NextPage = () => {
               )}
             </div>
           )}
-          {asyncGeneration.canResumeStatus && (
+          {(asyncGeneration.canResumeStatus || asyncGeneration.canRetrySubmission) && (
             <button
               type="button"
               className="mt-2 font-semibold text-brand-700 underline"
@@ -1267,10 +1269,24 @@ const NameArtGeneratorPage: NextPage = () => {
                 generationSubmitLockRef.current = true;
                 setIsSubmittingGeneration(true);
                 setError("");
-                void asyncGeneration.resumeStatus();
+                void (asyncGeneration.canRetrySubmission
+                  ? asyncGeneration.retrySubmission()
+                  : asyncGeneration.resumeStatus()).catch((error: unknown) => {
+                  if (isObsoleteAsyncGenerationOperationError(error)) return;
+                  setIsSubmittingGeneration(false);
+                  generationSubmitLockRef.current = false;
+                  if (isAmbiguousAsyncSubmissionError(error)) {
+                    setError("We couldn't confirm the request started. Your status is being checked; you can resume checking without creating another request.");
+                    return;
+                  }
+                  asyncGeneration.reset();
+                  setError(error instanceof Error ? error.message : "Unable to start generation.");
+                });
               }}
             >
-              Check generation status again
+              {asyncGeneration.canRetrySubmission
+                ? "Retry generation with saved request"
+                : "Check generation status again"}
             </button>
           )}
           {isCreditLocked && (

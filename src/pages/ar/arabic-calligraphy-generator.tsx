@@ -41,6 +41,7 @@ import {
   asyncGenerationImages,
   isAmbiguousAsyncSubmissionError,
   isAsyncGenerationEnabledForUser,
+  isObsoleteAsyncGenerationOperationError,
 } from "~/lib/asyncGeneration";
 import { useAsyncGeneration } from "~/hook/useAsyncGeneration";
 import { GeneratorNudge } from "~/component/Nudge/GeneratorNudge";
@@ -683,6 +684,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
     if (asyncGenerationEnabled) {
       pendingGenerationRequestIdRef.current = input.generationRequestId;
       void asyncGeneration.start(input).catch((error: unknown) => {
+        if (isObsoleteAsyncGenerationOperationError(error)) return;
         setIsSubmittingGeneration(false);
         generationSubmitLockRef.current = false;
         if (isAmbiguousAsyncSubmissionError(error)) {
@@ -1133,7 +1135,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
               {error} {error.includes("credits") && <Link href="/buy-credits?lang=ar" className="underline font-bold ml-2">شراء الرصيد</Link>}
             </div>
           )}
-          {asyncGeneration.canResumeStatus && (
+          {(asyncGeneration.canResumeStatus || asyncGeneration.canRetrySubmission) && (
             <button
               type="button"
               className="mt-2 font-semibold text-brand-700 underline"
@@ -1141,10 +1143,24 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
                 generationSubmitLockRef.current = true;
                 setIsSubmittingGeneration(true);
                 setError("");
-                void asyncGeneration.resumeStatus();
+                void (asyncGeneration.canRetrySubmission
+                  ? asyncGeneration.retrySubmission()
+                  : asyncGeneration.resumeStatus()).catch((error: unknown) => {
+                  if (isObsoleteAsyncGenerationOperationError(error)) return;
+                  setIsSubmittingGeneration(false);
+                  generationSubmitLockRef.current = false;
+                  if (isAmbiguousAsyncSubmissionError(error)) {
+                    setError("تعذر تأكيد بدء الطلب. نتحقق من حالته؛ يمكنك متابعة التحقق دون إنشاء طلب آخر.");
+                    return;
+                  }
+                  asyncGeneration.reset();
+                  setError(error instanceof Error ? error.message : "تعذر بدء إنشاء التصميم.");
+                });
               }}
             >
-              التحقق من حالة التصميم مجدداً
+              {asyncGeneration.canRetrySubmission
+                ? "إعادة محاولة إنشاء التصميم بالطلب المحفوظ"
+                : "التحقق من حالة التصميم مجدداً"}
             </button>
           )}
           

@@ -5,6 +5,7 @@ import {
   clearPendingAsyncGeneration,
   isAmbiguousAsyncSubmissionError,
   isNewAsyncTerminalStatus,
+  ObsoleteAsyncGenerationOperationError,
   readPendingAsyncGeneration,
   writePendingAsyncGeneration,
 } from "~/lib/asyncGeneration";
@@ -33,12 +34,35 @@ type ActiveAsyncOperation = {
   requestId: string;
 };
 
+function isValidAsyncGenerationInput(value: unknown): value is AsyncGenerationInput {
+  if (!value || typeof value !== "object") return false;
+  const input = value as Record<string, unknown>;
+  if (
+    typeof input.generationRequestId !== "string" ||
+    typeof input.prompt !== "string" ||
+    typeof input.aspectRatio !== "string" ||
+    typeof input.model !== "string" ||
+    typeof input.numberOfImages !== "number" ||
+    !Number.isFinite(input.numberOfImages)
+  ) return false;
+  if (input.paidTrafficUser !== undefined && typeof input.paidTrafficUser !== "boolean") return false;
+  if (input.sourcePage !== undefined && typeof input.sourcePage !== "string") return false;
+  if (input.metadata !== undefined) {
+    if (!input.metadata || typeof input.metadata !== "object") return false;
+    for (const value of Object.values(input.metadata)) {
+      if (value !== undefined && typeof value !== "string") return false;
+    }
+  }
+  return true;
+}
+
 export function useAsyncGeneration(options: AsyncGenerationOptions) {
   const [generationRequestId, setGenerationRequestId] = useState<string | null>(
     null
   );
   const [statusCheckPaused, setStatusCheckPaused] = useState(false);
-  const [pendingInput, setPendingInput] = useState<unknown>(null);
+  const [statusCheckPauseReason, setStatusCheckPauseReason] = useState<"error" | "missing" | null>(null);
+  const [pendingInput, setPendingInput] = useState<AsyncGenerationInput | null>(null);
   const onCompletedRef = useRef(options.onCompleted);
   const onFailedRef = useRef(options.onFailed);
   const onStatusErrorRef = useRef(options.onStatusError);
@@ -71,12 +95,14 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
       retry: false,
       onError: (error) => {
         setStatusCheckPaused(true);
+        setStatusCheckPauseReason("error");
         onStatusErrorRef.current?.(error);
       },
       onSuccess: (status) => {
         if (!generationRequestId || status !== null) {
           nullStatusRef.current = { requestId: generationRequestId, count: 0 };
           nullStatusNotifiedRequestIdRef.current = null;
+          setStatusCheckPauseReason(null);
           return;
         }
         const previous = nullStatusRef.current;
@@ -89,6 +115,7 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
         ) {
           nullStatusNotifiedRequestIdRef.current = generationRequestId;
           setStatusCheckPaused(true);
+          setStatusCheckPauseReason("missing");
           onStatusErrorRef.current?.(
             new Error(
               "Generation status is unavailable. Resume checking with the original request.",
@@ -123,6 +150,7 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
     nullStatusRef.current = { requestId: null, count: 0 };
     nullStatusNotifiedRequestIdRef.current = null;
     setStatusCheckPaused(false);
+    setStatusCheckPauseReason(null);
     setGenerationRequestId(null);
     setPendingInput(null);
     removeStatus();
@@ -134,9 +162,13 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
       options.userId,
       options.sourcePage,
     );
-    if (pending) {
+    if (
+      pending &&
+      isValidAsyncGenerationInput(pending.input) &&
+      pending.input.generationRequestId === pending.requestId
+    ) {
       setGenerationRequestId(pending.requestId);
-      setPendingInput(pending.input ?? null);
+      setPendingInput(pending.input);
     }
   }, [options.enabled, options.sourcePage, options.userId, removeStatus]);
 
@@ -149,6 +181,7 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
     setGenerationRequestId(null);
     setPendingInput(null);
     setStatusCheckPaused(false);
+    setStatusCheckPauseReason(null);
     removeStatus();
   }, [options.sourcePage, options.userId, removeStatus]);
 
@@ -157,6 +190,7 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
     nullStatusRef.current = { requestId: generationRequestId, count: 0 };
     nullStatusNotifiedRequestIdRef.current = null;
     setStatusCheckPaused(false);
+    setStatusCheckPauseReason(null);
     return statusQuery.refetch();
   }, [generationRequestId, statusQuery.refetch]);
 
@@ -212,6 +246,7 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
         input,
       );
       setStatusCheckPaused(false);
+      setStatusCheckPauseReason(null);
       try {
         const result = await startMutation.mutateAsync(input);
         const activeOperation = activeOperationRef.current;
@@ -234,6 +269,17 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
         );
         return result;
       } catch (error) {
+        const activeOperation = activeOperationRef.current;
+        const isCurrentOperation = Boolean(
+          activeOperation &&
+            activeOperation.token === token &&
+            activeOperation.userId === options.userId &&
+            activeOperation.sourcePage === options.sourcePage &&
+            activeOperation.requestId === input.generationRequestId,
+        );
+        if (!isCurrentOperation) {
+          throw new ObsoleteAsyncGenerationOperationError();
+        }
         if (!isAmbiguousAsyncSubmissionError(error)) {
           activeOperationRef.current = null;
           clearPendingAsyncGeneration(options.userId, options.sourcePage);
@@ -253,10 +299,24 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
     ]
   );
 
+  const canRetrySubmission = Boolean(
+    generationRequestId &&
+      statusCheckPaused &&
+      statusCheckPauseReason === "missing" &&
+      pendingInput &&
+      isValidAsyncGenerationInput(pendingInput) &&
+      pendingInput.generationRequestId === generationRequestId,
+  );
+  const retrySubmission = useCallback(async () => {
+    if (!canRetrySubmission || !pendingInput) return null;
+    return start(pendingInput);
+  }, [canRetrySubmission, pendingInput, start]);
+
   return {
     start,
     reset,
     resumeStatus,
+    retrySubmission,
     generationRequestId,
     pendingInput,
     status: statusQuery.data ?? null,
@@ -265,7 +325,12 @@ export function useAsyncGeneration(options: AsyncGenerationOptions) {
       Boolean(generationRequestId) &&
       statusQuery.data?.status !== "completed" &&
       statusQuery.data?.status !== "failed",
-    canResumeStatus: Boolean(generationRequestId && statusCheckPaused),
+    canResumeStatus: Boolean(
+      generationRequestId &&
+        statusCheckPaused &&
+        (statusCheckPauseReason === "error" || !canRetrySubmission),
+    ),
+    canRetrySubmission,
     error: startMutation.error ?? statusQuery.error ?? null,
   };
 }
