@@ -13,22 +13,27 @@ if (databaseUrl && !/(127\.0\.0\.1|localhost)/i.test(databaseUrl)) {
 }
 
 const integration = databaseUrl ? test : test.skip;
+const testDatabaseUrl = databaseUrl ?? "postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai";
 
 integration("atomic purchase fulfillment handles duplicates and concurrent increments", async () => {
-  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: testDatabaseUrl }) });
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const user = await prisma.user.create({ data: { email: `stripe-${suffix}@example.test`, credits: 1 } });
   const eventIds = [`evt-${suffix}-a`, `evt-${suffix}-b`];
   try {
+    const firstEventId = eventIds[0];
+    const secondEventId = eventIds[1];
+    assert.ok(firstEventId);
+    assert.ok(secondEventId);
     const duplicateResults = await Promise.all([
-      fulfillCreditPurchase(prisma, { eventId: eventIds[0], eventType: "checkout.session.completed", stripeSessionId: "cs-a", userId: user.id, credits: 20, plan: "Starter" }),
-      fulfillCreditPurchase(prisma, { eventId: eventIds[0], eventType: "checkout.session.completed", stripeSessionId: "cs-a", userId: user.id, credits: 20, plan: "Starter" }),
+      fulfillCreditPurchase(prisma, { eventId: firstEventId, eventType: "checkout.session.completed", stripeSessionId: "cs-a", userId: user.id, credits: 20, plan: "Starter" }),
+      fulfillCreditPurchase(prisma, { eventId: firstEventId, eventType: "checkout.session.completed", stripeSessionId: "cs-a", userId: user.id, credits: 20, plan: "Starter" }),
     ]);
     assert.deepEqual(duplicateResults.map((result) => result.outcome).sort(), ["APPLIED", "DUPLICATE"]);
 
     const concurrentResults = await Promise.all([
-      fulfillCreditPurchase(prisma, { eventId: eventIds[1], eventType: "checkout.session.completed", stripeSessionId: "cs-b", userId: user.id, credits: 50, plan: "Pro" }),
-      fulfillCreditPurchase(prisma, { eventId: `${eventIds[1]}-second`, eventType: "checkout.session.completed", stripeSessionId: "cs-c", userId: user.id, credits: 100, plan: "Elite" }),
+      fulfillCreditPurchase(prisma, { eventId: secondEventId, eventType: "checkout.session.completed", stripeSessionId: "cs-b", userId: user.id, credits: 50, plan: "Pro" }),
+      fulfillCreditPurchase(prisma, { eventId: `${secondEventId}-second`, eventType: "checkout.session.completed", stripeSessionId: "cs-c", userId: user.id, credits: 100, plan: "Elite" }),
     ]);
     assert.deepEqual(concurrentResults.map((result) => result.outcome).sort(), ["APPLIED", "APPLIED"]);
     const updated = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { credits: true } });
@@ -41,7 +46,7 @@ integration("atomic purchase fulfillment handles duplicates and concurrent incre
 });
 
 integration("failed user update rolls back the deduplication record", async () => {
-  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: testDatabaseUrl }) });
   const eventId = `evt-rollback-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   try {
     await assert.rejects(() => fulfillCreditPurchase(prisma, { eventId, eventType: "checkout.session.completed", stripeSessionId: "cs-missing", userId: "missing-user", credits: 20, plan: "Starter" }));

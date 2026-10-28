@@ -1,3 +1,4 @@
+/// <reference path="../workers/db/worker-configuration.d.ts" />
 import assert from "node:assert/strict";
 import { after, mock, test } from "node:test";
 import { createRequire } from "node:module";
@@ -69,6 +70,7 @@ globalThis.WorkerEntrypoint = class {
  * @property {(input: object) => Promise<GenerationFinalizeSuccessResult>} generationFinalizeSuccess
  * @property {(input: object) => Promise<GenerationFinalizeFailureResult>} generationFinalizeFailure
  * @property {(input: RecoveryTestInput) => Promise<GenerationFinalizeFailureResult>} generationFailIfStale
+ * @property {(input: import("../workers/db/src/types.ts").StripePurchaseInput) => Promise<import("../workers/db/src/types.ts").StripePurchaseResult>} stripeFulfillPurchase
  * @property {(scope: string, batchSize: number, maxDurationMs: number, processingGraceSeconds: number, dbTimeouts: RecoveryDbTimeouts) => Promise<void>} runGenerationRecovery
  * @property {(candidate: RecoveryCandidate, scope: string, dbTimeouts: RecoveryDbTimeouts) => Promise<void>} markGenerationRecoveryFailure
  */
@@ -253,6 +255,7 @@ async function runDirectRecovery(
 
 async function cleanup() {
   await prisma.icon.deleteMany({ where: { id: { startsWith: prefix } } });
+  await prisma.stripeWebhookEvent.deleteMany({ where: { userId: { in: createdUserIds } } });
   await prisma.generationRequest.deleteMany({
     where: { generationRequestId: { in: createdRequestIds } },
   });
@@ -261,6 +264,45 @@ async function cleanup() {
 }
 
 after(cleanup);
+
+test("actual DB Worker purchase RPC deduplicates, rolls back, and atomically increments", async () => {
+  const instance = service();
+  const userId = await createUser("stripe-rpc", 1);
+  const eventId = nextRequestId("stripe-event");
+  /** @type {import("../workers/db/src/types.ts").StripePurchaseInput} */
+  const purchase = { eventId, eventType: "checkout.session.completed", stripeSessionId: "cs-rpc", userId, credits: 20, plan: "Starter" };
+  const [first, duplicate] = await Promise.all([instance.stripeFulfillPurchase(purchase), instance.stripeFulfillPurchase(purchase)]);
+  assert.ok("outcome" in first);
+  assert.ok("outcome" in duplicate);
+  assert.deepEqual([first.outcome, duplicate.outcome].sort(), ["APPLIED", "DUPLICATE"]);
+  assert.equal(await credits(userId), "21");
+
+  const missingEventId = nextRequestId("stripe-rollback");
+  const rollback = await instance.stripeFulfillPurchase({ ...purchase, eventId: missingEventId, stripeSessionId: "cs-missing", userId: "missing-user" });
+  assert.deepEqual(rollback, { ok: false, code: "INTERNAL_DB_ERROR" });
+  assert.equal(await prisma.stripeWebhookEvent.findUnique({ where: { id: missingEventId } }), null);
+});
+
+test("actual DB Worker preserves concurrent generation charges and refunds", async () => {
+  const instance = service();
+  const userId = await createUser("stripe-generation-race", 2);
+  const firstId = nextRequestId("stripe-generation-one");
+  const secondId = nextRequestId("stripe-generation-two");
+  const [first, second] = await Promise.all([reserve(instance, firstId, userId), reserve(instance, secondId, userId)]);
+  assert.deepEqual([outcomeOf(first), outcomeOf(second)].sort(), ["CREATED", "CREATED"]);
+  assert.equal(await credits(userId), "0");
+
+  const firstAttempt = firstId + "-attempt";
+  const secondAttempt = secondId + "-attempt";
+  assert.equal(outcomeOf(await instance.generationClaimExecution({ generationRequestId: firstId, processingAttemptId: firstAttempt, leaseSeconds: 300 })), "CLAIMED");
+  assert.equal(outcomeOf(await instance.generationClaimExecution({ generationRequestId: secondId, processingAttemptId: secondAttempt, leaseSeconds: 300 })), "CLAIMED");
+  const [firstFailure, secondFailure] = await Promise.all([
+    instance.generationFinalizeFailure({ generationRequestId: firstId, processingAttemptId: firstAttempt, errorMessage: "test refund" }),
+    instance.generationFinalizeFailure({ generationRequestId: secondId, processingAttemptId: secondAttempt, errorMessage: "test refund" }),
+  ]);
+  assert.deepEqual([outcomeOf(firstFailure), outcomeOf(secondFailure)].sort(), ["FAILED", "FAILED"]);
+  assert.equal(await credits(userId), "2");
+});
 
 test("real PostgreSQL reconciles stale unclaimed requests and refunds exactly once", async () => {
   const instance = service();
