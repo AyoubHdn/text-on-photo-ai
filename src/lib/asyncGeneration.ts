@@ -45,7 +45,8 @@ export function readPendingAsyncGeneration(
       storage.removeItem(key);
       return null;
     }
-    return (parsed as { requestId: string }).requestId;
+    const record = parsed as { requestId: string; input?: unknown };
+    return { requestId: record.requestId, input: record.input };
   } catch {
     return null;
   }
@@ -55,6 +56,7 @@ export function writePendingAsyncGeneration(
   userId: string | null,
   sourcePage: string,
   requestId: string,
+  input?: unknown,
 ) {
   if (!userId) return;
   const storage = getStorage();
@@ -63,7 +65,7 @@ export function writePendingAsyncGeneration(
   try {
     storage.setItem(
       getPendingAsyncGenerationStorageKey(userId, sourcePage),
-      JSON.stringify({ requestId }),
+      JSON.stringify({ requestId, input }),
     );
   } catch {
     // Persistence is best effort; in-memory polling still works.

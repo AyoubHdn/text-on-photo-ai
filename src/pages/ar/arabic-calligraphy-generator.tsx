@@ -561,7 +561,7 @@ const ArabicNameArtGeneratorPage: NextPage = () => {
       generationSubmitLockRef.current = false;
       setIsSubmittingGeneration(false);
       void creditsQuery.refetch();
-      setError(status.errorMessage ?? "Generation failed. Your credits were refunded.");
+      setError(status.errorMessage ?? "فشل إنشاء التصميم. تمت إعادة الرصيد إلى حسابك.");
     },
     onStatusError: () => {
       generationSubmitLockRef.current = false;

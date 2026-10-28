@@ -12,8 +12,8 @@ process.env.NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED = "true";
 /**
  * @typedef {{generationRequestId: string, prompt: string, numberOfImages: number, aspectRatio: string, model: string, sourcePage: string}} RequestInput
  * @typedef {{kind: "error", error: Error} | {requestId: string, generationRequestId?: string, status: string, imageUrls?: string[], errorMessage?: string}} MockResult
- * @typedef {{start: (input: RequestInput) => Promise<unknown>, resumeStatus: () => Promise<unknown>, generationRequestId: string | null, canResumeStatus: boolean}} HookState
- * @typedef {{submissions: RequestInput[], get: (id: string) => MockResult | undefined, set: (id: string, result: MockResult) => void, subscribe: (id: string, listener: () => void) => void, unsubscribe: (id: string, listener: () => void) => void, submit: (input: RequestInput) => Promise<MockResult>}} GenerationMock
+ * @typedef {{start: (input: RequestInput) => Promise<unknown>, resumeStatus: () => Promise<unknown>, generationRequestId: string | null, canResumeStatus: boolean, pendingInput?: unknown}} HookState
+ * @typedef {{submissions: RequestInput[], get: (id: string) => MockResult | null | undefined, set: (id: string, result: MockResult | null) => void, subscribe: (id: string, listener: () => void) => void, unsubscribe: (id: string, listener: () => void) => void, submit: (input: RequestInput) => Promise<MockResult>}} GenerationMock
  */
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,13 +26,15 @@ const mockApi = [
   "  const id = input.generationRequestId;",
   "  const [state, setState] = React.useState({ data: undefined, error: null });",
   "  const onErrorRef = React.useRef(options.onError);",
+  "  const onSuccessRef = React.useRef(options.onSuccess);",
   "  const intervalRef = React.useRef(options.refetchInterval);",
   "  onErrorRef.current = options.onError;",
+  "  onSuccessRef.current = options.onSuccess;",
   "  intervalRef.current = options.refetchInterval;",
   "  const apply = React.useCallback(() => {",
   "    const result = mock().get(id);",
   "    if (result?.kind === 'error') { setState({ data: undefined, error: result.error }); onErrorRef.current?.(result.error); }",
-  "    else setState({ data: result ?? undefined, error: null });",
+  "    else { setState({ data: result === undefined ? undefined : result, error: null }); onSuccessRef.current?.(result); }",
   "  }, [id]);",
   "  React.useEffect(() => {",
   "    if (!options.enabled) return undefined;",
@@ -103,7 +105,7 @@ function makeMock() {
     submissions: [],
     /** @param {string} id */
     get: (id) => results.get(id),
-    /** @param {string} id @param {MockResult} result */
+    /** @param {string} id @param {MockResult | null} result */
     set(id, result) { results.set(id, result); for (const listener of listeners.get(id) ?? []) listener(); },
     /** @param {string} id @param {() => void} listener */
     subscribe(id, listener) { const set = listeners.get(id) ?? new Set(); set.add(listener); listeners.set(id, set); },
@@ -194,6 +196,125 @@ test("guest fallback never submits to the protected async mutation", async () =>
   await settle();
   await assert.rejects(() => current().start(input("guest-1")), /disabled/);
   assert.equal(mock.submissions.length, 0);
+  renderer.unmount();
+});
+
+test("late POST completion cannot restore a terminal request", async () => {
+  const mock = makeMock();
+  /** @type {(result: MockResult) => void} */
+  let resolveSubmit;
+  mock.submit = async (request) => {
+    mock.submissions.push(request);
+    return new Promise((resolve) => { resolveSubmit = resolve; });
+  };
+  let completed = 0;
+  latestState = undefined;
+  const renderer = create(React.createElement(Harness, {
+    options: {
+      enabled: true,
+      userId: "user-late-post",
+      sourcePage: "name-art-generator",
+      onCompleted: () => { completed += 1; },
+    },
+    onRender: (value) => { latestState = value; },
+  }));
+  await settle();
+  const pending = current().start(input("late-post-1"));
+  mock.set("late-post-1", {
+    requestId: "late-post-1",
+    status: "completed",
+    imageUrls: ["https://example.test/late.webp"],
+  });
+  await settle();
+  await act(async () => { resolveSubmit?.({ requestId: "late-post-1", status: "started" }); await pending; });
+  await settle();
+  assert.equal(completed, 1);
+  assert.equal(current().generationRequestId, null);
+  assert.equal(testWindow.localStorage.getItem("name-art:pending-async-generation:v1:user-late-post:name-art-generator"), null);
+  renderer.unmount();
+});
+
+test("account change during submission cannot restore the old scoped request", async () => {
+  const mock = makeMock();
+  /** @type {(result: MockResult) => void} */
+  let resolveSubmit;
+  mock.submit = async (request) => {
+    mock.submissions.push(request);
+    return new Promise((resolve) => { resolveSubmit = resolve; });
+  };
+  latestState = undefined;
+  const firstOptions = { enabled: true, userId: "user-before-change", sourcePage: "name-art-generator" };
+  const renderer = create(React.createElement(Harness, {
+    options: firstOptions,
+    onRender: (value) => { latestState = value; },
+  }));
+  await settle();
+  const pending = current().start(input("account-change-1"));
+  await act(async () => {
+    renderer.update(React.createElement(Harness, {
+      options: { ...firstOptions, userId: "user-after-change" },
+      onRender: (value) => { latestState = value; },
+    }));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+  await act(async () => { resolveSubmit?.({ requestId: "account-change-1", status: "started" }); await pending; });
+  await settle();
+  assert.equal(current().generationRequestId, null);
+  assert.equal(testWindow.localStorage.getItem("name-art:pending-async-generation:v1:user-before-change:name-art-generator"), null);
+  assert.equal(testWindow.localStorage.getItem("name-art:pending-async-generation:v1:user-after-change:name-art-generator"), null);
+  renderer.unmount();
+});
+
+test("definitive submission failure before reservation clears local state", async () => {
+  const mock = makeMock();
+  mock.submit = async (request) => {
+    mock.submissions.push(request);
+    throw { data: { code: "BAD_REQUEST", httpStatus: 400 }, message: "Rejected before reservation" };
+  };
+  latestState = undefined;
+  const renderer = create(React.createElement(Harness, {
+    options: { enabled: true, userId: "user-rejected", sourcePage: "name-art-generator" },
+    onRender: (value) => { latestState = value; },
+  }));
+  await settle();
+  await assert.rejects(
+    () => current().start(input("rejected-1")),
+    (error) => error?.message === "Rejected before reservation",
+  );
+  await settle();
+  assert.equal(current().generationRequestId, null);
+  assert.equal(current().canResumeStatus, false);
+  assert.equal(mock.submissions.length, 1);
+  assert.equal(testWindow.localStorage.getItem("name-art:pending-async-generation:v1:user-rejected:name-art-generator"), null);
+  renderer.unmount();
+});
+
+test("repeated null status pauses and resumes the original request without resubmitting", async () => {
+  const mock = makeMock();
+  latestState = undefined;
+  let statusErrors = 0;
+  const renderer = create(React.createElement(Harness, {
+    options: {
+      enabled: true,
+      userId: "user-null-status",
+      sourcePage: "name-art-generator",
+      onStatusError: () => { statusErrors += 1; },
+    },
+    onRender: (value) => { latestState = value; },
+  }));
+  await settle();
+  await act(async () => { await current().start(input("null-status-1")); });
+  mock.set("null-status-1", null);
+  await settle();
+  await settle();
+  await settle();
+  assert.equal(current().canResumeStatus, true);
+  assert.equal(statusErrors, 1);
+  const beforeResume = mock.submissions.length;
+  await act(async () => { await current().resumeStatus(); });
+  await settle();
+  assert.equal(mock.submissions.length, beforeResume);
+  assert.equal(current().generationRequestId, "null-status-1");
   renderer.unmount();
 });
 
