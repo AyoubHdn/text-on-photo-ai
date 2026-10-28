@@ -304,6 +304,77 @@ test("actual DB Worker preserves concurrent generation charges and refunds", asy
   assert.equal(await credits(userId), "2");
 });
 
+test("actual DB Worker purchases preserve overlapping generation charges and refunds", async () => {
+  const instance = service();
+  const userId = await createUser("stripe-mixed-race", 10);
+  const refundId = nextRequestId("stripe-mixed-refund");
+  const chargeId = nextRequestId("stripe-mixed-charge");
+
+  await reserve(instance, refundId, userId);
+  const refundAttempt = refundId + "-attempt";
+  assert.equal(
+    outcomeOf(await instance.generationClaimExecution({
+      generationRequestId: refundId,
+      processingAttemptId: refundAttempt,
+      leaseSeconds: 300,
+    })),
+    "CLAIMED",
+  );
+  assert.equal(await credits(userId), "9");
+
+  /** @type {import("../workers/db/src/types.ts").StripePurchaseInput} */
+  const purchaseA = {
+    eventId: nextRequestId("stripe-mixed-purchase-a"),
+    eventType: "checkout.session.completed",
+    stripeSessionId: "cs-mixed-a",
+    userId,
+    credits: 20,
+    plan: "Starter",
+  };
+  /** @type {import("../workers/db/src/types.ts").StripePurchaseInput} */
+  const purchaseB = {
+    ...purchaseA,
+    eventId: nextRequestId("stripe-mixed-purchase-b"),
+    stripeSessionId: "cs-mixed-b",
+    credits: 50,
+    plan: "Pro",
+  };
+  const failureInput = {
+    generationRequestId: refundId,
+    processingAttemptId: refundAttempt,
+    errorMessage: "mixed purchase/refund integration test",
+  };
+
+  const [appliedA, appliedB, charged, refunded] = await Promise.all([
+    instance.stripeFulfillPurchase(purchaseA),
+    instance.stripeFulfillPurchase(purchaseB),
+    reserve(instance, chargeId, userId),
+    instance.generationFinalizeFailure(failureInput),
+  ]);
+  assert.equal(outcomeOf(appliedA), "APPLIED");
+  assert.equal(outcomeOf(appliedB), "APPLIED");
+  assert.equal(outcomeOf(charged), "CREATED");
+  assert.equal(outcomeOf(refunded), "FAILED");
+  // Initial 10 - prior reservation 1 + purchases 70 - new charge 1 + refund 1.
+  assert.equal(await credits(userId), "79");
+  assert.equal((await requestRow(refundId))?.status, "failed");
+  assert.equal((await requestRow(chargeId))?.status, "started");
+
+  const [duplicatePurchase, duplicateRefund] = await Promise.all([
+    instance.stripeFulfillPurchase(purchaseA),
+    instance.generationFinalizeFailure(failureInput),
+  ]);
+  assert.equal(outcomeOf(duplicatePurchase), "DUPLICATE");
+  assert.equal(outcomeOf(duplicateRefund), "TERMINAL_NOOP");
+  assert.equal(await credits(userId), "79");
+  assert.equal(
+    await prisma.stripeWebhookEvent.count({
+      where: { id: { in: [purchaseA.eventId, purchaseB.eventId] } },
+    }),
+    2,
+  );
+});
+
 test("real PostgreSQL reconciles stale unclaimed requests and refunds exactly once", async () => {
   const instance = service();
   const userId = await createUser("unclaimed");
