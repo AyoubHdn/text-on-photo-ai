@@ -362,8 +362,10 @@ test("repeated null status pauses and explicitly retries with the saved request"
   await act(async () => { await current().retrySubmission(); });
   await settle();
   assert.equal(mock.submissions.length, beforeRetry + 1);
-  assert.equal(mock.submissions[1].generationRequestId, "null-status-1");
-  assert.equal(mock.submissions[1].prompt, "test");
+  const retried = mock.submissions[1];
+  assert.ok(retried);
+  assert.equal(retried.generationRequestId, "null-status-1");
+  assert.equal(retried.prompt, "test");
   assert.equal(current().generationRequestId, "null-status-1");
   renderer.unmount();
 });
