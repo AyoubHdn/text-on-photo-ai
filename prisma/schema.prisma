@@ -116,6 +116,7 @@ model GenerationRequest {
     processingAttemptId String?
     predictionId        String?
     creditsCharged      Decimal? @db.Decimal(10, 2)
+    chargeState         String?
     recoveryAttemptCount Int?
     recoveryNextAttemptAt DateTime?
     recoveryLastError   String?
@@ -295,3 +296,4 @@ model StripeWebhookEvent {
     user            User?    @relation(fields: [userId], references: [id])
     createdAt       DateTime @default(now())
 }
+
