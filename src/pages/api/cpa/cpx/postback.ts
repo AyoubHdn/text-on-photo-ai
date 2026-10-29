@@ -5,8 +5,10 @@ import { Prisma, type CpaResult } from "@prisma/client";
 import { CPX_DAILY_REWARD_CREDITS } from "~/config/cpa";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import { cpaProcessPostbackFromService } from "~/server/cloudflare/dbService";
 
 const CPX_SECRET = env.CPX_SECURITY_HASH;
+const shouldUseServiceCpa = () => process.env.DB_CPA_BACKEND === "service";
 
 const getParam = (p: string | string[] | undefined) =>
   Array.isArray(p) ? p[0] : p;
@@ -52,6 +54,27 @@ export default async function handler(
       return res.status(403).json({ error: "Invalid hash" });
     }
 
+    const payout = Number(amountUsd ?? 0);
+    const result = mapCpxType(type, payout);
+    const serviceResult = result === "reversed" ? "screenout_no_bonus" : result;
+    const requestedApproved = status !== "2";
+    const now = new Date();
+    if (shouldUseServiceCpa()) {
+      const outcome = await cpaProcessPostbackFromService({
+        userId,
+        transactionId: transId,
+        payout,
+        requestedApproved,
+        result: serviceResult,
+        leadIp: ipClick ?? null,
+        now,
+        rewardCredits: String(CPX_DAILY_REWARD_CREDITS),
+      });
+      return outcome.outcome === "NO_PENDING"
+        ? res.status(200).json({ message: "No pending unlock" })
+        : res.status(200).json({ success: true });
+    }
+
     const unlock = await prisma.cpaUnlock.findFirst({
       where: { userId, network: "cpx", status: "pending" },
       orderBy: { createdAt: "desc" },
@@ -61,13 +84,10 @@ export default async function handler(
       return res.status(200).json({ message: "No pending unlock" });
     }
 
-    const payout = Number(amountUsd ?? 0);
-    const result = mapCpxType(type, payout);
-    const requestedApproved = status === "2" ? false : true;
-    const now = new Date();
+    const requestedApprovedLegacy = status === "2" ? false : true;
     const { start, end } = getUtcDayRange(now);
 
-    let finalStatus: "approved" | "rejected" = requestedApproved
+    let finalStatus: "approved" | "rejected" = requestedApprovedLegacy
       ? "approved"
       : "rejected";
     let finalResult: CpaResult = result;
@@ -130,3 +150,4 @@ export default async function handler(
     return res.status(500).json({ error: "Server error" });
   }
 }
+
