@@ -9,18 +9,27 @@ import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
-import { userGetCreditsFromService, userGetCreditUpgradeStateFromService, userGetPaidTrafficFunnelStateFromService } from "~/server/cloudflare/dbService";
+import {
+  userGetCreditsFromService,
+  userGetCreditUpgradeStateFromService,
+  userGetPaidTrafficFunnelStateFromService,
+  userGetContactFromService,
+  userRecordDigitalArtInterestFromService,
+  userCapturePaidTrafficLeadFromService,
+  userMarkPaidTrafficFromService,
+  userGrantPaidTrafficFreeCreditsFromService,
+} from "~/server/cloudflare/dbService";
 
 const shouldUseServiceUserReads = () => process.env.DB_USER_READS_BACKEND === "service";
+const shouldUseServiceUserMutations = () => process.env.DB_USER_MUTATIONS_BACKEND === "service";
 
 export const userRouter = createTRPCRouter({
   syncPreferredLocale: protectedProcedure
     .input(z.object({ locale: z.enum(["ar", "en"]) }))
     .mutation(async ({ ctx, input }) => {
-      const user = await ctx.prisma.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: { email: true },
-      });
+      const user = shouldUseServiceUserMutations()
+        ? await userGetContactFromService({ userId: ctx.session.user.id })
+        : await ctx.prisma.user.findUnique({ where: { id: ctx.session.user.id }, select: { email: true } });
 
       if (!user?.email) {
         return { success: false, skipped: "missing_email" as const };
@@ -109,11 +118,22 @@ export const userRouter = createTRPCRouter({
         return { success: false };
       }
 
-      await recordDigitalArtInterest({
-        prisma: ctx.prisma,
-        userId: ctx.session.user.id,
-        interest,
-      });
+      if (shouldUseServiceUserMutations()) {
+        const state = await userRecordDigitalArtInterestFromService({ userId: ctx.session.user.id, interest });
+        if (state?.email) {
+          await updateMauticContact({
+            email: state.email,
+            name: state.name,
+            brand_specific_credits: state.credits,
+            customFields: {
+              first_digital_art_interes: state.firstDigitalArtInterest ?? interest,
+              latest_digital_art_intere: state.latestDigitalArtInterest ?? interest,
+            },
+          }, "namedesignai");
+        }
+      } else {
+        await recordDigitalArtInterest({ prisma: ctx.prisma, userId: ctx.session.user.id, interest });
+      }
 
       return { success: true };
     }),
@@ -140,6 +160,27 @@ export const userRouter = createTRPCRouter({
         hasGeneratedDesign: true,
         hasVisitedCheckout: true,
       } as const;
+      if (shouldUseServiceUserMutations()) {
+        const resolvedUser = await userCapturePaidTrafficLeadFromService({ email: normalizedEmail, name: input.name, hasGeneratedDesign: Boolean(input.hasGeneratedDesign), hasVisitedCheckout: Boolean(input.hasVisitedCheckout) });
+        if (!resolvedUser) throw new Error("Unable to capture paid traffic lead");
+        try {
+          await updateMauticContact({
+            email: resolvedUser.email ?? normalizedEmail,
+            name: resolvedUser.name,
+            brand_specific_credits: resolvedUser.credits,
+            customFields: {
+              is_paid_traffic_user: 1,
+              has_generated_design: resolvedUser.hasGeneratedDesign ? 1 : 0,
+              has_visited_checkout: resolvedUser.hasVisitedCheckout ? 1 : 0,
+              paid_traffic_source_page: input.sourcePage,
+              paid_traffic_promoted_pro: input.promotedProduct,
+              checkout_resume_url: input.checkoutResumeUrl,
+            },
+          }, "namedesignai");
+        } catch (err) { console.error("Error updating Mautic on capturePaidTrafficLead:", err); }
+        return { success: true };
+      }
+
       const existingUser = await ctx.prisma.user.findUnique({
         where: { email: normalizedEmail },
         select: paidTrafficLeadSelect,
@@ -225,6 +266,15 @@ export const userRouter = createTRPCRouter({
     console.log("PAID_TRAFFIC_DEBUG grantPaidTrafficFreeCredits called", {
       userId: ctx.session.user.id,
     });
+    if (shouldUseServiceUserMutations()) {
+      const updated = await userGrantPaidTrafficFreeCreditsFromService({ userId: ctx.session.user.id });
+      if (!updated) throw new Error("User not found");
+      if (updated.paidTrafficUser && updated.email) {
+        try { await updateMauticContact({ email: updated.email, name: updated.name, brand_specific_credits: updated.credits, customFields: { is_paid_traffic_user: 1 } }, "namedesignai"); }
+        catch (err) { console.error("Error updating Mautic on grantPaidTrafficFreeCredits:", err); }
+      }
+      return { ...updated, credits: Number(updated.credits), granted: false };
+    }
     const updated = await ctx.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
         where: { id: ctx.session.user.id },
@@ -300,6 +350,16 @@ export const userRouter = createTRPCRouter({
       promotedProduct: input?.promotedProduct,
     });
 
+    if (shouldUseServiceUserMutations()) {
+      const user = await userMarkPaidTrafficFromService({ userId: ctx.session.user.id });
+      if (!user) throw new Error("User not found");
+      if (user.email) {
+        try { await updateMauticContact({ email: user.email, name: user.name, brand_specific_credits: user.credits, customFields: { is_paid_traffic_user: 1, paid_traffic_source_page: input?.sourcePage, paid_traffic_promoted_pro: input?.promotedProduct } }, "namedesignai"); }
+        catch (err) { console.error("Error updating Mautic on markPaidTrafficUser:", err); }
+      }
+      return { success: true };
+    }
+
     const existingUser = await ctx.prisma.user.findUnique({
       where: { id: ctx.session.user.id },
       select: { email: true, name: true, credits: true, paidTrafficUser: true },
@@ -340,3 +400,4 @@ export const userRouter = createTRPCRouter({
     return { success: true };
     }),
 });
+
