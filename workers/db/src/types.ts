@@ -117,6 +117,29 @@ export interface GenerationFinalizeFailureInput {
   processingAttemptId: string;
   errorMessage: string;
 }
+
+export interface LegacyGenerationStartInput {
+  generationRequestId: string;
+  userId: string;
+  sourcePage: string | null;
+  requestType: string;
+  model: string;
+  promptHash: string;
+  inputHash: string;
+  numberOfImages: number;
+  aspectRatio: string;
+  creditsCharged: string;
+}
+export interface LegacyGenerationJob { generationRequestId: string; status: "started" | "processing" | "completed" | "failed"; resultImageUrls: string[]; errorMessage: string | null; predictionId: string | null }
+export type LegacyGenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
+export interface LegacyGenerationChargeInput { userId: string; creditsCharged: string }
+export type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" } | { ok: false; code: DbErrorCode };
+export interface LegacyGenerationIconInput { id: string; userId: string; prompt: string; metadata: unknown }
+export type LegacyGenerationIconResult = { iconId: string } | { ok: false; code: DbErrorCode };
+export interface LegacyGenerationPredictionInput { generationRequestId: string; predictionId: string }
+export interface LegacyGenerationSuccessInput { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }
+export interface LegacyGenerationFailureInput { generationRequestId: string; userId: string; creditsCharged: string; errorMessage: string; refund: boolean }
+export type LegacyGenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
 export type GenerationFinalizeFailureResult =
   | { outcome: "FAILED" | "TERMINAL_NOOP"; job: GenerationJobDto }
   | { ok: false; code: DbErrorCode };
@@ -167,6 +190,51 @@ export type UserPaidTrafficFunnelStateResult =
   | { found: true; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean; paidTrafficFreePreviewUsed: boolean; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean }
   | { found: false }
   | { ok: false; code: DbErrorCode };
+
+export interface UserContactInput { userId: string }
+export type UserContactResult =
+  | { found: true; email: string | null; name: string | null; credits: string }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+export interface UserRecordDigitalArtInterestInput { userId: string; interest: DigitalArtInterest }
+export type UserRecordDigitalArtInterestResult = AuthFinalizeEventResult;
+export interface PaidTrafficLeadInput {
+  email: string;
+  name?: string;
+  hasGeneratedDesign: boolean;
+  hasVisitedCheckout: boolean;
+}
+export type PaidTrafficLeadResult =
+  | { found: true; id: string; email: string | null; name: string | null; credits: string; paidTrafficUser: boolean; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+export interface PaidTrafficUserInput { userId: string }
+export type PaidTrafficUserResult =
+  | { found: true; email: string | null; name: string | null; credits: string; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean }
+  | { found: false }
+  | { ok: false; code: DbErrorCode };
+
+export interface BackgroundResolveInput { imageId: string; userId: string | null; paidTrafficUser: boolean }
+export interface BackgroundIconDto { id: string; userId: string | null; transparentImageUrl: string | null; backgroundRemovedAt: string | null }
+export type BackgroundResolveResult = { found: true; icon: BackgroundIconDto } | { found: false } | { ok: false; code: DbErrorCode };
+export interface BackgroundClaimInput { imageId: string; userId: string; creditCost: string }
+export type BackgroundClaimResult =
+  | { outcome: "CLAIMED" | "ALREADY_CLAIMED"; email: string | null; name: string | null; credits: string }
+  | { outcome: "INSUFFICIENT_CREDITS" }
+  | { outcome: "NOT_FOUND" }
+  | { ok: false; code: DbErrorCode };
+export interface BackgroundFinalizeInput { imageId: string; userId: string | null; transparentImageUrl: string; backgroundRemovedAt: string }
+export type BackgroundFinalizeResult = { updated: true; transparentImageUrl: string } | { updated: false } | { ok: false; code: DbErrorCode };
+
+export interface CpaUnlockStartInput { userId: string; token: string; now: string; leadIp: string | null }
+export type CpaUnlockStartResult =
+  | { outcome: "CREATED"; token: string }
+  | { outcome: "DAILY_LIMIT" }
+  | { outcome: "PENDING"; retryAfterMinutes: number };
+export interface CpaResultInput { userId: string }
+export type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" };
+export interface CpaPostbackInput { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: string; rewardCredits: string }
+export type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean };
 
 export interface PricingAvailabilityInput {
   productType: string;
@@ -411,3 +479,4 @@ export interface DbErrorResponse {
   ok: false;
   code: DbErrorCode;
 }
+
