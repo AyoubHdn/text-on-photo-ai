@@ -8,6 +8,20 @@ type DbErrorCode =
   | "DEPENDENCY_UNAVAILABLE"
   | "INTERNAL_DB_ERROR";
 
+type UserContactResult = { found: true; email: string | null; name: string | null; credits: string } | { found: false } | { ok: false; code: DbErrorCode };
+type PaidTrafficLeadResult = { found: true; id: string; email: string | null; name: string | null; credits: string; paidTrafficUser: boolean; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean } | { found: false } | { ok: false; code: DbErrorCode };
+type PaidTrafficUserResult = { found: true; email: string | null; name: string | null; credits: string; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean } | { found: false } | { ok: false; code: DbErrorCode };
+type BackgroundResolveResult = { found: true; icon: { id: string; userId: string | null; transparentImageUrl: string | null; backgroundRemovedAt: string | null } } | { found: false } | { ok: false; code: DbErrorCode };
+type BackgroundClaimResult = { outcome: "CLAIMED" | "ALREADY_CLAIMED"; email: string | null; name: string | null; credits: string } | { outcome: "INSUFFICIENT_CREDITS" | "NOT_FOUND" } | { ok: false; code: DbErrorCode };
+type BackgroundFinalizeResult = { updated: true; transparentImageUrl: string } | { updated: false } | { ok: false; code: DbErrorCode };
+type CpaUnlockStartResult = { outcome: "CREATED"; token: string } | { outcome: "DAILY_LIMIT" } | { outcome: "PENDING"; retryAfterMinutes: number };
+type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" };
+type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean };
+type LegacyGenerationJob = { generationRequestId: string; status: "started" | "processing" | "completed" | "failed"; resultImageUrls: string[]; errorMessage: string | null; predictionId: string | null };
+type LegacyGenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
+type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" } | { ok: false; code: DbErrorCode };
+type LegacyGenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
+
 export type PricingAvailabilityResult =
   | { available: boolean }
   | { ok: false; code: DbErrorCode };
@@ -77,6 +91,7 @@ export type AuthEventSyncState = {
   firstDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null;
   latestDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null;
 };
+type AuthEventSyncStateResult = { found: true; syncState: AuthEventSyncState } | { found: false } | { ok: false; code: DbErrorCode };
 export type GenerationJobResult = { generationRequestId: string; userId: string; status: "started" | "processing" | "completed" | "failed"; model: string; sourcePage: string | null; numberOfImages: number; aspectRatio: string; creditsCharged: string | null; remainingCredits: string | null; imageUrls: string[]; errorMessage: string | null; createdAt: string; updatedAt: string; processingStartedAt: string | null; leaseExpiresAt: string | null; outputIconIds: string[] };
 export type GenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: GenerationJobResult } | { ok: false; code: DbErrorCode };
 export type GenerationClaimResult = { outcome: "CLAIMED" | "ALREADY_CLAIMED" | "TERMINAL"; job: GenerationJobResult } | { ok: false; code: DbErrorCode };
@@ -100,6 +115,24 @@ type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | 
   userGetCredits(input: { userId: string }): Promise<UserCreditsResult>;
   userGetCreditUpgradeState(input: { userId: string }): Promise<UserCreditUpgradeStateResult>;
   userGetPaidTrafficFunnelState(input: { userId: string }): Promise<UserPaidTrafficFunnelStateResult>;
+  userGetContact(input: { userId: string }): Promise<UserContactResult>;
+  userRecordDigitalArtInterest(input: { userId: string; interest: "name_art" | "arabic_name_art" | "couples_art" }): Promise<AuthEventSyncStateResult>;
+  userCapturePaidTrafficLead(input: { email: string; name?: string; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean }): Promise<PaidTrafficLeadResult>;
+  userMarkPaidTraffic(input: { userId: string }): Promise<PaidTrafficUserResult>;
+  userGrantPaidTrafficFreeCredits(input: { userId: string }): Promise<PaidTrafficUserResult | ({ granted: false } & Extract<PaidTrafficUserResult, { found: true }>)>;
+  backgroundResolveIcon(input: { imageId: string; userId: string | null; paidTrafficUser: boolean }): Promise<BackgroundResolveResult>;
+  backgroundClaimCharge(input: { imageId: string; userId: string; creditCost: string }): Promise<BackgroundClaimResult>;
+  backgroundFinalize(input: { imageId: string; userId: string | null; transparentImageUrl: string; backgroundRemovedAt: string }): Promise<BackgroundFinalizeResult>;
+  cpaStartUnlock(input: { userId: string; token: string; now: string; leadIp: string | null }): Promise<CpaUnlockStartResult>;
+  cpaGetResult(input: { userId: string }): Promise<CpaResultResponse>;
+  cpaProcessPostback(input: { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: string; rewardCredits: string }): Promise<CpaPostbackResult>;
+  generationStartLegacy(input: { generationRequestId: string; userId: string; sourcePage: string | null; requestType: string; model: string; promptHash: string; inputHash: string; numberOfImages: number; aspectRatio: string; creditsCharged: string }): Promise<LegacyGenerationStartResult>;
+  generationLegacyGetStatus(input: { generationRequestId: string; userId: string }): Promise<LegacyGenerationStartResult>;
+  generationLegacyCharge(input: { userId: string; creditsCharged: string }): Promise<LegacyGenerationChargeResult>;
+  generationLegacyCreateIcon(input: { id: string; userId: string; prompt: string; metadata: unknown }): Promise<{ iconId: string } | { ok: false; code: DbErrorCode }>;
+  generationLegacySetPrediction(input: { generationRequestId: string; predictionId: string }): Promise<{ outcome: "UPDATED" | "NOOP" } | { ok: false; code: DbErrorCode }>;
+  generationLegacyFinalizeSuccess(input: { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }): Promise<LegacyGenerationTransitionResult>;
+  generationLegacyFinalizeFailure(input: { generationRequestId: string; userId: string; creditsCharged: string; errorMessage: string; refund: boolean }): Promise<LegacyGenerationTransitionResult>;
   authGetUser(input: { userId: string }): Promise<AuthUserResult>;
   authGetSessionAndUser(input: { sessionToken: string }): Promise<AuthSessionAndUserResult>;
   authGetUserByEmail(input: { email: string }): Promise<AuthUserResult>;
@@ -210,6 +243,64 @@ export async function userGetPaidTrafficFunnelStateFromService(input: { userId: 
   if ("found" in result) return result.found ? result : null;
   throw new DbServiceRequestError(result.code, "auth");
 }
+
+export async function userGetContactFromService(input: { userId: string }) {
+  const result = await (await getDbService()).userGetContact(input);
+  if ("found" in result) return result.found ? { ...result, credits: Number(result.credits) } : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function userRecordDigitalArtInterestFromService(input: { userId: string; interest: "name_art" | "arabic_name_art" | "couples_art" }) {
+  const result = await (await getDbService()).userRecordDigitalArtInterest(input);
+  if ("found" in result) return result.found ? result.syncState : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function userCapturePaidTrafficLeadFromService(input: { email: string; name?: string; hasGeneratedDesign: boolean; hasVisitedCheckout: boolean }) {
+  const result = await (await getDbService()).userCapturePaidTrafficLead(input);
+  if ("found" in result) return result.found ? result : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function userMarkPaidTrafficFromService(input: { userId: string }) {
+  const result = await (await getDbService()).userMarkPaidTraffic(input);
+  if ("found" in result) return result.found ? result : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function userGrantPaidTrafficFreeCreditsFromService(input: { userId: string }) {
+  const result = await (await getDbService()).userGrantPaidTrafficFreeCredits(input);
+  if ("found" in result) return result.found ? result : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function backgroundResolveIconFromService(input: { imageId: string; userId: string | null; paidTrafficUser: boolean }) {
+  const result = await (await getDbService()).backgroundResolveIcon(input);
+  if ("found" in result) return result.found ? { ...result.icon, backgroundRemovedAt: result.icon.backgroundRemovedAt ? new Date(result.icon.backgroundRemovedAt) : null } : null;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function backgroundClaimChargeFromService(input: { imageId: string; userId: string; creditCost: string }) {
+  return (await getDbService()).backgroundClaimCharge(input);
+}
+
+export async function backgroundFinalizeFromService(input: { imageId: string; userId: string | null; transparentImageUrl: string; backgroundRemovedAt: Date }) {
+  const result = await (await getDbService()).backgroundFinalize({ ...input, backgroundRemovedAt: input.backgroundRemovedAt.toISOString() });
+  if ("updated" in result) return result;
+  throw new DbServiceRequestError(result.code, "auth");
+}
+
+export async function cpaStartUnlockFromService(input: { userId: string; token: string; now: Date; leadIp: string | null }) { return (await getDbService()).cpaStartUnlock({ ...input, now: input.now.toISOString() }); }
+export async function cpaGetResultFromService(input: { userId: string }) { return (await getDbService()).cpaGetResult(input); }
+export async function cpaProcessPostbackFromService(input: { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: Date; rewardCredits: string }) { return (await getDbService()).cpaProcessPostback({ ...input, now: input.now.toISOString() }); }
+
+export async function generationStartLegacyFromService(input: { generationRequestId: string; userId: string; sourcePage: string | null; requestType: string; model: string; promptHash: string; inputHash: string; numberOfImages: number; aspectRatio: string; creditsCharged: string }) { return (await getDbService()).generationStartLegacy(input); }
+export async function generationLegacyGetStatusFromService(input: { generationRequestId: string; userId: string }) { return (await getDbService()).generationLegacyGetStatus(input); }
+export async function generationLegacyChargeFromService(input: { userId: string; creditsCharged: string }) { return (await getDbService()).generationLegacyCharge(input); }
+export async function generationLegacyCreateIconFromService(input: { id: string; userId: string; prompt: string; metadata: unknown }) { return (await getDbService()).generationLegacyCreateIcon(input); }
+export async function generationLegacySetPredictionFromService(input: { generationRequestId: string; predictionId: string }) { return (await getDbService()).generationLegacySetPrediction(input); }
+export async function generationLegacyFinalizeSuccessFromService(input: { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }) { return (await getDbService()).generationLegacyFinalizeSuccess(input); }
+export async function generationLegacyFinalizeFailureFromService(input: { generationRequestId: string; userId: string; creditsCharged: string; errorMessage: string; refund: boolean }) { return (await getDbService()).generationLegacyFinalizeFailure(input); }
 
 export async function generationStartOrGetAndReserveFromService(input: Record<string, unknown>) { return (await getDbService()).generationStartOrGetAndReserve(input); }
 export async function generationClaimExecutionFromService(input: { generationRequestId: string; processingAttemptId: string; leaseSeconds: number }) { return (await getDbService()).generationClaimExecution(input); }
@@ -443,3 +534,4 @@ export function authFinalizeSignInFromService(input: { userId: string; markPaidT
 export function authFinalizeNewUserFromService(input: { userId: string; markPaidTraffic: boolean; digitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }) {
   return finalizeAuthEventFromService("authFinalizeNewUser", input);
 }
+
