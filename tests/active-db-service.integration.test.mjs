@@ -77,6 +77,8 @@ integration("active DB-service operations preserve ownership, idempotency and at
 
     const interest = await service.userRecordDigitalArtInterest({ userId: user.id, interest: "name_art" });
     assert.equal(interest.found, true);
+    const contacts = await service.mauticListContacts({ limit: 10, cursor: null });
+    assert.equal(contacts.contacts.some((contact) => contact.id === user.id), true);
     const resolved = await service.backgroundResolveIcon({ imageId: icon.id, userId: user.id, paidTrafficUser: false });
     assert.equal(resolved.found, true);
     const claims = await Promise.all([
