@@ -16,10 +16,10 @@ type BackgroundClaimResult = { outcome: "CLAIMED" | "ALREADY_CLAIMED"; email: st
 type BackgroundFinalizeResult = { updated: true; transparentImageUrl: string } | { updated: false } | { ok: false; code: DbErrorCode };
 type CpaUnlockStartResult = { outcome: "CREATED"; token: string } | { outcome: "DAILY_LIMIT" } | { outcome: "PENDING"; retryAfterMinutes: number } | { ok: false; code: DbErrorCode };
 type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" } | { ok: false; code: DbErrorCode };
-type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean } | { ok: false; code: DbErrorCode };
+type CpaPostbackResult = { outcome: "NO_PENDING" | "DUPLICATE" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean } | { ok: false; code: DbErrorCode };
 type LegacyGenerationJob = { generationRequestId: string; status: "started" | "processing" | "completed" | "failed"; resultImageUrls: string[]; errorMessage: string | null; predictionId: string | null };
 type LegacyGenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
-type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" } | { ok: false; code: DbErrorCode };
+type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { alreadyCharged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" | "NOT_CHARGEABLE" } | { ok: false; code: DbErrorCode };
 type LegacyGenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
 type MauticContactBatchResult = { total: number; contacts: Array<{ id: string; email: string; name: string | null; credits: string; plan: "None" | "Starter" | "Pro" | "Elite"; firstDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null; latestDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }>; nextCursor: string | null; hasMore: boolean } | { ok: false; code: DbErrorCode };
 
@@ -130,7 +130,7 @@ type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | 
   mauticListContacts(input: { limit: number; cursor: string | null }): Promise<MauticContactBatchResult>;
   generationStartLegacy(input: { generationRequestId: string; userId: string; sourcePage: string | null; requestType: string; model: string; promptHash: string; inputHash: string; numberOfImages: number; aspectRatio: string; creditsCharged: string }): Promise<LegacyGenerationStartResult>;
   generationLegacyGetStatus(input: { generationRequestId: string; userId: string }): Promise<LegacyGenerationStartResult>;
-  generationLegacyCharge(input: { userId: string; creditsCharged: string }): Promise<LegacyGenerationChargeResult>;
+  generationLegacyCharge(input: { generationRequestId: string; userId: string; creditsCharged: string }): Promise<LegacyGenerationChargeResult>;
   generationLegacyCreateIcon(input: { id: string; userId: string; prompt: string; metadata: unknown }): Promise<{ iconId: string } | { ok: false; code: DbErrorCode }>;
   generationLegacySetPrediction(input: { generationRequestId: string; predictionId: string }): Promise<{ outcome: "UPDATED" | "NOOP" } | { ok: false; code: DbErrorCode }>;
   generationLegacyFinalizeSuccess(input: { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }): Promise<LegacyGenerationTransitionResult>;
@@ -299,7 +299,7 @@ export async function mauticListContactsFromService(input: { limit: number; curs
 
 export async function generationStartLegacyFromService(input: { generationRequestId: string; userId: string; sourcePage: string | null; requestType: string; model: string; promptHash: string; inputHash: string; numberOfImages: number; aspectRatio: string; creditsCharged: string }) { return (await getDbService()).generationStartLegacy(input); }
 export async function generationLegacyGetStatusFromService(input: { generationRequestId: string; userId: string }) { return (await getDbService()).generationLegacyGetStatus(input); }
-export async function generationLegacyChargeFromService(input: { userId: string; creditsCharged: string }) { return (await getDbService()).generationLegacyCharge(input); }
+export async function generationLegacyChargeFromService(input: { generationRequestId: string; userId: string; creditsCharged: string }) { return (await getDbService()).generationLegacyCharge(input); }
 export async function generationLegacyCreateIconFromService(input: { id: string; userId: string; prompt: string; metadata: unknown }) { return (await getDbService()).generationLegacyCreateIcon(input); }
 export async function generationLegacySetPredictionFromService(input: { generationRequestId: string; predictionId: string }) { return (await getDbService()).generationLegacySetPrediction(input); }
 export async function generationLegacyFinalizeSuccessFromService(input: { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }) { return (await getDbService()).generationLegacyFinalizeSuccess(input); }
