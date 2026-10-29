@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/async-callback-contract
+      - fix/active-db-service-f353
   workflow_dispatch:
     inputs:
       enable_async_client:
