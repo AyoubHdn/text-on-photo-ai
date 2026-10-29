@@ -132,8 +132,8 @@ export interface LegacyGenerationStartInput {
 }
 export interface LegacyGenerationJob { generationRequestId: string; status: "started" | "processing" | "completed" | "failed"; resultImageUrls: string[]; errorMessage: string | null; predictionId: string | null }
 export type LegacyGenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
-export interface LegacyGenerationChargeInput { userId: string; creditsCharged: string }
-export type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" } | { ok: false; code: DbErrorCode };
+export interface LegacyGenerationChargeInput { generationRequestId: string; userId: string; creditsCharged: string }
+export type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { alreadyCharged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" | "NOT_CHARGEABLE" } | { ok: false; code: DbErrorCode };
 export interface LegacyGenerationIconInput { id: string; userId: string; prompt: string; metadata: unknown }
 export type LegacyGenerationIconResult = { iconId: string } | { ok: false; code: DbErrorCode };
 export interface LegacyGenerationPredictionInput { generationRequestId: string; predictionId: string }
@@ -235,7 +235,7 @@ export type CpaUnlockStartResult =
 export interface CpaResultInput { userId: string }
 export type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" } | { ok: false; code: DbErrorCode };
 export interface CpaPostbackInput { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: string; rewardCredits: string }
-export type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean } | { ok: false; code: DbErrorCode };
+export type CpaPostbackResult = { outcome: "NO_PENDING" | "DUPLICATE" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean } | { ok: false; code: DbErrorCode };
 export interface MauticContactBatchInput { limit: number; cursor: string | null }
 export interface MauticContactDto { id: string; email: string; name: string | null; credits: string; plan: "None" | "Starter" | "Pro" | "Elite"; firstDigitalArtInterest: DigitalArtInterest | null; latestDigitalArtInterest: DigitalArtInterest | null }
 export type MauticContactBatchResult = { total: number; contacts: MauticContactDto[]; nextCursor: string | null; hasMore: boolean } | { ok: false; code: DbErrorCode };
