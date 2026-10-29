@@ -227,6 +227,15 @@ export default async function handler(
         if ("outcome" in claimed && claimed.outcome === "INSUFFICIENT_CREDITS") {
           return res.status(402).json({ error: "INSUFFICIENT_CREDITS" });
         }
+        if ("outcome" in claimed && claimed.outcome === "NOT_FOUND") {
+          return res.status(404).json({ error: "Image not found" });
+        }
+        if ("outcome" in claimed && claimed.outcome === "ALREADY_CLAIMED") {
+          return res.status(409).json({ error: "Background removal is already in progress" });
+        }
+        if (!("outcome" in claimed) || claimed.outcome !== "CLAIMED") {
+          return res.status(500).json({ error: "Credit deduction failed" });
+        }
         if ("outcome" in claimed && (claimed.outcome === "CLAIMED" || claimed.outcome === "ALREADY_CLAIMED") && claimed.email) {
           try {
             await updateMauticContact({ email: claimed.email, name: claimed.name, brand_specific_credits: Number(claimed.credits) }, "namedesignai");
