@@ -12,6 +12,9 @@ import { getServerSession } from "next-auth/next";
 import { env } from "~/env.mjs";
 import { authOptions } from "~/server/auth";
 import { prisma } from "~/server/db";
+import { cpaStartUnlockFromService } from "~/server/cloudflare/dbService";
+
+const shouldUseServiceCpa = () => process.env.DB_CPA_BACKEND === "service";
 
 function getUtcDayRange(date: Date) {
   const start = new Date(
@@ -73,6 +76,23 @@ export default async function handler(
 
   const now = new Date();
   const { start, end } = getUtcDayRange(now);
+
+  if (shouldUseServiceCpa()) {
+    const result = await cpaStartUnlockFromService({
+      userId: session.user.id,
+      token: crypto.randomUUID(),
+      now,
+      leadIp: ip,
+    });
+    if (result.outcome === "DAILY_LIMIT") {
+      return res.status(400).json({ code: "DAILY_LIMIT", error: "You already claimed free credits today. Try again tomorrow or buy credits." });
+    }
+    if (result.outcome === "PENDING") {
+      return res.status(400).json({ error: "You already have a pending survey", retryAfterMinutes: result.retryAfterMinutes });
+    }
+    const redirectUrl = `https://offers.cpx-research.com/index.php?app_id=${env.CPX_APP_ID}&ext_user_id=${session.user.id}&subid_1=namedesignai`;
+    return res.status(200).json({ redirectUrl });
+  }
 
   const claimedToday = await prisma.cpaUnlock.findFirst({
     where: {
@@ -148,3 +168,4 @@ export default async function handler(
 
   return res.status(200).json({ redirectUrl });
 }
+
