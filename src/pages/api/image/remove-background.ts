@@ -14,6 +14,11 @@ import { Prisma } from "@prisma/client";
 import { Readable } from "stream";
 import { buffer as readStreamIntoBuffer } from "stream/consumers";
 import { updateMauticContact } from "~/server/api/routers/mautic-utils";
+import {
+  backgroundClaimChargeFromService,
+  backgroundFinalizeFromService,
+  backgroundResolveIconFromService,
+} from "~/server/cloudflare/dbService";
 
 const BUCKET_NAME = env.NEXT_PUBLIC_S3_BUCKET_NAME;
 
@@ -30,6 +35,7 @@ const replicate = new Replicate({
 });
 
 const RECRAFT_MODEL = "recraft-ai/recraft-remove-background";
+const shouldUseServiceBackground = () => process.env.DB_BACKGROUND_BACKEND === "service";
 
 function getImageIdFromUrl(imageUrl: string): string {
   try {
@@ -156,7 +162,9 @@ export default async function handler(
     return res.status(400).json({ error: "Missing imageId" });
   }
 
-  let icon = session?.user?.id
+  let icon = shouldUseServiceBackground()
+    ? await backgroundResolveIconFromService({ imageId, userId: session?.user?.id ?? null, paidTrafficUser })
+    : session?.user?.id
     ? await prisma.icon.findFirst({
         where: { id: imageId, userId: session.user.id },
         select: {
@@ -169,7 +177,7 @@ export default async function handler(
     : null;
 
   let claimedGuestIconToUser = false;
-  if (!icon && paidTrafficUser) {
+  if (!shouldUseServiceBackground() && !icon && paidTrafficUser) {
     icon = await prisma.icon.findFirst({
       where: { id: imageId, userId: null },
       select: {
@@ -210,7 +218,22 @@ export default async function handler(
   // Charge only once per image (idempotent).
   if (!icon.backgroundRemovedAt && session?.user?.id) {
     try {
-      await prisma.$transaction(async (tx) => {
+      if (shouldUseServiceBackground()) {
+        const claimed = await backgroundClaimChargeFromService({
+          imageId,
+          userId: session.user.id,
+          creditCost: String(CREDIT_COSTS.BACKGROUND_REMOVAL),
+        });
+        if ("outcome" in claimed && claimed.outcome === "INSUFFICIENT_CREDITS") {
+          return res.status(402).json({ error: "INSUFFICIENT_CREDITS" });
+        }
+        if ("outcome" in claimed && (claimed.outcome === "CLAIMED" || claimed.outcome === "ALREADY_CLAIMED") && claimed.email) {
+          try {
+            await updateMauticContact({ email: claimed.email, name: claimed.name, brand_specific_credits: Number(claimed.credits) }, "namedesignai");
+          } catch (mauticErr) { console.error("[REMOVE_BACKGROUND_MAUTIC_SYNC_ERROR]", mauticErr); }
+        }
+      } else {
+        await prisma.$transaction(async (tx) => {
         const claimed = await tx.icon.updateMany({
           where: {
             id: imageId,
@@ -252,7 +275,8 @@ export default async function handler(
           where: { id: session.user.id },
           data: { credits: updatedCredits },
         });
-      });
+        });
+      }
     } catch (error) {
       if (error instanceof Error && error.message === "INSUFFICIENT_CREDITS") {
         return res.status(402).json({ error: "INSUFFICIENT_CREDITS" });
@@ -261,10 +285,12 @@ export default async function handler(
       return res.status(500).json({ error: "Credit deduction failed" });
     }
 
-    const updatedUserForMautic = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { credits: true, email: true, name: true },
-    });
+    const updatedUserForMautic = shouldUseServiceBackground()
+      ? null
+      : await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { credits: true, email: true, name: true },
+        });
 
     if (updatedUserForMautic?.email) {
       try {
@@ -352,19 +378,33 @@ export default async function handler(
       throw new Error("Transparent output matches original image");
     }
 
-    const updated = await prisma.icon.update({
-      where: { id: imageId },
-      data: {
-        transparentImageUrl,
-        backgroundRemovedAt: icon.backgroundRemovedAt ?? new Date(),
-      },
-      select: {
-        transparentImageUrl: true,
-      },
-    });
+    const updated = shouldUseServiceBackground()
+      ? await backgroundFinalizeFromService({
+          imageId,
+          userId: icon.userId ?? session?.user?.id ?? null,
+          transparentImageUrl,
+          backgroundRemovedAt: icon.backgroundRemovedAt ?? new Date(),
+        })
+      : await prisma.icon.update({
+          where: { id: imageId },
+          data: {
+            transparentImageUrl,
+            backgroundRemovedAt: icon.backgroundRemovedAt ?? new Date(),
+          },
+          select: { transparentImageUrl: true },
+        });
+
+    let finalTransparentImageUrl: string | null;
+    if (shouldUseServiceBackground()) {
+      const serviceUpdated = updated as { updated?: boolean; transparentImageUrl?: string };
+      if (serviceUpdated.updated !== true || typeof serviceUpdated.transparentImageUrl !== "string") throw new Error("Background image ownership changed before finalization");
+      finalTransparentImageUrl = serviceUpdated.transparentImageUrl;
+    } else {
+      finalTransparentImageUrl = (updated as { transparentImageUrl: string | null }).transparentImageUrl;
+    }
 
     return res.status(200).json({
-      transparentImageUrl: updated.transparentImageUrl,
+      transparentImageUrl: finalTransparentImageUrl,
       alreadyExists: false,
     });
   } catch (error) {
@@ -372,3 +412,4 @@ export default async function handler(
     return res.status(500).json({ error: "Background removal failed" });
   }
 }
+
