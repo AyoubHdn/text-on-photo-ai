@@ -145,6 +145,9 @@ jobs:
 
       - name: Run Stripe webhook PostgreSQL integration tests
         run: node --experimental-strip-types --test tests/stripe-webhook.integration.test.mjs
+
+      - name: Run active DB-service PostgreSQL integration tests
+        run: node --experimental-strip-types --test tests/active-db-service.integration.test.mjs
       - name: Run all TypeScript typechecks
         shell: bash
         run: |
@@ -459,5 +462,6 @@ jobs:
           if-no-files-found: error
           retention-days: 3
           include-hidden-files: true
+
 
 
