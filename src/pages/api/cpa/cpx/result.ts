@@ -18,7 +18,9 @@ export default async function handler(
   }
 
   if (shouldUseServiceCpa()) {
-    return res.json(await cpaGetResultFromService({ userId: session.user.id }));
+    const result = await cpaGetResultFromService({ userId: session.user.id });
+    if ("ok" in result) return res.status(500).json({ error: "Survey service unavailable" });
+    return res.json(result);
   }
 
   const unlock = await prisma.cpaUnlock.findFirst({
