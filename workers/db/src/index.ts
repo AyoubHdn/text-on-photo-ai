@@ -474,7 +474,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
     const prisma = this.createPrisma();
     try {
       return await prisma.$transaction(async (tx) => {
-        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${input.transactionId}, 0))`;
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${input.transactionId}))`;
         const reused = await tx.cpaUnlock.findFirst({ where: { transactionId: input.transactionId }, select: { id: true } });
         if (reused) return { outcome: "DUPLICATE" as const };
         await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
@@ -1136,19 +1136,20 @@ export default class DbService extends WorkerEntrypoint<Env> {
   }
 
   async generationLegacyFinalizeFailure(input: LegacyGenerationFailureInput): Promise<LegacyGenerationTransitionResult> {
-    if (!input?.generationRequestId || !input.userId || !input.errorMessage) return { ok: false, code: "INVALID_INPUT" };
-    let credits: Prisma.Decimal;
-    try { credits = new Prisma.Decimal(input.creditsCharged); } catch { return { ok: false, code: "INVALID_INPUT" }; }
+    if (!input?.generationRequestId || !input.errorMessage) return { ok: false, code: "INVALID_INPUT" };
     const prisma = this.createPrisma();
     try {
       const result = await prisma.$transaction(async (tx) => {
-        await tx.$queryRaw`SELECT "generationRequestId" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} AND "userId" = ${input.userId} FOR UPDATE`;
+        await tx.$queryRaw`SELECT "generationRequestId" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} FOR UPDATE`;
         const currentBefore = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
-        if (!currentBefore || currentBefore.userId !== input.userId) return { updated: false, current: currentBefore };
+        if (!currentBefore) return { updated: false, current: currentBefore };
         if (currentBefore.status === "completed" || currentBefore.status === "failed") return { updated: false, current: currentBefore };
-        const shouldRefund = input.refund && currentBefore.chargeState === "charged";
+        const shouldRefund = currentBefore.chargeState === "charged";
+        if (shouldRefund && (!currentBefore.userId || !currentBefore.creditsCharged)) return { updated: false, current: currentBefore };
         const current = await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { status: "failed", errorMessage: input.errorMessage, failedAt: new Date(), processingStartedAt: null, leaseExpiresAt: null, chargeState: shouldRefund ? "refunded" : currentBefore.chargeState } });
-        if (shouldRefund) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: credits } } });
+        if (shouldRefund) {
+          await tx.user.update({ where: { id: currentBefore.userId! }, data: { credits: { increment: currentBefore.creditsCharged! } } });
+        }
         return { updated: true, current };
       });
       if (!result.current) return { ok: false, code: "NOT_FOUND" };

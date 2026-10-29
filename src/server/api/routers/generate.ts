@@ -714,7 +714,7 @@ async function generateIconThroughService(input: GenerationInput, userId: string
         if ("ok" in finalized) throw new Error("Generation success finalization failed");
         return imageUrls;
       },
-      finalizeFailure: ({ errorMessage, refund }) => generationLegacyFinalizeFailureFromService({ generationRequestId: input.generationRequestId, userId, creditsCharged: totalCredits.toString(), errorMessage, refund }),
+      finalizeFailure: ({ errorMessage }) => generationLegacyFinalizeFailureFromService({ generationRequestId: input.generationRequestId, errorMessage }),
       getErrorMessage: (error) => error instanceof TRPCError ? error.message : normalizeGenerationErrorMessage(error),
     });
     const digitalArtInterest = getDigitalArtInterestFromSourcePage(input.sourcePage);

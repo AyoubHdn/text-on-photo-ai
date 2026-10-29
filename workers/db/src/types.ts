@@ -138,7 +138,7 @@ export interface LegacyGenerationIconInput { id: string; userId: string; prompt:
 export type LegacyGenerationIconResult = { iconId: string } | { ok: false; code: DbErrorCode };
 export interface LegacyGenerationPredictionInput { generationRequestId: string; predictionId: string }
 export interface LegacyGenerationSuccessInput { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }
-export interface LegacyGenerationFailureInput { generationRequestId: string; userId: string; creditsCharged: string; errorMessage: string; refund: boolean }
+export interface LegacyGenerationFailureInput { generationRequestId: string; errorMessage: string }
 export type LegacyGenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
 export type GenerationFinalizeFailureResult =
   | { outcome: "FAILED" | "TERMINAL_NOOP"; job: GenerationJobDto }
@@ -482,5 +482,6 @@ export type StripePurchaseResult =
 export interface DbErrorResponse {
   ok: false;
   code: DbErrorCode;
+  detail?: string;
 }
 

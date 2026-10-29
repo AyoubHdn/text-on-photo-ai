@@ -134,7 +134,7 @@ type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | 
   generationLegacyCreateIcon(input: { id: string; userId: string; prompt: string; metadata: unknown }): Promise<{ iconId: string } | { ok: false; code: DbErrorCode }>;
   generationLegacySetPrediction(input: { generationRequestId: string; predictionId: string }): Promise<{ outcome: "UPDATED" | "NOOP" } | { ok: false; code: DbErrorCode }>;
   generationLegacyFinalizeSuccess(input: { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }): Promise<LegacyGenerationTransitionResult>;
-  generationLegacyFinalizeFailure(input: { generationRequestId: string; userId: string; creditsCharged: string; errorMessage: string; refund: boolean }): Promise<LegacyGenerationTransitionResult>;
+  generationLegacyFinalizeFailure(input: { generationRequestId: string; errorMessage: string }): Promise<LegacyGenerationTransitionResult>;
   authGetUser(input: { userId: string }): Promise<AuthUserResult>;
   authGetSessionAndUser(input: { sessionToken: string }): Promise<AuthSessionAndUserResult>;
   authGetUserByEmail(input: { email: string }): Promise<AuthUserResult>;
@@ -303,7 +303,7 @@ export async function generationLegacyChargeFromService(input: { generationReque
 export async function generationLegacyCreateIconFromService(input: { id: string; userId: string; prompt: string; metadata: unknown }) { return (await getDbService()).generationLegacyCreateIcon(input); }
 export async function generationLegacySetPredictionFromService(input: { generationRequestId: string; predictionId: string }) { return (await getDbService()).generationLegacySetPrediction(input); }
 export async function generationLegacyFinalizeSuccessFromService(input: { generationRequestId: string; resultImageUrls: string[]; predictionId: string | null }) { return (await getDbService()).generationLegacyFinalizeSuccess(input); }
-export async function generationLegacyFinalizeFailureFromService(input: { generationRequestId: string; userId: string; creditsCharged: string; errorMessage: string; refund: boolean }) { return (await getDbService()).generationLegacyFinalizeFailure(input); }
+export async function generationLegacyFinalizeFailureFromService(input: { generationRequestId: string; errorMessage: string }) { return (await getDbService()).generationLegacyFinalizeFailure(input); }
 
 export async function generationStartOrGetAndReserveFromService(input: Record<string, unknown>) { return (await getDbService()).generationStartOrGetAndReserve(input); }
 export async function generationClaimExecutionFromService(input: { generationRequestId: string; processingAttemptId: string; leaseSeconds: number }) { return (await getDbService()).generationClaimExecution(input); }
