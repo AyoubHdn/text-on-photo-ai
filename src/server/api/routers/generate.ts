@@ -9,6 +9,14 @@ import {
   generationFailIfUnclaimedFromService,
   generationGetStatusFromService,
   generationStartOrGetAndReserveFromService,
+  generationStartLegacyFromService,
+  generationLegacyGetStatusFromService,
+  generationLegacyChargeFromService,
+  generationLegacyCreateIconFromService,
+  generationLegacySetPredictionFromService,
+  generationLegacyFinalizeSuccessFromService,
+  generationLegacyFinalizeFailureFromService,
+  userRecordDigitalArtInterestFromService,
 } from "~/server/cloudflare/dbService";
 import { invokeGenerationLambda } from "~/server/generation/lambdaInvoke";
 import {
@@ -32,7 +40,7 @@ import {
   getDigitalArtInterestFromSourcePage,
   recordDigitalArtInterest,
 } from "~/server/mautic/digitalArtInterest";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { assertAsyncGenerationEnabled } from "~/server/generation/asyncGate";
 import { syncAsyncGenerationMauticForUser } from "~/server/generation/asyncMautic";
 
@@ -619,6 +627,103 @@ function prepareGenerationRequest(
     logContext,
     totalCredits,
   };
+}
+
+const shouldUseServiceGeneration = () => process.env.DB_GENERATION_BACKEND === "service";
+
+async function waitForLegacyServiceResult(generationRequestId: string, userId: string) {
+  const deadline = Date.now() + GENERATION_REQUEST_WAIT_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const result = await generationLegacyGetStatusFromService({ generationRequestId, userId });
+    if ("job" in result) {
+      if (result.job.status === "completed") return result.job.resultImageUrls;
+      if (result.job.status === "failed") throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: getStoredGenerationError({ errorMessage: result.job.errorMessage }) });
+    } else if ("ok" in result) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to read generation status." });
+    }
+    await sleep(GENERATION_REQUEST_POLL_INTERVAL_MS);
+  }
+  throw new TRPCError({ code: "CONFLICT", message: "Generation is already in progress. Please wait a moment and try again." });
+}
+
+async function generateIconThroughService(input: GenerationInput, userId: string) {
+  const preparation = prepareGenerationRequest(input, userId, "generateIcon");
+  const { effectiveNumberOfImages, logContext, totalCredits } = preparation;
+  const started = await generationStartLegacyFromService({
+    generationRequestId: input.generationRequestId,
+    userId,
+    sourcePage: input.sourcePage ?? null,
+    requestType: "generateIcon",
+    model: input.model,
+    promptHash: preparation.promptHash,
+    inputHash: preparation.inputHash,
+    numberOfImages: effectiveNumberOfImages,
+    aspectRatio: input.aspectRatio,
+    creditsCharged: totalCredits.toString(),
+  });
+  if ("ok" in started) throw new TRPCError({ code: started.code === "CONFLICT" ? "CONFLICT" : "INTERNAL_SERVER_ERROR", message: "Unable to start generation." });
+  if (started.outcome === "EXISTING") {
+    if (started.job.status === "completed") return started.job.resultImageUrls.map((imageUrl) => ({ imageUrl }));
+    if (started.job.status === "failed") throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: getStoredGenerationError({ errorMessage: started.job.errorMessage }) });
+    const imageUrls = await waitForLegacyServiceResult(input.generationRequestId, userId);
+    return imageUrls.map((imageUrl) => ({ imageUrl }));
+  }
+
+  let charged = false;
+  try {
+    const charge = await generationLegacyChargeFromService({ userId, creditsCharged: totalCredits.toString() });
+    if ("charged" in charge && !charge.charged) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: charge.code === "INSUFFICIENT_CREDITS" ? "You do not have enough credits" : "User not found after credit update" });
+    }
+    if (!("charged" in charge) || !charge.charged) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Credit deduction failed" });
+    charged = true;
+    if (charge.email) {
+      try { await updateMauticContact({ email: charge.email, name: charge.name, brand_specific_credits: Number(charge.credits), customFields: { has_generated_design: 1 } }, "namedesignai"); }
+      catch (error) { console.error("Error updating Mautic after service generation charge:", error); }
+    }
+
+    const generated = await generateImages(input.prompt, effectiveNumberOfImages, input.aspectRatio, input.model, undefined, {
+      logContext,
+      onPredictionCreated: async (predictionId) => { await generationLegacySetPredictionFromService({ generationRequestId: input.generationRequestId, predictionId }); },
+    });
+    const imageUrls = await Promise.all(generated.imagesBase64.map(async (image, index) => {
+      const iconId = `${input.generationRequestId}-${index}-${randomUUID().slice(0, 8)}`;
+      const metadata = {
+        aspectRatio: input.aspectRatio ?? null,
+        model: input.model,
+        category: input.metadata?.category ?? null,
+        subcategory: input.metadata?.subcategory ?? null,
+        communityAlt: input.metadata?.communityAlt ?? null,
+        communityTitle: input.metadata?.communityTitle ?? null,
+        sourcePage: input.sourcePage ?? null,
+      };
+      const created = await generationLegacyCreateIconFromService({ id: iconId, userId, prompt: input.prompt, metadata });
+      if (!("iconId" in created)) throw new Error("Unable to create generated icon");
+      try {
+        await s3.putObject({ Bucket: BUCKET_NAME, Body: Buffer.from(image, "base64"), Key: created.iconId, ContentEncoding: "base64", ContentType: isPngOutputModel(input.model) ? "image/png" : "image/webp" }).promise();
+      } catch (error) {
+        console.error("S3 Upload Error:", error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to upload image to S3" });
+      }
+      return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${created.iconId}`;
+    }));
+
+    const finalized = await generationLegacyFinalizeSuccessFromService({ generationRequestId: input.generationRequestId, resultImageUrls: imageUrls, predictionId: generated.predictionId });
+    if ("ok" in finalized) throw new Error("Generation success finalization failed");
+    const digitalArtInterest = getDigitalArtInterestFromSourcePage(input.sourcePage);
+    if (digitalArtInterest) {
+      try {
+        const state = await userRecordDigitalArtInterestFromService({ userId, interest: digitalArtInterest });
+        if (state?.email) await updateMauticContact({ email: state.email, name: state.name, brand_specific_credits: state.credits, customFields: { first_digital_art_interes: state.firstDigitalArtInterest ?? digitalArtInterest, latest_digital_art_intere: state.latestDigitalArtInterest ?? digitalArtInterest } }, "namedesignai");
+      } catch (error) { console.error("Digital art interest update failed:", error); }
+    }
+    return imageUrls.map((imageUrl) => ({ imageUrl }));
+  } catch (error) {
+    const message = error instanceof TRPCError ? error.message : normalizeGenerationErrorMessage(error);
+    const finalized = await generationLegacyFinalizeFailureFromService({ generationRequestId: input.generationRequestId, userId, creditsCharged: totalCredits.toString(), errorMessage: message, refund: charged });
+    if ("ok" in finalized) console.error("Service generation failure finalization failed", finalized.code);
+    throw error instanceof TRPCError ? error : new TRPCError({ code: "INTERNAL_SERVER_ERROR", message });
+  }
 }
 
 function clampCustomSizeToMaxWidth(
@@ -1625,6 +1730,9 @@ export const generateRouter = createTRPCRouter({
     .input(generationInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session?.user?.id;
+      if (shouldUseServiceGeneration() && userId) {
+        return generateIconThroughService(input, userId);
+      }
       const preparation = prepareGenerationRequest(input, userId, "generateIcon");
       const {
         effectiveNumberOfImages,
@@ -1983,3 +2091,4 @@ export const generateRouter = createTRPCRouter({
       return result.found ? toPublicGenerationStatus(result.job) : null;
     }),
 });
+
