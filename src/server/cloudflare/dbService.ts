@@ -21,6 +21,7 @@ type LegacyGenerationJob = { generationRequestId: string; status: "started" | "p
 type LegacyGenerationStartResult = { outcome: "CREATED" | "EXISTING"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
 type LegacyGenerationChargeResult = { charged: true; email: string | null; name: string | null; credits: string } | { charged: false; code: "INSUFFICIENT_CREDITS" | "NOT_FOUND" } | { ok: false; code: DbErrorCode };
 type LegacyGenerationTransitionResult = { outcome: "COMPLETED" | "FAILED" | "TERMINAL_NOOP"; job: LegacyGenerationJob } | { ok: false; code: DbErrorCode };
+type MauticContactBatchResult = { total: number; contacts: Array<{ id: string; email: string; name: string | null; credits: string; plan: "None" | "Starter" | "Pro" | "Elite"; firstDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null; latestDigitalArtInterest: "name_art" | "arabic_name_art" | "couples_art" | null }>; nextCursor: string | null; hasMore: boolean } | { ok: false; code: DbErrorCode };
 
 export type PricingAvailabilityResult =
   | { available: boolean }
@@ -126,6 +127,7 @@ type AuthFinalizeEventResult = { found: true; syncState: AuthEventSyncState } | 
   cpaStartUnlock(input: { userId: string; token: string; now: string; leadIp: string | null }): Promise<CpaUnlockStartResult>;
   cpaGetResult(input: { userId: string }): Promise<CpaResultResponse>;
   cpaProcessPostback(input: { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: string; rewardCredits: string }): Promise<CpaPostbackResult>;
+  mauticListContacts(input: { limit: number; cursor: string | null }): Promise<MauticContactBatchResult>;
   generationStartLegacy(input: { generationRequestId: string; userId: string; sourcePage: string | null; requestType: string; model: string; promptHash: string; inputHash: string; numberOfImages: number; aspectRatio: string; creditsCharged: string }): Promise<LegacyGenerationStartResult>;
   generationLegacyGetStatus(input: { generationRequestId: string; userId: string }): Promise<LegacyGenerationStartResult>;
   generationLegacyCharge(input: { userId: string; creditsCharged: string }): Promise<LegacyGenerationChargeResult>;
@@ -293,6 +295,7 @@ export async function backgroundFinalizeFromService(input: { imageId: string; us
 export async function cpaStartUnlockFromService(input: { userId: string; token: string; now: Date; leadIp: string | null }) { return (await getDbService()).cpaStartUnlock({ ...input, now: input.now.toISOString() }); }
 export async function cpaGetResultFromService(input: { userId: string }) { return (await getDbService()).cpaGetResult(input); }
 export async function cpaProcessPostbackFromService(input: { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: Date; rewardCredits: string }) { return (await getDbService()).cpaProcessPostback({ ...input, now: input.now.toISOString() }); }
+export async function mauticListContactsFromService(input: { limit: number; cursor: string | null }) { const result = await (await getDbService()).mauticListContacts(input); if ("contacts" in result) return result; throw new DbServiceRequestError(result.code, "auth"); }
 
 export async function generationStartLegacyFromService(input: { generationRequestId: string; userId: string; sourcePage: string | null; requestType: string; model: string; promptHash: string; inputHash: string; numberOfImages: number; aspectRatio: string; creditsCharged: string }) { return (await getDbService()).generationStartLegacy(input); }
 export async function generationLegacyGetStatusFromService(input: { generationRequestId: string; userId: string }) { return (await getDbService()).generationLegacyGetStatus(input); }
