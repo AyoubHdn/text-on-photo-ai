@@ -43,6 +43,7 @@ import {
 import { createHash, randomUUID } from "crypto";
 import { assertAsyncGenerationEnabled } from "~/server/generation/asyncGate";
 import { syncAsyncGenerationMauticForUser } from "~/server/generation/asyncMautic";
+import { runLegacyGenerationAfterReservation } from "~/server/generation/legacyGenerationLifecycle";
 
 const s3 = new AWS.S3({
   credentials: {
@@ -669,24 +670,25 @@ async function generateIconThroughService(input: GenerationInput, userId: string
     return imageUrls.map((imageUrl) => ({ imageUrl }));
   }
 
-  let charged = false;
   try {
-    const charge = await generationLegacyChargeFromService({ userId, creditsCharged: totalCredits.toString() });
-    if ("charged" in charge && !charge.charged) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: charge.code === "INSUFFICIENT_CREDITS" ? "You do not have enough credits" : "User not found after credit update" });
-    }
-    if (!("charged" in charge) || !charge.charged) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Credit deduction failed" });
-    charged = true;
-    if (charge.email) {
-      try { await updateMauticContact({ email: charge.email, name: charge.name, brand_specific_credits: Number(charge.credits), customFields: { has_generated_design: 1 } }, "namedesignai"); }
-      catch (error) { console.error("Error updating Mautic after service generation charge:", error); }
-    }
-
-    const generated = await generateImages(input.prompt, effectiveNumberOfImages, input.aspectRatio, input.model, undefined, {
-      logContext,
-      onPredictionCreated: async (predictionId) => { await generationLegacySetPredictionFromService({ generationRequestId: input.generationRequestId, predictionId }); },
-    });
-    const imageUrls = await Promise.all(generated.imagesBase64.map(async (image, index) => {
+    const imageUrls = await runLegacyGenerationAfterReservation({
+      charge: async () => {
+        const charge = await generationLegacyChargeFromService({ generationRequestId: input.generationRequestId, userId, creditsCharged: totalCredits.toString() });
+        if ("charged" in charge && !charge.charged) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: charge.code === "INSUFFICIENT_CREDITS" ? "You do not have enough credits" : "User not found after credit update" });
+        }
+        if (!("charged" in charge || "alreadyCharged" in charge)) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Credit deduction failed" });
+        if (charge.email) {
+          try { await updateMauticContact({ email: charge.email, name: charge.name, brand_specific_credits: Number(charge.credits), customFields: { has_generated_design: 1 } }, "namedesignai"); }
+          catch (error) { console.error("Error updating Mautic after service generation charge:", error); }
+        }
+      },
+      execute: async () => {
+        const generated = await generateImages(input.prompt, effectiveNumberOfImages, input.aspectRatio, input.model, undefined, {
+          logContext,
+          onPredictionCreated: async (predictionId) => { await generationLegacySetPredictionFromService({ generationRequestId: input.generationRequestId, predictionId }); },
+        });
+        const imageUrls = await Promise.all(generated.imagesBase64.map(async (image, index) => {
       const iconId = `${input.generationRequestId}-${index}-${randomUUID().slice(0, 8)}`;
       const metadata = {
         aspectRatio: input.aspectRatio ?? null,
@@ -706,10 +708,15 @@ async function generateIconThroughService(input: GenerationInput, userId: string
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to upload image to S3" });
       }
       return `https://${BUCKET_NAME}.s3.${env.NEXT_PUBLIC_S3_REGION}.amazonaws.com/${created.iconId}`;
-    }));
+        }));
 
-    const finalized = await generationLegacyFinalizeSuccessFromService({ generationRequestId: input.generationRequestId, resultImageUrls: imageUrls, predictionId: generated.predictionId });
-    if ("ok" in finalized) throw new Error("Generation success finalization failed");
+        const finalized = await generationLegacyFinalizeSuccessFromService({ generationRequestId: input.generationRequestId, resultImageUrls: imageUrls, predictionId: generated.predictionId });
+        if ("ok" in finalized) throw new Error("Generation success finalization failed");
+        return imageUrls;
+      },
+      finalizeFailure: ({ errorMessage, refund }) => generationLegacyFinalizeFailureFromService({ generationRequestId: input.generationRequestId, userId, creditsCharged: totalCredits.toString(), errorMessage, refund }),
+      getErrorMessage: (error) => error instanceof TRPCError ? error.message : normalizeGenerationErrorMessage(error),
+    });
     const digitalArtInterest = getDigitalArtInterestFromSourcePage(input.sourcePage);
     if (digitalArtInterest) {
       try {
@@ -719,10 +726,7 @@ async function generateIconThroughService(input: GenerationInput, userId: string
     }
     return imageUrls.map((imageUrl) => ({ imageUrl }));
   } catch (error) {
-    const message = error instanceof TRPCError ? error.message : normalizeGenerationErrorMessage(error);
-    const finalized = await generationLegacyFinalizeFailureFromService({ generationRequestId: input.generationRequestId, userId, creditsCharged: totalCredits.toString(), errorMessage: message, refund: charged });
-    if ("ok" in finalized) console.error("Service generation failure finalization failed", finalized.code);
-    throw error instanceof TRPCError ? error : new TRPCError({ code: "INTERNAL_SERVER_ERROR", message });
+    throw error instanceof TRPCError ? error : new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: normalizeGenerationErrorMessage(error) });
   }
 }
 
