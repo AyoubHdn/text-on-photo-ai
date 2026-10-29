@@ -73,6 +73,8 @@ export default async function handler(
       if ("ok" in outcome) return res.status(500).json({ error: "Survey fulfillment unavailable" });
       return outcome.outcome === "NO_PENDING"
         ? res.status(200).json({ message: "No pending unlock" })
+        : outcome.outcome === "DUPLICATE"
+        ? res.status(200).json({ message: "Duplicate transaction" })
         : res.status(200).json({ success: true });
     }
 
