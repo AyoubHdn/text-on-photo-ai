@@ -15,6 +15,7 @@
       "DB_CPA_BACKEND": "service",
       "DB_USER_MUTATIONS_BACKEND": "service",
       "DB_GENERATION_BACKEND": "service",
+      "DB_MAUTIC_BACKEND": "service",
     "AUTH_EXTERNAL_SYNC_MODE": "noop",
     "GENERATION_LAMBDA_REGION": "us-east-1",
     "GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging",
