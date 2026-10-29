@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "~/server/auth";
 import { prisma } from "~/server/db";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { cpaGetResultFromService } from "~/server/cloudflare/dbService";
+
+const shouldUseServiceCpa = () => process.env.DB_CPA_BACKEND === "service";
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,6 +15,10 @@ export default async function handler(
 
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (shouldUseServiceCpa()) {
+    return res.json(await cpaGetResultFromService({ userId: session.user.id }));
   }
 
   const unlock = await prisma.cpaUnlock.findFirst({
@@ -47,3 +54,4 @@ export default async function handler(
 
   return res.json({ status: "pending" });
 }
+
