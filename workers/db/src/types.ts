@@ -230,11 +230,12 @@ export interface CpaUnlockStartInput { userId: string; token: string; now: strin
 export type CpaUnlockStartResult =
   | { outcome: "CREATED"; token: string }
   | { outcome: "DAILY_LIMIT" }
-  | { outcome: "PENDING"; retryAfterMinutes: number };
+  | { outcome: "PENDING"; retryAfterMinutes: number }
+  | { ok: false; code: DbErrorCode };
 export interface CpaResultInput { userId: string }
-export type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" };
+export type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" } | { ok: false; code: DbErrorCode };
 export interface CpaPostbackInput { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: string; rewardCredits: string }
-export type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean };
+export type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean } | { ok: false; code: DbErrorCode };
 
 export interface PricingAvailabilityInput {
   productType: string;
