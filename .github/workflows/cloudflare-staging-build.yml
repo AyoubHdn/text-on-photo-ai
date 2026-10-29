@@ -149,6 +149,8 @@ jobs:
 
       - name: Run active DB-service PostgreSQL integration tests
         run: node --experimental-strip-types --test tests/active-db-service.integration.test.mjs
+      - name: Run synchronous-generation lifecycle mock tests
+        run: node --experimental-strip-types --test tests/legacy-generation-lifecycle.test.mjs
       - name: Run all TypeScript typechecks
         shell: bash
         run: |
