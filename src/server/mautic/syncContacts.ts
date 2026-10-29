@@ -6,6 +6,7 @@ import {
   MAUTIC_FIRST_DIGITAL_ART_INTEREST_ALIAS,
   MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS,
 } from "~/server/mautic/digitalArtInterest";
+import { mauticListContactsFromService } from "~/server/cloudflare/dbService";
 
 export type SyncContactsResult = {
   message: string;
@@ -25,6 +26,38 @@ export async function syncAllContactsToMautic(
   options: SyncContactsOptions = {},
 ): Promise<SyncContactsResult> {
   const batchSize = Math.min(Math.max(options.limit ?? 100, 1), 500);
+  if (process.env.DB_MAUTIC_BACKEND === "service") {
+    const batch = await mauticListContactsFromService({ limit: batchSize, cursor: options.cursor ?? null });
+    let processedCount = 0;
+    let failedCount = 0;
+    for (const contact of batch.contacts) {
+      try {
+        const mauticData = await updateMauticContact({
+          email: contact.email,
+          name: contact.name,
+          brand_specific_credits: Number(contact.credits),
+          brand_specific_plan: contact.plan,
+          customFields: {
+            [MAUTIC_FIRST_DIGITAL_ART_INTEREST_ALIAS]: contact.firstDigitalArtInterest ?? undefined,
+            [MAUTIC_LATEST_DIGITAL_ART_INTEREST_ALIAS]: contact.latestDigitalArtInterest ?? undefined,
+          },
+        }, "namedesignai");
+        if (mauticData.errors?.length) throw new Error(mauticData.errors.map((error) => error.message).join("; "));
+        processedCount++;
+      } catch (error) {
+        failedCount++;
+        console.error(`Error processing contact ${contact.email}:`, error);
+      }
+    }
+    return {
+      message: batch.hasMore ? "Contacts sync batch complete" : "Contacts sync complete",
+      total: batch.total,
+      processed: processedCount,
+      failed: failedCount,
+      nextCursor: batch.nextCursor,
+      hasMore: batch.hasMore,
+    };
+  }
   const total = await prisma.user.count({
     where: { email: { not: null } },
   });
@@ -111,3 +144,4 @@ export async function syncAllContactsToMautic(
     hasMore,
   };
 }
+
