@@ -34,6 +34,25 @@ import type {
   UserCreditsResult,
   UserCreditUpgradeStateResult,
   UserPaidTrafficFunnelStateResult,
+  UserContactResult,
+  UserRecordDigitalArtInterestInput,
+  UserRecordDigitalArtInterestResult,
+  PaidTrafficLeadInput,
+  PaidTrafficLeadResult,
+  PaidTrafficUserInput,
+  PaidTrafficUserResult,
+  BackgroundResolveInput,
+  BackgroundResolveResult,
+  BackgroundClaimInput,
+  BackgroundClaimResult,
+  BackgroundFinalizeInput,
+  BackgroundFinalizeResult,
+  CpaUnlockStartInput,
+  CpaUnlockStartResult,
+  CpaResultInput,
+  CpaResultResponse,
+  CpaPostbackInput,
+  CpaPostbackResult,
   PricingAvailabilityInput,
   PricingAvailabilityErrorResponse,
   PricingAvailabilityResponse,
@@ -94,10 +113,21 @@ import type {
   GenerationMauticSyncStateResult,
   GenerationFinalizeFailureInput,
   GenerationFinalizeFailureResult,
+  LegacyGenerationStartInput,
+  LegacyGenerationStartResult,
+  LegacyGenerationChargeInput,
+  LegacyGenerationChargeResult,
+  LegacyGenerationIconInput,
+  LegacyGenerationIconResult,
+  LegacyGenerationPredictionInput,
+  LegacyGenerationSuccessInput,
+  LegacyGenerationFailureInput,
+  LegacyGenerationTransitionResult,
   GenerationFailIfUnclaimedInput,
   GenerationFailIfStaleInput,
   StripePurchaseInput,
   StripePurchaseResult,
+  DbErrorCode,
 } from "./types";
 
 const AUTH_INTERESTS = new Set<DigitalArtInterest>(["name_art", "arabic_name_art", "couples_art"]);
@@ -253,6 +283,209 @@ export default class DbService extends WorkerEntrypoint<Env> {
       console.error("Paid traffic funnel lookup failed", toSafeErrorResponse(error));
       return { ok: false, code: "INTERNAL_DB_ERROR" };
     } finally { await prisma.$disconnect(); }
+  }
+
+  async userGetContact(input: { userId: string }): Promise<UserContactResult> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, credits: true } });
+      return user ? { found: true, email: user.email, name: user.name, credits: user.credits.toString() } : { found: false };
+    } catch (error) {
+      console.error("User contact lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async userRecordDigitalArtInterest(input: UserRecordDigitalArtInterestInput): Promise<UserRecordDigitalArtInterestResult> {
+    if (!input?.userId?.trim() || !AUTH_INTERESTS.has(input.interest)) return { ok: false, code: "INVALID_INPUT" };
+    return this.finalizeAuthEventState({ userId: input.userId, markPaidTraffic: false, digitalArtInterest: input.interest });
+  }
+
+  async userCapturePaidTrafficLead(input: PaidTrafficLeadInput): Promise<PaidTrafficLeadResult> {
+    const email = input?.email?.trim().toLowerCase();
+    if (!email || email.length > 320 || !email.includes("@") || typeof input.name !== "string" && input.name !== undefined || typeof input.hasGeneratedDesign !== "boolean" || typeof input.hasVisitedCheckout !== "boolean") return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const select = { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } as const;
+        const current = await tx.user.findUnique({ where: { email }, select });
+        const user = current
+          ? await tx.user.update({ where: { id: current.id }, data: { name: current.name ?? input.name, paidTrafficUser: true, hasGeneratedDesign: current.hasGeneratedDesign || input.hasGeneratedDesign, hasVisitedCheckout: current.hasVisitedCheckout || input.hasVisitedCheckout }, select })
+          : await tx.user.create({ data: { email, name: input.name, paidTrafficUser: true, hasGeneratedDesign: input.hasGeneratedDesign, hasVisitedCheckout: input.hasVisitedCheckout }, select });
+        return user;
+      });
+      return { found: true, ...result, credits: result.credits.toString() };
+    } catch (error) {
+      if ((error as { code?: string }).code === "P2002") {
+        try {
+          const raced = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } });
+          if (raced) {
+            const updated = await prisma.user.update({ where: { id: raced.id }, data: { name: raced.name ?? input.name, paidTrafficUser: true, hasGeneratedDesign: raced.hasGeneratedDesign || input.hasGeneratedDesign, hasVisitedCheckout: raced.hasVisitedCheckout || input.hasVisitedCheckout }, select: { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } });
+            return { found: true, ...updated, credits: updated.credits.toString() };
+          }
+        } catch (retryError) {
+          console.error("Paid traffic lead race recovery failed", toSafeErrorResponse(retryError));
+        }
+        return { ok: false, code: "CONFLICT" };
+      }
+      console.error("Paid traffic lead update failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async userMarkPaidTraffic(input: PaidTrafficUserInput): Promise<PaidTrafficUserResult> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.user.update({ where: { id: userId }, data: { paidTrafficUser: true }, select: { email: true, name: true, credits: true, paidTrafficUser: true, paidTrafficFreeCreditsGranted: true } });
+      return { found: true, ...user, credits: user.credits.toString() };
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      return { ok: false, code: code === "P2025" ? "NOT_FOUND" : "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async userGrantPaidTrafficFreeCredits(input: PaidTrafficUserInput): Promise<PaidTrafficUserResult | { granted: false; found: true; email: string | null; name: string | null; credits: string; paidTrafficUser: boolean; paidTrafficFreeCreditsGranted: boolean }> {
+    const userId = input?.userId?.trim();
+    if (!userId || userId.length > 128) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const user = await prisma.$transaction(async (tx) => tx.user.update({ where: { id: userId }, data: { paidTrafficUser: true }, select: { email: true, name: true, credits: true, paidTrafficUser: true, paidTrafficFreeCreditsGranted: true } }));
+      return { granted: false, found: true, ...user, credits: user.credits.toString() };
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      return { ok: false, code: code === "P2025" ? "NOT_FOUND" : "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async backgroundResolveIcon(input: BackgroundResolveInput): Promise<BackgroundResolveResult> {
+    const imageId = input?.imageId?.trim();
+    const userId = input?.userId?.trim() || null;
+    if (!imageId || imageId.length > 128 || (!userId && !input.paidTrafficUser)) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const icon = await prisma.$transaction(async (tx) => {
+        let found = userId
+          ? await tx.icon.findFirst({ where: { id: imageId, userId }, select: { id: true, userId: true, transparentImageUrl: true, backgroundRemovedAt: true } })
+          : null;
+        if (!found && input.paidTrafficUser) {
+          found = await tx.icon.findFirst({ where: { id: imageId, userId: null }, select: { id: true, userId: true, transparentImageUrl: true, backgroundRemovedAt: true } });
+          if (found && userId) {
+            await tx.icon.update({ where: { id: imageId }, data: { userId } });
+            found = { ...found, userId };
+          }
+        }
+        return found;
+      });
+      return icon ? { found: true, icon: { ...icon, backgroundRemovedAt: icon.backgroundRemovedAt?.toISOString() ?? null } } : { found: false };
+    } catch (error) {
+      console.error("Background icon lookup failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async backgroundClaimCharge(input: BackgroundClaimInput): Promise<BackgroundClaimResult> {
+    const imageId = input?.imageId?.trim();
+    const userId = input?.userId?.trim();
+    if (!imageId || !userId || !input.creditCost) return { ok: false, code: "INVALID_INPUT" };
+    let creditCost: Prisma.Decimal;
+    try { creditCost = new Prisma.Decimal(input.creditCost); } catch { return { ok: false, code: "INVALID_INPUT" }; }
+    const prisma = this.createPrisma();
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const claimed = await tx.icon.updateMany({ where: { id: imageId, userId, backgroundRemovedAt: null, transparentImageUrl: null }, data: { backgroundRemovedAt: new Date() } });
+        const user = await tx.user.findUnique({ where: { id: userId }, select: { email: true, name: true, credits: true } });
+        if (!user) return { outcome: "NOT_FOUND" as const };
+        if (claimed.count === 0) return { outcome: "ALREADY_CLAIMED" as const, email: user.email, name: user.name, credits: user.credits.toString() };
+        if (user.credits.lessThan(creditCost)) {
+          await tx.icon.updateMany({ where: { id: imageId, userId, transparentImageUrl: null }, data: { backgroundRemovedAt: null } });
+          return { outcome: "INSUFFICIENT_CREDITS" as const };
+        }
+        const updated = await tx.user.update({ where: { id: userId }, data: { credits: { decrement: creditCost }, hasGeneratedDesign: true }, select: { email: true, name: true, credits: true } });
+        return { outcome: "CLAIMED" as const, email: updated.email, name: updated.name, credits: updated.credits.toString() };
+      });
+    } catch (error) {
+      console.error("Background charge failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async backgroundFinalize(input: BackgroundFinalizeInput): Promise<BackgroundFinalizeResult> {
+    if (!input?.imageId?.trim() || (input.userId !== null && !input.userId?.trim()) || !input.transparentImageUrl || !input.backgroundRemovedAt) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const updated = await prisma.icon.updateMany({ where: { id: input.imageId, userId: input.userId }, data: { transparentImageUrl: input.transparentImageUrl, backgroundRemovedAt: new Date(input.backgroundRemovedAt) } });
+      if (updated.count !== 1) return { updated: false };
+      return { updated: true, transparentImageUrl: input.transparentImageUrl };
+    } catch (error) {
+      console.error("Background finalization failed", toSafeErrorResponse(error));
+      return { ok: false, code: "INTERNAL_DB_ERROR" };
+    } finally { await prisma.$disconnect(); }
+  }
+
+  async cpaStartUnlock(input: CpaUnlockStartInput): Promise<CpaUnlockStartResult> {
+    if (!input?.userId?.trim() || !input.token || !input.now) return { outcome: "PENDING", retryAfterMinutes: 0 };
+    const now = new Date(input.now);
+    const prisma = this.createPrisma();
+    try {
+      return await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
+        const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        const end = new Date(start); end.setUTCDate(end.getUTCDate() + 1);
+        if (await tx.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx", status: "approved", approvedAt: { gte: start, lt: end } }, select: { id: true } })) return { outcome: "DAILY_LIMIT" as const };
+        const expireBefore = new Date(now.getTime() - 30 * 60 * 1000);
+        await tx.cpaUnlock.updateMany({ where: { userId: input.userId, network: "cpx", status: "pending", createdAt: { lt: expireBefore } }, data: { status: "rejected", expiredAt: now } });
+        const existing = await tx.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx", status: "pending", createdAt: { gt: expireBefore } }, orderBy: { createdAt: "desc" } });
+        if (existing) return { outcome: "PENDING" as const, retryAfterMinutes: Math.ceil(Math.max(0, 30 * 60 * 1000 - (now.getTime() - existing.createdAt.getTime())) / 60000) };
+        await tx.cpaUnlock.create({ data: { userId: input.userId, token: input.token, network: "cpx", status: "pending", leadIp: input.leadIp } });
+        return { outcome: "CREATED" as const, token: input.token };
+      });
+    } catch (error) { console.error("CPA unlock start failed", toSafeErrorResponse(error)); return { outcome: "PENDING", retryAfterMinutes: 0 }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async cpaGetResult(input: CpaResultInput): Promise<CpaResultResponse> {
+    if (!input?.userId?.trim()) return { status: "pending" };
+    const prisma = this.createPrisma();
+    try {
+      const unlock = await prisma.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx" }, orderBy: { createdAt: "desc" } });
+      if (!unlock) return { status: "pending" };
+      if (unlock.status === "approved" && unlock.payout && unlock.payout > 0) return { status: "approved", payout: unlock.payout };
+      if (unlock.status === "approved") return { status: "screenout" };
+      return { status: unlock.status === "rejected" ? "rejected" : "pending" };
+    } catch (error) { console.error("CPA result lookup failed", toSafeErrorResponse(error)); return { status: "pending" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async cpaProcessPostback(input: CpaPostbackInput): Promise<CpaPostbackResult> {
+    if (!input?.userId?.trim() || !input.transactionId || !input.now || !input.rewardCredits) return { outcome: "NO_PENDING" };
+    const now = new Date(input.now);
+    let rewardCredits: Prisma.Decimal;
+    try { rewardCredits = new Prisma.Decimal(input.rewardCredits); } catch { return { outcome: "NO_PENDING" }; }
+    const prisma = this.createPrisma();
+    try {
+      return await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
+        const unlock = await tx.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx", status: "pending" }, orderBy: { createdAt: "desc" } });
+        if (!unlock) return { outcome: "NO_PENDING" as const };
+        let finalStatus: "approved" | "rejected" = input.requestedApproved ? "approved" : "rejected";
+        let finalResult: "complete" | "screenout_bonus" | "screenout_no_bonus" | "reversed" = input.result;
+        if (finalStatus === "approved" && input.result !== "screenout_no_bonus") {
+          const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+          const end = new Date(start); end.setUTCDate(end.getUTCDate() + 1);
+          const approvedToday = await tx.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx", status: "approved", approvedAt: { gte: start, lt: end }, id: { not: unlock.id } }, select: { id: true } });
+          if (approvedToday) { finalStatus = "rejected"; finalResult = "reversed"; }
+        }
+        await tx.cpaUnlock.update({ where: { id: unlock.id }, data: { status: finalStatus, transactionId: input.transactionId, payout: input.payout, currency: "USD", leadIp: input.leadIp, approvedAt: finalStatus === "approved" ? now : null, result: finalResult } });
+        const rewardApplied = finalStatus === "approved" && finalResult !== "screenout_no_bonus";
+        if (rewardApplied) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: rewardCredits } } });
+        return { outcome: "APPLIED" as const, success: true as const, status: finalStatus, rewardApplied };
+      });
+    } catch (error) { console.error("CPA postback failed", toSafeErrorResponse(error)); return { outcome: "NO_PENDING" }; }
+    finally { await prisma.$disconnect(); }
   }
 
   async stripeFulfillPurchase(input: StripePurchaseInput): Promise<StripePurchaseResult> {
@@ -786,6 +1019,102 @@ export default class DbService extends WorkerEntrypoint<Env> {
     }
   }
 
+  async generationStartLegacy(input: LegacyGenerationStartInput): Promise<LegacyGenerationStartResult> {
+    if (!input || !/^[A-Za-z0-9_-]{1,120}$/.test(input.generationRequestId) || !input.userId || !input.requestType || !input.model || !input.promptHash || !input.inputHash || !Number.isInteger(input.numberOfImages) || input.numberOfImages < 1 || input.numberOfImages > 10 || !input.aspectRatio) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const current = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+        if (current) {
+          if (current.userId !== input.userId || current.requestType !== input.requestType || current.promptHash !== input.promptHash || current.inputHash !== input.inputHash) return { conflict: true as const };
+          return { existing: current };
+        }
+        const created = await tx.generationRequest.create({ data: { generationRequestId: input.generationRequestId, userId: input.userId, sourcePage: input.sourcePage, requestType: input.requestType, model: input.model, promptHash: input.promptHash, inputHash: input.inputHash, status: "started", numberOfImages: input.numberOfImages, aspectRatio: input.aspectRatio, creditsCharged: new Prisma.Decimal(input.creditsCharged) } });
+        return { created };
+      });
+      if ("conflict" in result) return { ok: false, code: "CONFLICT" };
+      return { outcome: "created" in result ? "CREATED" : "EXISTING", job: this.legacyGenerationJob("created" in result ? result.created : result.existing) };
+    } catch (error) { console.error("Legacy generation request start failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationLegacyGetStatus(input: { generationRequestId: string; userId: string }): Promise<LegacyGenerationStartResult> {
+    if (!input?.generationRequestId || !input.userId) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const request = await prisma.generationRequest.findFirst({ where: { generationRequestId: input.generationRequestId, userId: input.userId } });
+      return request ? { outcome: "EXISTING", job: this.legacyGenerationJob(request) } : { ok: false, code: "NOT_FOUND" };
+    } catch (error) { console.error("Legacy generation status failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationLegacyCharge(input: LegacyGenerationChargeInput): Promise<LegacyGenerationChargeResult> {
+    if (!input?.userId || !input.creditsCharged) return { ok: false, code: "INVALID_INPUT" };
+    let credits: Prisma.Decimal;
+    try { credits = new Prisma.Decimal(input.creditsCharged); } catch { return { ok: false, code: "INVALID_INPUT" }; }
+    const prisma = this.createPrisma();
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({ where: { id: input.userId }, select: { credits: true } });
+        if (!user) return { charged: false as const, code: "NOT_FOUND" as const };
+        const updated = await tx.user.updateMany({ where: { id: input.userId, credits: { gte: credits } }, data: { credits: { decrement: credits }, hasGeneratedDesign: true } });
+        if (updated.count !== 1) return { charged: false as const, code: "INSUFFICIENT_CREDITS" as const };
+        const contact = await tx.user.findUnique({ where: { id: input.userId }, select: { email: true, name: true, credits: true } });
+        return contact ? { charged: true as const, email: contact.email, name: contact.name, credits: contact.credits.toString() } : { charged: false as const, code: "NOT_FOUND" as const };
+      });
+    } catch (error) { console.error("Legacy generation charge failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationLegacyCreateIcon(input: LegacyGenerationIconInput): Promise<LegacyGenerationIconResult> {
+    if (!input?.id || !input.userId || !input.prompt) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try { await prisma.icon.create({ data: { id: input.id, userId: input.userId, prompt: input.prompt, metadata: input.metadata as Prisma.InputJsonValue } }); return { iconId: input.id }; }
+    catch (error) { return this.mapWriteError(error, "Legacy generation icon create failed"); }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationLegacySetPrediction(input: LegacyGenerationPredictionInput): Promise<{ outcome: "UPDATED" | "NOOP" } | { ok: false; code: DbErrorCode }> {
+    if (!input?.generationRequestId || !input.predictionId) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try { const result = await prisma.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: { notIn: ["completed", "failed"] } }, data: { predictionId: input.predictionId } }); return { outcome: result.count === 1 ? "UPDATED" : "NOOP" }; }
+    catch (error) { console.error("Legacy generation prediction update failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationLegacyFinalizeSuccess(input: LegacyGenerationSuccessInput): Promise<LegacyGenerationTransitionResult> {
+    if (!input?.generationRequestId || !Array.isArray(input.resultImageUrls)) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const request = await prisma.$transaction(async (tx) => {
+        const updated = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: { notIn: ["completed", "failed"] } }, data: { status: "completed", resultImageUrls: input.resultImageUrls, predictionId: input.predictionId, errorMessage: null, completedAt: new Date(), failedAt: null } });
+        const current = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+        return { updated: updated.count === 1, current };
+      });
+      if (!request.current) return { ok: false, code: "NOT_FOUND" };
+      return { outcome: request.updated ? "COMPLETED" : "TERMINAL_NOOP", job: this.legacyGenerationJob(request.current) };
+    } catch (error) { console.error("Legacy generation success finalization failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async generationLegacyFinalizeFailure(input: LegacyGenerationFailureInput): Promise<LegacyGenerationTransitionResult> {
+    if (!input?.generationRequestId || !input.userId || !input.errorMessage) return { ok: false, code: "INVALID_INPUT" };
+    let credits: Prisma.Decimal;
+    try { credits = new Prisma.Decimal(input.creditsCharged); } catch { return { ok: false, code: "INVALID_INPUT" }; }
+    const prisma = this.createPrisma();
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const updated = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: { notIn: ["completed", "failed"] } }, data: { status: "failed", errorMessage: input.errorMessage, failedAt: new Date() } });
+        if (updated.count === 1 && input.refund) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: credits } } });
+        const current = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+        return { updated: updated.count === 1, current };
+      });
+      if (!result.current) return { ok: false, code: "NOT_FOUND" };
+      return { outcome: result.updated ? "FAILED" : "TERMINAL_NOOP", job: this.legacyGenerationJob(result.current) };
+    } catch (error) { console.error("Legacy generation failure finalization failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
   async generationStartOrGetAndReserve(input: GenerationStartInput): Promise<GenerationStartResult> {
     if (!this.validGenerationInput(input)) return { ok: false, code: "INVALID_INPUT" };
     let charged: Prisma.Decimal;
@@ -1066,6 +1395,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
   }
 
   private validGenerationInput(input: GenerationStartInput): boolean { return !!input && /^[A-Za-z0-9_-]{1,120}$/.test(input.generationRequestId) && !!input.userId && (input.sourcePage === null || typeof input.sourcePage === "string") && input.requestType === GENERATION_ASYNC_REQUEST_TYPE && isValidOptionalExecutionScope(input.executionScope) && !!input.model && !!input.promptHash && !!input.inputHash && Number.isInteger(input.numberOfImages) && input.numberOfImages > 0 && input.numberOfImages <= 10 && !!input.aspectRatio; }
+  private legacyGenerationJob(request: any): any { return { generationRequestId: request.generationRequestId, status: request.status, resultImageUrls: Array.isArray(request.resultImageUrls) ? request.resultImageUrls.filter((item: unknown): item is string => typeof item === "string") : [], errorMessage: request.errorMessage ?? null, predictionId: request.predictionId ?? null }; }
   private async generationExistingResult(prisma: PrismaClient, request: any, input: GenerationStartInput): Promise<GenerationStartResult> { if (request.userId !== input.userId || request.promptHash !== input.promptHash || request.inputHash !== input.inputHash || request.requestType !== input.requestType) return { ok: false, code: "CONFLICT" }; const balance = await prisma.user.findUnique({ where: { id: input.userId }, select: { credits: true } }); return { outcome: "EXISTING", job: this.generationJob(request, balance?.credits ?? null) }; }
   private generationJob(request: any, remainingCredits: Prisma.Decimal | null): any { const count = request.numberOfImages ?? 0; return { generationRequestId: request.generationRequestId, userId: request.userId, status: request.status, model: request.model, sourcePage: request.sourcePage ?? null, numberOfImages: count, aspectRatio: request.aspectRatio ?? "", creditsCharged: request.creditsCharged?.toString() ?? null, remainingCredits: remainingCredits?.toString() ?? null, imageUrls: Array.isArray(request.resultImageUrls) ? request.resultImageUrls as string[] : [], errorMessage: request.errorMessage ?? null, createdAt: request.createdAt.toISOString(), updatedAt: request.updatedAt.toISOString(), processingStartedAt: request.processingStartedAt?.toISOString() ?? null, leaseExpiresAt: request.leaseExpiresAt?.toISOString() ?? null, outputIconIds: Array.from({ length: count }, (_, index) => `${request.generationRequestId}-${index}`) }; }
 
@@ -1083,3 +1413,4 @@ export default class DbService extends WorkerEntrypoint<Env> {
     return { ok: false, code: code === "P2002" ? "CONFLICT" : code === "P2025" ? "NOT_FOUND" : "INTERNAL_DB_ERROR" };
   }
 }
+
