@@ -100,7 +100,7 @@ integration("active DB-service operations preserve ownership, idempotency and at
       service.cpaProcessPostback({ userId: user.id, transactionId: `${suffix}-tx`, payout: 1, requestedApproved: true, result: "complete", leadIp: null, now: new Date().toISOString(), rewardCredits: "1" }),
       service.cpaProcessPostback({ userId: user.id, transactionId: `${suffix}-tx`, payout: 1, requestedApproved: true, result: "complete", leadIp: null, now: new Date().toISOString(), rewardCredits: "1" }),
     ]);
-    assert.deepEqual(applied.map((item) => item.outcome).sort(), ["APPLIED", "NO_PENDING"]);
+    assert.deepEqual(applied.map((item) => item.outcome).sort(), ["APPLIED", "DUPLICATE"]);
     const finalUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { credits: true, firstDigitalArtInterest: true, latestDigitalArtInterest: true } });
     assert.equal(finalUser.credits.toString(), "10");
     assert.equal(finalUser.firstDigitalArtInterest, "name_art");
@@ -110,6 +110,93 @@ integration("active DB-service operations preserve ownership, idempotency and at
     await prisma.icon.deleteMany({ where: { id: icon.id } });
     await prisma.user.delete({ where: { id: user.id } });
     await prisma.user.deleteMany({ where: { email: `${suffix}-lead@example.invalid` } });
+    await prisma.$disconnect();
+  }
+});
+
+integration("active DB-service operations preserve charge state, guest ownership and monotone lead flags", async () => {
+  const { PrismaClient } = await import("@prisma/client");
+  const { PrismaPg } = await import("@prisma/adapter-pg");
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
+  const DbService = await loadDbService();
+  const suffix = `active-db-race-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const makeService = () => {
+    const service = Object.create(DbService.prototype);
+    service.env = { HYPERDRIVE: { connectionString: databaseUrl } };
+    /** @param {Promise<unknown>} promise */
+    const waitUntil = (promise) => promise;
+    service.ctx = { waitUntil };
+    return service;
+  };
+  const service = makeService();
+  const userA = await prisma.user.create({ data: { email: `${suffix}-a@example.invalid`, credits: 5 } });
+  const userB = await prisma.user.create({ data: { email: `${suffix}-b@example.invalid`, credits: 5 } });
+  const lowCreditUser = await prisma.user.create({ data: { email: `${suffix}-low@example.invalid`, credits: 0.5 } });
+  const lowCreditIcon = await prisma.icon.create({ data: { id: `${suffix}-low-icon`, userId: lowCreditUser.id, prompt: "low-credit" } });
+  const guestIcon = await prisma.icon.create({ data: { id: `${suffix}-guest-icon`, userId: null, prompt: "guest" } });
+  try {
+    const lowClaims = await Promise.all([
+      service.backgroundClaimCharge({ imageId: lowCreditIcon.id, userId: lowCreditUser.id, creditCost: "1" }),
+      service.backgroundClaimCharge({ imageId: lowCreditIcon.id, userId: lowCreditUser.id, creditCost: "1" }),
+    ]);
+    assert.deepEqual(lowClaims.map((item) => "outcome" in item ? item.outcome : item.code).sort(), ["INSUFFICIENT_CREDITS", "INSUFFICIENT_CREDITS"]);
+    const lowState = await prisma.user.findUniqueOrThrow({ where: { id: lowCreditUser.id }, select: { credits: true } });
+    const lowIconState = await prisma.icon.findUniqueOrThrow({ where: { id: lowCreditIcon.id }, select: { backgroundRemovedAt: true } });
+    assert.equal(lowState.credits.toString(), "0.5");
+    assert.equal(lowIconState.backgroundRemovedAt, null);
+
+    const guestClaims = await Promise.all([
+      service.backgroundResolveIcon({ imageId: guestIcon.id, userId: userA.id, paidTrafficUser: true }),
+      service.backgroundResolveIcon({ imageId: guestIcon.id, userId: userB.id, paidTrafficUser: true }),
+    ]);
+    assert.equal(guestClaims.filter((item) => item.found).length, 1);
+    const guestState = await prisma.icon.findUniqueOrThrow({ where: { id: guestIcon.id }, select: { userId: true } });
+    assert.ok(guestState.userId === userA.id || guestState.userId === userB.id);
+
+    const requestId = `${suffix}-generation`;
+    const started = await service.generationStartLegacy({ generationRequestId: requestId, userId: userA.id, sourcePage: "name-art-generator", requestType: "generateIcon", model: "flux-schnell", promptHash: `${suffix}-prompt`, inputHash: `${suffix}-input`, numberOfImages: 1, aspectRatio: "1:1", creditsCharged: "1" });
+    assert.equal(started.outcome, "CREATED");
+    const charges = await Promise.all([
+      service.generationLegacyCharge({ generationRequestId: requestId, userId: userA.id, creditsCharged: "1" }),
+      service.generationLegacyCharge({ generationRequestId: requestId, userId: userA.id, creditsCharged: "1" }),
+    ]);
+    assert.deepEqual(charges.map((item) => "charged" in item && item.charged ? "CHARGED" : "alreadyCharged" in item ? "ALREADY_CHARGED" : item.code).sort(), ["ALREADY_CHARGED", "CHARGED"]);
+    const failed = await Promise.all([
+      service.generationLegacyFinalizeFailure({ generationRequestId: requestId, userId: userA.id, creditsCharged: "1", errorMessage: "provider failed", refund: true }),
+      service.generationLegacyFinalizeFailure({ generationRequestId: requestId, userId: userA.id, creditsCharged: "1", errorMessage: "provider failed", refund: true }),
+    ]);
+    assert.deepEqual(failed.map((item) => "outcome" in item ? item.outcome : item.code).sort(), ["FAILED", "TERMINAL_NOOP"]);
+    const refundedUser = await prisma.user.findUniqueOrThrow({ where: { id: userA.id }, select: { credits: true } });
+    const failedRequest = await prisma.generationRequest.findUniqueOrThrow({ where: { generationRequestId: requestId }, select: { status: true, chargeState: true } });
+    assert.equal(refundedUser.credits.toString(), "5");
+    assert.deepEqual(failedRequest, { status: "failed", chargeState: "refunded" });
+
+    const unlockA = await service.cpaStartUnlock({ userId: userA.id, token: `${suffix}-unlock-a`, now: new Date().toISOString(), leadIp: null });
+    const unlockB = await service.cpaStartUnlock({ userId: userB.id, token: `${suffix}-unlock-b`, now: new Date().toISOString(), leadIp: null });
+    assert.equal(unlockA.outcome, "CREATED");
+    assert.equal(unlockB.outcome, "CREATED");
+    const [firstPostback, reusedPostback] = await Promise.all([
+      service.cpaProcessPostback({ userId: userA.id, transactionId: `${suffix}-reused-tx`, payout: 1, requestedApproved: true, result: "complete", leadIp: null, now: new Date().toISOString(), rewardCredits: "1" }),
+      service.cpaProcessPostback({ userId: userB.id, transactionId: `${suffix}-reused-tx`, payout: 1, requestedApproved: true, result: "complete", leadIp: null, now: new Date().toISOString(), rewardCredits: "1" }),
+    ]);
+    assert.equal(firstPostback.outcome, "APPLIED");
+    assert.equal(reusedPostback.outcome, "DUPLICATE");
+    const userBState = await prisma.user.findUniqueOrThrow({ where: { id: userB.id }, select: { credits: true } });
+    const userBUnlock = await prisma.cpaUnlock.findUnique({ where: { token: `${suffix}-unlock-b` }, select: { status: true, transactionId: true } });
+    assert.equal(userBState.credits.toString(), "5");
+    assert.deepEqual(userBUnlock, { status: "pending", transactionId: null });
+
+    await Promise.all([
+      service.userCapturePaidTrafficLead({ email: `${suffix}-lead@example.invalid`, name: "Lead", hasGeneratedDesign: true, hasVisitedCheckout: false }),
+      service.userCapturePaidTrafficLead({ email: `${suffix}-lead@example.invalid`, name: "Lead", hasGeneratedDesign: false, hasVisitedCheckout: true }),
+    ]);
+    const lead = await prisma.user.findUniqueOrThrow({ where: { email: `${suffix}-lead@example.invalid` }, select: { hasGeneratedDesign: true, hasVisitedCheckout: true } });
+    assert.deepEqual(lead, { hasGeneratedDesign: true, hasVisitedCheckout: true });
+  } finally {
+    await prisma.generationRequest.deleteMany({ where: { generationRequestId: { startsWith: suffix } } });
+    await prisma.cpaUnlock.deleteMany({ where: { token: { startsWith: suffix } } });
+    await prisma.icon.deleteMany({ where: { id: { startsWith: suffix } } });
+    await prisma.user.deleteMany({ where: { email: { startsWith: suffix } } });
     await prisma.$disconnect();
   }
 });
