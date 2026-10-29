@@ -427,7 +427,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
   }
 
   async cpaStartUnlock(input: CpaUnlockStartInput): Promise<CpaUnlockStartResult> {
-    if (!input?.userId?.trim() || !input.token || !input.now) return { outcome: "PENDING", retryAfterMinutes: 0 };
+    if (!input?.userId?.trim() || !input.token || !input.now) return { ok: false, code: "INVALID_INPUT" };
     const now = new Date(input.now);
     const prisma = this.createPrisma();
     try {
@@ -443,12 +443,12 @@ export default class DbService extends WorkerEntrypoint<Env> {
         await tx.cpaUnlock.create({ data: { userId: input.userId, token: input.token, network: "cpx", status: "pending", leadIp: input.leadIp } });
         return { outcome: "CREATED" as const, token: input.token };
       });
-    } catch (error) { console.error("CPA unlock start failed", toSafeErrorResponse(error)); return { outcome: "PENDING", retryAfterMinutes: 0 }; }
+    } catch (error) { console.error("CPA unlock start failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
     finally { await prisma.$disconnect(); }
   }
 
   async cpaGetResult(input: CpaResultInput): Promise<CpaResultResponse> {
-    if (!input?.userId?.trim()) return { status: "pending" };
+    if (!input?.userId?.trim()) return { ok: false, code: "INVALID_INPUT" };
     const prisma = this.createPrisma();
     try {
       const unlock = await prisma.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx" }, orderBy: { createdAt: "desc" } });
@@ -456,15 +456,15 @@ export default class DbService extends WorkerEntrypoint<Env> {
       if (unlock.status === "approved" && unlock.payout && unlock.payout > 0) return { status: "approved", payout: unlock.payout };
       if (unlock.status === "approved") return { status: "screenout" };
       return { status: unlock.status === "rejected" ? "rejected" : "pending" };
-    } catch (error) { console.error("CPA result lookup failed", toSafeErrorResponse(error)); return { status: "pending" }; }
+    } catch (error) { console.error("CPA result lookup failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
     finally { await prisma.$disconnect(); }
   }
 
   async cpaProcessPostback(input: CpaPostbackInput): Promise<CpaPostbackResult> {
-    if (!input?.userId?.trim() || !input.transactionId || !input.now || !input.rewardCredits) return { outcome: "NO_PENDING" };
+    if (!input?.userId?.trim() || !input.transactionId || !input.now || !input.rewardCredits) return { ok: false, code: "INVALID_INPUT" };
     const now = new Date(input.now);
     let rewardCredits: Prisma.Decimal;
-    try { rewardCredits = new Prisma.Decimal(input.rewardCredits); } catch { return { outcome: "NO_PENDING" }; }
+    try { rewardCredits = new Prisma.Decimal(input.rewardCredits); } catch { return { ok: false, code: "INVALID_INPUT" }; }
     const prisma = this.createPrisma();
     try {
       return await prisma.$transaction(async (tx) => {
@@ -484,7 +484,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
         if (rewardApplied) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: rewardCredits } } });
         return { outcome: "APPLIED" as const, success: true as const, status: finalStatus, rewardApplied };
       });
-    } catch (error) { console.error("CPA postback failed", toSafeErrorResponse(error)); return { outcome: "NO_PENDING" }; }
+    } catch (error) { console.error("CPA postback failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
     finally { await prisma.$disconnect(); }
   }
 
