@@ -84,6 +84,7 @@ export default async function handler(
       now,
       leadIp: ip,
     });
+    if ("ok" in result) return res.status(500).json({ error: "Survey service unavailable" });
     if (result.outcome === "DAILY_LIMIT") {
       return res.status(400).json({ code: "DAILY_LIMIT", error: "You already claimed free credits today. Try again tomorrow or buy credits." });
     }
