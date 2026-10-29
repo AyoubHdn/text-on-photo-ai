@@ -11,6 +11,10 @@
     "DB_ICON_READS_BACKEND": "service",
     "DB_ICON_WRITES_BACKEND": "service",
     "DB_STRIPE_BACKEND": "service",
+      "DB_BACKGROUND_BACKEND": "service",
+      "DB_CPA_BACKEND": "service",
+      "DB_USER_MUTATIONS_BACKEND": "service",
+      "DB_GENERATION_BACKEND": "service",
     "AUTH_EXTERNAL_SYNC_MODE": "noop",
     "GENERATION_LAMBDA_REGION": "us-east-1",
     "GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging",
@@ -32,3 +36,4 @@
     "binding": "ASSETS"
   }
 }
+
