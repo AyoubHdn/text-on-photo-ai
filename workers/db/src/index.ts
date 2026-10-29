@@ -314,7 +314,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
         const select = { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } as const;
         const current = await tx.user.findUnique({ where: { email }, select });
         const user = current
-          ? await tx.user.update({ where: { id: current.id }, data: { name: current.name ?? input.name, paidTrafficUser: true, hasGeneratedDesign: current.hasGeneratedDesign || input.hasGeneratedDesign, hasVisitedCheckout: current.hasVisitedCheckout || input.hasVisitedCheckout }, select })
+          ? await tx.user.update({ where: { id: current.id }, data: { name: current.name ?? input.name, paidTrafficUser: true, ...(input.hasGeneratedDesign ? { hasGeneratedDesign: true } : {}), ...(input.hasVisitedCheckout ? { hasVisitedCheckout: true } : {}) }, select })
           : await tx.user.create({ data: { email, name: input.name, paidTrafficUser: true, hasGeneratedDesign: input.hasGeneratedDesign, hasVisitedCheckout: input.hasVisitedCheckout }, select });
         return user;
       });
@@ -324,7 +324,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
         try {
           const raced = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } });
           if (raced) {
-            const updated = await prisma.user.update({ where: { id: raced.id }, data: { name: raced.name ?? input.name, paidTrafficUser: true, hasGeneratedDesign: raced.hasGeneratedDesign || input.hasGeneratedDesign, hasVisitedCheckout: raced.hasVisitedCheckout || input.hasVisitedCheckout }, select: { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } });
+            const updated = await prisma.user.update({ where: { id: raced.id }, data: { name: raced.name ?? input.name, paidTrafficUser: true, ...(input.hasGeneratedDesign ? { hasGeneratedDesign: true } : {}), ...(input.hasVisitedCheckout ? { hasVisitedCheckout: true } : {}) }, select: { id: true, email: true, name: true, credits: true, paidTrafficUser: true, hasGeneratedDesign: true, hasVisitedCheckout: true } });
             return { found: true, ...updated, credits: updated.credits.toString() };
           }
         } catch (retryError) {
@@ -376,8 +376,9 @@ export default class DbService extends WorkerEntrypoint<Env> {
         if (!found && input.paidTrafficUser) {
           found = await tx.icon.findFirst({ where: { id: imageId, userId: null }, select: { id: true, userId: true, transparentImageUrl: true, backgroundRemovedAt: true } });
           if (found && userId) {
-            await tx.icon.update({ where: { id: imageId }, data: { userId } });
-            found = { ...found, userId };
+            const claimed = await tx.icon.updateMany({ where: { id: imageId, userId: null }, data: { userId } });
+            if (claimed.count === 1) found = { ...found, userId };
+            else found = await tx.icon.findFirst({ where: { id: imageId, userId }, select: { id: true, userId: true, transparentImageUrl: true, backgroundRemovedAt: true } });
           }
         }
         return found;
@@ -398,16 +399,19 @@ export default class DbService extends WorkerEntrypoint<Env> {
     const prisma = this.createPrisma();
     try {
       return await prisma.$transaction(async (tx) => {
-        const claimed = await tx.icon.updateMany({ where: { id: imageId, userId, backgroundRemovedAt: null, transparentImageUrl: null }, data: { backgroundRemovedAt: new Date() } });
         const user = await tx.user.findUnique({ where: { id: userId }, select: { email: true, name: true, credits: true } });
         if (!user) return { outcome: "NOT_FOUND" as const };
+        const claimedAt = new Date();
+        const claimed = await tx.icon.updateMany({ where: { id: imageId, userId, backgroundRemovedAt: null, transparentImageUrl: null }, data: { backgroundRemovedAt: claimedAt } });
         if (claimed.count === 0) return { outcome: "ALREADY_CLAIMED" as const, email: user.email, name: user.name, credits: user.credits.toString() };
-        if (user.credits.lessThan(creditCost)) {
-          await tx.icon.updateMany({ where: { id: imageId, userId, transparentImageUrl: null }, data: { backgroundRemovedAt: null } });
+        const updated = await tx.user.updateMany({ where: { id: userId, credits: { gte: creditCost } }, data: { credits: { decrement: creditCost, }, hasGeneratedDesign: true } });
+        if (updated.count !== 1) {
+          await tx.icon.updateMany({ where: { id: imageId, userId, backgroundRemovedAt: claimedAt, transparentImageUrl: null }, data: { backgroundRemovedAt: null } });
           return { outcome: "INSUFFICIENT_CREDITS" as const };
         }
-        const updated = await tx.user.update({ where: { id: userId }, data: { credits: { decrement: creditCost }, hasGeneratedDesign: true }, select: { email: true, name: true, credits: true } });
-        return { outcome: "CLAIMED" as const, email: updated.email, name: updated.name, credits: updated.credits.toString() };
+        const updatedUser = await tx.user.findUnique({ where: { id: userId }, select: { email: true, name: true, credits: true } });
+        if (!updatedUser) return { outcome: "NOT_FOUND" as const };
+        return { outcome: "CLAIMED" as const, email: updatedUser.email, name: updatedUser.name, credits: updatedUser.credits.toString() };
       });
     } catch (error) {
       console.error("Background charge failed", toSafeErrorResponse(error));
@@ -470,6 +474,9 @@ export default class DbService extends WorkerEntrypoint<Env> {
     const prisma = this.createPrisma();
     try {
       return await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${input.transactionId}, 0))`;
+        const reused = await tx.cpaUnlock.findFirst({ where: { transactionId: input.transactionId }, select: { id: true } });
+        if (reused) return { outcome: "DUPLICATE" as const };
         await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
         const unlock = await tx.cpaUnlock.findFirst({ where: { userId: input.userId, network: "cpx", status: "pending" }, orderBy: { createdAt: "desc" } });
         if (!unlock) return { outcome: "NO_PENDING" as const };
@@ -1052,7 +1059,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
           if (current.userId !== input.userId || current.requestType !== input.requestType || current.promptHash !== input.promptHash || current.inputHash !== input.inputHash) return { conflict: true as const };
           return { existing: current };
         }
-        const created = await tx.generationRequest.create({ data: { generationRequestId: input.generationRequestId, userId: input.userId, sourcePage: input.sourcePage, requestType: input.requestType, model: input.model, promptHash: input.promptHash, inputHash: input.inputHash, status: "started", numberOfImages: input.numberOfImages, aspectRatio: input.aspectRatio, creditsCharged: new Prisma.Decimal(input.creditsCharged) } });
+          const created = await tx.generationRequest.create({ data: { generationRequestId: input.generationRequestId, userId: input.userId, sourcePage: input.sourcePage, requestType: input.requestType, model: input.model, promptHash: input.promptHash, inputHash: input.inputHash, status: "started", numberOfImages: input.numberOfImages, aspectRatio: input.aspectRatio, creditsCharged: new Prisma.Decimal(input.creditsCharged), chargeState: "pending" } });
         return { created };
       });
       if ("conflict" in result) return { ok: false, code: "CONFLICT" };
@@ -1072,16 +1079,24 @@ export default class DbService extends WorkerEntrypoint<Env> {
   }
 
   async generationLegacyCharge(input: LegacyGenerationChargeInput): Promise<LegacyGenerationChargeResult> {
-    if (!input?.userId || !input.creditsCharged) return { ok: false, code: "INVALID_INPUT" };
+    if (!input?.generationRequestId || !input.userId || !input.creditsCharged) return { ok: false, code: "INVALID_INPUT" };
     let credits: Prisma.Decimal;
     try { credits = new Prisma.Decimal(input.creditsCharged); } catch { return { ok: false, code: "INVALID_INPUT" }; }
     const prisma = this.createPrisma();
     try {
       return await prisma.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({ where: { id: input.userId }, select: { credits: true } });
-        if (!user) return { charged: false as const, code: "NOT_FOUND" as const };
+        await tx.$queryRaw`SELECT "generationRequestId" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} AND "userId" = ${input.userId} FOR UPDATE`;
+        const request = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId }, select: { userId: true, requestType: true, status: true, chargeState: true } });
+        if (!request || request.userId !== input.userId || request.requestType !== "generateIcon") return { charged: false as const, code: "NOT_FOUND" as const };
+        if (request.chargeState === "charged") {
+          if (request.status === "started") await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { status: "processing", processingStartedAt: new Date() } });
+          const contact = await tx.user.findUnique({ where: { id: input.userId }, select: { email: true, name: true, credits: true } });
+          return contact ? { alreadyCharged: true as const, email: contact.email, name: contact.name, credits: contact.credits.toString() } : { charged: false as const, code: "NOT_FOUND" as const };
+        }
+        if (request.chargeState === "refunded" || request.status !== "started") return { charged: false as const, code: "NOT_CHARGEABLE" as const };
         const updated = await tx.user.updateMany({ where: { id: input.userId, credits: { gte: credits } }, data: { credits: { decrement: credits }, hasGeneratedDesign: true } });
         if (updated.count !== 1) return { charged: false as const, code: "INSUFFICIENT_CREDITS" as const };
+        await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { chargeState: "charged", status: "processing", processingStartedAt: new Date() } });
         const contact = await tx.user.findUnique({ where: { id: input.userId }, select: { email: true, name: true, credits: true } });
         return contact ? { charged: true as const, email: contact.email, name: contact.name, credits: contact.credits.toString() } : { charged: false as const, code: "NOT_FOUND" as const };
       });
@@ -1110,7 +1125,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
     const prisma = this.createPrisma();
     try {
       const request = await prisma.$transaction(async (tx) => {
-        const updated = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: { notIn: ["completed", "failed"] } }, data: { status: "completed", resultImageUrls: input.resultImageUrls, predictionId: input.predictionId, errorMessage: null, completedAt: new Date(), failedAt: null } });
+        const updated = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: { notIn: ["completed", "failed"] } }, data: { status: "completed", resultImageUrls: input.resultImageUrls, predictionId: input.predictionId, errorMessage: null, completedAt: new Date(), failedAt: null, processingStartedAt: null, leaseExpiresAt: null } });
         const current = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
         return { updated: updated.count === 1, current };
       });
@@ -1127,10 +1142,14 @@ export default class DbService extends WorkerEntrypoint<Env> {
     const prisma = this.createPrisma();
     try {
       const result = await prisma.$transaction(async (tx) => {
-        const updated = await tx.generationRequest.updateMany({ where: { generationRequestId: input.generationRequestId, status: { notIn: ["completed", "failed"] } }, data: { status: "failed", errorMessage: input.errorMessage, failedAt: new Date() } });
-        if (updated.count === 1 && input.refund) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: credits } } });
-        const current = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
-        return { updated: updated.count === 1, current };
+        await tx.$queryRaw`SELECT "generationRequestId" FROM "GenerationRequest" WHERE "generationRequestId" = ${input.generationRequestId} AND "userId" = ${input.userId} FOR UPDATE`;
+        const currentBefore = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
+        if (!currentBefore || currentBefore.userId !== input.userId) return { updated: false, current: currentBefore };
+        if (currentBefore.status === "completed" || currentBefore.status === "failed") return { updated: false, current: currentBefore };
+        const shouldRefund = input.refund && (currentBefore.chargeState === "charged" || currentBefore.chargeState === null);
+        const current = await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { status: "failed", errorMessage: input.errorMessage, failedAt: new Date(), processingStartedAt: null, leaseExpiresAt: null, chargeState: shouldRefund ? "refunded" : currentBefore.chargeState } });
+        if (shouldRefund) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: credits } } });
+        return { updated: true, current };
       });
       if (!result.current) return { ok: false, code: "NOT_FOUND" };
       return { outcome: result.updated ? "FAILED" : "TERMINAL_NOOP", job: this.legacyGenerationJob(result.current) };
