@@ -474,7 +474,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
     const prisma = this.createPrisma();
     try {
       return await prisma.$transaction(async (tx) => {
-        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${input.transactionId}))`;
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.transactionId}))`;
         const reused = await tx.cpaUnlock.findFirst({ where: { transactionId: input.transactionId }, select: { id: true } });
         if (reused) return { outcome: "DUPLICATE" as const };
         await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.userId} FOR UPDATE`;
