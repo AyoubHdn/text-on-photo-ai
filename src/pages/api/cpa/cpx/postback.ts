@@ -70,6 +70,7 @@ export default async function handler(
         now,
         rewardCredits: String(CPX_DAILY_REWARD_CREDITS),
       });
+      if ("ok" in outcome) return res.status(500).json({ error: "Survey fulfillment unavailable" });
       return outcome.outcome === "NO_PENDING"
         ? res.status(200).json({ message: "No pending unlock" })
         : res.status(200).json({ success: true });
