@@ -236,6 +236,9 @@ export interface CpaResultInput { userId: string }
 export type CpaResultResponse = { status: "approved"; payout: number } | { status: "screenout" | "rejected" | "pending" } | { ok: false; code: DbErrorCode };
 export interface CpaPostbackInput { userId: string; transactionId: string; payout: number; requestedApproved: boolean; result: "complete" | "screenout_bonus" | "screenout_no_bonus"; leadIp: string | null; now: string; rewardCredits: string }
 export type CpaPostbackResult = { outcome: "NO_PENDING" } | { outcome: "APPLIED"; success: true; status: "approved" | "rejected"; rewardApplied: boolean } | { ok: false; code: DbErrorCode };
+export interface MauticContactBatchInput { limit: number; cursor: string | null }
+export interface MauticContactDto { id: string; email: string; name: string | null; credits: string; plan: "None" | "Starter" | "Pro" | "Elite"; firstDigitalArtInterest: DigitalArtInterest | null; latestDigitalArtInterest: DigitalArtInterest | null }
+export type MauticContactBatchResult = { total: number; contacts: MauticContactDto[]; nextCursor: string | null; hasMore: boolean } | { ok: false; code: DbErrorCode };
 
 export interface PricingAvailabilityInput {
   productType: string;
