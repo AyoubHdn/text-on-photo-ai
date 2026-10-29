@@ -1093,7 +1093,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
           const contact = await tx.user.findUnique({ where: { id: input.userId }, select: { email: true, name: true, credits: true } });
           return contact ? { alreadyCharged: true as const, email: contact.email, name: contact.name, credits: contact.credits.toString() } : { charged: false as const, code: "NOT_FOUND" as const };
         }
-        if (request.chargeState === "refunded" || request.status !== "started") return { charged: false as const, code: "NOT_CHARGEABLE" as const };
+        if (request.chargeState !== "pending" || request.status !== "started") return { charged: false as const, code: "NOT_CHARGEABLE" as const };
         const updated = await tx.user.updateMany({ where: { id: input.userId, credits: { gte: credits } }, data: { credits: { decrement: credits }, hasGeneratedDesign: true } });
         if (updated.count !== 1) return { charged: false as const, code: "INSUFFICIENT_CREDITS" as const };
         await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { chargeState: "charged", status: "processing", processingStartedAt: new Date() } });
@@ -1146,7 +1146,7 @@ export default class DbService extends WorkerEntrypoint<Env> {
         const currentBefore = await tx.generationRequest.findUnique({ where: { generationRequestId: input.generationRequestId } });
         if (!currentBefore || currentBefore.userId !== input.userId) return { updated: false, current: currentBefore };
         if (currentBefore.status === "completed" || currentBefore.status === "failed") return { updated: false, current: currentBefore };
-        const shouldRefund = input.refund && (currentBefore.chargeState === "charged" || currentBefore.chargeState === null);
+        const shouldRefund = input.refund && currentBefore.chargeState === "charged";
         const current = await tx.generationRequest.update({ where: { generationRequestId: input.generationRequestId }, data: { status: "failed", errorMessage: input.errorMessage, failedAt: new Date(), processingStartedAt: null, leaseExpiresAt: null, chargeState: shouldRefund ? "refunded" : currentBefore.chargeState } });
         if (shouldRefund) await tx.user.update({ where: { id: input.userId }, data: { credits: { increment: credits } } });
         return { updated: true, current };
