@@ -33,6 +33,10 @@ const server = z.object({
   ASYNC_GENERATION_ENABLED: z.enum(["true", "false"]).optional(),
   GENERATION_EXECUTION_SCOPE: z.string().optional(),
   DB_STRIPE_BACKEND: z.enum(["prisma", "service"]).optional(),
+  DB_BACKGROUND_BACKEND: z.enum(["prisma", "service"]).optional(),
+  DB_CPA_BACKEND: z.enum(["prisma", "service"]).optional(),
+  DB_USER_MUTATIONS_BACKEND: z.enum(["prisma", "service"]).optional(),
+  DB_GENERATION_BACKEND: z.enum(["prisma", "service"]).optional(),
   STRIPE_SECRET_KEY: z.string(),
   HOST_NAME: z.string(),
   STRIPE_WEB_HOOK_SECRET: z.string(),
@@ -99,6 +103,10 @@ const processEnv = {
   ASYNC_GENERATION_ENABLED: process.env.ASYNC_GENERATION_ENABLED,
   GENERATION_EXECUTION_SCOPE: process.env.GENERATION_EXECUTION_SCOPE,
   DB_STRIPE_BACKEND: process.env.DB_STRIPE_BACKEND,
+  DB_BACKGROUND_BACKEND: process.env.DB_BACKGROUND_BACKEND,
+  DB_CPA_BACKEND: process.env.DB_CPA_BACKEND,
+  DB_USER_MUTATIONS_BACKEND: process.env.DB_USER_MUTATIONS_BACKEND,
+  DB_GENERATION_BACKEND: process.env.DB_GENERATION_BACKEND,
   NEXT_PUBLIC_STRIPE_KEY: process.env.NEXT_PUBLIC_STRIPE_KEY,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   HOST_NAME: process.env.HOST_NAME,
@@ -202,3 +210,4 @@ const env = process.env.SKIP_ENV_VALIDATION
   : loadValidatedEnv();
 
 export { env };
+
