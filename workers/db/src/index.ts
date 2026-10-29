@@ -53,6 +53,8 @@ import type {
   CpaResultResponse,
   CpaPostbackInput,
   CpaPostbackResult,
+  MauticContactBatchInput,
+  MauticContactBatchResult,
   PricingAvailabilityInput,
   PricingAvailabilityErrorResponse,
   PricingAvailabilityResponse,
@@ -485,6 +487,27 @@ export default class DbService extends WorkerEntrypoint<Env> {
         return { outcome: "APPLIED" as const, success: true as const, status: finalStatus, rewardApplied };
       });
     } catch (error) { console.error("CPA postback failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
+    finally { await prisma.$disconnect(); }
+  }
+
+  async mauticListContacts(input: MauticContactBatchInput): Promise<MauticContactBatchResult> {
+    const limit = input?.limit;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 500) return { ok: false, code: "INVALID_INPUT" };
+    const prisma = this.createPrisma();
+    try {
+      const where = { email: { not: null } } as const;
+      const total = await prisma.user.count({ where });
+      const users = await prisma.user.findMany({ where, orderBy: { id: "asc" }, take: limit, ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}), select: { id: true, email: true, name: true, credits: true, plan: true, firstDigitalArtInterest: true, latestDigitalArtInterest: true, icons: { orderBy: { createdAt: "asc" }, select: { metadata: true } } } });
+      const contacts = users.flatMap((user) => {
+        if (!user.email) return [];
+        let first = normalizeAuthInterest(user.firstDigitalArtInterest);
+        let latest = normalizeAuthInterest(user.latestDigitalArtInterest);
+        if (!first && !latest) for (const icon of user.icons) { const interest = interestFromMetadata(icon.metadata); if (!interest) continue; first ??= interest; latest = interest; }
+        return [{ id: user.id, email: user.email, name: user.name, credits: user.credits.toString(), plan: user.plan, firstDigitalArtInterest: first, latestDigitalArtInterest: latest }];
+      });
+      const nextCursor = users.length > 0 ? users[users.length - 1]!.id : null;
+      return { total, contacts, nextCursor, hasMore: users.length === limit };
+    } catch (error) { console.error("Mautic contact batch lookup failed", toSafeErrorResponse(error)); return { ok: false, code: "INTERNAL_DB_ERROR" }; }
     finally { await prisma.$disconnect(); }
   }
 
