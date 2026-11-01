@@ -53,6 +53,8 @@ jobs:
       CPX_SECURITY_HASH: ci-cpx-security-hash
       CPX_APP_ID: ci-cpx-app-id
       IPAPI_KEY: ci-ipapi-key
+      PRINTFUL_API_KEY: ci-printful-api-key
+      PRINTFUL_WEBHOOK_SECRET: ci-printful-webhook-secret
       META_PIXEL_ID: ci-meta-pixel-id
       META_ACCESS_TOKEN: ci-meta-access-token
       NEXT_PUBLIC_STRIPE_KEY: ${{ secrets.PROD_NEXT_PUBLIC_STRIPE_KEY }}
@@ -69,14 +71,30 @@ jobs:
           ref: fc9b0c69e71c71f50543772834659f63809ca80f
           fetch-depth: 1
 
-      - name: Verify pinned application source
+      - name: Verify pinned application and record both source SHAs
+        id: tested-sha
         shell: bash
         run: |
           set -euo pipefail
           test "${APP_SOURCE_SHA}" = "fc9b0c69e71c71f50543772834659f63809ca80f"
-          test "$(git rev-parse HEAD)" = "${APP_SOURCE_SHA}"
+          test "${APP_SOURCE_SHA}" = "$(git rev-parse HEAD)"
           test -z "$(git status --porcelain)"
-          echo "application_sha=${APP_SOURCE_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+          echo "workflow_sha=${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+
+      - name: Validate production public-input mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${NEXT_PUBLIC_STRIPE_KEY}" in
+            pk_live_*) ;;
+            *) echo 'Production publishable Stripe key is missing or is not live-mode'; exit 1 ;;
+          esac
+          test "${NEXT_PUBLIC_S3_REGION}" = "us-east-1"
+          test "${NEXT_PUBLIC_S3_BUCKET_NAME}" = "name-design-ai"
+          test "${NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED}" = "false"
+          test "${HOST_NAME}" = "https://www.namedesignai.com"
+          test "${NEXTAUTH_URL}" = "https://www.namedesignai.com"
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
@@ -84,7 +102,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install pinned dependencies
+      - name: Install dependencies
         run: npm ci --include=dev
 
       - name: Generate Prisma client
@@ -99,40 +117,68 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "${DATABASE_URL}" = "postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai"
+          test "$(printenv DATABASE_URL)" = "postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai"
           npx prisma db push --schema prisma/schema.prisma --accept-data-loss --skip-generate
 
-      - name: Run recovery and generation tests
-        run: |
-          node --experimental-strip-types --test tests/generation-recovery.integration.test.mjs
-          node --experimental-strip-types --test tests/generation-recovery.test.mjs
-          npm run test:generation:async
-          npm run test:generation:parity
-          node --experimental-strip-types tests/server-async-generation-gate.test.mjs
-          node --experimental-strip-types --test tests/async-generation-ui.test.mjs
-          node --experimental-strip-types --test tests/async-generation-hook.test.mjs
-          node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
+      - name: Run real PostgreSQL recovery integration tests
+        run: node --experimental-strip-types --test tests/generation-recovery.integration.test.mjs
 
-      - name: Run application and database tests
-        run: |
-          node --experimental-strip-types --test tests/json-response.test.mjs
-          node --experimental-strip-types --test tests/stripe-webhook.test.mjs
-          node --experimental-strip-types --test tests/stripe-webhook.integration.test.mjs
-          node --experimental-strip-types --test tests/active-db-service.integration.test.mjs
-          node --experimental-strip-types --test tests/legacy-generation-lifecycle.test.mjs
+      - name: Run recovery tests
+        run: node --experimental-strip-types --test tests/generation-recovery.test.mjs
 
+      - name: Run async orchestration mock tests
+        run: npm run test:generation:async
+
+      - name: Run async parity mock tests
+        run: npm run test:generation:parity
+
+      - name: Run server async gate tests
+        run: node --experimental-strip-types tests/server-async-generation-gate.test.mjs
+
+      - name: Run async UI lifecycle tests
+        env:
+          NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
+        run: node --experimental-strip-types --test tests/async-generation-ui.test.mjs
+
+      - name: Run async hook lifecycle tests
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
+        run: node --experimental-strip-types --test tests/async-generation-hook.test.mjs
+
+      - name: Run Lambda mocked tests
+        run: node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
+
+      - name: Run JSON response guard tests
+        run: node --experimental-strip-types --test tests/json-response.test.mjs
+
+      - name: Run Stripe webhook mocked tests
+        run: node --experimental-strip-types --test tests/stripe-webhook.test.mjs
+
+      - name: Run Stripe webhook PostgreSQL integration tests
+        run: node --experimental-strip-types --test tests/stripe-webhook.integration.test.mjs
+
+      - name: Run active DB-service PostgreSQL integration tests
+        run: node --experimental-strip-types --test tests/active-db-service.integration.test.mjs
+      - name: Run synchronous-generation lifecycle mock tests
+        run: node --experimental-strip-types --test tests/legacy-generation-lifecycle.test.mjs
       - name: Run all TypeScript typechecks
         shell: bash
         run: |
           set +e
+
           npx tsc --project tsconfig.json --noEmit --pretty false > typecheck-application.log 2>&1
           application_status=$?
+
           npx tsc --project tsconfig.node.json --noEmit --pretty false > typecheck-node.log 2>&1
           node_status=$?
+
           npx tsc --project workers/db/tsconfig.json --noEmit --pretty false > typecheck-db.log 2>&1
           db_status=$?
+
           npx tsc --project workers/generation-lambda/tsconfig.json --noEmit --pretty false > typecheck-lambda.log 2>&1
           lambda_status=$?
+
           echo "===== application typecheck (exit ${application_status}) ====="
           cat typecheck-application.log
           echo "===== Node test typecheck (exit ${node_status}) ====="
@@ -141,16 +187,17 @@ jobs:
           cat typecheck-db.log
           echo "===== Lambda typecheck (exit ${lambda_status}) ====="
           cat typecheck-lambda.log
+
           if [[ ${application_status} -ne 0 || ${node_status} -ne 0 || ${db_status} -ne 0 || ${lambda_status} -ne 0 ]]; then
             exit 1
           fi
+      - name: Build Next.js application
+        run: npm run build
 
-      - name: Build Next.js and OpenNext
-        run: |
-          npm run build
-          npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
+      - name: Build OpenNext Cloudflare worker
+        run: npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
 
-      - name: Verify production public inputs and disabled client flag
+      - name: Verify real public build inputs and remove CI placeholders
         shell: bash
         env:
           EXPECTED_STRIPE: ${{ secrets.PROD_NEXT_PUBLIC_STRIPE_KEY }}
@@ -158,56 +205,284 @@ jobs:
           EXPECTED_S3_BUCKET: ${{ secrets.PROD_NEXT_PUBLIC_S3_BUCKET_NAME }}
         run: |
           set -euo pipefail
+
           for name in EXPECTED_STRIPE EXPECTED_S3_REGION EXPECTED_S3_BUCKET; do
             if [[ -z "${!name:-}" ]]; then
-              echo "Missing production public-input secret: ${name}"
+              echo "Missing required GitHub Actions secret for ${name}"
               exit 1
             fi
           done
+
           for placeholder in pk_test_ci_only ci-namedesignai-bucket ci-meta-pixel-id ca-pub-ci-only ci-slot; do
             if grep -RIlF -- "${placeholder}" .open-next >/dev/null 2>&1; then
               echo "Legacy CI public placeholder found in .open-next"
               exit 1
             fi
           done
+
           grep -RIlF -- "${EXPECTED_STRIPE}" .open-next >/dev/null
           grep -RIlF -- "${EXPECTED_S3_REGION}" .open-next >/dev/null
           grep -RIlF -- "${EXPECTED_S3_BUCKET}" .open-next >/dev/null
           test "${NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED}" = "false"
-          if grep -RIlE 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED[^A-Za-z0-9]*(true)' .open-next >/dev/null 2>&1; then
-            echo 'Compiled client async flag is enabled'
-            exit 1
-          fi
-          echo 'Production public inputs are present; client async is disabled; placeholders are absent'
+          echo "Production public build values are present; client disabled; legacy CI public placeholders are absent"
 
-      - name: Verify OpenNext bundle and staging dry-runs only
+      - name: Inspect data-uri-to-buffer packaging
         shell: bash
         run: |
           set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const packageJsonPath = path.join('node_modules', 'data-uri-to-buffer', 'package.json');
+          if (!fs.existsSync(packageJsonPath)) {
+            throw new Error('data-uri-to-buffer is missing from node_modules');
+          }
+
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+          const packageModule = await import('data-uri-to-buffer');
+          if (typeof packageModule.default !== 'function') {
+            throw new Error('data-uri-to-buffer is not importable as a callable module');
+          }
+          console.log(`data-uri-to-buffer installed and importable: ${packageJson.version}`);
+
+          const emittedPaths = [];
+          const emittedReferences = [];
+          const walk = (directory) => {
+            for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+              const entryPath = path.join(directory, entry.name);
+              if (entry.isDirectory()) {
+                walk(entryPath);
+                continue;
+              }
+              if (entryPath.includes('data-uri-to-buffer')) emittedPaths.push(entryPath);
+              if (!/\.(?:js|mjs|cjs|json)$/.test(entry.name)) continue;
+              const stat = fs.statSync(entryPath);
+              if (stat.size > 20 * 1024 * 1024) continue;
+              const contents = fs.readFileSync(entryPath, 'utf8');
+              if (contents.includes('data-uri-to-buffer') || contents.includes('dataUriToBuffer')) {
+                emittedReferences.push(entryPath);
+              }
+            }
+          };
+          walk('.open-next');
+
+          console.log(`OpenNext emitted package paths: ${emittedPaths.length}`);
+          for (const emittedPath of emittedPaths.slice(0, 20)) console.log(`  ${emittedPath}`);
+          console.log(`OpenNext emitted package references: ${emittedReferences.length}`);
+          for (const emittedReference of emittedReferences.slice(0, 20)) console.log(`  ${emittedReference}`);
+          if (emittedPaths.length === 0 && emittedReferences.length === 0) {
+            console.log('No separate data-uri-to-buffer output was emitted; the successful bundle may have inlined or pruned this transitive dependency.');
+          }
+          NODE
+
+      - name: Verify OpenNext bundle and source safety
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          trap 'echo Source safety check failed at script line ${LINENO}: ${BASH_COMMAND} >&2' ERR
           test -s .open-next/worker.js
           test -d .open-next/assets
           test -d .open-next/server-functions
-          npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-staging-dry-run.log 2>&1 || { cat wrangler-staging-dry-run.log; exit 1; }
-          npx wrangler deploy --config workers/db/wrangler.jsonc --dry-run --outdir .dry-run-db > db-worker-staging-dry-run.log 2>&1 || { cat db-worker-staging-dry-run.log; exit 1; }
+          echo "OpenNext bundle verified"
+
           grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
+          grep -Fq 'const imageUrls = await executeIdempotentGenerationRequest' src/server/api/routers/generate.ts
+          grep -Fq 'generateIconAsync: protectedProcedure' src/server/api/routers/generate.ts
+          grep -Fq 'ASYNC_GENERATION_ENABLED' src/env.mjs
           grep -Fq 'assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);' src/server/api/routers/generate.ts
           grep -Fq '"ASYNC_GENERATION_ENABLED": "false"' wrangler.jsonc
+          grep -Fq '"GENERATION_EXECUTION_SCOPE": "cloudflare-staging"' wrangler.jsonc
+          grep -Fq 'String(process.env.NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED ?? "") === "true"' src/lib/asyncGeneration.ts
+          grep -Fq 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED' src/env.mjs
           grep -Fq '"NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED": "false"' wrangler.jsonc
-          grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
-          echo 'OpenNext bundle and existing staging dry-runs passed; no deployment was attempted'
+          grep -Fq 'iconMetadata:' src/server/api/routers/generate.ts
+          grep -Fq 'prompt: callback.prompt' 'src/pages/api/internal/generation/[operation].ts'
+          grep -Fq 'digitalArtInterest: job.digitalArtInterest' workers/generation-lambda/src/callback.ts
+          grep -Fq 'COALESCE("firstDigitalArtInterest"' workers/db/src/index.ts
+          grep -Fq 'syncAsyncGenerationMauticForUser' src/server/generation/asyncMautic.ts
 
-      - name: Scan OpenNext bundle for secrets and upload artifact
+          awk '/generateIconAsync: protectedProcedure/ { in_async = 1 } /getGenerationStatus: protectedProcedure/ { in_async = 0 } in_async && /assertAsyncGenerationEnabled\(env\.ASYNC_GENERATION_ENABLED\)/ { gate = NR } in_async && /const preparation = prepareGenerationRequest/ { preparation = NR } END { exit !(gate > 0 && preparation > 0 && gate < preparation) }' src/server/api/routers/generate.ts
+
+          for page in \
+            src/pages/name-art-generator.tsx \
+            src/pages/arabic-calligraphy-generator.tsx \
+            src/pages/ar/arabic-calligraphy-generator.tsx \
+            src/pages/couples-name-art-generator.tsx; do
+            grep -Fq 'api.generate.generateIcon.useMutation' "${page}"
+          done
+
+          for page in \
+            src/pages/name-art-generator.tsx \
+            src/pages/arabic-calligraphy-generator.tsx \
+            src/pages/ar/arabic-calligraphy-generator.tsx \
+            src/pages/couples-name-art-generator.tsx; do
+            grep -Fq 'useAsyncGeneration' "${page}"
+            grep -Fq 'isAsyncGenerationEnabledForUser(isLoggedIn)' "${page}"
+            grep -Fq 'asyncGeneration.start(input)' "${page}"
+            if grep -Fq 'api.generate.generateIconAsync' "${page}"; then
+              echo "Normal page calls the async procedure directly: ${page}"
+              exit 1
+            fi
+          done
+
+          if grep -RInF -- 'invokeGenerationLambda' src/pages src/component; then
+            echo 'User-facing page/component invokes Lambda directly'
+            exit 1
+          fi
+
+          grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_SCOPE": "cloudflare-staging"' workers/db/wrangler.jsonc
+          grep -Fq 'scheduleGenerationRecovery(' workers/db/src/index.ts
+          grep -Fq 'if (env.GENERATION_RECOVERY_ENABLED !== "true" || !scope) return;' workers/db/src/recovery.ts
+          grep -Fq 'recoveryAttemptCount' workers/db/src/index.ts
+          echo 'Source safety verified: async and recovery remain disabled'
+
+      - name: Root Wrangler dry-run and staging binding checks
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(find .open-next -type f \( -name '.env' -o -name '.env.*' -o -name '.dev.vars' -o -name '.dev.vars.*' -o -path '*/.aws/credentials' -o -path '*/.aws/config' -o -iname 'wrangler*.json' -o -iname 'wrangler*.jsonc' -o -path '*/.wrangler/*' \) -print -quit)"
-          echo 'OpenNext secret/config filename scan passed'
 
-      - name: Upload production OpenNext artifact
+          if ! npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-dry-run.log 2>&1; then
+            echo 'Root Wrangler dry-run failed:'
+            cat wrangler-dry-run.log
+            exit 1
+          fi
+          cat wrangler-dry-run.log
+
+          grep -Fq '"name": "namedesignai-cloudflare-staging"' wrangler.jsonc
+          grep -Fq '"binding": "DB_SERVICE"' wrangler.jsonc
+          grep -Fq '"service": "namedesignai-db-staging"' wrangler.jsonc
+          grep -Fq '"GENERATION_LAMBDA_REGION": "us-east-1"' wrangler.jsonc
+          grep -Fq '"GENERATION_LAMBDA_FUNCTION_NAME": "namedesignai-generation-staging"' wrangler.jsonc
+
+          if grep -nE 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842' wrangler.jsonc; then
+            echo 'Isolated DB Worker or Hyperdrive reference found in the staging root config'
+            exit 1
+          fi
+
+          echo 'Root Wrangler dry-run succeeded'
+
+      - name: DB Worker Wrangler dry-run and binding checks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! npx wrangler deploy --config workers/db/wrangler.jsonc --dry-run --outdir .dry-run-db > db-worker-dry-run.log 2>&1; then
+            echo 'DB Worker Wrangler dry-run failed:'
+            cat db-worker-dry-run.log
+            exit 1
+          fi
+          cat db-worker-dry-run.log
+
+          grep -Fq '"name": "namedesignai-db-staging"' workers/db/wrangler.jsonc
+          grep -Fq '"id": "734191bc000c45088e62b987e790b206"' workers/db/wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_SCOPE": "cloudflare-staging"' workers/db/wrangler.jsonc
+
+          if grep -nE 'namedesignai-db-auth-test|82d5c021a9cf4b6db58abb4ba7f25842|namedesignai-db-auth-test' workers/db/wrangler.jsonc; then
+            echo 'Isolated DB Worker or Hyperdrive reference found in the DB Worker config'
+            exit 1
+          fi
+
+          echo 'DB Worker dry-run succeeded; recovery remains disabled'
+
+      - name: Report safe build sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          stat -c 'worker.js bytes: %s' .open-next/worker.js
+          du -sh .open-next 2>/dev/null || true
+
+      - name: Scan OpenNext bundle for secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sensitive_match=0
+          report_filename_matches() {
+            local category="$1"
+            while IFS= read -r -d '' file; do
+              local relative_path="${file#.open-next/}"
+              echo "Sensitive-looking path: ${relative_path} [category: ${category}]"
+              sensitive_match=1
+            done
+          }
+
+          report_filename_matches 'env/dev-vars' < <(find .open-next -type f \( \
+            -name '.env' -o -name '.env.*' -o \
+            -name '.dev.vars' -o -name '.dev.vars.*' \
+          \) -print0)
+          report_filename_matches 'AWS credential filename' < <(find .open-next -type f \( \
+            -path '*/.aws/credentials' -o -path '*/.aws/config' -o \
+            -iname 'aws-credentials*' -o -iname 'aws_credentials*' \
+          \) -print0)
+          report_filename_matches 'Cloudflare/Wrangler filename' < <(find .open-next -type f \( \
+            -iname '*cloudflare*token*' -o -iname '*cloudflare*credential*' -o \
+            -iname 'wrangler*.json' -o -iname 'wrangler*.jsonc' -o \
+            -path '*/.wrangler/*' \
+          \) -print0)
+          report_filename_matches 'XML filename' < <(find .open-next -type f -name '*.xml' -print0)
+
+          if [[ "${sensitive_match}" -ne 0 ]]; then
+            echo 'Sensitive-looking paths found in .open-next; refusing artifact upload'
+            exit 1
+          fi
+
+          is_placeholder() {
+            case "$1" in
+              ci-*|*_ci_only|price_ci_*|postgresql://ci_*|https://mautic.invalid|https://namedesignai-cloudflare-staging.workers.dev)
+                return 0
+                ;;
+              *)
+                return 1
+                ;;
+            esac
+          }
+
+          while IFS='=' read -r variable value; do
+            case "$variable" in
+              DATABASE_URL|*_SECRET|*_SECRET_KEY|*_TOKEN|*_PASSWORD|*_ACCESS_KEY|*_ACCESS_KEY_ID|AWS_*|CLOUDFLARE_*|CF_*)
+                if [[ ${#value} -ge 12 ]] && ! is_placeholder "$value"; then
+                  if grep -RIlF -- "$value" .open-next >/dev/null 2>&1; then
+                    echo "Environment secret-like value detected in .open-next for variable $variable"
+                    exit 1
+                  fi
+                fi
+                ;;
+            esac
+          done < <(env)
+
+          echo 'OpenNext secret/config scan passed without printing secret values'
+
+      - name: Record artifact provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const expected = 'fc9b0c69e71c71f50543772834659f63809ca80f';
+          if (process.env.APP_SOURCE_SHA !== expected) throw new Error('Unexpected application SHA');
+          fs.writeFileSync('.open-next/build-provenance.json', JSON.stringify({
+            applicationSha: expected,
+            workflowSha: process.env.GITHUB_SHA,
+            runId: process.env.GITHUB_RUN_ID,
+            buildTarget: 'production',
+            clientAsync: false,
+            hostName: 'https://www.namedesignai.com'
+          }, null, 2) + '\n');
+          NODE
+
+      - name: Upload production OpenNext bundle
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-production-client-disabled-fc9b0c6
+          name: namedesignai-open-next-production-client-disabled-${{ steps.tested-sha.outputs.sha }}-workflow-${{ github.sha }}
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
           include-hidden-files: true
+
+
+
