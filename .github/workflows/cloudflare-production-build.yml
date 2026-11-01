@@ -1,6 +1,9 @@
 name: Cloudflare production artifact build
 
 on:
+  push:
+    branches:
+      - fix/production-build-fc9b0c6
   workflow_dispatch:
 
 permissions:
