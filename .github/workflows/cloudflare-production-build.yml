@@ -62,7 +62,7 @@ jobs:
       ASYNC_GENERATION_ENABLED: "false"
       GENERATION_RECOVERY_ENABLED: "false"
       DB_STRIPE_BACKEND: prisma
-      APP_SOURCE_SHA: b0aff77a9c7056005b2c6acfa301d93f5096ebe8
+      APP_SOURCE_SHA: 49bd72ad2a93fb9082ce12e3e6d28708777a5f0a
 
     steps:
       - name: Check out fix branch history
@@ -213,7 +213,7 @@ jobs:
       - name: Upload production OpenNext artifact
         uses: actions/upload-artifact@v4
         with:
-          name: namedesignai-open-next-production-stripe-async-crypto-b0aff77a
+          name: namedesignai-open-next-production-stripe-async-crypto-49bd72ad
           path: .open-next/**
           if-no-files-found: error
           retention-days: 3
