@@ -11,6 +11,7 @@ import { updateMauticContact } from "~/server/api/routers/mautic-utils";
 import { sendMetaPurchaseEvent } from "~/server/meta/sendConversionEvent";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2025-02-24.acacia" });
+const stripeCryptoProvider = Stripe.createSubtleCryptoProvider();
 export const config = { api: { bodyParser: false } };
 
 function getRequestIp(req: NextApiRequest): string | null {
@@ -45,7 +46,7 @@ const webhook = async (req: NextApiRequest, res: NextApiResponse) => {
     rawBody,
     typeof signature === "string" ? signature : null,
     {
-      constructEvent: (body, signedPayload) => stripe.webhooks.constructEvent(body, signedPayload, env.STRIPE_WEB_HOOK_SECRET),
+      constructEvent: (body, signedPayload) => stripe.webhooks.constructEventAsync(body, signedPayload, env.STRIPE_WEB_HOOK_SECRET, undefined, stripeCryptoProvider),
       listLineItems: (sessionId) => stripe.checkout.sessions.listLineItems(sessionId),
       fulfillPurchase,
       priceIds: { starter: env.PRICE_ID_STARTER, pro: env.PRICE_ID_PRO, elite: env.PRICE_ID_ELITE },

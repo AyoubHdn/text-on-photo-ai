@@ -23,6 +23,20 @@ function checkoutEvent() {
 }
 
 const prices = { starter: "price_starter", pro: "price_pro", elite: "price_elite" };
+const signingSecret = "whsec_test_only";
+const signer = new Stripe("sk_test_only");
+const subtleCryptoProvider = Stripe.createSubtleCryptoProvider();
+
+function signedPayload(event = checkoutEvent(), secret = signingSecret) {
+  const rawBody = JSON.stringify(event);
+  const signature = signer.webhooks.generateTestHeaderString({ payload: rawBody, secret, timestamp: Math.floor(Date.now() / 1000) });
+  return { rawBody, signature };
+}
+
+function asyncVerifier(secret = signingSecret) {
+  return (body, signature) => signer.webhooks.constructEventAsync(body, signature, secret, undefined, subtleCryptoProvider);
+}
+
 /** @returns {Stripe.ApiList<Stripe.LineItem>} */
 function lineItems(price = prices.starter) {
   return /** @type {Stripe.ApiList<Stripe.LineItem>} */ (/** @type {unknown} */ ({
@@ -37,7 +51,7 @@ test("signature rejection happens before fulfillment or line-item/database work"
   let fulfilled = 0;
   let listed = 0;
   const result = await handleStripeWebhook(Buffer.from("raw"), "bad", {
-    constructEvent: () => { throw new Error("invalid signature"); },
+    constructEvent: async () => { throw new Error("invalid signature"); },
     listLineItems: async () => { listed += 1; return lineItems(); },
     fulfillPurchase: async () => { fulfilled += 1; return { outcome: "DUPLICATE" }; },
     priceIds: prices,
@@ -53,7 +67,7 @@ test("applied purchase maps the reviewed price and runs external sync after comm
   /** @type {import("../src/server/stripe/fulfillCreditPurchase.ts").CreditPurchaseInput | undefined} */
   let receivedInput;
   const result = await handleStripeWebhook(Buffer.from("raw"), "sig", {
-    constructEvent: () => checkoutEvent(),
+    constructEvent: async () => checkoutEvent(),
     listLineItems: async () => lineItems(),
     fulfillPurchase: async (input) => { receivedInput = input; return { outcome: "APPLIED", updatedUser: { email: "buyer@example.com", name: "Buyer", credits: new Prisma.Decimal("21"), plan: "Starter" } }; },
     afterCommit: async () => { calls.push("external-sync"); },
@@ -68,7 +82,7 @@ test("applied purchase maps the reviewed price and runs external sync after comm
 test("a duplicate is a successful no-op and does not repeat external sync", async () => {
   let syncCount = 0;
   const result = await handleStripeWebhook(Buffer.from("raw"), "sig", {
-    constructEvent: () => checkoutEvent(),
+    constructEvent: async () => checkoutEvent(),
     listLineItems: async () => lineItems(),
     fulfillPurchase: async () => ({ outcome: "DUPLICATE" }),
     afterCommit: async () => { syncCount += 1; },
@@ -81,7 +95,7 @@ test("a duplicate is a successful no-op and does not repeat external sync", asyn
 
 test("database failure is retryable and does not look like a successful duplicate", async () => {
   const result = await handleStripeWebhook(Buffer.from("raw"), "sig", {
-    constructEvent: () => checkoutEvent(),
+    constructEvent: async () => checkoutEvent(),
     listLineItems: async () => lineItems(),
     fulfillPurchase: async () => { throw new Error("transaction unavailable"); },
     priceIds: prices,
@@ -94,4 +108,59 @@ test("the webhook alias reuses the same handler", async () => {
   const aliasSource = await import("node:fs/promises").then((fs) => fs.readFile("src/pages/api/stripe/webhook.ts", "utf8"));
   assert.match(aliasSource, /from \"\.\.\/stripe\"/);
   assert.match(aliasSource, /export default webhook/);
+});
+
+test("real Stripe async verification accepts a valid signed payload", async () => {
+  const { rawBody, signature } = signedPayload();
+  let fulfillmentCount = 0;
+  const result = await handleStripeWebhook(Buffer.from(rawBody), signature, {
+    constructEvent: asyncVerifier(),
+    listLineItems: async () => lineItems(),
+    fulfillPurchase: async () => { fulfillmentCount += 1; return { outcome: "DUPLICATE" }; },
+    priceIds: prices,
+  });
+  assert.equal(result.status, 200);
+  assert.equal(fulfillmentCount, 1);
+  assert.deepEqual(result.body, { received: true, duplicate: true });
+});
+
+test("real Stripe async verification rejects a wrong secret before fulfillment", async () => {
+  const { rawBody, signature } = signedPayload();
+  let fulfillmentCount = 0;
+  const result = await handleStripeWebhook(Buffer.from(rawBody), signature, {
+    constructEvent: asyncVerifier("whsec_wrong_secret"),
+    listLineItems: async () => lineItems(),
+    fulfillPurchase: async () => { fulfillmentCount += 1; return { outcome: "DUPLICATE" }; },
+    priceIds: prices,
+  });
+  assert.equal(result.status, 400);
+  assert.equal(fulfillmentCount, 0);
+  assert.deepEqual(result.body, { received: true, error: "Webhook signature verification failed" });
+});
+
+test("real Stripe async verification rejects a modified raw body", async () => {
+  const { signature } = signedPayload();
+  let fulfillmentCount = 0;
+  const result = await handleStripeWebhook(Buffer.from(JSON.stringify({ modified: true })), signature, {
+    constructEvent: asyncVerifier(),
+    listLineItems: async () => lineItems(),
+    fulfillPurchase: async () => { fulfillmentCount += 1; return { outcome: "DUPLICATE" }; },
+    priceIds: prices,
+  });
+  assert.equal(result.status, 400);
+  assert.equal(fulfillmentCount, 0);
+  assert.deepEqual(result.body, { received: true, error: "Webhook signature verification failed" });
+});
+
+test("async verifier rejection remains a safe 400 and does not fulfill", async () => {
+  let fulfillmentCount = 0;
+  const result = await handleStripeWebhook(Buffer.from("raw"), "sig", {
+    constructEvent: async () => { throw new Error("crypto provider rejected"); },
+    listLineItems: async () => lineItems(),
+    fulfillPurchase: async () => { fulfillmentCount += 1; return { outcome: "DUPLICATE" }; },
+    priceIds: prices,
+  });
+  assert.equal(result.status, 400);
+  assert.equal(fulfillmentCount, 0);
+  assert.deepEqual(result.body, { received: true, error: "Webhook signature verification failed" });
 });

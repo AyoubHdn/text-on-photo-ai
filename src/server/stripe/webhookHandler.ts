@@ -7,7 +7,7 @@ export type StripeWebhookHandlerResult = {
 };
 
 export type StripeWebhookHandlerDependencies = {
-  constructEvent: (rawBody: Buffer, signature: string) => Stripe.Event;
+  constructEvent: (rawBody: Buffer, signature: string) => Promise<Stripe.Event>;
   listLineItems: (sessionId: string) => Promise<Stripe.ApiList<Stripe.LineItem>>;
   fulfillPurchase: (input: CreditPurchaseInput) => Promise<CreditPurchaseResult>;
   afterCommit?: (input: {
@@ -34,7 +34,7 @@ export async function handleStripeWebhook(
 
   let event: Stripe.Event;
   try {
-    event = dependencies.constructEvent(rawBody, signature);
+    event = await dependencies.constructEvent(rawBody, signature);
   } catch {
     return { status: 400, body: { received: true, error: "Webhook signature verification failed" } };
   }
