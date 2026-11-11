@@ -1,0 +1,220 @@
+name: Cloudflare production Stripe-fix artifact build
+
+on:
+  push:
+    branches:
+      - fix/stripe-webhook-async-crypto
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: namedesignai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d namedesignai"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai
+      RECOVERY_TEST_DATABASE_URL: postgresql://ci_user:ci_password@127.0.0.1:5432/namedesignai
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      NEXTAUTH_URL: https://www.namedesignai.com
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      REPLICATE_API_TOKEN: ci-replicate-token
+      MOCK_REPLICATE: "true"
+      ACCESS_KEY_ID: ci-access-key
+      SECRET_ACCESS_KEY: ci-secret-key
+      STRIPE_SECRET_KEY: sk_test_ci_only
+      HOST_NAME: https://www.namedesignai.com
+      STRIPE_WEB_HOOK_SECRET: whsec_ci_only
+      PRICE_ID_STARTER: price_ci_starter
+      PRICE_ID_PRO: price_ci_pro
+      PRICE_ID_ELITE: price_ci_elite
+      MAUTIC_BASE_URL: https://mautic.invalid
+      MAUTIC_API_TOKEN: ci-mautic-token
+      MAUTIC_USERNAME: ci-mautic-user
+      MAUTIC_PASSWORD: ci-mautic-password
+      CRON_SECRET: ci-cron-secret
+      CPX_SECURITY_HASH: ci-cpx-security-hash
+      CPX_APP_ID: ci-cpx-app-id
+      IPAPI_KEY: ci-ipapi-key
+      META_PIXEL_ID: ci-meta-pixel-id
+      META_ACCESS_TOKEN: ci-meta-access-token
+      NEXT_PUBLIC_STRIPE_KEY: ${{ secrets.PROD_NEXT_PUBLIC_STRIPE_KEY }}
+      NEXT_PUBLIC_S3_REGION: ${{ secrets.PROD_NEXT_PUBLIC_S3_REGION }}
+      NEXT_PUBLIC_S3_BUCKET_NAME: ${{ secrets.PROD_NEXT_PUBLIC_S3_BUCKET_NAME }}
+      NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED: "false"
+      ASYNC_GENERATION_ENABLED: "false"
+      GENERATION_RECOVERY_ENABLED: "false"
+      DB_STRIPE_BACKEND: prisma
+      APP_SOURCE_SHA: b0aff77a9c7056005b2c6acfa301d93f5096ebe8
+
+    steps:
+      - name: Check out fix branch history
+        uses: actions/checkout@v4
+        with:
+          ref: fix/stripe-webhook-async-crypto
+          fetch-depth: 0
+
+      - name: Pin reviewed application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "${APP_SOURCE_SHA}"
+          test "$(git rev-parse HEAD)" = "${APP_SOURCE_SHA}"
+          test -z "$(git status --porcelain)"
+          echo "application_sha=${APP_SOURCE_SHA}"
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install pinned dependencies
+        run: npm ci --include=dev
+
+      - name: Generate Prisma client
+        run: npm run db-worker:generate
+
+      - name: Generate Cloudflare runtime types
+        run: |
+          npx wrangler types worker-configuration.d.ts --config wrangler.jsonc --include-runtime
+          npx wrangler types workers/db/worker-configuration.d.ts --config workers/db/wrangler.jsonc --include-runtime
+
+      - name: Initialize disposable PostgreSQL schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx prisma db push --schema prisma/schema.prisma --accept-data-loss --skip-generate
+
+      - name: Run signed Stripe webhook tests
+        run: |
+          node --experimental-strip-types --test tests/stripe-webhook.test.mjs
+          node --experimental-strip-types --test tests/stripe-webhook.integration.test.mjs
+
+      - name: Run relevant application and migration tests
+        run: |
+          node --experimental-strip-types --test tests/json-response.test.mjs
+          node --experimental-strip-types --test tests/active-db-service.integration.test.mjs
+          node --experimental-strip-types --test tests/legacy-generation-lifecycle.test.mjs
+          npm run test:generation:async
+          npm run test:generation:parity
+          node --experimental-strip-types tests/server-async-generation-gate.test.mjs
+          node --experimental-strip-types --test tests/async-generation-ui.test.mjs
+          node --experimental-strip-types --test tests/async-generation-hook.test.mjs
+          node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
+
+      - name: Run all TypeScript typechecks
+        shell: bash
+        run: |
+          set +e
+          npx tsc --project tsconfig.json --noEmit --pretty false > typecheck-application.log 2>&1
+          application_status=$?
+          npx tsc --project tsconfig.node.json --noEmit --pretty false > typecheck-node.log 2>&1
+          node_status=$?
+          npx tsc --project workers/db/tsconfig.json --noEmit --pretty false > typecheck-db.log 2>&1
+          db_status=$?
+          npx tsc --project workers/generation-lambda/tsconfig.json --noEmit --pretty false > typecheck-lambda.log 2>&1
+          lambda_status=$?
+          echo "===== application typecheck (exit ${application_status}) ====="
+          cat typecheck-application.log
+          echo "===== Node test typecheck (exit ${node_status}) ====="
+          cat typecheck-node.log
+          echo "===== DB Worker typecheck (exit ${db_status}) ====="
+          cat typecheck-db.log
+          echo "===== Lambda typecheck (exit ${lambda_status}) ====="
+          cat typecheck-lambda.log
+          if [[ ${application_status} -ne 0 || ${node_status} -ne 0 || ${db_status} -ne 0 || ${lambda_status} -ne 0 ]]; then
+            exit 1
+          fi
+
+      - name: Build Next.js and OpenNext
+        run: |
+          npm run build
+          npx opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
+
+      - name: Verify production public inputs and disabled client flag
+        shell: bash
+        env:
+          EXPECTED_STRIPE: ${{ secrets.PROD_NEXT_PUBLIC_STRIPE_KEY }}
+          EXPECTED_S3_REGION: ${{ secrets.PROD_NEXT_PUBLIC_S3_REGION }}
+          EXPECTED_S3_BUCKET: ${{ secrets.PROD_NEXT_PUBLIC_S3_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          for name in EXPECTED_STRIPE EXPECTED_S3_REGION EXPECTED_S3_BUCKET; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Missing production public-input secret: ${name}"
+              exit 1
+            fi
+          done
+          for placeholder in pk_test_ci_only ci-namedesignai-bucket ci-meta-pixel-id ca-pub-ci-only ci-slot; do
+            if grep -RIlF -- "${placeholder}" .open-next >/dev/null 2>&1; then
+              echo "Legacy CI public placeholder found in .open-next"
+              exit 1
+            fi
+          done
+          grep -RIlF -- "${EXPECTED_STRIPE}" .open-next >/dev/null
+          grep -RIlF -- "${EXPECTED_S3_REGION}" .open-next >/dev/null
+          grep -RIlF -- "${EXPECTED_S3_BUCKET}" .open-next >/dev/null
+          test "${NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED}" = "false"
+          if grep -RIlE 'NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED[^A-Za-z0-9]*(true)' .open-next >/dev/null 2>&1; then
+            echo 'Compiled client async flag is enabled'
+            exit 1
+          fi
+          echo 'Production public inputs are present; client async is disabled; placeholders are absent'
+
+      - name: Verify bundle and Cloudflare dry-runs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .open-next/worker.js
+          test -d .open-next/assets
+          test -d .open-next/server-functions
+          npx wrangler deploy --config wrangler.jsonc --dry-run > wrangler-production-dry-run.log 2>&1 || { cat wrangler-production-dry-run.log; exit 1; }
+          npx wrangler deploy --config workers/db/wrangler.jsonc --dry-run --outdir .dry-run-db > db-worker-production-dry-run.log 2>&1 || { cat db-worker-production-dry-run.log; exit 1; }
+          grep -Fq 'generateIcon: publicProcedure' src/server/api/routers/generate.ts
+          grep -Fq 'assertAsyncGenerationEnabled(env.ASYNC_GENERATION_ENABLED);' src/server/api/routers/generate.ts
+          grep -Fq '"ASYNC_GENERATION_ENABLED": "false"' wrangler.jsonc
+          grep -Fq '"NEXT_PUBLIC_ASYNC_GENERATION_FEATURE_ENABLED": "false"' wrangler.jsonc
+          grep -Fq '"GENERATION_RECOVERY_ENABLED": "false"' workers/db/wrangler.jsonc
+          echo 'OpenNext bundle and Worker dry-runs passed; no deployment was attempted'
+
+      - name: Write and verify build provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e 'const fs=require("fs"); fs.writeFileSync(".open-next/build-provenance.json", JSON.stringify({applicationSha:process.env.APP_SOURCE_SHA, workflowSha:process.env.GITHUB_SHA, workflowRunId:process.env.GITHUB_RUN_ID}, null, 2)+"\n")'
+          node -e 'const p=JSON.parse(require("fs").readFileSync(".open-next/build-provenance.json","utf8")); if(p.applicationSha!==process.env.APP_SOURCE_SHA || p.workflowSha!==process.env.GITHUB_SHA || p.workflowRunId!==process.env.GITHUB_RUN_ID) process.exit(1)'
+          echo 'Build provenance verified without printing secret values'
+
+      - name: Scan OpenNext bundle for secrets and upload artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(find .open-next -type f \( -name '.env' -o -name '.env.*' -o -name '.dev.vars' -o -name '.dev.vars.*' -o -path '*/.aws/credentials' -o -path '*/.aws/config' -o -iname 'wrangler*.json' -o -iname 'wrangler*.jsonc' -o -path '*/.wrangler/*' \) -print -quit)"
+          echo 'OpenNext secret/config filename scan passed'
+
+      - name: Upload production OpenNext artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: namedesignai-open-next-production-stripe-async-crypto-b0aff77a
+          path: .open-next/**
+          if-no-files-found: error
+          retention-days: 3
+          include-hidden-files: true
