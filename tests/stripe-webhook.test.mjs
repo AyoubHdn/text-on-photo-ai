@@ -33,6 +33,7 @@ function signedPayload(event = checkoutEvent(), secret = signingSecret) {
   return { rawBody, signature };
 }
 
+/** @returns {(body: Buffer, signature: string) => Promise<Stripe.Event>} */
 function asyncVerifier(secret = signingSecret) {
   return (body, signature) => signer.webhooks.constructEventAsync(body, signature, secret, undefined, subtleCryptoProvider);
 }
