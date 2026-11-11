@@ -117,7 +117,7 @@ jobs:
           npm run test:generation:parity
           node --experimental-strip-types tests/server-async-generation-gate.test.mjs
           node --experimental-strip-types --test tests/async-generation-ui.test.mjs
-          node --experimental-strip-types --test tests/async-generation-hook.test.mjs
+          NODE_ENV=test node --experimental-strip-types --test tests/async-generation-hook.test.mjs
           node --experimental-strip-types workers/generation-lambda/tests/generation.test.mjs
 
       - name: Run all TypeScript typechecks
